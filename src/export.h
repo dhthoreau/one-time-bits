@@ -6,4 +6,13 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-void* smemset(void *buffer, int value, int size);
+#ifndef OTB_EXPORT_H
+#define OTB_EXPORT_H
+
+#include <openssl/evp.h>
+
+const EVP_CIPHER *_EVP_get_cipherbyname(const char *name);
+int _RAND_bytes(unsigned char *buf, int num);
+int _RSA_generate_key_ex(RSA *rsa_impl, int bits, BIGNUM *e, BN_GENCB *cb);
+
+#endif

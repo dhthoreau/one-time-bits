@@ -8,6 +8,9 @@
 
 #include "../config.h"
 
+#include <openssl/rsa.h>
+
+#include "export.h"
 #include "rsa.h"
 
 #define MINIMUM_KEY_SIZE	2048
@@ -15,7 +18,7 @@
 
 struct _OtbRSAPrivate
 {
-	int dummy;
+	RSA *rsa_impl;
 };
 
 enum
@@ -39,6 +42,7 @@ static void otb_rsa_class_init(OtbRSAClass *klass)
 static void otb_rsa_init(OtbRSA *rsa)
 {
 	rsa->priv=G_TYPE_INSTANCE_GET_PRIVATE(rsa, OTB_TYPE_RSA, OtbRSAPrivate);
+	rsa->priv->rsa_impl=NULL;
 }
 
 static void otb_rsa_finalize(GObject *object)
@@ -46,5 +50,27 @@ static void otb_rsa_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_RSA(object));
 	OtbRSA *rsa=OTB_RSA(object);
+	if(rsa->priv->rsa_impl!=NULL)
+		RSA_free(rsa->priv->rsa_impl);
 	G_OBJECT_CLASS(otb_rsa_parent_class)->finalize(object);
+}
+
+gboolean otb_rsa_generate_keys(OtbRSA *rsa, size_t key_size)
+{
+	gboolean success=FALSE;
+	BIGNUM *big_number=BN_new();
+	BN_set_word(big_number, RSA_F4);
+	RSA *rsa_impl=RSA_new();
+	if(_RSA_generate_key_ex(rsa_impl, (int)key_size, big_number, NULL))
+		success=TRUE;
+	BN_free(big_number);
+	if(success)
+	{
+		if(rsa->priv->rsa_impl!=NULL)
+			RSA_free(rsa->priv->rsa_impl);
+		rsa->priv->rsa_impl=rsa_impl;
+	}
+	else
+		RSA_free(rsa_impl);
+	return success;
 }

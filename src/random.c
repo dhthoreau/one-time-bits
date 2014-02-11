@@ -10,9 +10,8 @@
 
 #include <glib/gi18n.h>
 
+#include "export.h"
 #include "openssl-util.h"
-
-int _RAND_bytes(unsigned char *buf, int num);
 
 gboolean otb_random_bytes(void *bytes, size_t num_bytes)
 {

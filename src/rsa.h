@@ -38,6 +38,6 @@ struct _OtbRSAClass
 
 GType otb_rsa_get_type();
 
-void otb_rsa_generate_keys(OtbRSA *rsa, size_t key_size);
+gboolean otb_rsa_generate_keys(OtbRSA *rsa, size_t key_size);
 
 #endif

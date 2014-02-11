@@ -9,14 +9,14 @@
 #include "../config.h"
 
 #include <glib/gi18n.h>
-#include <openssl/evp.h>
 
 #include "cipher.h"
-#include "random.h"
+#include "export.h"
 #include "io.h"
 #include "memory.h"
 #include "openssl-util.h"
-#include "smemset.h"
+#include "random.h"
+#include "smem.h"
 
 #define DEFAULT_CIPHER			"AES-256-CBC"
 #define DEFAULT_MESSAGE_DIGEST	"SHA512"
@@ -89,8 +89,6 @@ static void otb_cipher_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_cipher_parent_class)->finalize(object);
 }
 
-const EVP_CIPHER *_EVP_get_cipherbyname(const char *name);
-
 static void otb_cipher_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
 	OtbCipher *cipher=OTB_CIPHER(object);
@@ -152,7 +150,7 @@ gboolean otb_cipher_validate_passphrase(const OtbCipher *cipher, const unsigned 
 	size_t hash_size;
 	const char *passphrase_hash_bytes=g_bytes_get_data(passphrase_hash, &hash_size);
 	char *hash_bytes=g_malloc(hash_size);
-	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof salt, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, hash_size, hash_bytes) && memcmp(passphrase_hash_bytes, hash_bytes, hash_size)==0)
+	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof salt, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, hash_size, hash_bytes) && smemcmp(passphrase_hash_bytes, hash_bytes, hash_size)==0)
 		ret_val=TRUE;
 	g_free(hash_bytes);
 	return ret_val;

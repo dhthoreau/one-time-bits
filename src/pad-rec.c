@@ -16,7 +16,7 @@
 #include "pad-rec.h"
 #include "random.h"
 #include "settings.h"
-#include "smemset.h"
+#include "smem.h"
 
 #define INPUT_BUFFER_SIZE	4096
 #define UNIQUE_ID_STR_BYTES	37

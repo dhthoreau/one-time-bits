@@ -1,6 +1,6 @@
 lib_LTLIBRARIES=libotb.la
 libotb_la_LDFLAGS = -version-info 0:0:0
-libotb_la_SOURCES=bitkeeper.c cipher.c friend.c io.c local-crypto.c openssl-util.c pad-db.c pad-rec.c random.c rsa.c settings.c smemset.c
+libotb_la_SOURCES=bitkeeper.c cipher.c friend.c io.c local-crypto.c openssl-util.c pad-db.c pad-rec.c random.c rsa.c settings.c smem.c
 if EXPORTABLE
 libotb_la_SOURCES+=secure-using-real-openssl-functions.c
 else

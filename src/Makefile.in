@@ -101,16 +101,14 @@ libotb_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am__libotb_la_SOURCES_DIST = bitkeeper.c cipher.c friend.c io.c \
 	local-crypto.c openssl-util.c pad-db.c pad-rec.c random.c \
-	rsa.c settings.c smemset.c \
-	secure-using-real-openssl-functions.c \
+	rsa.c settings.c smem.c secure-using-real-openssl-functions.c \
 	insecure-using-dummy-replacements-of-the-original-openssl-functions.c
 @EXPORTABLE_TRUE@am__objects_1 =  \
 @EXPORTABLE_TRUE@	secure-using-real-openssl-functions.lo
 @EXPORTABLE_FALSE@am__objects_2 = insecure-using-dummy-replacements-of-the-original-openssl-functions.lo
 am_libotb_la_OBJECTS = bitkeeper.lo cipher.lo friend.lo io.lo \
 	local-crypto.lo openssl-util.lo pad-db.lo pad-rec.lo random.lo \
-	rsa.lo settings.lo smemset.lo $(am__objects_1) \
-	$(am__objects_2)
+	rsa.lo settings.lo smem.lo $(am__objects_1) $(am__objects_2)
 libotb_la_OBJECTS = $(am_libotb_la_OBJECTS)
 libotb_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -296,7 +294,7 @@ lib_LTLIBRARIES = libotb.la
 libotb_la_LDFLAGS = -version-info 0:0:0
 libotb_la_SOURCES = bitkeeper.c cipher.c friend.c io.c local-crypto.c \
 	openssl-util.c pad-db.c pad-rec.c random.c rsa.c settings.c \
-	smemset.c $(am__append_1) $(am__append_2)
+	smem.c $(am__append_1) $(am__append_2)
 libotb_la_LIBADD = $(libglib_LIBS) $(libgobject_LIBS) $(libuuid_LIBS) $(openssl_LIBS)
 AM_CPPFLAGS = $(libglib_CFLAGS) $(libgobject_CFLAGS) $(libuuid_CFLAGS) $(openssl_CFLAGS) -DLOCALEDIR=\""$(datadir)/locale"\"
 all: all-am
@@ -387,7 +385,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rsa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/secure-using-real-openssl-functions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/settings.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smemset.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smem.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

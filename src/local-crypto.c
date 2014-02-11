@@ -121,7 +121,7 @@ gboolean otb_local_crypto_create_cipher(const char *passphrase)
 	return creation_successful;
 }
 
-static gboolean validate_passphrase(OtbCipher *cipher, const char *passphrase)
+static gboolean otb_local_crypto_validate_passphrase(OtbCipher *cipher, const char *passphrase)
 {
 	gboolean validate_successful=TRUE;
 	OtbCipherSalt *passphrase_salt=NULL;
@@ -143,7 +143,7 @@ gboolean otb_local_crypto_unlock_cipher(const char *passphrase)
 	OtbCipher *cipher=otb_local_crypto_new();
 	OtbCipherSalt *wrapped_key_salt=NULL;
 	GBytes *wrapped_key=NULL;
-	if(!validate_passphrase(cipher, passphrase))
+	if(!otb_local_crypto_validate_passphrase(cipher, passphrase))
 		unlock_successful=FALSE;
 	else if((wrapped_key_salt=(OtbCipherSalt*)otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_KEY_SALT, NULL))==NULL)
 		unlock_successful=FALSE;
@@ -166,7 +166,7 @@ gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const ch
 	otb_local_crypto_lock();
 	if(local_cipher==NULL)
 		ret_val=FALSE;
-	else if(!validate_passphrase(local_cipher, old_passphrase))
+	else if(!otb_local_crypto_validate_passphrase(local_cipher, old_passphrase))
 		ret_val=FALSE;
 	else if(!otb_local_crypto_set_passphrase(local_cipher, new_passphrase))
 		ret_val=FALSE;
