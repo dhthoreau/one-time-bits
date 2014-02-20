@@ -15,7 +15,7 @@
 #define otb_cipher_context_free(cipher_context)	EVP_CIPHER_CTX_free(cipher_context)
 
 typedef char OtbCipherSalt[PKCS5_SALT_LEN];
-typedef EVP_CIPHER_CTX OtbCipherContext;
+typedef EVP_CIPHER_CTX OtbCipherContext[2];
 
 #define OTB_CIPHER_PROP_CIPHER			"cipher"
 #define OTB_CIPHER_PROP_MESSAGE_DIGEST	"message_digest"
