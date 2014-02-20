@@ -47,7 +47,7 @@ struct _OtbPadIO
 	size_t final_output_buffer_size;
 	size_t output_buffer_position;
 	GBytes *pad_iv;
-	EVP_CIPHER_CTX *cipher_context;
+	OtbCipherContext *cipher_context;
 };
 
 enum
