@@ -16,6 +16,7 @@
 #include "openssl-util.h"
 #include "random.h"
 #include "rsa.h"
+#include "smem.h"
 
 #define MINIMUM_NEW_KEY_SIZE	512
 #define DEFAULT_NEW_KEY_SIZE	4096
@@ -75,18 +76,18 @@ static void otb_rsa_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_rsa_parent_class)->finalize(object);
 }
 
-static void otb_rsa_set_private_key_impl(OtbRSA *rsa, EVP_PKEY *private_key_impl)
+static void otb_rsa_set_private_key_impl(const OtbRSA *rsa, EVP_PKEY *private_key_impl)
 {
 	if(rsa->priv->private_key_impl!=NULL)
 		EVP_PKEY_free(rsa->priv->private_key_impl);
-	rsa->priv->private_key_impl=private_key_impl;
+	_otb_set_EVP_PKEY(&rsa->priv->private_key_impl, &private_key_impl);
 }
 
-static void otb_rsa_set_public_key_impl(OtbRSA *rsa, EVP_PKEY *public_key_impl)
+static void otb_rsa_set_public_key_impl(const OtbRSA *rsa, EVP_PKEY *public_key_impl)
 {
 	if(rsa->priv->public_key_impl!=NULL)
 		EVP_PKEY_free(rsa->priv->public_key_impl);
-	rsa->priv->public_key_impl=public_key_impl;
+	_otb_set_EVP_PKEY(&rsa->priv->public_key_impl, &public_key_impl);
 }
 
 static void otb_rsa_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
@@ -125,7 +126,7 @@ static void otb_rsa_get_property(GObject *object, unsigned int prop_id, GValue *
 	}
 }
 
-gboolean otb_rsa_set_public_key(OtbRSA *rsa, GBytes *public_key)
+gboolean otb_rsa_set_public_key(const OtbRSA *rsa, GBytes *public_key)
 {
 	gboolean ret_val=FALSE;
 	BIO *buff_io=BIO_new_mem_buf((void*)g_bytes_get_data(public_key, NULL), g_bytes_get_size(public_key));
@@ -133,35 +134,75 @@ gboolean otb_rsa_set_public_key(OtbRSA *rsa, GBytes *public_key)
 	BIO_free(buff_io);
 	if(public_key_impl!=NULL)
 	{
-		otb_rsa_set_private_key_impl(rsa, public_key_impl);
+		otb_rsa_set_public_key_impl(rsa, public_key_impl);
 		ret_val=TRUE;
 	}
+	return ret_val;
 }
 
-GBytes *otb_rsa_get_public_key(OtbRSA *rsa)
+GBytes *otb_rsa_get_public_key(const OtbRSA *rsa)
 {
 	GBytes *ret_val=NULL;
 	BIO *buff_io=BIO_new(BIO_s_mem());
 	if(PEM_write_bio_PUBKEY(buff_io, rsa->priv->public_key_impl))
 	{
-		char *key=NULL;
-		long key_size=BIO_get_mem_data(buff_io, &key);
-		ret_val=g_bytes_new_take(key, key_size);
+		char *public_key=NULL;
+		long public_key_size=BIO_get_mem_data(buff_io, &public_key);
+		ret_val=g_bytes_new_take(public_key, public_key_size);
 	}
 	BIO_free(buff_io);
 	return ret_val;
 }
 
-gboolean otb_rsa_set_private_key(OtbRSA *rsa, GBytes *encrypted_private_key, OtbCipher *cipher)
+static char *otb_rsa_decrypt_private_key(const OtbCipher *cipher, GBytes *iv, GBytes *encrypted_private_key, size_t *private_key_size)
 {
-	// FARE...
-	return FALSE;
+	OtbCipherContext *cipher_context=otb_cipher_init_decryption(cipher, iv);
+	char *private_key=otb_cipher_create_encryption_buffer(cipher, g_bytes_get_size(encrypted_private_key), NULL);
+	*private_key_size=otb_cipher_decrypt(cipher_context, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key);
+	*private_key_size+=otb_cipher_finish_decrypt(cipher_context, private_key+*private_key_size);
+	return private_key;
 }
 
-GBytes *otb_rsa_get_private_key(OtbRSA *rsa, OtbCipher *cipher)
+gboolean otb_rsa_set_private_key(const OtbRSA *rsa, const OtbCipher *cipher, GBytes *iv, GBytes *encrypted_private_key)
 {
-	// FARE...
-	return NULL;
+	gboolean ret_val=FALSE;
+	size_t private_key_size;
+	char *private_key=otb_rsa_decrypt_private_key(cipher, iv, encrypted_private_key, &private_key_size);
+	BIO *buff_io=BIO_new_mem_buf(private_key, private_key_size);
+	EVP_PKEY *private_key_impl=PEM_read_bio_PrivateKey(buff_io, NULL, NULL, NULL);
+	BIO_free(buff_io);
+	smemset(private_key, 0, private_key_size);
+	g_free(private_key);
+	if(private_key_impl!=NULL)
+	{
+		otb_rsa_set_private_key_impl(rsa, private_key_impl);
+		ret_val=TRUE;
+	}
+	return ret_val;
+}
+
+static char *otb_rsa_encrypt_private_key(const OtbCipher *cipher, GBytes *iv, char *private_key, size_t private_key_size, size_t *encrypted_private_key_size)
+{
+	char *encrypted_private_key=g_malloc(private_key_size);
+	OtbCipherContext *cipher_context=otb_cipher_init_encryption(cipher, iv);
+	*encrypted_private_key_size=otb_cipher_encrypt(cipher_context, private_key, private_key_size, encrypted_private_key);
+	*encrypted_private_key_size+=otb_cipher_finish_encrypt(cipher_context, encrypted_private_key+*encrypted_private_key_size);
+}
+
+GBytes *otb_rsa_get_private_key(const OtbRSA *rsa, const OtbCipher *cipher, GBytes *iv)
+{
+	GBytes *ret_val=NULL;
+	BIO *buff_io=BIO_new(BIO_s_mem());
+	if(PEM_write_bio_PrivateKey(buff_io, rsa->priv->private_key_impl, NULL, NULL, 0, NULL, NULL))
+	{
+		char *private_key=NULL;
+		long private_key_size=BIO_get_mem_data(buff_io, &private_key);
+		size_t encrypted_private_key_size;
+		char *encrypted_private_key=otb_rsa_encrypt_private_key(cipher, iv, private_key, private_key_size, &encrypted_private_key_size);
+		ret_val=g_bytes_new_take(encrypted_private_key, encrypted_private_key_size);
+	}
+	BIO_free(buff_io);
+	return ret_val;
 }
 
 static EVP_PKEY *otb_rsa_get_private_key_impl_from_joint_key(EVP_PKEY *key_impl)
@@ -223,14 +264,13 @@ gboolean otb_rsa_generate_keys(OtbRSA *rsa, size_t key_size)
 	return ret_val;
 }
 
-OtbRSAContext *otb_rsa_init_encryption(const OtbRSA *rsa, GBytes **iv_out, GBytes **encrypted_key_out)
+const OtbRSAContext *otb_rsa_init_encryption(const OtbRSA *rsa, const GBytes **iv_out, const GBytes **encrypted_key_out)
 {
 	OtbRSAContext *rsa_context=NULL;
 	rsa_context=g_malloc(sizeof(OtbRSAContext));
 	unsigned char *iv_bytes=g_malloc(EVP_CIPHER_iv_length(rsa->priv->cipher_impl));
-	unsigned char *encrypted_key_bytes;
+	unsigned char *encrypted_key_bytes=g_malloc(EVP_PKEY_size(rsa->priv->public_key_impl));
 	size_t encrypted_key_size;
-	*encrypted_key_out=g_malloc(EVP_PKEY_size(rsa->priv->public_key_impl));
 	EVP_CIPHER_CTX_init(rsa_context);
 	if(EVP_SealInit(rsa_context, rsa->priv->cipher_impl, &encrypted_key_bytes, &encrypted_key_size, iv_bytes, &rsa->priv->public_key_impl, 1))
 	{
@@ -241,13 +281,13 @@ OtbRSAContext *otb_rsa_init_encryption(const OtbRSA *rsa, GBytes **iv_out, GByte
 	{
 		otb_rsa_context_free(rsa_context);
 		g_free(iv_bytes);
-		g_free(*encrypted_key_out);
+		g_free(encrypted_key_bytes);
 		g_warning(_("%s: Failed to initialize encryption."), "otb_rsa_init_encryption");
 	}
 	return rsa_context;
 }
 
-OtbRSAContext *otb_rsa_init_decryption(const OtbRSA *rsa, GBytes *iv, GBytes *encrypted_key)
+const OtbRSAContext *otb_rsa_init_decryption(const OtbRSA *rsa, GBytes *iv, GBytes *encrypted_key)
 {
 	OtbRSAContext *rsa_context=g_malloc(sizeof(OtbRSAContext));
 	EVP_CIPHER_CTX_init(rsa_context);
