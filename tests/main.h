@@ -11,7 +11,7 @@
 
 #include <glib-object.h>
 
-#define add_test_func(name, func)	g_test_add_func((name), (func)); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
+#define otb_add_test_func(name, func)	g_test_add_func((name), (func)); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
 
 extern GSList *otb_test_funcs;
 

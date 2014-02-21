@@ -9,6 +9,6 @@
 #ifndef OTB_FRIEND_TESTS
 #define OTB_FRIEND_TESTS
 
-void add_friend_tests();
+void otb_add_friend_tests();
 
 #endif

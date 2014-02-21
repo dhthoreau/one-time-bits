@@ -24,9 +24,10 @@
 
 struct _OtbCipherPrivate
 {
-	char *key;
+	unsigned char *key;
 	size_t key_size;
 	const EVP_CIPHER *cipher_impl;
+	// FARE - message_digest_impl ed hash_iterations dovrebbero essere input a otb_cipher_hash_passphrase(), etc. invece di membri di OtbCipherPrivate.
 	const EVP_MD *message_digest_impl;
 	unsigned int hash_iterations;
 };
@@ -68,7 +69,7 @@ static void otb_cipher_init(OtbCipher *cipher)
 	cipher->priv->hash_iterations=0;
 }
 
-static void otb_cipher_set_key(OtbCipher *cipher, char *key, size_t key_size)
+static void otb_cipher_set_key(OtbCipher *cipher, unsigned char *key, size_t key_size)
 {
 	if(cipher->priv->key!=NULL)
 	{
@@ -132,11 +133,11 @@ static void otb_cipher_get_property(GObject *object, unsigned int prop_id, GValu
 	}
 }
 
-GBytes *otb_cipher_hash_passphrase(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out)
+GBytes *otb_cipher_hash_passphrase(const OtbCipher *cipher, const char *passphrase, OtbCipherSalt salt_out)
 {
 	GBytes *hash=NULL;
 	size_t hash_size=EVP_MD_size(cipher->priv->message_digest_impl);
-	char *hash_bytes=g_malloc(hash_size);
+	unsigned char *hash_bytes=g_malloc(hash_size);
 	if(otb_random_bytes(salt_out, sizeof salt_out) && PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt_out, sizeof salt_out, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, hash_size, hash_bytes))
 		hash=g_bytes_new_take(hash_bytes, hash_size);
 	else
@@ -144,23 +145,23 @@ GBytes *otb_cipher_hash_passphrase(const OtbCipher *cipher, const unsigned char 
 	return hash;
 }
 
-gboolean otb_cipher_validate_passphrase(const OtbCipher *cipher, const unsigned char *passphrase, GBytes *passphrase_hash, OtbCipherSalt salt)
+gboolean otb_cipher_validate_passphrase(const OtbCipher *cipher, const char *passphrase, GBytes *passphrase_hash, OtbCipherSalt salt)
 {
 	gboolean ret_val=FALSE;
 	size_t hash_size;
-	const char *passphrase_hash_bytes=g_bytes_get_data(passphrase_hash, &hash_size);
-	char *hash_bytes=g_malloc(hash_size);
+	const unsigned char *passphrase_hash_bytes=g_bytes_get_data(passphrase_hash, &hash_size);
+	unsigned char *hash_bytes=g_malloc(hash_size);
 	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof salt, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, hash_size, hash_bytes) && smemcmp(passphrase_hash_bytes, hash_bytes, hash_size)==0)
 		ret_val=TRUE;
 	g_free(hash_bytes);
 	return ret_val;
 }
 
-static OtbCipherContext *otb_cipher_init_encryption_openssl(const EVP_CIPHER *cipher, const char *key, const char *iv)
+static OtbCipherContext *otb_cipher_init_encryption_openssl(const EVP_CIPHER *cipher_impl, const unsigned char *key, const unsigned char *iv)
 {
 	OtbCipherContext *cipher_context=g_malloc(sizeof(OtbCipherContext));
 	EVP_CIPHER_CTX_init(cipher_context);
-	if(!EVP_EncryptInit_ex(cipher_context, cipher, NULL, key, iv))
+	if(!EVP_EncryptInit_ex(cipher_context, cipher_impl, NULL, key, iv))
 	{
 		otb_cipher_context_free(cipher_context);
 		g_warning(_("%s: Failed to initialize encryption."), "otb_cipher_init_encryption_openssl");
@@ -168,7 +169,7 @@ static OtbCipherContext *otb_cipher_init_encryption_openssl(const EVP_CIPHER *ci
 	return cipher_context;
 }
 
-static OtbCipherContext *otb_cipher_init_decryption_openssl(const EVP_CIPHER *cipher, const char *key, const char *iv)
+static OtbCipherContext *otb_cipher_init_decryption_openssl(const EVP_CIPHER *cipher, const unsigned char *key, const unsigned char *iv)
 {
 	OtbCipherContext *cipher_context=g_malloc(sizeof(OtbCipherContext));
 	EVP_CIPHER_CTX_init(cipher_context);
@@ -182,13 +183,13 @@ static OtbCipherContext *otb_cipher_init_decryption_openssl(const EVP_CIPHER *ci
 
 #define key_and_iv_size(cipher)	(EVP_CIPHER_key_length((cipher)->priv->cipher_impl)+EVP_CIPHER_iv_length((cipher)->priv->cipher_impl))
 
-gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const unsigned char *passphrase, OtbCipherSalt salt)
+gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const char *passphrase, OtbCipherSalt salt)
 {
 	gboolean ret_val=FALSE;
-	char *wrapping_key_and_iv=g_malloc(key_and_iv_size(cipher));
+	unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(cipher));
 	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof salt, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, key_and_iv_size(cipher), wrapping_key_and_iv))
 	{
-		char *key_bytes=otb_cipher_create_decryption_buffer(cipher, g_bytes_get_size(wrapped_key), NULL);
+		unsigned char *key_bytes=otb_cipher_create_decryption_buffer(cipher, g_bytes_get_size(wrapped_key), NULL);
 		OtbCipherContext *cipher_context=otb_cipher_init_decryption_openssl(cipher->priv->cipher_impl, wrapping_key_and_iv, wrapping_key_and_iv+EVP_CIPHER_key_length(cipher->priv->cipher_impl));
 		size_t key_size=otb_cipher_decrypt(cipher_context, g_bytes_get_data(wrapped_key, NULL), g_bytes_get_size(wrapped_key), key_bytes);
 		size_t final_bytes_size=otb_cipher_finish_decrypt(cipher_context, key_bytes+key_size);
@@ -203,15 +204,15 @@ gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const uns
 	return ret_val;
 }
 
-GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out)
+GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const char *passphrase, OtbCipherSalt salt_out)
 {
 	GBytes *wrapped_key=NULL;
 	if(otb_random_bytes(salt_out, sizeof salt_out))
 	{
-		char *wrapping_key_and_iv=g_malloc(key_and_iv_size(cipher));
+		unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(cipher));
 		if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt_out, sizeof salt_out, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, key_and_iv_size(cipher), wrapping_key_and_iv))
 		{
-			char *wrapped_key_bytes=otb_cipher_create_encryption_buffer(cipher, cipher->priv->key_size, NULL);
+			unsigned char *wrapped_key_bytes=otb_cipher_create_encryption_buffer(cipher, cipher->priv->key_size, NULL);
 			OtbCipherContext *cipher_context=otb_cipher_init_encryption_openssl(cipher->priv->cipher_impl, wrapping_key_and_iv, wrapping_key_and_iv+EVP_CIPHER_key_length(cipher->priv->cipher_impl));
 			size_t wrapped_key_size=otb_cipher_encrypt(cipher_context, cipher->priv->key, cipher->priv->key_size, wrapped_key_bytes);
 			size_t final_bytes_size=otb_cipher_finish_encrypt(cipher_context, wrapped_key_bytes+wrapped_key_size);
@@ -228,7 +229,7 @@ GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const unsigned char *passph
 gboolean otb_cipher_generate_random_key(OtbCipher *cipher)
 {
 	gboolean ret_val=TRUE;
-	char *key=otb_create_random_bytes(EVP_CIPHER_key_length(cipher->priv->cipher_impl));
+	unsigned char *key=otb_create_random_bytes(EVP_CIPHER_key_length(cipher->priv->cipher_impl));
 	if(key==NULL)
 		ret_val=FALSE;
 	else
@@ -236,34 +237,27 @@ gboolean otb_cipher_generate_random_key(OtbCipher *cipher)
 	return ret_val;
 }
 
-GBytes *otb_cipher_generate_random_iv(const OtbCipher *cipher)
+unsigned char *otb_cipher_create_encryption_buffer(const OtbCipher *cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out)
 {
-	GBytes *iv=NULL;
-	char *iv_bytes=otb_create_random_bytes(EVP_CIPHER_iv_length(cipher->priv->cipher_impl));
-	if(iv_bytes!=NULL)
-		iv=g_bytes_new_take(iv_bytes, EVP_CIPHER_iv_length(cipher->priv->cipher_impl));
-	return iv;
+	return otb_openssl_create_encryption_buffer(cipher->priv->cipher_impl, plain_bytes_buffer_size, encryption_buffer_size_out);
 }
 
-char *otb_cipher_create_encryption_buffer(const OtbCipher *cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out)
+unsigned char *otb_cipher_create_decryption_buffer(const OtbCipher *cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out)
 {
-	size_t size=plain_bytes_buffer_size+EVP_CIPHER_block_size(cipher->priv->cipher_impl)-1;
-	if(encryption_buffer_size_out!=NULL)
-		*encryption_buffer_size_out=size;
-	return g_malloc(size);
+	return otb_openssl_create_decryption_buffer(cipher->priv->cipher_impl, encrypted_bytes_buffer_size, decryption_buffer_size_out);
 }
 
-char *otb_cipher_create_decryption_buffer(const OtbCipher *cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out)
+OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes **iv)
 {
-	size_t size=encrypted_bytes_buffer_size+EVP_CIPHER_block_size(cipher->priv->cipher_impl);
-	if(decryption_buffer_size_out!=NULL)
-		*decryption_buffer_size_out=size;
-	return g_malloc(size);
-}
-
-OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes *iv)
-{
-	return otb_cipher_init_encryption_openssl(cipher->priv->cipher_impl, cipher->priv->key, g_bytes_get_data(iv, NULL));
+	*iv=otb_openssl_generate_random_iv(cipher->priv->cipher_impl);
+	size_t iv_size;
+	OtbCipherContext *ret_val=otb_cipher_init_encryption_openssl(cipher->priv->cipher_impl, cipher->priv->key, g_bytes_get_data(*iv, NULL));
+	if(ret_val==NULL)
+	{
+		g_bytes_unref(*iv);
+		*iv=NULL;
+	}
+	return ret_val;
 }
 
 OtbCipherContext *otb_cipher_init_decryption(const OtbCipher *cipher, GBytes *iv)
@@ -271,7 +265,7 @@ OtbCipherContext *otb_cipher_init_decryption(const OtbCipher *cipher, GBytes *iv
 	return otb_cipher_init_decryption_openssl(cipher->priv->cipher_impl, cipher->priv->key, g_bytes_get_data(iv, NULL));
 }
 
-size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const char *plain_bytes, size_t plain_bytes_size, char *encrypted_bytes_out)
+size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const unsigned char *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
 	if(!EVP_EncryptUpdate(cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size))
@@ -284,7 +278,7 @@ size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const char *plain_by
 	return (size_t)encrypted_bytes_size;
 }
 
-size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const char *encrypted_bytes, size_t encrypted_bytes_size, char *plain_bytes_out)
+size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, unsigned char *plain_bytes_out)
 {
 	int plain_bytes_size;
 	if(!EVP_DecryptUpdate(cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size))
@@ -297,7 +291,7 @@ size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const char *encrypte
 	return (size_t)plain_bytes_size;
 }
 
-size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, char *encrypted_bytes_out)
+size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, unsigned char *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
 	if(!EVP_EncryptFinal_ex(cipher_context, encrypted_bytes_out, &encrypted_bytes_size))
@@ -311,7 +305,7 @@ size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, char *encrypt
 	return (size_t)encrypted_bytes_size;
 }
 
-size_t otb_cipher_finish_decrypt(OtbCipherContext *cipher_context, char *plain_bytes_out)
+size_t otb_cipher_finish_decrypt(OtbCipherContext *cipher_context, unsigned char *plain_bytes_out)
 {
 	int plain_bytes_size;
 	if(!EVP_DecryptFinal_ex(cipher_context, plain_bytes_out, &plain_bytes_size))

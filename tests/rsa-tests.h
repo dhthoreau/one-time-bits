@@ -6,9 +6,9 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_PAD_REC_TESTS
-#define OTB_PAD_REC_TESTS
+#ifndef OTB_RSA_TESTS
+#define OTB_RSA_TESTS
 
-void otb_add_pad_rec_tests();
+void otb_add_rsa_tests();
 
 #endif

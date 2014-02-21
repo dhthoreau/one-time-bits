@@ -98,7 +98,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am_otb_tests_OBJECTS = cipher-tests.$(OBJEXT) friend-tests.$(OBJEXT) \
 	local-crypto-tests.$(OBJEXT) main.$(OBJEXT) \
 	pad-db-tests.$(OBJEXT) pad-rec-tests.$(OBJEXT) \
-	settings-tests.$(OBJEXT) test-utils.$(OBJEXT)
+	rsa-tests.$(OBJEXT) settings-tests.$(OBJEXT) \
+	test-utils.$(OBJEXT)
 otb_tests_OBJECTS = $(am_otb_tests_OBJECTS)
 am__DEPENDENCIES_1 =
 otb_tests_DEPENDENCIES = ../src/libotb.la $(am__DEPENDENCIES_1) \
@@ -527,7 +528,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-otb_tests_SOURCES = cipher-tests.c friend-tests.c local-crypto-tests.c main.c pad-db-tests.c pad-rec-tests.c settings-tests.c test-utils.c
+otb_tests_SOURCES = cipher-tests.c friend-tests.c local-crypto-tests.c main.c pad-db-tests.c pad-rec-tests.c rsa-tests.c settings-tests.c test-utils.c
 otb_tests_LDADD = ../src/libotb.la $(libglib_LIBS) $(libgobject_LIBS) $(libuuid_LIBS) $(openssl_LIBS)
 AM_CPPFLAGS = $(libglib_CFLAGS) $(libgobject_CFLAGS) $(libuuid_CFLAGS) -DLOCALEDIR=\""$(datadir)/locale"\"
 all: all-am
@@ -590,6 +591,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pad-db-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pad-rec-tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rsa-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/settings-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-utils.Po@am__quote@
 

@@ -9,6 +9,6 @@
 #ifndef OTB_PAD_DB_TESTS
 #define OTB_PAD_DB_TESTS
 
-void add_pad_db_tests();
+void otb_add_pad_db_tests();
 
 #endif

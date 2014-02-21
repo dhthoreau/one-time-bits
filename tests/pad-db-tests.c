@@ -185,7 +185,7 @@ static void test_create_unsent_pad_results_in_proper_pad_file()
 	g_object_unref(pad_db);
 }
 
-static char *otb_assert_pad_read(OtbPadIO *pad_io, const char *expected_bytes, size_t expected_bytes_size)
+static void *otb_assert_pad_read(OtbPadIO *pad_io, const void *expected_bytes, size_t expected_bytes_size)
 {
 	size_t expected_bytes_position=0;
 	void *actual_bytes;
@@ -219,7 +219,7 @@ static void test_pads_save_and_load()
 	const uuid_t *expected_unsent_unique_id=otb_pad_db_fetch_random_rec_id_with_null_assertion(save_pad_db, OTB_PAD_REC_STATUS_UNSENT);
 	OtbPadIO *unsent_save_pad_io=otb_pad_db_open_pad_for_read(save_pad_db, expected_unsent_unique_id);
 	g_assert(unsent_save_pad_io!=NULL);
-	char *expected_unsent_bytes=otb_assert_pad_read(unsent_save_pad_io, NULL, EXPECTED_DEFAULT_NEW_PAD_SIZE);
+	unsigned char *expected_unsent_bytes=otb_assert_pad_read(unsent_save_pad_io, NULL, EXPECTED_DEFAULT_NEW_PAD_SIZE);
 	g_assert(otb_pad_db_close_pad(save_pad_db));
 	uuid_t expected_received_unique_id;
 	uuid_generate(expected_received_unique_id);
@@ -249,7 +249,7 @@ static void test_pads_save_and_load()
 	g_object_unref(load_pad_db);
 }
 
-static uuid_t *otb_pad_db_add_received_pad_from_bytes(const OtbPadDb *pad_db, const char *bytes, off_t size)
+static uuid_t *otb_pad_db_add_received_pad_from_bytes(const OtbPadDb *pad_db, const unsigned char *bytes, off_t size)
 {
 	uuid_t *unique_id=g_malloc(sizeof(uuid_t));
 	uuid_generate(*unique_id);
@@ -263,7 +263,7 @@ static uuid_t *otb_pad_db_add_received_pad_from_bytes(const OtbPadDb *pad_db, co
 static void test_add_received_pad()
 {
 	const off_t EXPECTED_PAD_SIZE=8;
-	const char EXPECTED_PAD_BYTES[8]={0x43, 0x61, 0x7a, 0x5a, 0x6f, 0x4e, 0x53, 0x61};
+	const unsigned char EXPECTED_PAD_BYTES[8]={0x43, 0x61, 0x7a, 0x5a, 0x6f, 0x4e, 0x53, 0x61};
 	
 	otb_test_setup_local_crypto();
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
@@ -359,7 +359,7 @@ static void test_pad_rec_mark_as_sent()
 	g_object_unref(pad_db);
 }
 
-static char *otb_input_create_file(const char *pad_db_dir_path, const char *bytes, size_t number_of_bytes)
+static char *otb_input_create_file(const char *pad_db_dir_path, const unsigned char *bytes, size_t number_of_bytes)
 {
 	char *input_file_path=g_strconcat(pad_db_dir_path, "/input_file", NULL);
 	FILE *input_file=otb_open_for_write(input_file_path, "otb_input_create_file");
@@ -414,7 +414,7 @@ static void test_encryption_with_one_pad()
 	FILE *output_file=otb_open_for_read(output_file_path, "test_encryption_with_one_pad");
 	g_assert(output_file!=NULL);
 	g_free(output_file_path);
-	char encrypted_bytes[EXPECTED_ENCRYPTED_FILE_SIZE];
+	unsigned char encrypted_bytes[EXPECTED_ENCRYPTED_FILE_SIZE];
 	g_assert_cmpint(EXPECTED_ENCRYPTED_FILE_SIZE, ==, otb_read(encrypted_bytes, sizeof(char), EXPECTED_ENCRYPTED_FILE_SIZE, output_file, "test_encryption_with_one_pad"));
 	g_assert(!otb_file_has_more_bytes(output_file));
 	g_assert(otb_close(output_file, "test_encryption_with_one_pad"));
@@ -422,7 +422,7 @@ static void test_encryption_with_one_pad()
 	g_assert_cmpint(0, ==, uuid_compare(*expected_unique_id, *((uuid_t*)(encrypted_bytes+sizeof(guint8)))));
 	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(pad_db, expected_unique_id);
 	g_assert(pad_io!=NULL);
-	char *pad_bytes=otb_assert_pad_read(pad_io, NULL, ABSOLUTE_MIN_PAD_SIZE);
+	unsigned char *pad_bytes=otb_assert_pad_read(pad_io, NULL, ABSOLUTE_MIN_PAD_SIZE);
 	g_assert(otb_pad_db_close_pad(pad_db));
 	for(size_t byte_index=0; byte_index<MESSAGE_SIZE; byte_index++)
 		g_assert_cmpint(EXPECTED_MESSAGE[byte_index], ==, encrypted_bytes[byte_index+START_OF_ENCRYPTED_MESSAGE]^pad_bytes[byte_index]);
@@ -516,7 +516,7 @@ static void otb_send_random_pads(const OtbPadDb *sender_pad_db, const OtbPadDb *
 		otb_send_random_pad(sender_pad_db, recipient_pad_db);
 }
 
-static char *otb_encrypt_file_for_two_pad_test(const char *pad_db_dir_path, const OtbPadDb *pad_db, const char *message, size_t message_size)
+static char *otb_encrypt_file_for_two_pad_test(const char *pad_db_dir_path, const OtbPadDb *pad_db, const unsigned char *message, size_t message_size)
 {
 	char *input_file_path=g_strconcat(pad_db_dir_path, "/original_file", NULL);
 	FILE *input_file=otb_open_for_write(input_file_path, "otb_encrypt_file_for_two_pad_test");
@@ -573,25 +573,25 @@ static void test_encryption_decryption_with_two_pads()
 	g_free(encrypted_file_path);
 }
 
-void add_pad_db_tests()
+void otb_add_pad_db_tests()
 {
-	add_test_func("/pad-db/test_set_new_pad_size", test_set_new_pad_size);
-	add_test_func("/pad-db/test_otb_pad_db_io", test_otb_pad_db_io);
-	add_test_func("/pad-db/test_otb_pad_db_rejects_pads_too_large", test_otb_pad_db_rejects_pads_too_large);
-	add_test_func("/pad-db/test_otb_pad_db_rejects_pads_duplicate_id", test_otb_pad_db_rejects_pads_duplicate_id);
-	add_test_func("/pad-db/test_create_unsent_pad_results_in_proper_pad_file", test_create_unsent_pad_results_in_proper_pad_file);
-	add_test_func("/pad-db/test_pads_save_and_load", test_pads_save_and_load);
-	add_test_func("/pad-db/test_add_received_pad", test_add_received_pad);
-	add_test_func("/pad-db/test_get_random_rec_id", test_get_random_rec_id);
-	add_test_func("/pad-db/test_close_pad_fails_when_nothing_is_opened", test_close_pad_fails_when_nothing_is_opened);
-	add_test_func("/pad-db/test_remove_rec", test_remove_rec);
-	add_test_func("/pad-db/test_remove_rec_that_does_not_exist", test_remove_rec_that_does_not_exist);
-	add_test_func("/pad-db/test_pad_rec_mark_as_sent", test_pad_rec_mark_as_sent);
-	add_test_func("/pad-db/test_encryption_fails_due_to_not_enough_pad_bytes", test_encryption_fails_due_to_not_enough_pad_bytes);
-	add_test_func("/pad-db/test_encryption_with_one_pad", test_encryption_with_one_pad);
-	add_test_func("/pad-db/test_decryption_fails_due_to_unsupported_file_format", test_decryption_fails_due_to_unsupported_file_format);
-	add_test_func("/pad-db/test_decryption_fails_due_to_missing_pad", test_decryption_fails_due_to_missing_pad);
-	add_test_func("/pad-db/test_pad_db_get_pad_size", test_pad_db_get_pad_size);
-	add_test_func("/pad-db/test_pad_db_get_pad_size_range", test_pad_db_get_pad_size_range);
-	add_test_func("/pad-db/test_encryption_decryption_with_two_pads", test_encryption_decryption_with_two_pads);
+	otb_add_test_func("/pad-db/test_set_new_pad_size", test_set_new_pad_size);
+	otb_add_test_func("/pad-db/test_otb_pad_db_io", test_otb_pad_db_io);
+	otb_add_test_func("/pad-db/test_otb_pad_db_rejects_pads_too_large", test_otb_pad_db_rejects_pads_too_large);
+	otb_add_test_func("/pad-db/test_otb_pad_db_rejects_pads_duplicate_id", test_otb_pad_db_rejects_pads_duplicate_id);
+	otb_add_test_func("/pad-db/test_create_unsent_pad_results_in_proper_pad_file", test_create_unsent_pad_results_in_proper_pad_file);
+	otb_add_test_func("/pad-db/test_pads_save_and_load", test_pads_save_and_load);
+	otb_add_test_func("/pad-db/test_add_received_pad", test_add_received_pad);
+	otb_add_test_func("/pad-db/test_get_random_rec_id", test_get_random_rec_id);
+	otb_add_test_func("/pad-db/test_close_pad_fails_when_nothing_is_opened", test_close_pad_fails_when_nothing_is_opened);
+	otb_add_test_func("/pad-db/test_remove_rec", test_remove_rec);
+	otb_add_test_func("/pad-db/test_remove_rec_that_does_not_exist", test_remove_rec_that_does_not_exist);
+	otb_add_test_func("/pad-db/test_pad_rec_mark_as_sent", test_pad_rec_mark_as_sent);
+	otb_add_test_func("/pad-db/test_encryption_fails_due_to_not_enough_pad_bytes", test_encryption_fails_due_to_not_enough_pad_bytes);
+	otb_add_test_func("/pad-db/test_encryption_with_one_pad", test_encryption_with_one_pad);
+	otb_add_test_func("/pad-db/test_decryption_fails_due_to_unsupported_file_format", test_decryption_fails_due_to_unsupported_file_format);
+	otb_add_test_func("/pad-db/test_decryption_fails_due_to_missing_pad", test_decryption_fails_due_to_missing_pad);
+	otb_add_test_func("/pad-db/test_pad_db_get_pad_size", test_pad_db_get_pad_size);
+	otb_add_test_func("/pad-db/test_pad_db_get_pad_size_range", test_pad_db_get_pad_size_range);
+	otb_add_test_func("/pad-db/test_encryption_decryption_with_two_pads", test_encryption_decryption_with_two_pads);
 }

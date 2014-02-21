@@ -224,7 +224,8 @@ void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const c
 	if(bytes!=NULL)
 	{
 		size_t value_length_temp;
-		g_base64_decode_inplace(bytes, &value_length_temp);
+		if(bytes[0])
+			g_base64_decode_inplace(bytes, &value_length_temp);
 		if(value_length!=NULL)
 			*value_length=value_length_temp;
 	}
@@ -253,7 +254,7 @@ GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, cons
 {
 	GBytes *value=NULL;
 	size_t value_length;
-	char *value_bytes=otb_settings_get_bytes(key_file, group_name, key, &value_length, func_name);
+	void *value_bytes=otb_settings_get_bytes(key_file, group_name, key, &value_length, func_name);
 	if(value_bytes!=NULL)
 		value=g_bytes_new_take(value_bytes, value_length);
 	return value;

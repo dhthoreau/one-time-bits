@@ -38,9 +38,9 @@ struct _OtbPadIO
 	gboolean is_for_write;
 	gboolean auto_rewind;
 	FILE *file;
-	char *input_buffer;
-	char *output_buffer;
-	char *final_output_buffer;
+	unsigned char *input_buffer;
+	unsigned char *output_buffer;
+	unsigned char *final_output_buffer;
 	size_t output_buffer_allocated_size;
 	size_t final_output_buffer_allocated_size;
 	size_t output_buffer_size;
@@ -60,7 +60,6 @@ enum
 	PROP_SIZE
 };
 
-static void otb_pad_rec_dispose(GObject *object);
 static void otb_pad_rec_finalize(GObject *object);
 static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);
 static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
@@ -70,7 +69,6 @@ G_DEFINE_TYPE(OtbPadRec, otb_pad_rec, G_TYPE_OBJECT);
 static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 {
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
-	object_class->dispose=otb_pad_rec_dispose;
 	object_class->finalize=otb_pad_rec_finalize;
 	object_class->set_property=otb_pad_rec_set_property;
 	object_class->get_property=otb_pad_rec_get_property;
@@ -105,17 +103,7 @@ static void otb_pad_rec_init(OtbPadRec *pad_rec)
 	pad_rec->priv->pad_rec_file_path=NULL;
 	pad_rec->priv->pad_file_path=NULL;
 	pad_rec->priv->size=-1;
-	pad_rec->priv->pad_iv=otb_cipher_generate_random_iv(otb_local_crypto_get_cipher());
-}
-
-static void otb_pad_rec_dispose(GObject *object)
-{
-	g_return_if_fail(object!=NULL);
-	g_return_if_fail(OTB_IS_PAD_REC(object));
-	OtbPadRec *pad_rec=OTB_PAD_REC(object);
-	g_bytes_unref(pad_rec->priv->pad_iv);
-	pad_rec->priv->pad_iv=NULL;
-	G_OBJECT_CLASS(otb_pad_rec_parent_class)->dispose(object);
+	pad_rec->priv->pad_iv=g_bytes_new_static("", 0);
 }
 
 static void otb_pad_rec_finalize(GObject *object)
@@ -123,6 +111,7 @@ static void otb_pad_rec_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_PAD_REC(object));
 	OtbPadRec *pad_rec=OTB_PAD_REC(object);
+	g_bytes_unref(pad_rec->priv->pad_iv);
 	g_free(pad_rec->priv->unique_id);
 	g_free(pad_rec->priv->base_path);
 	g_free(pad_rec->priv->base_name);
@@ -135,7 +124,7 @@ static void otb_pad_rec_compute_file_paths(const OtbPadRec *pad_rec)
 {
 	if(pad_rec->priv->base_path!=NULL)
 	{
-		gchar *file_path_without_extension=g_build_filename(pad_rec->priv->base_path, pad_rec->priv->base_name, NULL);
+		char *file_path_without_extension=g_build_filename(pad_rec->priv->base_path, pad_rec->priv->base_name, NULL);
 		g_free(pad_rec->priv->pad_rec_file_path);
 		pad_rec->priv->pad_rec_file_path=g_strconcat(file_path_without_extension, ".rec", NULL);
 		g_free(pad_rec->priv->pad_file_path);
@@ -272,7 +261,13 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
 		pad_io->input_buffer=NULL;
 		pad_io->output_buffer=otb_cipher_create_encryption_buffer(otb_local_crypto_get_cipher(), INPUT_BUFFER_SIZE, &pad_io->output_buffer_allocated_size);
 		pad_io->final_output_buffer=NULL;
-		pad_io->cipher_context=otb_cipher_init_encryption(otb_local_crypto_get_cipher(), pad_rec->priv->pad_iv);
+		g_bytes_unref(pad_rec->priv->pad_iv);
+		pad_io->cipher_context=otb_cipher_init_encryption(otb_local_crypto_get_cipher(), &pad_rec->priv->pad_iv);
+		if(!otb_pad_rec_save(pad_rec))
+		{
+			otb_pad_io_free(pad_io);
+			pad_io=NULL;
+		}
 	}
 	return pad_io;
 }
@@ -420,7 +415,7 @@ gboolean otb_pad_read(OtbPadIO *pad_io, void **output_buffer, size_t *output_buf
 	return ret_val;
 }
 
-gboolean otb_pad_read_byte(OtbPadIO *pad_io, char *output_byte)
+gboolean otb_pad_read_byte(OtbPadIO *pad_io, unsigned char *output_byte)
 {
 	gboolean ret_val=TRUE;
 	otb_pad_copy_final_bytes_to_output_buffer_if_needed(pad_io);

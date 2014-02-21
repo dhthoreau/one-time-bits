@@ -17,6 +17,7 @@
 #include "friend-tests.h"
 #include "pad-db-tests.h"
 #include "pad-rec-tests.h"
+#include "rsa-tests.h"
 #include "settings-tests.h"
 #include "test-utils.h"
 
@@ -30,7 +31,7 @@ static GOptionEntry entries[]=
 	{ NULL }
 };
 
-static gboolean parse_input(int *p_argc, char **p_argv[])
+static gboolean otb_parse_input(int *p_argc, char **p_argv[])
 {
 	gboolean ret_val=TRUE;
 	GError *error=NULL;
@@ -46,53 +47,54 @@ static gboolean parse_input(int *p_argc, char **p_argv[])
 	return ret_val;
 }
 
-static void call_test(const gpointer test, const gpointer user_data)
+static void otb_call_test(const gpointer test, const gpointer user_data)
 {
 	GTestFunc test_func=(GTestFunc)test;
 	test_func();
 }
 
-static void run_tests_to_find_memory_leaks()
+static void otb_run_tests_to_find_memory_leaks()
 {
 	otb_recreate_test_dir();
-	g_slist_foreach(otb_test_funcs, call_test, NULL);
+	g_slist_foreach(otb_test_funcs, otb_call_test, NULL);
 	otb_delete_test_dir();
 }
 
-static void add_tests()
+static void otb_add_tests()
 {
-	add_settings_tests();
-	add_cipher_tests();
-	add_local_crypto_tests();
-	add_pad_rec_tests();
-	add_pad_db_tests();
-	add_friend_tests();
+	otb_add_settings_tests();
+	otb_add_cipher_tests();
+	otb_add_rsa_tests();
+	otb_add_local_crypto_tests();
+	otb_add_pad_rec_tests();
+	otb_add_pad_db_tests();
+	otb_add_friend_tests();
 }
 
-static void run_tests()
+static void otb_run_tests()
 {
 	otb_recreate_test_dir();
-	add_tests();
+	otb_add_tests();
 	g_test_run();
 	otb_delete_test_dir();
 	while(leaky)
-		run_tests_to_find_memory_leaks();
+		otb_run_tests_to_find_memory_leaks();
 	g_slist_free(otb_test_funcs);
 }
 
-static void null_log_handler(const char *log_domain, GLogLevelFlags log_level, const char *message, gpointer user_data)
+static void otb_null_log_handler(const char *log_domain, GLogLevelFlags log_level, const char *message, gpointer user_data)
 {
 }
 
 int main(int argc, char *argv[])
 {
-	g_log_set_handler(NULL, G_LOG_LEVEL_MESSAGE, null_log_handler, NULL);
+	g_log_set_handler(NULL, G_LOG_LEVEL_MESSAGE, otb_null_log_handler, NULL);
 	setlocale(LC_ALL, "");
 	textdomain(GETTEXT_PACKAGE);
 	g_test_init(&argc, &argv, NULL);
-	if(!parse_input(&argc, &argv))
+	if(!otb_parse_input(&argc, &argv))
 		return 1;
-	run_tests(&argc, &argv);
+	otb_run_tests(&argc, &argv);
 	return 0;
 }
 

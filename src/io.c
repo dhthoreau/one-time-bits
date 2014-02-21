@@ -45,7 +45,7 @@ size_t otb_write(const void *buffer, size_t size, size_t num_items, FILE *file, 
 	return ret_val;
 }
 
-gboolean otb_write_byte(char byte, FILE *file, const char *function_name)
+gboolean otb_write_byte(unsigned char byte, FILE *file, const char *function_name)
 {
 	gboolean ret_val=TRUE;
 	int put_result=fputc(byte, file);
@@ -69,7 +69,7 @@ size_t otb_read(void *buffer, size_t size, size_t num_items, FILE *file, const c
 	return ret_val;
 }
 
-gboolean otb_read_byte(char *byte, FILE *file, const char *function_name)
+gboolean otb_read_byte(unsigned char *byte, FILE *file, const char *function_name)
 {
 	gboolean ret_val=TRUE;
 	int get_result=fgetc(file);

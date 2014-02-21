@@ -25,11 +25,11 @@ static void test_cipher_properties()
 	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, OTB_CIPHER_PROP_CIPHER, EXPECTED_CIPHER, OTB_CIPHER_PROP_MESSAGE_DIGEST, EXPECTED_MESSAGE_DIGEST, OTB_CIPHER_PROP_HASH_ITERATIONS, EXPECTED_HASH_ITERATIONS, NULL);
 	char *actual_cipher=NULL;
 	char *actual_message_digest=NULL;
-	unsigned int actual_has_iterations;
-	g_object_get(cipher, OTB_CIPHER_PROP_CIPHER, &actual_cipher, OTB_CIPHER_PROP_MESSAGE_DIGEST, &actual_message_digest, OTB_CIPHER_PROP_HASH_ITERATIONS, &actual_has_iterations, NULL);
+	unsigned int actual_hash_iterations;
+	g_object_get(cipher, OTB_CIPHER_PROP_CIPHER, &actual_cipher, OTB_CIPHER_PROP_MESSAGE_DIGEST, &actual_message_digest, OTB_CIPHER_PROP_HASH_ITERATIONS, &actual_hash_iterations, NULL);
 	g_assert_cmpstr(EXPECTED_CIPHER, ==, actual_cipher);
 	g_assert_cmpstr(EXPECTED_MESSAGE_DIGEST, ==, actual_message_digest);
-	g_assert_cmpint(EXPECTED_HASH_ITERATIONS, ==, actual_has_iterations);
+	g_assert_cmpint(EXPECTED_HASH_ITERATIONS, ==, actual_hash_iterations);
 	g_free(actual_message_digest);
 	g_free(actual_cipher);
 	g_object_unref(cipher);
@@ -52,19 +52,6 @@ static void test_cipher_hash_passphrase()
 	g_object_unref(cipher);
 }
 
-static void test_cipher_generate_random_iv()
-{
-	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, NULL);
-	GBytes *actual_iv1=otb_cipher_generate_random_iv(cipher);
-	g_assert(actual_iv1!=NULL);
-	GBytes *actual_iv2=otb_cipher_generate_random_iv(cipher);
-	g_assert(actual_iv2!=NULL);
-	g_assert(!g_bytes_equal(actual_iv1, actual_iv2));
-	g_bytes_unref(actual_iv1);
-	g_bytes_unref(actual_iv2);
-	g_object_unref(cipher);
-}
-
 static void test_cipher_encryption()
 {
 	const char EXPECTED_MESSAGE_SIZE=126;
@@ -73,11 +60,11 @@ static void test_cipher_encryption()
 	
 	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, OTB_CIPHER_PROP_CIPHER, "aes-256-cbc", OTB_CIPHER_PROP_MESSAGE_DIGEST, "sha512", OTB_CIPHER_PROP_HASH_ITERATIONS, 2048, NULL);
 	g_assert(otb_cipher_generate_random_key(cipher));
-	GBytes *iv=otb_cipher_generate_random_iv(cipher);
-	g_assert(iv!=NULL);
-	char *encrypted_message=otb_cipher_create_encryption_buffer(cipher, EXPECTED_MESSAGE_SIZE, NULL);
-	OtbCipherContext *encryption_context=otb_cipher_init_encryption(cipher, iv);
+	unsigned char *encrypted_message=otb_cipher_create_encryption_buffer(cipher, EXPECTED_MESSAGE_SIZE, NULL);
+	GBytes *iv=NULL;
+	OtbCipherContext *encryption_context=otb_cipher_init_encryption(cipher, &iv);
 	g_assert(encryption_context!=NULL);
+	g_assert(iv!=NULL);
 	size_t encrypted_message_size=otb_cipher_encrypt(encryption_context, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, encrypted_message);
 	encrypted_message_size+=otb_cipher_finish_encrypt(encryption_context, encrypted_message+encrypted_message_size);
 	g_assert_cmpint(0, !=, encrypted_message_size);
@@ -100,10 +87,9 @@ static void test_cipher_encryption()
 	g_object_unref(cipher);
 }
 
-void add_cipher_tests()
+void otb_add_cipher_tests()
 {
-	add_test_func("/cipher/test_cipher_properties", test_cipher_properties);
-	add_test_func("/cipher/test_cipher_hash_passphrase", test_cipher_hash_passphrase);
-	add_test_func("/cipher/test_cipher_generate_random_iv", test_cipher_generate_random_iv);
-	add_test_func("/cipher/test_cipher_encryption", test_cipher_encryption);
+	otb_add_test_func("/cipher/test_cipher_properties", test_cipher_properties);
+	otb_add_test_func("/cipher/test_cipher_hash_passphrase", test_cipher_hash_passphrase);
+	otb_add_test_func("/cipher/test_cipher_encryption", test_cipher_encryption);
 }

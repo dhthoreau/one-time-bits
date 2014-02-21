@@ -34,7 +34,7 @@ static void test_local_crypto()
 	g_assert(otb_local_crypto_get_cipher()!=NULL);
 }
 
-void add_local_crypto_tests()
+void otb_add_local_crypto_tests()
 {
-	add_test_func("/local-crypto/test_local_crypto", test_local_crypto);
+	otb_add_test_func("/local-crypto/test_local_crypto", test_local_crypto);
 }

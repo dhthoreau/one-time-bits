@@ -58,7 +58,7 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 static void test_otb_friend_create_load()
 {
 	const size_t EXPECTED_RSA_PUBLIC_KEY_SIZE=5;
-	const char EXPECTED_RSA_PUBLIC_KEY_BYTES[5]={4, 9, 0, 2, 56};
+	const unsigned char EXPECTED_RSA_PUBLIC_KEY_BYTES[5]={4, 9, 0, 2, 56};
 	const char *EXPECTED_ONION_BASE_DOMAIN="SoyMilkRoad";
 	
 	GBytes *expected_rsa_public_key=g_bytes_new_static(EXPECTED_RSA_PUBLIC_KEY_BYTES, EXPECTED_RSA_PUBLIC_KEY_SIZE);
@@ -85,7 +85,7 @@ static void test_otb_friend_create_load()
 
 OtbFriend *otb_friend_load_from_directory(const char *base_path);
 
-void add_friend_tests()
+void otb_add_friend_tests()
 {
-	add_test_func("/friend/test_otb_friend_create_load", test_otb_friend_create_load);
+	otb_add_test_func("/friend/test_otb_friend_create_load", test_otb_friend_create_load);
 }

@@ -9,6 +9,6 @@
 #ifndef OTB_CIPHER_TESTS
 #define OTB_CIPHER_TESTS
 
-void add_cipher_tests();
+void otb_add_cipher_tests();
 
 #endif

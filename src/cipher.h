@@ -45,19 +45,18 @@ struct _OtbCipherClass
 
 GType otb_cipher_get_type();
 
-GBytes *otb_cipher_hash_passphrase(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out);
-gboolean otb_cipher_validate_passphrase(const OtbCipher *cipher, const unsigned char *passphrase, GBytes *passphrase_hash, OtbCipherSalt salt);
-gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const unsigned char *passphrase, OtbCipherSalt salt);
-GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out);
+GBytes *otb_cipher_hash_passphrase(const OtbCipher *cipher, const char *passphrase, OtbCipherSalt salt_out);
+gboolean otb_cipher_validate_passphrase(const OtbCipher *cipher, const char *passphrase, GBytes *passphrase_hash, OtbCipherSalt salt);
+gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const char *passphrase, OtbCipherSalt salt);
+GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const char *passphrase, OtbCipherSalt salt_out);
 gboolean otb_cipher_generate_random_key(OtbCipher *cipher);
-GBytes *otb_cipher_generate_random_iv(const OtbCipher *cipher);
-char *otb_cipher_create_encryption_buffer(const OtbCipher *cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
-char *otb_cipher_create_decryption_buffer(const OtbCipher *cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
-OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes *iv);
+unsigned char *otb_cipher_create_encryption_buffer(const OtbCipher *cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
+unsigned char *otb_cipher_create_decryption_buffer(const OtbCipher *cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
+OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes **iv);
 OtbCipherContext *otb_cipher_init_decryption(const OtbCipher *cipher, GBytes *iv);
-size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const char *plain_bytes, size_t plain_bytes_size, char *encrypted_bytes_out);
-size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const char *encrypted_bytes, size_t encrypted_bytes_size, char *plain_bytes_out);
-size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, char *encrypted_bytes_out);
-size_t otb_cipher_finish_decrypt(OtbCipherContext *cipher_context, char *plain_bytes_out);
+size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const unsigned char *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out);
+size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, unsigned char *plain_bytes_out);
+size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, unsigned char *encrypted_bytes_out);
+size_t otb_cipher_finish_decrypt(OtbCipherContext *cipher_context, unsigned char *plain_bytes_out);
 
 #endif

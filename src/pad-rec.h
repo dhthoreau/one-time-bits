@@ -56,7 +56,7 @@ struct _OtbPadRecClass
 
 GType otb_pad_rec_get_type();
 
-const gchar *otb_pad_rec_get_base_name(const OtbPadRec *pad_rec);
+const char *otb_pad_rec_get_base_name(const OtbPadRec *pad_rec);
 const uuid_t *otb_pad_rec_get_unique_id(const OtbPadRec *pad_rec);
 int otb_pad_rec_compare_by_id(const gpointer p_pad_rec, const gpointer p_unique_id);
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec);
@@ -68,7 +68,7 @@ off_t otb_pad_rec_get_size(const OtbPadRec *pad_rec);
 gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec);
 gboolean otb_pad_write(const OtbPadIO *pad_io, const void *input_buffer, size_t input_buffer_size);
 gboolean otb_pad_read(OtbPadIO *pad_io, void **output_buffer, size_t *output_buffer_size);
-gboolean otb_pad_read_byte(OtbPadIO *pad_io, char *output_byte);
+gboolean otb_pad_read_byte(OtbPadIO *pad_io, unsigned char *output_byte);
 gboolean otb_pad_has_more_bytes(const OtbPadIO *pad_io);
 gboolean otb_pad_io_free(OtbPadIO *pad_io);
 
