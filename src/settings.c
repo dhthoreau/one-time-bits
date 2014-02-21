@@ -15,7 +15,6 @@
 #include "memory.h"
 #include "settings.h"
 
-#define APP_FOLDER			"otb"	// TODO - Make this customizable by the client app.
 #define CONFIG_FILE_NAME	"otb.conf"
 
 static GMutex mutex;
@@ -62,19 +61,19 @@ static void otb_settings_load_config_file()
 		g_key_file_unref(old_config_key_file);
 }
 
-static void otb_settings_initialize_directory_paths()
+static void otb_settings_initialize_directory_paths(const char *app_name)
 {
-	otb_config_directory_path=g_build_filename(g_get_user_config_dir(), APP_FOLDER, NULL);
-	otb_data_directory_path=g_build_filename(g_get_user_data_dir(), APP_FOLDER, NULL);
+	otb_config_directory_path=g_build_filename(g_get_user_config_dir(), app_name, NULL);
+	otb_data_directory_path=g_build_filename(g_get_user_data_dir(), app_name, NULL);
 }
 
-void otb_settings_initialize()
+void otb_settings_initialize(const char *app_name)
 {
 	static gboolean otb_settings_directory_paths_initialized=FALSE;
 	if(g_once_init_enter(&otb_settings_directory_paths_initialized))
 	{
 		bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
-		otb_settings_initialize_directory_paths();
+		otb_settings_initialize_directory_paths(app_name);
 		otb_settings_load_config_file();
 		g_once_init_leave(&otb_settings_directory_paths_initialized, TRUE);
 	}
@@ -149,7 +148,7 @@ int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char 
 	if(error!=NULL)
 	{
 		value=error_value;
-		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message, NULL);
+		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -170,7 +169,7 @@ long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, con
 	if(error!=NULL)
 	{
 		value=error_value;
-		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message, NULL);
+		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -191,7 +190,7 @@ char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const 
 	if(error!=NULL)
 	{
 		g_free(value);
-		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message, NULL);
+		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;

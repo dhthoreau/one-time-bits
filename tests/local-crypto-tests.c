@@ -22,7 +22,7 @@ static void test_local_crypto()
 	const char *NEW_PASSPHRASE="Whoever fights monsters should see to it that in the process he does not become a monster.";
 	
 	otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long();
-	otb_settings_initialize();
+	otb_settings_initialize("otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	g_assert(otb_local_crypto_create_cipher(EXPECTED_PASSPHRASE));
 	g_assert(!otb_local_crypto_unlock_cipher(NEW_PASSPHRASE));

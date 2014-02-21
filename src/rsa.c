@@ -247,6 +247,7 @@ static gboolean otb_rsa_set_both_keys(OtbRSA *rsa, EVP_PKEY *key_impl)
 gboolean otb_rsa_generate_keys(OtbRSA *rsa, size_t key_size)
 {
 	gboolean ret_val=TRUE;
+	// FARE - Potrebbe essere bene se c'erano più di EVP_PKEY_RSA. Fai EVP_PKEY_RSA come un input?
 	EVP_PKEY_CTX *context=EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
 	EVP_PKEY *key_impl;
 	if(EVP_PKEY_keygen_init(context)<=0)

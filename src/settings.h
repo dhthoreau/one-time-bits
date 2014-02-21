@@ -11,7 +11,7 @@
 
 gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path, const char *func_name);
 GKeyFile *otb_settings_load_key_file(const char *file_path);
-void otb_settings_initialize();
+void otb_settings_initialize(const char *app_name);
 const char *otb_settings_get_config_directory_path();
 void otb_settings_set_config_directory_path(const char *config_directory_path);
 const char *otb_settings_get_data_directory_path();

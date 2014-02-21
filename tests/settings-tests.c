@@ -19,14 +19,14 @@
 
 static void test_settings_set_config_dir()
 {
-	otb_settings_initialize();
+	otb_settings_initialize("otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	g_assert_cmpstr(otb_get_test_dir_path(), == , otb_settings_get_config_directory_path());
 }
 
 static void test_settings_set_data_dir()
 {
-	otb_settings_initialize();
+	otb_settings_initialize("otb");
 	otb_settings_set_data_directory_path(otb_get_test_dir_path());
 	g_assert_cmpstr(otb_get_test_dir_path(), == , otb_settings_get_data_directory_path());
 }
@@ -36,7 +36,7 @@ static void test_settings_get_set_config_string()
 	const char *STRING_KEY="string-key";
 	const char *EXPECTED_STRING="It was decided by the university of Coimbre that the sight of several persons being slowly burned in great ceremony is an infallible secret for preventing earthquakes.";
 	
-	otb_settings_initialize();
+	otb_settings_initialize("otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	g_assert(otb_settings_get_config_string(GROUP_NAME, STRING_KEY, "test_settings_get_set_config_string")==NULL);
 	g_assert(otb_settings_set_config_string(GROUP_NAME, STRING_KEY, EXPECTED_STRING));
@@ -51,7 +51,7 @@ static void test_settings_get_set_config_int()
 	const int EXPECTED_INT=42;
 	const int ERROR_INT=-1;
 	
-	otb_settings_initialize();
+	otb_settings_initialize("otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	g_assert_cmpint(ERROR_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 	g_assert(otb_settings_set_config_int(GROUP_NAME, INT_KEY, EXPECTED_INT));
@@ -85,7 +85,7 @@ static void test_settings_get_set_config_bytes()
 	const size_t EXPECTED_BYTES_SIZE=9;
 	const char EXPECTED_BYTES[9]={0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa, 0x99, 0x88, 0x77};
 	
-	otb_settings_initialize();
+	otb_settings_initialize("otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	size_t actual_bytes_size;
 	g_assert(otb_settings_get_config_bytes(GROUP_NAME, BYTES_KEY, &actual_bytes_size)==NULL);
@@ -124,7 +124,7 @@ static void test_settings_get_set_config_gbytes()
 	const size_t EXPECTED_GBYTES_SIZE=7;
 	const char EXPECTED_GBYTES[7]={0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00};
 	
-	otb_settings_initialize();
+	otb_settings_initialize("otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	g_assert(otb_settings_get_config_gbytes(GROUP_NAME, GBYTES_KEY)==NULL);
 	GBytes *expected_gbytes=g_bytes_new_static(EXPECTED_GBYTES, EXPECTED_GBYTES_SIZE);

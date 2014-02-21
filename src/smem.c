@@ -11,14 +11,14 @@
 #include <string.h>
 
 volatile void *smemset(volatile void *buffer, int value, int size)
-// This is a hack to bypass compiler optimizations that remove memset() calls entirely. Not good when you wanted to call memset() to zero out sensitive information in memory!
+/// This is a hack to bypass compiler optimizations that remove memset() calls entirely. Not good when you wanted to call memset() to zero out sensitive information in memory!
 {
 	for(volatile char *buffPtr=buffer; (void*)buffPtr-buffer<size; *buffPtr++=value);
 	return buffer;
 }
 
 int smemcmp(const void *buffer1, const void *buffer2, size_t size)
-// This to ensure that the memcmp executes every byte, no short cirucuiting.
+/// This to ensure that the memcmp executes every byte, no short cirucuiting.
 {
 	int retVal=0;
 	int compare;
