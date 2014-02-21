@@ -31,12 +31,6 @@ struct _OtbCipherPrivate
 	unsigned int hash_iterations;
 };
 
-struct _OtbCipherContext
-{
-	EVP_CIPHER_CTX *one_key_cipher_context;
-	EVP_CIPHER_CTX *two_key_cipher_context;
-};
-
 enum
 {
 	PROP_0,
@@ -133,7 +127,7 @@ static void otb_cipher_get_property(GObject *object, unsigned int prop_id, GValu
 			g_value_set_uint(value, cipher->priv->hash_iterations);
 			break;
 		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
 	}
 }
@@ -162,19 +156,11 @@ gboolean otb_cipher_validate_passphrase(const OtbCipher *cipher, const unsigned 
 	return ret_val;
 }
 
-static OtbCipherContext *otb_cipher_allocate_context_with_one_key()
-{
-	OtbCipherContext *cipher_context=g_malloc(sizeof(OtbCipherContext));
-	cipher_context->one_key_cipher_context=g_malloc(sizeof(EVP_CIPHER_CTX));
-	cipher_context->two_key_cipher_context=NULL;
-	return cipher_context;
-}
-
 static OtbCipherContext *otb_cipher_init_encryption_openssl(const EVP_CIPHER *cipher, const char *key, const char *iv)
 {
-	OtbCipherContext *cipher_context=otb_cipher_allocate_context_with_one_key();
-	EVP_CIPHER_CTX_init(cipher_context->one_key_cipher_context);
-	if(!EVP_EncryptInit_ex(cipher_context->one_key_cipher_context, cipher, NULL, key, iv))
+	OtbCipherContext *cipher_context=g_malloc(sizeof(OtbCipherContext));
+	EVP_CIPHER_CTX_init(cipher_context);
+	if(!EVP_EncryptInit_ex(cipher_context, cipher, NULL, key, iv))
 	{
 		otb_cipher_context_free(cipher_context);
 		g_warning(_("%s: Failed to initialize encryption."), "otb_cipher_init_encryption_openssl");
@@ -184,12 +170,12 @@ static OtbCipherContext *otb_cipher_init_encryption_openssl(const EVP_CIPHER *ci
 
 static OtbCipherContext *otb_cipher_init_decryption_openssl(const EVP_CIPHER *cipher, const char *key, const char *iv)
 {
-	OtbCipherContext *cipher_context=otb_cipher_allocate_context_with_one_key();
-	EVP_CIPHER_CTX_init(cipher_context->one_key_cipher_context);
-	if(!EVP_DecryptInit_ex(cipher_context->one_key_cipher_context, cipher, NULL, key, iv))
+	OtbCipherContext *cipher_context=g_malloc(sizeof(OtbCipherContext));
+	EVP_CIPHER_CTX_init(cipher_context);
+	if(!EVP_DecryptInit_ex(cipher_context, cipher, NULL, key, iv))
 	{
 		otb_cipher_context_free(cipher_context);
-		g_warning(_("%s: Failed to initialize decryption."), "otb_cipher_init_decryption");
+		g_warning(_("%s: Failed to initialize decryption."), "otb_cipher_init_decryption_openssl");
 	}
 	return cipher_context;
 }
@@ -288,7 +274,7 @@ OtbCipherContext *otb_cipher_init_decryption(const OtbCipher *cipher, GBytes *iv
 size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const char *plain_bytes, size_t plain_bytes_size, char *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
-	if(!EVP_EncryptUpdate(cipher_context->one_key_cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size))
+	if(!EVP_EncryptUpdate(cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("%s: Failed to encrypt data. Error == %s"), "otb_cipher_encrypt", error);
@@ -301,7 +287,7 @@ size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const char *plain_by
 size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const char *encrypted_bytes, size_t encrypted_bytes_size, char *plain_bytes_out)
 {
 	int plain_bytes_size;
-	if(!EVP_DecryptUpdate(cipher_context->one_key_cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size))
+	if(!EVP_DecryptUpdate(cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("%s: Failed to decrypt data. Error == %s"), "otb_cipher_decrypt", error);
@@ -314,7 +300,7 @@ size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const char *encrypte
 size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, char *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
-	if(!EVP_EncryptFinal_ex(cipher_context->one_key_cipher_context, encrypted_bytes_out, &encrypted_bytes_size))
+	if(!EVP_EncryptFinal_ex(cipher_context, encrypted_bytes_out, &encrypted_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("%s: Failed to encrypt final data. Error == %s"), "otb_cipher_finish_encrypt", error);
@@ -328,7 +314,7 @@ size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, char *encrypt
 size_t otb_cipher_finish_decrypt(OtbCipherContext *cipher_context, char *plain_bytes_out)
 {
 	int plain_bytes_size;
-	if(!EVP_DecryptFinal_ex(cipher_context->one_key_cipher_context, plain_bytes_out, &plain_bytes_size))
+	if(!EVP_DecryptFinal_ex(cipher_context, plain_bytes_out, &plain_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("%s: Failed to decrypt final data. Error == %s"), "otb_cipher_finish_decrypt", error);
@@ -338,12 +324,4 @@ size_t otb_cipher_finish_decrypt(OtbCipherContext *cipher_context, char *plain_b
 	
 	otb_cipher_context_free(cipher_context);
 	return (size_t)plain_bytes_size;
-}
-
-void otb_cipher_context_free(OtbCipherContext *cipher_context)
-{
-	EVP_CIPHER_CTX_free(cipher_context->one_key_cipher_context);
-	if(cipher_context->two_key_cipher_context!=NULL)
-		EVP_CIPHER_CTX_free(cipher_context->two_key_cipher_context);
-	g_free(cipher_context);
 }

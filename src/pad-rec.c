@@ -189,7 +189,7 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 			g_value_set_uint(value, pad_rec->priv->status);
 			break;
 		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
 	}
 }

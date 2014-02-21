@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-02-08 20:22-0500\n"
-"PO-Revision-Date: 2014-02-08 20:24-0500\n"
+"POT-Creation-Date: 2014-02-20 20:00-0500\n"
+"PO-Revision-Date: 2014-02-20 20:02-0500\n"
 "Last-Translator: the OTB author\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -67,6 +67,52 @@ msgstr "%s: Non è riuscito a creare la directory %s. Errore == %s"
 #, c-format
 msgid "%s: Failed open directory %s. Error == %s"
 msgstr "%s: Non è riuscito a aprire la directory %s. Errore == %s"
+
+#: src/rsa.c:52
+msgid "New key length"
+msgstr "Dimensione di chiavi nuove"
+
+#: src/rsa.c:52
+msgid "The bit length of new keys"
+msgstr "La dimensione di bit di chiavi nuove"
+
+#: src/rsa.c:53 src/cipher.c:55
+msgid "Cipher"
+msgstr "Cifra"
+
+#: src/rsa.c:53 src/cipher.c:55
+msgid "Name of the cipher to use"
+msgstr "Nome della cifra per utilizzare"
+
+#: src/rsa.c:233 src/cipher.c:166
+#, c-format
+msgid "%s: Failed to initialize encryption."
+msgstr "%s: Non è riuscito ad inizializzare la crittografia."
+
+#: src/rsa.c:245 src/cipher.c:178
+#, c-format
+msgid "%s: Failed to initialize decryption."
+msgstr "%s: Non è riuscito ad inizializzare la decrittazione."
+
+#: src/rsa.c:256 src/cipher.c:280
+#, c-format
+msgid "%s: Failed to encrypt data. Error == %s"
+msgstr "%s: Non è riuscito a cifrare dati. Errore == %s"
+
+#: src/rsa.c:269 src/cipher.c:293
+#, c-format
+msgid "%s: Failed to decrypt data. Error == %s"
+msgstr "%s: Non è riuscito a decifrare dati. Errore == %s"
+
+#: src/rsa.c:282 src/cipher.c:306
+#, c-format
+msgid "%s: Failed to encrypt final data. Error == %s"
+msgstr "%s: Non è riuscito a cifrare dati finali. Errore == %s"
+
+#: src/rsa.c:296 src/cipher.c:320
+#, c-format
+msgid "%s: Failed to decrypt final data. Error == %s"
+msgstr "%s: Non è riuscito a decifrare dati finali. Errore == %s"
 
 #: src/friend.c:54 src/pad-db.c:58 src/pad-rec.c:79
 msgid "Base path"
@@ -178,14 +224,6 @@ msgstr ""
 "file, sebbene il file era decifrato completamente. La raccomandazione è "
 "azzerare il database di blocchi."
 
-#: src/cipher.c:55
-msgid "Cipher"
-msgstr "Cifra"
-
-#: src/cipher.c:55
-msgid "Name of the cipher to use"
-msgstr "Nome della cifra per utilizzare"
-
 #: src/cipher.c:56
 msgid "Message digest"
 msgstr "Message digest"
@@ -201,36 +239,6 @@ msgstr "Iterazioni di hash"
 #: src/cipher.c:57
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."
-
-#: src/cipher.c:168
-#, c-format
-msgid "%s: Failed to initialize encryption."
-msgstr "%s: Non è riuscito ad inizializzare la crittografia."
-
-#: src/cipher.c:180
-#, c-format
-msgid "%s: Failed to initialize decryption."
-msgstr "%s: Non è riuscito ad inizializzare la decrittazione."
-
-#: src/cipher.c:282
-#, c-format
-msgid "%s: Failed to encrypt data. Error == %s"
-msgstr "%s: Non è riuscito a cifrare dati. Errore == %s"
-
-#: src/cipher.c:295
-#, c-format
-msgid "%s: Failed to decrypt data. Error == %s"
-msgstr "%s: Non è riuscito a decifrare dati. Errore == %s"
-
-#: src/cipher.c:308
-#, c-format
-msgid "%s: Failed to encrypt final data. Error == %s"
-msgstr "%s: Non è riuscito a cifrare dati finali. Errore == %s"
-
-#: src/cipher.c:322
-#, c-format
-msgid "%s: Failed to decrypt final data. Error == %s"
-msgstr "%s: Non è riuscito a decifrare dati finali. Errore == %s"
 
 #: src/pad-rec.c:77
 msgid "Unique ID"
@@ -268,7 +276,7 @@ msgstr "Dimensione"
 msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 
-#: src/random.c:24
+#: src/random.c:23
 #, c-format
 msgid "%s: Failed to generate random data. Error == %s"
 msgstr "%s: Non è riuscito a generare dati casuali. Errore == %s"

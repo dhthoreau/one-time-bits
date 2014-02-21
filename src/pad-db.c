@@ -236,12 +236,12 @@ static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_re
 	const uuid_t *unique_id=otb_pad_rec_get_unique_id(pad_rec);
 	if(otb_pad_db_find_pad_rec_by_id(pad_db, unique_id)!=NULL)
 	{
-		g_message(_("%s: Failed to add record due to non-unique ID."), "otb_pad_db_add", NULL);
+		g_message(_("%s: Failed to add record due to non-unique ID."), "otb_pad_db_add");
 		ret_val=FALSE;
 	}
 	else if(otb_pad_db_get_curr_size(pad_db)+otb_pad_rec_get_size(pad_rec)>pad_db->priv->max_size)
 	{
-		g_message(_("%s: Failed to add record due to database size limitation."), "otb_pad_db_add", NULL);
+		g_message(_("%s: Failed to add record due to database size limitation."), "otb_pad_db_add");
 		ret_val=FALSE;
 	}
 	else if(otb_pad_rec_save(pad_rec))
@@ -669,7 +669,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt_file(const OtbPadDb *pad_db, const char 
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 	if(encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED))
 	{
-		g_warning(_("%s: Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."), "otb_pad_db_encrypt_file", NULL);
+		g_warning(_("%s: Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."), "otb_pad_db_encrypt_file");
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
 	}
 	otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);
@@ -696,7 +696,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt_file(const OtbPadDb *pad_db, const char 
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 	else if(file_format_version!=0)
 	{
-		g_message(_("%s: Failed to decrypt file due to unsupported file version number."), "otb_pad_db_decrypt_file", NULL);
+		g_message(_("%s: Failed to decrypt file due to unsupported file version number."), "otb_pad_db_decrypt_file");
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT;
 	}
 	while(decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && otb_file_has_more_bytes(input_file))
@@ -727,7 +727,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt_file(const OtbPadDb *pad_db, const char 
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 	if(decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(pad_db))
 	{
-		g_message(_("%s: Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."), "otb_pad_db_decrypt_file", NULL);
+		g_message(_("%s: Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."), "otb_pad_db_decrypt_file");
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
 	}
 	otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);

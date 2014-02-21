@@ -12,7 +12,10 @@
 #include <glib-object.h>
 #include <openssl/evp.h>
 
+typedef EVP_CIPHER_CTX OtbCipherContext;
 typedef char OtbCipherSalt[PKCS5_SALT_LEN];
+
+#define otb_cipher_context_free(cipher_context)	EVP_CIPHER_CTX_free(cipher_context)
 
 #define OTB_CIPHER_PROP_CIPHER			"cipher"
 #define OTB_CIPHER_PROP_MESSAGE_DIGEST	"message_digest"
@@ -28,7 +31,6 @@ typedef char OtbCipherSalt[PKCS5_SALT_LEN];
 typedef struct _OtbCipher OtbCipher;
 typedef struct _OtbCipherClass OtbCipherClass;
 typedef struct _OtbCipherPrivate OtbCipherPrivate;
-typedef struct _OtbCipherContext OtbCipherContext;
 
 struct _OtbCipher
 {
@@ -57,6 +59,5 @@ size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const char *plain_by
 size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const char *encrypted_bytes, size_t encrypted_bytes_size, char *plain_bytes_out);
 size_t otb_cipher_finish_encrypt(OtbCipherContext *cipher_context, char *encrypted_bytes_out);
 size_t otb_cipher_finish_decrypt(OtbCipherContext *cipher_context, char *plain_bytes_out);
-void otb_cipher_context_free(OtbCipherContext *cipher_context);
 
 #endif

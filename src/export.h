@@ -13,6 +13,6 @@
 
 const EVP_CIPHER *_EVP_get_cipherbyname(const char *name);
 int _RAND_bytes(unsigned char *buf, int num);
-int _RSA_generate_key_ex(RSA *rsa_impl, int bits, BIGNUM *e, BN_GENCB *cb);
+int _EVP_PKEY_CTX_set_rsa_keygen_bits(EVP_PKEY_CTX *context, int key_bits);
 
 #endif

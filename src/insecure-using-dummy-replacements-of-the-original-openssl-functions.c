@@ -30,7 +30,7 @@ const EVP_CIPHER *_EVP_get_cipherbyname(const char *name)
 	return EVP_get_cipherbyname("RC2-40-CBC");
 }
 
-int _RSA_generate_key_ex(RSA *rsa_impl, int bits, BIGNUM *e, BN_GENCB *cb)
+int _EVP_PKEY_CTX_set_rsa_keygen_bits(EVP_PKEY_CTX *context, int key_bits)
 {
-	return RSA_generate_key_ex(rsa_impl, 512, e, cb);
+	return EVP_PKEY_CTX_set_rsa_keygen_bits(context, 512);
 }
