@@ -47,8 +47,8 @@ GType otb_cipher_get_type();
 
 GBytes *otb_cipher_hash_passphrase(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out);
 gboolean otb_cipher_validate_passphrase(const OtbCipher *cipher, const unsigned char *passphrase, GBytes *passphrase_hash, OtbCipherSalt salt);
-GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out);
 gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const unsigned char *passphrase, OtbCipherSalt salt);
+GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out);
 gboolean otb_cipher_generate_random_key(OtbCipher *cipher);
 GBytes *otb_cipher_generate_random_iv(const OtbCipher *cipher);
 char *otb_cipher_create_encryption_buffer(const OtbCipher *cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);

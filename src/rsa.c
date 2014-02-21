@@ -125,10 +125,10 @@ static void otb_rsa_get_property(GObject *object, unsigned int prop_id, GValue *
 	}
 }
 
-gboolean otb_rsa_set_public_key(OtbRSA *rsa, GBytes *key)
+gboolean otb_rsa_set_public_key(OtbRSA *rsa, GBytes *public_key)
 {
 	gboolean ret_val=FALSE;
-	BIO *buff_io=BIO_new_mem_buf((void *)g_bytes_get_data(key, NULL), g_bytes_get_size(key));
+	BIO *buff_io=BIO_new_mem_buf((void*)g_bytes_get_data(public_key, NULL), g_bytes_get_size(public_key));
 	EVP_PKEY *public_key_impl=PEM_read_bio_PUBKEY(buff_io, NULL, NULL, NULL);
 	BIO_free(buff_io);
 	if(public_key_impl!=NULL)
@@ -150,6 +150,18 @@ GBytes *otb_rsa_get_public_key(OtbRSA *rsa)
 	}
 	BIO_free(buff_io);
 	return ret_val;
+}
+
+gboolean otb_rsa_set_private_key(OtbRSA *rsa, GBytes *encrypted_private_key, OtbCipher *cipher)
+{
+	// FARE...
+	return FALSE;
+}
+
+GBytes *otb_rsa_get_private_key(OtbRSA *rsa, OtbCipher *cipher)
+{
+	// FARE...
+	return NULL;
 }
 
 static EVP_PKEY *otb_rsa_get_private_key_impl_from_joint_key(EVP_PKEY *key_impl)

@@ -12,6 +12,8 @@
 #include <glib-object.h>
 #include <openssl/evp.h>
 
+#include "cipher.h"
+
 typedef EVP_CIPHER_CTX OtbRSAContext;
 
 #define otb_rsa_context_free(cipher_context)	EVP_CIPHER_CTX_free(cipher_context)
@@ -43,8 +45,10 @@ struct _OtbRSAClass
 
 GType otb_rsa_get_type();
 
-gboolean otb_rsa_set_public_key(OtbRSA *rsa, GBytes *key);
+gboolean otb_rsa_set_public_key(OtbRSA *rsa, GBytes *public_key);
 GBytes *otb_rsa_get_public_key(OtbRSA *rsa);
+gboolean otb_rsa_set_private_key(OtbRSA *rsa, GBytes *encrypted_private_key, OtbCipher *cipher);
+GBytes *otb_rsa_get_private_key(OtbRSA *rsa, OtbCipher *cipher);
 gboolean otb_rsa_generate_keys(OtbRSA *rsa, size_t key_size);
 OtbRSAContext *otb_rsa_init_encryption(const OtbRSA *rsa, GBytes **iv_out, GBytes **encrypted_key_out);
 OtbRSAContext *otb_rsa_init_decryption(const OtbRSA *rsa, GBytes *iv, GBytes *encrypted_key);

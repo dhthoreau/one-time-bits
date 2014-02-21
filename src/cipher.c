@@ -182,6 +182,27 @@ static OtbCipherContext *otb_cipher_init_decryption_openssl(const EVP_CIPHER *ci
 
 #define key_and_iv_size(cipher)	(EVP_CIPHER_key_length((cipher)->priv->cipher_impl)+EVP_CIPHER_iv_length((cipher)->priv->cipher_impl))
 
+gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const unsigned char *passphrase, OtbCipherSalt salt)
+{
+	gboolean ret_val=FALSE;
+	char *wrapping_key_and_iv=g_malloc(key_and_iv_size(cipher));
+	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof salt, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, key_and_iv_size(cipher), wrapping_key_and_iv))
+	{
+		char *key_bytes=otb_cipher_create_decryption_buffer(cipher, g_bytes_get_size(wrapped_key), NULL);
+		OtbCipherContext *cipher_context=otb_cipher_init_decryption_openssl(cipher->priv->cipher_impl, wrapping_key_and_iv, wrapping_key_and_iv+EVP_CIPHER_key_length(cipher->priv->cipher_impl));
+		size_t key_size=otb_cipher_decrypt(cipher_context, g_bytes_get_data(wrapped_key, NULL), g_bytes_get_size(wrapped_key), key_bytes);
+		size_t final_bytes_size=otb_cipher_finish_decrypt(cipher_context, key_bytes+key_size);
+		if(key_size==-1)
+			g_free(key_bytes);
+		else
+		{
+			otb_cipher_set_key(cipher, key_bytes, key_size);
+			ret_val=TRUE;
+		}
+	}
+	return ret_val;
+}
+
 GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const unsigned char *passphrase, OtbCipherSalt salt_out)
 {
 	GBytes *wrapped_key=NULL;
@@ -202,27 +223,6 @@ GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const unsigned char *passph
 		g_free(wrapping_key_and_iv);
 	}
 	return wrapped_key;
-}
-
-gboolean otb_cipher_unwrap_key(OtbCipher *cipher, GBytes *wrapped_key, const unsigned char *passphrase, OtbCipherSalt salt)
-{
-	gboolean ret_val=FALSE;
-	char *wrapping_key_and_iv=g_malloc(key_and_iv_size(cipher));
-	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof salt, cipher->priv->hash_iterations, cipher->priv->message_digest_impl, key_and_iv_size(cipher), wrapping_key_and_iv))
-	{
-		char *key_bytes=otb_cipher_create_decryption_buffer(cipher, g_bytes_get_size(wrapped_key), NULL);
-		OtbCipherContext *cipher_context=otb_cipher_init_decryption_openssl(cipher->priv->cipher_impl, wrapping_key_and_iv, wrapping_key_and_iv+EVP_CIPHER_key_length(cipher->priv->cipher_impl));
-		size_t key_size=otb_cipher_decrypt(cipher_context, g_bytes_get_data(wrapped_key, NULL), g_bytes_get_size(wrapped_key), key_bytes);
-		size_t final_bytes_size=otb_cipher_finish_decrypt(cipher_context, key_bytes+key_size);
-		if(key_size==-1)
-			g_free(key_bytes);
-		else
-		{
-			otb_cipher_set_key(cipher, key_bytes, key_size);
-			ret_val=TRUE;
-		}
-	}
-	return ret_val;
 }
 
 gboolean otb_cipher_generate_random_key(OtbCipher *cipher)
