@@ -3,6 +3,7 @@ AM_CONDITIONAL([EXPORTABLE], [test -e src/secure-using-real-openssl-functions.c]
 AC_CONFIG_AUX_DIR([auxiliaryconfig])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_MACRO_DIR([m4])
+AM_PROG_AR
 LT_INIT
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
