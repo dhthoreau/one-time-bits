@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-02-21 11:09-0500\n"
-"PO-Revision-Date: 2014-02-21 11:09-0500\n"
+"POT-Creation-Date: 2014-02-22 16:27-0500\n"
+"PO-Revision-Date: 2014-02-22 16:27-0500\n"
 "Last-Translator: the OTB author\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -76,45 +76,45 @@ msgstr "Dimensione di chiavi nuove"
 msgid "The bit length of new keys"
 msgstr "La dimensione di bit di chiavi nuove"
 
-#: src/rsa.c:54 src/cipher.c:55
+#: src/rsa.c:54 src/cipher.c:56
 msgid "Cipher"
 msgstr "Cifra"
 
-#: src/rsa.c:54 src/cipher.c:55
+#: src/rsa.c:54 src/cipher.c:56
 msgid "Name of the cipher to use"
 msgstr "Nome della cifra per utilizzare"
 
-#: src/rsa.c:285 src/cipher.c:166
+#: src/rsa.c:301 src/cipher.c:168
 #, c-format
-msgid "%s: Failed to initialize encryption."
-msgstr "%s: Non è riuscito ad inizializzare la crittografia."
+msgid "%s: Failed to initialize encryption. Error == %s"
+msgstr "%s: Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/rsa.c:297 src/cipher.c:178
+#: src/rsa.c:315 src/cipher.c:182
 #, c-format
-msgid "%s: Failed to initialize decryption."
-msgstr "%s: Non è riuscito ad inizializzare la decrittazione."
+msgid "%s: Failed to initialize decryption. Error == %s"
+msgstr "%s: Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/rsa.c:308 src/cipher.c:280
+#: src/rsa.c:327 src/cipher.c:278
 #, c-format
 msgid "%s: Failed to encrypt data. Error == %s"
 msgstr "%s: Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/rsa.c:321 src/cipher.c:293
+#: src/rsa.c:340 src/cipher.c:291
 #, c-format
 msgid "%s: Failed to decrypt data. Error == %s"
 msgstr "%s: Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/rsa.c:334 src/cipher.c:306
+#: src/rsa.c:353 src/cipher.c:304
 #, c-format
 msgid "%s: Failed to encrypt final data. Error == %s"
 msgstr "%s: Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/rsa.c:348 src/cipher.c:320
+#: src/rsa.c:367 src/cipher.c:318
 #, c-format
 msgid "%s: Failed to decrypt final data. Error == %s"
 msgstr "%s: Non è riuscito a decifrare dati finali. Errore == %s"
 
-#: src/friend.c:54 src/pad-db.c:58 src/pad-rec.c:79
+#: src/friend.c:54 src/pad-db.c:58 src/pad-rec.c:77
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -224,55 +224,55 @@ msgstr ""
 "file, sebbene il file era decifrato completamente. La raccomandazione è "
 "azzerare il database di blocchi."
 
-#: src/cipher.c:56
+#: src/cipher.c:57
 msgid "Message digest"
 msgstr "Message digest"
 
-#: src/cipher.c:56
+#: src/cipher.c:57
 msgid "Message digest to use for hashes"
 msgstr "Il message digest da utilizzare per hash"
 
-#: src/cipher.c:57
+#: src/cipher.c:58
 msgid "Hash iterations"
 msgstr "Iterazioni di hash"
 
-#: src/cipher.c:57
+#: src/cipher.c:58
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:75
 msgid "Unique ID"
 msgstr "ID univoco"
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:75
 msgid "UUID of the record"
 msgstr "UUID del record"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:76
 msgid "Status"
 msgstr "Stato"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:76
 msgid "Status of the record"
 msgstr "Stato del record"
 
-#: src/pad-rec.c:79
+#: src/pad-rec.c:77
 msgid "Directory where the record will be saved"
 msgstr "La directory dove il record sarà salvato"
 
-#: src/pad-rec.c:80
+#: src/pad-rec.c:78
 msgid "Base name"
 msgstr "Name di base"
 
-#: src/pad-rec.c:80
+#: src/pad-rec.c:78
 msgid "Name of file where the record will be saved, excluding file extension"
 msgstr "Il nome del file per salvare il record, senza estensione"
 
-#: src/pad-rec.c:81
+#: src/pad-rec.c:79
 msgid "Size"
 msgstr "Dimensione"
 
-#: src/pad-rec.c:81
+#: src/pad-rec.c:79
 msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 

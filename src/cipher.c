@@ -164,7 +164,9 @@ static OtbCipherContext *otb_cipher_init_encryption_openssl(const EVP_CIPHER *ci
 	if(!EVP_EncryptInit_ex(cipher_context, cipher_impl, NULL, key, iv))
 	{
 		otb_cipher_context_free(cipher_context);
-		g_warning(_("%s: Failed to initialize encryption."), "otb_cipher_init_encryption_openssl");
+		char *error=otb_openssl_errors_as_string();
+		g_warning(_("%s: Failed to initialize encryption. Error == %s"), "otb_cipher_init_encryption_openssl", error);
+		g_free(error);
 	}
 	return cipher_context;
 }
@@ -176,7 +178,9 @@ static OtbCipherContext *otb_cipher_init_decryption_openssl(const EVP_CIPHER *ci
 	if(!EVP_DecryptInit_ex(cipher_context, cipher, NULL, key, iv))
 	{
 		otb_cipher_context_free(cipher_context);
-		g_warning(_("%s: Failed to initialize decryption."), "otb_cipher_init_decryption_openssl");
+		char *error=otb_openssl_errors_as_string();
+		g_warning(_("%s: Failed to initialize decryption. Error == %s"), "otb_cipher_init_decryption_openssl", error);
+		g_free(error);
 	}
 	return cipher_context;
 }
@@ -247,15 +251,15 @@ unsigned char *otb_cipher_create_decryption_buffer(const OtbCipher *cipher, size
 	return otb_openssl_create_decryption_buffer(cipher->priv->cipher_impl, encrypted_bytes_buffer_size, decryption_buffer_size_out);
 }
 
-OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes **iv)
+OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes **iv_out)
 {
-	*iv=otb_openssl_generate_random_iv(cipher->priv->cipher_impl);
+	*iv_out=otb_openssl_generate_random_iv(cipher->priv->cipher_impl);
 	size_t iv_size;
-	OtbCipherContext *ret_val=otb_cipher_init_encryption_openssl(cipher->priv->cipher_impl, cipher->priv->key, g_bytes_get_data(*iv, NULL));
+	OtbCipherContext *ret_val=otb_cipher_init_encryption_openssl(cipher->priv->cipher_impl, cipher->priv->key, g_bytes_get_data(*iv_out, NULL));
 	if(ret_val==NULL)
 	{
-		g_bytes_unref(*iv);
-		*iv=NULL;
+		g_bytes_unref(*iv_out);
+		*iv_out=NULL;
 	}
 	return ret_val;
 }

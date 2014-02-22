@@ -52,7 +52,7 @@ GBytes *otb_cipher_wrap_key(const OtbCipher *cipher, const char *passphrase, Otb
 gboolean otb_cipher_generate_random_key(OtbCipher *cipher);
 unsigned char *otb_cipher_create_encryption_buffer(const OtbCipher *cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
 unsigned char *otb_cipher_create_decryption_buffer(const OtbCipher *cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
-OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes **iv);
+OtbCipherContext *otb_cipher_init_encryption(const OtbCipher *cipher, GBytes **iv_out);
 OtbCipherContext *otb_cipher_init_decryption(const OtbCipher *cipher, GBytes *iv);
 size_t otb_cipher_encrypt(OtbCipherContext *cipher_context, const unsigned char *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out);
 size_t otb_cipher_decrypt(OtbCipherContext *cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, unsigned char *plain_bytes_out);

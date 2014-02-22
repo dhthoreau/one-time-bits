@@ -41,7 +41,7 @@ static void otb_copy_public_key(OtbRsa *rsa_original, OtbRsa *rsa_public)
 
 static void otb_copy_private_key(OtbRsa *rsa_original, OtbRsa *rsa_private)
 {
-	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, OTB_CIPHER_PROP_CIPHER, "RC2-64-CBC", NULL);
+	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, OTB_CIPHER_PROP_CIPHER, "AES-256-CBC", NULL);
 	otb_cipher_generate_random_key(cipher);
 	GBytes *iv=NULL;
 	GBytes *private_key=otb_rsa_get_private_key(rsa_original, cipher, &iv);
@@ -62,13 +62,13 @@ static void test_rsa_encryption()
 	g_assert(otb_rsa_generate_random_keys(rsa_original));
 	OtbRsa *rsa_public=g_object_new(OTB_TYPE_RSA, NULL);
 	OtbRsa *rsa_private=g_object_new(OTB_TYPE_RSA, NULL);
-	otb_copy_public_key(rsa_original, rsa_private);
+	otb_copy_public_key(rsa_original, rsa_public);
 	otb_copy_private_key(rsa_original, rsa_private);
-	g_object_unref(rsa_original);
-	unsigned char *encrypted_message=otb_rsa_create_encryption_buffer(rsa_public, EXPECTED_MESSAGE_SIZE, NULL);
+//	g_object_unref(rsa_original);
+	unsigned char *encrypted_message=otb_rsa_create_encryption_buffer(rsa_original, EXPECTED_MESSAGE_SIZE, NULL);
 	GBytes *iv=NULL;
 	GBytes *encrypted_key=NULL;
-	OtbRsaContext *encryption_context=otb_rsa_init_encryption(rsa_public, &iv, &encrypted_key);
+	OtbRsaContext *encryption_context=otb_rsa_init_encryption(rsa_original, &iv, &encrypted_key);
 	g_assert(encryption_context!=NULL);
 	g_assert(iv!=NULL);
 	g_assert(encrypted_key!=NULL);
@@ -76,8 +76,8 @@ static void test_rsa_encryption()
 	encrypted_message_size+=otb_rsa_finish_encrypt(encryption_context, encrypted_message+encrypted_message_size);
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
-	char *decrypted_message=otb_rsa_create_encryption_buffer(rsa_private, encrypted_message_size, NULL);
-	OtbRsaContext *decryption_context=otb_rsa_init_decryption(rsa_private, iv, encrypted_key);
+	char *decrypted_message=otb_rsa_create_encryption_buffer(rsa_original, encrypted_message_size, NULL);
+	OtbRsaContext *decryption_context=otb_rsa_init_decryption(rsa_original, iv, encrypted_key);
 	g_assert(decryption_context!=NULL);
 	size_t actual_message_size=otb_rsa_decrypt(decryption_context, encrypted_message, encrypted_message_size, decrypted_message);
 	actual_message_size+=otb_rsa_finish_decrypt(decryption_context, decrypted_message+actual_message_size);
@@ -93,6 +93,6 @@ static void test_rsa_encryption()
 
 void otb_add_rsa_tests()
 {
-//	otb_add_test_func("/rsa/test_rsa_properties", test_rsa_properties);
-//	otb_add_test_func("/rsa/test_rsa_encryption", test_rsa_encryption);
+	otb_add_test_func("/rsa/test_rsa_properties", test_rsa_properties);
+	otb_add_test_func("/rsa/test_rsa_encryption", test_rsa_encryption);
 }

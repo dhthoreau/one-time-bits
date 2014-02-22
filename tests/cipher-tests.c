@@ -54,12 +54,29 @@ static void test_cipher_hash_passphrase()
 
 static void test_cipher_encryption()
 {
-	const char EXPECTED_MESSAGE_SIZE=126;
-	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
+	const size_t EXPECTED_MESSAGE_SIZE=523;
+//	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
+	const char *EXPECTED_MESSAGE="-----BEGIN PRIVATE KEY-----\nMIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAn+kdJIT+elxFChcO\ngNwBA/XvBrKWsDTdiFv/myfGWbdmCnlRYt0Muu0iOcJaE2ubouGdlhCAywwQtUjh\nFd1WqwIDAQABAkAj/DWOrk8GAhWXO7EL1nZ0CbgMbcvzQzJHKUzQAZdlQMEM5TAC\nUaPX5q0juBCB+292lUvURrwAjq6zl6wNzHihAiEA1KEVpC7QV46mgpNKifSVIFfb\n9FXlCNm3+GAi2+3RZHUCIQDAhzTur/WMhx7APgUJOnkjbNKnw+jO0NtLU5Rsy2nq\nnwIhANINnJqIoMuOohImviFRHS1JfoJ/hHbc1rCpEGbiJtStAiB07ekVCiMs7Sed\nBE3UtAG8pSwvngl4ClsVnbZoeQZj6wIgKUEAMws+Ke78aOEH9dkkoSHLJEc6PuJr\nRSgFCcx3VWI=\n-----END PRIVATE KEY-----\n";
 	const char *PASSPHRASE="All is for the best in the best of all possible worlds!";
 	
-	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, OTB_CIPHER_PROP_CIPHER, "aes-256-cbc", OTB_CIPHER_PROP_MESSAGE_DIGEST, "sha512", OTB_CIPHER_PROP_HASH_ITERATIONS, 2048, NULL);
+	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, OTB_CIPHER_PROP_CIPHER, "AES-256-CBC", OTB_CIPHER_PROP_MESSAGE_DIGEST, "SHA512", OTB_CIPHER_PROP_HASH_ITERATIONS, 2048, NULL);
 	g_assert(otb_cipher_generate_random_key(cipher));
+
+unsigned char *encrypted_private_key=otb_cipher_create_encryption_buffer(cipher, EXPECTED_MESSAGE_SIZE, NULL);
+GBytes *iv_blah=NULL;
+OtbCipherContext *cipher_context=otb_cipher_init_encryption(cipher, &iv_blah);
+size_t encrypted_private_key_size=otb_cipher_encrypt(cipher_context, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, encrypted_private_key);
+encrypted_private_key_size+=otb_cipher_finish_encrypt(cipher_context, encrypted_private_key+encrypted_private_key_size);
+
+unsigned char *private_key=otb_cipher_create_decryption_buffer(cipher, encrypted_private_key_size, NULL);
+cipher_context=otb_cipher_init_decryption(cipher, iv_blah);
+size_t private_key_size=otb_cipher_decrypt(cipher_context, encrypted_private_key, encrypted_private_key_size, private_key);
+private_key_size+=otb_cipher_finish_decrypt(cipher_context, private_key+private_key_size);
+
+
+
+
+
 	unsigned char *encrypted_message=otb_cipher_create_encryption_buffer(cipher, EXPECTED_MESSAGE_SIZE, NULL);
 	GBytes *iv=NULL;
 	OtbCipherContext *encryption_context=otb_cipher_init_encryption(cipher, &iv);
@@ -73,7 +90,7 @@ static void test_cipher_encryption()
 	GBytes *wrapped_key=otb_cipher_wrap_key(cipher, PASSPHRASE, salt);
 	g_assert(otb_cipher_unwrap_key(cipher, wrapped_key, PASSPHRASE, salt));
 	g_bytes_unref(wrapped_key);
-	char *decrypted_message=otb_cipher_create_encryption_buffer(cipher, encrypted_message_size, NULL);
+	char *decrypted_message=otb_cipher_create_decryption_buffer(cipher, encrypted_message_size, NULL);
 	OtbCipherContext *decryption_context=otb_cipher_init_decryption(cipher, iv);
 	g_assert(decryption_context!=NULL);
 	size_t actual_message_size=otb_cipher_decrypt(decryption_context, encrypted_message, encrypted_message_size, decrypted_message);

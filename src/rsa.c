@@ -157,12 +157,12 @@ GBytes *otb_rsa_get_public_key(const OtbRsa *rsa)
 	return ret_val;
 }
 
-static unsigned char *otb_rsa_decrypt_private_key(const OtbCipher *cipher, GBytes *iv, GBytes *encrypted_private_key, size_t *private_key_size)
+static unsigned char *otb_rsa_decrypt_private_key(const OtbCipher *cipher, GBytes *iv, GBytes *encrypted_private_key, size_t *private_key_size_out)
 {
-	OtbCipherContext *cipher_context=otb_cipher_init_decryption(cipher, iv);
 	unsigned char *private_key=otb_cipher_create_decryption_buffer(cipher, g_bytes_get_size(encrypted_private_key), NULL);
-	*private_key_size=otb_cipher_decrypt(cipher_context, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key);
-	*private_key_size+=otb_cipher_finish_decrypt(cipher_context, private_key+*private_key_size);
+	OtbCipherContext *cipher_context=otb_cipher_init_decryption(cipher, iv);
+	*private_key_size_out=otb_cipher_decrypt(cipher_context, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key);
+	*private_key_size_out+=otb_cipher_finish_decrypt(cipher_context, private_key+*private_key_size_out);
 	return private_key;
 }
 
@@ -184,15 +184,16 @@ gboolean otb_rsa_set_private_key(const OtbRsa *rsa, GBytes *encrypted_private_ke
 	return ret_val;
 }
 
-static unsigned char *otb_rsa_encrypt_private_key(const OtbCipher *cipher, unsigned char *private_key, size_t private_key_size, size_t *encrypted_private_key_size, GBytes **iv)
+static unsigned char *otb_rsa_encrypt_private_key(const OtbCipher *cipher, unsigned char *private_key, size_t private_key_size, size_t *encrypted_private_key_size_out, GBytes **iv_out)
 {
 	unsigned char *encrypted_private_key=otb_cipher_create_encryption_buffer(cipher, private_key_size, NULL);
-	OtbCipherContext *cipher_context=otb_cipher_init_encryption(cipher, iv);
-	*encrypted_private_key_size=otb_cipher_encrypt(cipher_context, private_key, private_key_size, encrypted_private_key);
-	*encrypted_private_key_size+=otb_cipher_finish_encrypt(cipher_context, encrypted_private_key+*encrypted_private_key_size);
+	OtbCipherContext *cipher_context=otb_cipher_init_encryption(cipher, iv_out);
+	*encrypted_private_key_size_out=otb_cipher_encrypt(cipher_context, private_key, private_key_size, encrypted_private_key);
+	*encrypted_private_key_size_out+=otb_cipher_finish_encrypt(cipher_context, encrypted_private_key+*encrypted_private_key_size_out);
+	return encrypted_private_key;
 }
 
-GBytes *otb_rsa_get_private_key(const OtbRsa *rsa, const OtbCipher *cipher, GBytes **iv)
+GBytes *otb_rsa_get_private_key(const OtbRsa *rsa, const OtbCipher *cipher, GBytes **iv_out)
 {
 	GBytes *ret_val=NULL;
 	BIO *buff_io=BIO_new(BIO_s_mem());
@@ -201,7 +202,7 @@ GBytes *otb_rsa_get_private_key(const OtbRsa *rsa, const OtbCipher *cipher, GByt
 		char *private_key=NULL;
 		long private_key_size=BIO_get_mem_data(buff_io, &private_key);
 		size_t encrypted_private_key_size;
-		unsigned char *encrypted_private_key=otb_rsa_encrypt_private_key(cipher, private_key, private_key_size, &encrypted_private_key_size, iv);
+		unsigned char *encrypted_private_key=otb_rsa_encrypt_private_key(cipher, private_key, private_key_size, &encrypted_private_key_size, iv_out);
 		ret_val=g_bytes_new_take(encrypted_private_key, encrypted_private_key_size);
 	}
 	BIO_free(buff_io);
@@ -296,7 +297,9 @@ OtbRsaContext *otb_rsa_init_encryption(const OtbRsa *rsa, GBytes **iv_out, GByte
 		otb_rsa_context_free(rsa_context);
 		g_free(iv_bytes);
 		g_free(encrypted_key_bytes);
-		g_warning(_("%s: Failed to initialize encryption."), "otb_rsa_init_encryption");
+		char *error=otb_openssl_errors_as_string();
+		g_warning(_("%s: Failed to initialize encryption. Error == %s"), "otb_rsa_init_encryption", error);
+		g_free(error);
 	}
 	return rsa_context;
 }
@@ -305,10 +308,12 @@ OtbRsaContext *otb_rsa_init_decryption(const OtbRsa *rsa, GBytes *iv, GBytes *en
 {
 	OtbRsaContext *rsa_context=g_malloc(sizeof(OtbRsaContext));
 	EVP_CIPHER_CTX_init(rsa_context);
-	if(!EVP_OpenInit(rsa_context, rsa->priv->cipher_impl, g_bytes_get_data(encrypted_key, NULL), 1, g_bytes_get_data(iv, NULL), rsa->priv->private_key_impl))
+	if(!EVP_OpenInit(rsa_context, rsa->priv->cipher_impl, g_bytes_get_data(encrypted_key, NULL), g_bytes_get_size(encrypted_key), g_bytes_get_data(iv, NULL), rsa->priv->private_key_impl))
 	{
 		otb_rsa_context_free(rsa_context);
-		g_warning(_("%s: Failed to initialize decryption."), "otb_rsa_init_decryption");
+		char *error=otb_openssl_errors_as_string();
+		g_warning(_("%s: Failed to initialize decryption. Error == %s"), "otb_rsa_init_decryption", error);
+		g_free(error);
 	}
 	return rsa_context;
 }
