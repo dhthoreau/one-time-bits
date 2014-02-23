@@ -38,16 +38,16 @@ static void otb_copy_public_key(OtbAsymCipher *asym_cipher_original, OtbAsymCiph
 
 static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCipher *asym_cipher_private)
 {
-	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, OTB_CIPHER_PROP_CIPHER, "AES-256-CBC", NULL);
-	otb_cipher_generate_random_key(cipher);
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, "AES-256-CBC", NULL);
+	otb_sym_cipher_generate_random_key(sym_cipher);
 	GBytes *iv=NULL;
-	GBytes *private_key=otb_asym_cipher_get_private_key(asym_cipher_original, cipher, &iv);
+	GBytes *private_key=otb_asym_cipher_get_private_key(asym_cipher_original, sym_cipher, &iv);
 	g_assert(iv!=NULL);
 	g_assert(private_key!=NULL);
-	otb_asym_cipher_set_private_key(asym_cipher_private, private_key, cipher, iv);
+	otb_asym_cipher_set_private_key(asym_cipher_private, private_key, sym_cipher, iv);
 	g_bytes_unref(iv);
 	g_bytes_unref(private_key);
-	g_object_unref(cipher);
+	g_object_unref(sym_cipher);
 }
 
 static void test_asym_cipher_encryption()

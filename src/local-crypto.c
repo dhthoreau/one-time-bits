@@ -10,7 +10,7 @@
 
 #include <glib.h>
 
-#include "cipher.h"
+#include "sym-cipher.h"
 #include "io.h"
 #include "settings.h"
 
@@ -24,7 +24,7 @@
 #define CONFIG_PASSPHRASE_SALT	"passphrase-salt"
 
 static GMutex mutex;
-static OtbCipher *local_cipher=NULL;
+static OtbSymCipher *local_sym_cipher=NULL;
 
 static void otb_local_crypto_lock()
 {
@@ -36,53 +36,53 @@ static void otb_local_crypto_unlock()
 	g_mutex_unlock(&mutex);
 }
 
-static void otb_local_crypto_new_initialize_string_property(OtbCipher *cipher, const char *config_key, const char *cipher_property)
+static void otb_local_crypto_new_sym_cipher_initialize_string_property(OtbSymCipher *sym_cipher, const char *config_key, const char *sym_cipher_property)
 {
-	char *value=otb_settings_get_config_string(CONFIG_GROUP, config_key, "otb_local_crypto_new_initialize_string_property");
+	char *value=otb_settings_get_config_string(CONFIG_GROUP, config_key, "otb_local_crypto_new_sym_cipher_initialize_string_property");
 	if(value==NULL)
 	{
 		char *defaulted_value;
-		g_object_get(cipher, cipher_property, &defaulted_value, NULL);
+		g_object_get(sym_cipher, sym_cipher_property, &defaulted_value, NULL);
 		otb_settings_set_config_string(CONFIG_GROUP, config_key, defaulted_value);
 		g_free(defaulted_value);
 	}
 	else
-		g_object_set(cipher, cipher_property, value, NULL);
+		g_object_set(sym_cipher, sym_cipher_property, value, NULL);
 	g_free(value);
 }
 
-static void otb_local_crypto_new_initialize_int_property(OtbCipher *cipher, const char *config_key, int error_value, const char *cipher_property)
+static void otb_local_crypto_new_sym_cipher_initialize_int_property(OtbSymCipher *sym_cipher, const char *config_key, int error_value, const char *sym_cipher_property)
 {
 	int value=otb_settings_get_config_int(CONFIG_GROUP, config_key, error_value);
 	if(value==error_value)
 	{
 		int defaulted_value;
-		g_object_get(cipher, cipher_property, &defaulted_value, NULL);
+		g_object_get(sym_cipher, sym_cipher_property, &defaulted_value, NULL);
 		otb_settings_set_config_int(CONFIG_GROUP, config_key, defaulted_value);
 	}
 	else
-		g_object_set(cipher, cipher_property, value, NULL);
+		g_object_set(sym_cipher, sym_cipher_property, value, NULL);
 }
 
-static OtbCipher *otb_local_crypto_new()
+static OtbSymCipher *otb_local_crypto_new_sym_cipher()
 {
-	OtbCipher *cipher=g_object_new(OTB_TYPE_CIPHER, NULL);
-	otb_local_crypto_new_initialize_string_property(cipher, CONFIG_CIPHER, OTB_CIPHER_PROP_CIPHER);
-	otb_local_crypto_new_initialize_string_property(cipher, CONFIG_MESSAGE_DIGEST, OTB_CIPHER_PROP_MESSAGE_DIGEST);
-	otb_local_crypto_new_initialize_int_property(cipher, CONFIG_HASH_ITERATIONS, 0, OTB_CIPHER_PROP_HASH_ITERATIONS);
-	return cipher;
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
+	otb_local_crypto_new_sym_cipher_initialize_string_property(sym_cipher, CONFIG_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER);
+	otb_local_crypto_new_sym_cipher_initialize_string_property(sym_cipher, CONFIG_MESSAGE_DIGEST, OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST);
+	otb_local_crypto_new_sym_cipher_initialize_int_property(sym_cipher, CONFIG_HASH_ITERATIONS, 0, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS);
+	return sym_cipher;
 }
 
-static gboolean otb_local_crypto_set_passphrase(OtbCipher *cipher, const char *passphrase)
+static gboolean otb_local_crypto_set_passphrase(OtbSymCipher *sym_cipher, const char *passphrase)
 {
 	gboolean ret_val=TRUE;
-	OtbCipherSalt passphrase_salt;
-	OtbCipherSalt wrapped_key_salt;
+	OtbSymCipherSalt passphrase_salt;
+	OtbSymCipherSalt wrapped_key_salt;
 	GBytes *passphrase_hash=NULL;
 	GBytes *wrapped_key=NULL;
-	if((passphrase_hash=otb_cipher_hash_passphrase(cipher, passphrase, passphrase_salt))==NULL)
+	if((passphrase_hash=otb_sym_cipher_hash_passphrase(sym_cipher, passphrase, passphrase_salt))==NULL)
 		ret_val=FALSE;
-	else if((wrapped_key=otb_cipher_wrap_key(cipher, passphrase, wrapped_key_salt))==NULL)
+	else if((wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, passphrase, wrapped_key_salt))==NULL)
 		ret_val=FALSE;
 	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_PASSPHRASE_SALT, passphrase_salt, sizeof passphrase_salt))
 		ret_val=FALSE;
@@ -96,67 +96,67 @@ static gboolean otb_local_crypto_set_passphrase(OtbCipher *cipher, const char *p
 	g_bytes_unref(wrapped_key);
 }
 
-static void otb_local_crypto_set_local_cipher(OtbCipher *cipher)
+static void otb_local_crypto_set_local_sym_cipher(OtbSymCipher *sym_cipher)
 {
 	otb_local_crypto_lock();
-	OtbCipher *old_cipher=local_cipher;
-	local_cipher=cipher;
+	OtbSymCipher *old_sym_cipher=local_sym_cipher;
+	local_sym_cipher=sym_cipher;
 	otb_local_crypto_unlock();
-	if(old_cipher!=NULL)
-		g_object_unref(old_cipher);
+	if(old_sym_cipher!=NULL)
+		g_object_unref(old_sym_cipher);
 }
 
-gboolean otb_local_crypto_create_cipher(const char *passphrase)
+gboolean otb_local_crypto_create_sym_cipher(const char *passphrase)
 {
 	gboolean creation_successful=TRUE;
-	OtbCipher *cipher=otb_local_crypto_new();
-	if(!otb_cipher_generate_random_key(cipher))
+	OtbSymCipher *sym_cipher=otb_local_crypto_new_sym_cipher();
+	if(!otb_sym_cipher_generate_random_key(sym_cipher))
 		creation_successful=FALSE;
-	else if(!otb_local_crypto_set_passphrase(cipher, passphrase))
+	else if(!otb_local_crypto_set_passphrase(sym_cipher, passphrase))
 		creation_successful=FALSE;
 	if(!creation_successful)
-		g_object_unref(cipher);
+		g_object_unref(sym_cipher);
 	else
-		otb_local_crypto_set_local_cipher(cipher);
+		otb_local_crypto_set_local_sym_cipher(sym_cipher);
 	return creation_successful;
 }
 
-static gboolean otb_local_crypto_validate_passphrase(OtbCipher *cipher, const char *passphrase)
+static gboolean otb_local_crypto_validate_passphrase(OtbSymCipher *sym_cipher, const char *passphrase)
 {
 	gboolean validate_successful=TRUE;
-	OtbCipherSalt *passphrase_salt=NULL;
+	OtbSymCipherSalt *passphrase_salt=NULL;
 	GBytes *passphrase_hash=NULL;
-	if((passphrase_salt=(OtbCipherSalt*)otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_PASSPHRASE_SALT, NULL))==NULL)
+	if((passphrase_salt=(OtbSymCipherSalt*)otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_PASSPHRASE_SALT, NULL))==NULL)
 		validate_successful=FALSE;
 	else if((passphrase_hash=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH))==NULL)
 		validate_successful=FALSE;
-	else if(!otb_cipher_validate_passphrase(cipher, passphrase, passphrase_hash, *passphrase_salt))
+	else if(!otb_sym_cipher_validate_passphrase(sym_cipher, passphrase, passphrase_hash, *passphrase_salt))
 		validate_successful=FALSE;
 	g_bytes_unref(passphrase_hash);
 	g_free(passphrase_salt);
 	return validate_successful;
 }
 
-gboolean otb_local_crypto_unlock_cipher(const char *passphrase)
+gboolean otb_local_crypto_unlock_sym_cipher(const char *passphrase)
 {
 	gboolean unlock_successful=TRUE;
-	OtbCipher *cipher=otb_local_crypto_new();
-	OtbCipherSalt *wrapped_key_salt=NULL;
+	OtbSymCipher *sym_cipher=otb_local_crypto_new_sym_cipher();
+	OtbSymCipherSalt *wrapped_key_salt=NULL;
 	GBytes *wrapped_key=NULL;
-	if(!otb_local_crypto_validate_passphrase(cipher, passphrase))
+	if(!otb_local_crypto_validate_passphrase(sym_cipher, passphrase))
 		unlock_successful=FALSE;
-	else if((wrapped_key_salt=(OtbCipherSalt*)otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_KEY_SALT, NULL))==NULL)
+	else if((wrapped_key_salt=(OtbSymCipherSalt*)otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_KEY_SALT, NULL))==NULL)
 		unlock_successful=FALSE;
 	else if((wrapped_key=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_KEY))==NULL)
 		unlock_successful=FALSE;
-	else if(!otb_cipher_unwrap_key(cipher, wrapped_key, passphrase, *wrapped_key_salt))
+	else if(!otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, passphrase, *wrapped_key_salt))
 		unlock_successful=FALSE;
 	g_free(wrapped_key_salt);
 	g_bytes_unref(wrapped_key);
 	if(!unlock_successful)
-		g_object_unref(cipher);
+		g_object_unref(sym_cipher);
 	else
-		otb_local_crypto_set_local_cipher(cipher);
+		otb_local_crypto_set_local_sym_cipher(sym_cipher);
 	return unlock_successful;
 }
 
@@ -164,20 +164,20 @@ gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const ch
 {
 	gboolean ret_val=TRUE;
 	otb_local_crypto_lock();
-	if(local_cipher==NULL)
+	if(local_sym_cipher==NULL)
 		ret_val=FALSE;
-	else if(!otb_local_crypto_validate_passphrase(local_cipher, old_passphrase))
+	else if(!otb_local_crypto_validate_passphrase(local_sym_cipher, old_passphrase))
 		ret_val=FALSE;
-	else if(!otb_local_crypto_set_passphrase(local_cipher, new_passphrase))
+	else if(!otb_local_crypto_set_passphrase(local_sym_cipher, new_passphrase))
 		ret_val=FALSE;
 	otb_local_crypto_unlock();
 	return ret_val;
 }
 
-const OtbCipher *otb_local_crypto_get_cipher()
+const OtbSymCipher *otb_local_crypto_get_sym_cipher()
 {
 	otb_local_crypto_lock();
-	OtbCipher *crypto=local_cipher;
+	OtbSymCipher *sym_cipher=local_sym_cipher;
 	otb_local_crypto_unlock();
-	return crypto;
+	return sym_cipher;
 }

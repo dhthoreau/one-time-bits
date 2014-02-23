@@ -12,10 +12,10 @@
 #include <uuid.h>
 
 #include "test-utils.h"
-#include "../src/cipher.h"
 #include "../src/io.h"
 #include "../src/local-crypto.h"
 #include "../src/settings.h"
+#include "../src/sym-cipher.h"
 
 char *otb_test_dir_path=NULL;
 
@@ -89,5 +89,5 @@ void otb_test_setup_local_crypto()
 	
 	otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long();
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
-	otb_local_crypto_create_cipher(PASSPHRASE);
+	otb_local_crypto_create_sym_cipher(PASSPHRASE);
 }

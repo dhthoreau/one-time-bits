@@ -13,12 +13,12 @@
 #include <main.h>
 
 #include "asym-cipher-tests.h"
-#include "cipher-tests.h"
 #include "local-crypto-tests.h"
 #include "friend-tests.h"
 #include "pad-db-tests.h"
 #include "pad-rec-tests.h"
 #include "settings-tests.h"
+#include "sym-cipher-tests.h"
 #include "test-utils.h"
 
 GSList *otb_test_funcs=NULL;
@@ -63,7 +63,7 @@ static void otb_run_tests_to_find_memory_leaks()
 static void otb_add_tests()
 {
 	otb_add_settings_tests();
-	otb_add_cipher_tests();
+	otb_add_sym_cipher_tests();
 	otb_add_asym_cipher_tests();
 	otb_add_local_crypto_tests();
 	otb_add_pad_rec_tests();

@@ -6,9 +6,9 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_CIPHER_TESTS
-#define OTB_CIPHER_TESTS
+#ifndef OTB_SYM_CIPHER_TESTS
+#define OTB_SYM_CIPHER_TESTS
 
-void otb_add_cipher_tests();
+void otb_add_sym_cipher_tests();
 
 #endif

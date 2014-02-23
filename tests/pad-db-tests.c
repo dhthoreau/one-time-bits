@@ -13,7 +13,6 @@
 #include "main.h"
 #include "pad-rec-tests.h"
 #include "test-utils.h"
-#include "../src/cipher.h"
 #include "../src/io.h"
 #include "../src/pad-db.h"
 #include "../src/pad-rec.h"
