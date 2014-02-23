@@ -58,6 +58,15 @@ static void test_settings_get_set_config_int()
 	g_assert_cmpint(EXPECTED_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 }
 
+static void test_settings_get_config_file_version()
+{
+	const char *CONFIG_META_GROUP_NAME="config-meta";
+	const char *FILE_VERSION_KEY="file-version";
+	
+	otb_settings_initialize("otb");
+	g_assert_cmpint(0, ==, otb_settings_get_config_int(CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, -1));
+}
+
 static void test_settings_get_set_bytes()
 {
 	const char *BYTES_KEY="bytes-key";
@@ -79,6 +88,7 @@ static void test_settings_get_set_bytes()
 	g_free(actual_bytes);
 	g_key_file_unref(load_key_file);
 }
+
 static void test_settings_get_set_config_bytes()
 {
 	const char *BYTES_KEY="bytes-key";
@@ -139,6 +149,7 @@ void otb_add_settings_tests()
 {
 	otb_add_test_func("/settings/test_settings_set_config_dir", test_settings_set_config_dir);
 	otb_add_test_func("/settings/test_settings_set_data_dir", test_settings_set_data_dir);
+	otb_add_test_func("/settings/test_settings_get_config_file_version", test_settings_get_config_file_version);
 	otb_add_test_func("/settings/test_settings_get_set_config_string", test_settings_get_set_config_string);
 	otb_add_test_func("/settings/test_settings_get_set_config_int", test_settings_get_set_config_int);
 	otb_add_test_func("/settings/test_settings_get_set_config_bytes", test_settings_get_set_config_bytes);

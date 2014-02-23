@@ -20,7 +20,7 @@ enum
 	PROP_BASE_PATH,
 	PROP_INCOMING_PADS,
 	PROP_OUTGOING_PADS,
-	PROP_RSA_PUBLIC_KEY,
+	PROP_PUBLIC_KEY,
 	PROP_ONION_BASE_DOMAIN
 };
 
@@ -39,7 +39,7 @@ struct _OtbFriendPrivate
 	OtbPadDb *incoming_pads;
 	char *outgoing_pads_path;
 	OtbPadDb *outgoing_pads;
-	GBytes *rsa_public_key;
+	char *public_key;
 	char *onion_base_domain;
 	char *onion_full_domain;
 };
@@ -54,7 +54,7 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_FRIEND_PROP_BASE_PATH, _("Base path"), _("Directory where the friend's data will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_INCOMING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_INCOMING_PADS, _("Incoming pads"), _("Database of incoming pads"), G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_OUTGOING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_OUTGOING_PADS, _("Outgoing pads"), _("Database of outgoing pads"), G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_RSA_PUBLIC_KEY, g_param_spec_pointer(OTB_FRIEND_PROP_RSA_PUBLIC_KEY, _("RSA public key"), _("Key that is used to identify the friend"), G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_pointer(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ONION_BASE_DOMAIN, g_param_spec_string(OTB_FRIEND_PROP_ONION_BASE_DOMAIN, _("Onion base domain"), _("The domain of the friend's Tor hidden service (minus the \".onion\")."), NULL, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbFriendPrivate));
 }
@@ -68,34 +68,45 @@ static void otb_friend_init(OtbFriend *friend)
 	friend->priv->incoming_pads_path=NULL;
 	friend->priv->outgoing_pads=NULL;
 	friend->priv->outgoing_pads_path=NULL;
-	friend->priv->rsa_public_key=NULL;
+	friend->priv->public_key=NULL;
 	friend->priv->onion_base_domain=NULL;
 	friend->priv->onion_full_domain=NULL;
 }
 
-static OtbPadDb *otb_friend_set_incoming_pads_no_save(const OtbFriend *friend, OtbPadDb *incoming_pads)
+static const OtbPadDb *otb_friend_set_incoming_pads_no_save(const OtbFriend *friend, OtbPadDb *incoming_pads)
 {
+	if(incoming_pads!=NULL)
+		g_object_ref(incoming_pads);
 	if(friend->priv->incoming_pads!=NULL)
 		g_object_unref(friend->priv->incoming_pads);
 	friend->priv->incoming_pads=incoming_pads;
 	return incoming_pads;
 }
 
-static OtbPadDb *otb_friend_set_outgoing_pads_no_save(const OtbFriend *friend, OtbPadDb *outgoing_pads)
+static const OtbPadDb *otb_friend_set_outgoing_pads_no_save(const OtbFriend *friend, OtbPadDb *outgoing_pads)
 {
+	if(outgoing_pads!=NULL)
+		g_object_ref(outgoing_pads);
 	if(friend->priv->outgoing_pads!=NULL)
 		g_object_unref(friend->priv->outgoing_pads);
 	friend->priv->outgoing_pads=outgoing_pads;
 	return outgoing_pads;
 }
 
-static const GBytes *otb_friend_set_rsa_public_key_no_save(const OtbFriend *friend, GBytes *rsa_public_key)
+static const char *otb_friend_set_public_key_no_save(const OtbFriend *friend, const char *public_key)
 {
-	g_bytes_unref(friend->priv->rsa_public_key);
-	friend->priv->rsa_public_key=rsa_public_key;
-	if(friend->priv->rsa_public_key!=NULL)
-		g_bytes_ref(friend->priv->rsa_public_key);
-	return rsa_public_key;
+	g_free(friend->priv->public_key);
+	friend->priv->public_key=g_strdup(public_key);
+	return public_key;
+}
+
+static const char *otb_friend_set_onion_base_domain_no_save(const OtbFriend *friend, const char *onion_base_domain)
+{
+	g_free(friend->priv->onion_base_domain);
+	friend->priv->onion_base_domain=g_strdup(onion_base_domain);
+	g_free(friend->priv->onion_full_domain);
+	friend->priv->onion_full_domain=g_strconcat(friend->priv->onion_base_domain, ".onion", NULL);
+	return onion_base_domain;
 }
 
 static void otb_friend_dispose(GObject *object)
@@ -105,7 +116,7 @@ static void otb_friend_dispose(GObject *object)
 	OtbFriend *friend=OTB_FRIEND(object);
 	otb_friend_set_incoming_pads_no_save(friend, NULL);
 	otb_friend_set_outgoing_pads_no_save(friend, NULL);
-	otb_friend_set_rsa_public_key_no_save(friend, NULL);
+	otb_friend_set_public_key_no_save(friend, NULL);
 	G_OBJECT_CLASS(otb_friend_parent_class)->dispose(object);
 }
 
@@ -133,15 +144,6 @@ static void otb_friend_set_base_path(const OtbFriend *friend, const char *base_p
 	friend->priv->incoming_pads_path=g_build_filename(base_path, "incoming", NULL);
 	g_free(friend->priv->outgoing_pads_path);
 	friend->priv->outgoing_pads_path=g_build_filename(base_path, "outgoing", NULL);
-}
-
-static const char *otb_friend_set_onion_base_domain_no_save(const OtbFriend *friend, const char *onion_base_domain)
-{
-	g_free(friend->priv->onion_base_domain);
-	friend->priv->onion_base_domain=g_strdup(onion_base_domain);
-	g_free(friend->priv->onion_full_domain);
-	friend->priv->onion_full_domain=g_strconcat(friend->priv->onion_base_domain, ".onion", NULL);
-	return onion_base_domain;
 }
 
 static void otb_friend_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
@@ -172,8 +174,8 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 		case PROP_OUTGOING_PADS:
 			g_value_set_pointer(value, friend->priv->outgoing_pads);
 			break;
-		case PROP_RSA_PUBLIC_KEY:
-			g_value_set_pointer(value, friend->priv->rsa_public_key);
+		case PROP_PUBLIC_KEY:
+			g_value_set_pointer(value, friend->priv->public_key);
 			break;
 		case PROP_ONION_BASE_DOMAIN:
 			g_value_set_string(value, friend->priv->onion_base_domain);
@@ -185,7 +187,7 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 }
 
 #define SAVE_GROUP					"friend"
-#define SAVE_KEY_RSA_PUBLIC_KEY		"rsa-public-key"
+#define SAVE_KEY_PUBLIC_KEY			"public-key"
 #define SAVE_KEY_ONION_BASE_DOMAIN	"onion-base-domain"
 
 static gboolean otb_friend_save(const OtbFriend *friend)
@@ -194,8 +196,8 @@ static gboolean otb_friend_save(const OtbFriend *friend)
 	if(otb_mkdir_with_parents(friend->priv->base_path, "otb_friend_save"))
 	{
 		GKeyFile *key_file=g_key_file_new();
-		if(friend->priv->rsa_public_key!=NULL)
-			otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_RSA_PUBLIC_KEY, friend->priv->rsa_public_key);
+		if(friend->priv->public_key!=NULL)
+			g_key_file_set_string(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, friend->priv->public_key);
 		if(friend->priv->onion_base_domain!=NULL)
 			g_key_file_set_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, friend->priv->onion_base_domain);
 		ret_val=otb_settings_save_key_file(key_file, friend->priv->file_path, "otb_friend_save");
@@ -221,14 +223,10 @@ static gboolean otb_friend_load(const OtbFriend *friend)
 	GKeyFile *key_file=otb_settings_load_key_file(friend->priv->file_path);
 	if(key_file==NULL)
 		ret_val=FALSE;
-	else if(otb_friend_set_rsa_public_key_no_save(friend, otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_RSA_PUBLIC_KEY, "otb_friend_load"))==NULL)
+	else if(otb_friend_set_public_key_no_save(friend, otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, "otb_friend_load"))==NULL)
 		ret_val=FALSE;
-	else
-	{
-		g_bytes_unref(friend->priv->rsa_public_key);
-		if(otb_friend_set_onion_base_domain_no_save(friend, otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, "otb_pad_db_load"))==NULL)
-			ret_val=FALSE;
-	}
+	else if(otb_friend_set_onion_base_domain_no_save(friend, otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, "otb_friend_load"))==NULL)
+		ret_val=FALSE;
 	if(key_file!=NULL)
 		g_key_file_unref(key_file);
 	return ret_val;
@@ -260,9 +258,9 @@ OtbFriend *otb_friend_load_from_directory(const char *base_path)
 	return friend;
 }
 
-gboolean otb_friend_set_rsa_public_key(const OtbFriend *friend, GBytes *rsa_public_key)
+gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_key)
 {
-	otb_friend_set_rsa_public_key_no_save(friend, rsa_public_key);
+	otb_friend_set_public_key_no_save(friend, public_key);
 	return otb_friend_save(friend);
 }
 

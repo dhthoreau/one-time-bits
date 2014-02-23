@@ -15,23 +15,26 @@
 #include "memory.h"
 #include "settings.h"
 
-#define CONFIG_FILE_NAME	"otb.conf"
+#define CONFIG_FILE_NAME			"otb.conf"
+#define CONFIG_META_GROUP_NAME		"config-meta"
+#define FILE_VERSION_KEY			"file-version"
+#define CURRENT_CONFIG_FILE_VERSION	0
 
-static GMutex mutex;
 static char *otb_config_directory_path=NULL;
 static char *otb_data_directory_path=NULL;
+static GMutex config_mutex;
 static GKeyFile *config_key_file=NULL;
 
 #define otb_settings_get_config_file_path()	(g_build_filename(otb_config_directory_path, CONFIG_FILE_NAME, NULL))
 
-static void otb_settings_lock()
+static void otb_settings_lock_config()
 {
-	g_mutex_lock(&mutex);
+	g_mutex_lock(&config_mutex);
 }
 
-static void otb_settings_unlock()
+static void otb_settings_unlock_config()
 {
-	g_mutex_unlock(&mutex);
+	g_mutex_unlock(&config_mutex);
 }
 
 GKeyFile *otb_settings_load_key_file(const char *file_path)
@@ -51,14 +54,15 @@ GKeyFile *otb_settings_load_key_file(const char *file_path)
 
 static void otb_settings_load_config_file()
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	GKeyFile *old_config_key_file=config_key_file;
 	char *config_file_path=otb_settings_get_config_file_path();
 	config_key_file=otb_settings_load_key_file(config_file_path);
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	g_free(config_file_path);
 	if(old_config_key_file!=NULL)
 		g_key_file_unref(old_config_key_file);
+	g_key_file_set_integer(config_key_file, CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, CURRENT_CONFIG_FILE_VERSION);
 }
 
 static void otb_settings_initialize_directory_paths(const char *app_name)
@@ -126,18 +130,18 @@ gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path, c
 static gboolean otb_settings_save_config_key_file()
 {
 	char *config_file_path=otb_settings_get_config_file_path();
-	otb_settings_lock();
+	otb_settings_lock_config();
 	gboolean ret_val=otb_settings_save_key_file(config_key_file, config_file_path, "otb_settings_save_config_key_file");
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	g_free(config_file_path);
 	return ret_val;
 }
 
 gboolean otb_settings_set_config_int(const char *group_name, const char *key, int value)
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	g_key_file_set_integer(config_key_file, group_name, key, value);
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	return otb_settings_save_config_key_file();
 }
 
@@ -156,9 +160,9 @@ int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char 
 
 int otb_settings_get_config_int(const char *group_name, const char *key, int error_value)
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	int ret_val=otb_settings_get_int(config_key_file, group_name, key, error_value, "otb_settings_get_config_int");
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	return ret_val;
 }
 
@@ -177,9 +181,9 @@ long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, con
 
 gboolean otb_settings_set_config_string(const char *group_name, const char *key, const char *value)
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	g_key_file_set_string(config_key_file, group_name, key, value);
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	return otb_settings_save_config_key_file();
 }
 
@@ -198,9 +202,9 @@ char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const 
 
 char *otb_settings_get_config_string(const char *group_name, const char *key, const char *func_name)
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	char *ret_val=otb_settings_get_string(config_key_file, group_name, key, func_name);
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	return ret_val;
 }
 
@@ -212,9 +216,9 @@ void otb_settings_set_bytes(GKeyFile *key_file, const char *group_name, const ch
 }
 gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, const void *value, size_t value_length)
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	otb_settings_set_bytes(config_key_file, group_name, key, value, value_length);
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	return otb_settings_save_config_key_file();
 }
 
@@ -234,9 +238,9 @@ void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const c
 
 void *otb_settings_get_config_bytes(const char *group_name, const char *key, size_t* value_length)
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	void *ret_val=otb_settings_get_bytes(config_key_file, group_name, key, value_length, "otb_settings_get_config_bytes");
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	return ret_val;
 }
 
@@ -262,8 +266,8 @@ GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, cons
 
 GBytes *otb_settings_get_config_gbytes(const char *group_name, const char *key)
 {
-	otb_settings_lock();
+	otb_settings_lock_config();
 	GBytes *ret_val=otb_settings_get_gbytes(config_key_file, group_name, key, "otb_settings_get_config_gbytes");
-	otb_settings_unlock();
+	otb_settings_unlock_config();
 	return ret_val;
 }

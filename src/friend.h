@@ -16,7 +16,7 @@
 #define OTB_FRIEND_PROP_BASE_PATH			"base_path"
 #define OTB_FRIEND_PROP_INCOMING_PADS		"incoming_pads"
 #define OTB_FRIEND_PROP_OUTGOING_PADS		"outgoing_pads"
-#define OTB_FRIEND_PROP_RSA_PUBLIC_KEY		"rsa_public_key"
+#define OTB_FRIEND_PROP_PUBLIC_KEY			"public_key"
 #define OTB_FRIEND_PROP_ONION_BASE_DOMAIN	"onion_base_domain"
 
 #define OTB_TYPE_FRIEND				(otb_friend_get_type())
@@ -45,7 +45,7 @@ GType otb_friend_get_type();
 
 OtbFriend *otb_friend_create_in_directory(const char *base_path);
 OtbFriend *otb_friend_load_from_directory(const char *base_path);
-gboolean otb_friend_set_rsa_public_key(const OtbFriend *friend, GBytes *rsa_public_key);
+gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_key);
 gboolean otb_friend_set_onion_base_domain(const OtbFriend *friend, const char *onion_base_domain);
 
 #endif

@@ -18,7 +18,6 @@ typedef EVP_CIPHER_CTX OtbRsaContext;
 
 #define otb_rsa_context_free(cipher_context)	EVP_CIPHER_CTX_free(cipher_context)
 
-#define OTB_RSA_PROP_NEW_KEY_LENGTH	"new-key-length"
 #define OTB_RSA_PROP_CIPHER			"cipher"
 
 #define OTB_TYPE_RSA			(otb_rsa_get_type())
@@ -45,11 +44,11 @@ struct _OtbRsaClass
 
 GType otb_rsa_get_type();
 
-gboolean otb_rsa_set_public_key(const OtbRsa *rsa, GBytes *public_key);
-GBytes *otb_rsa_get_public_key(const OtbRsa *rsa);
+gboolean otb_rsa_set_public_key(const OtbRsa *rsa, const char *public_key);
+const char *otb_rsa_get_public_key(const OtbRsa *rsa);
 gboolean otb_rsa_set_private_key(const OtbRsa *rsa, GBytes *encrypted_private_key, const OtbCipher *cipher, GBytes *iv);
 GBytes *otb_rsa_get_private_key(const OtbRsa *rsa, const OtbCipher *cipher, GBytes **iv);
-gboolean otb_rsa_generate_random_keys(OtbRsa *rsa);
+gboolean otb_rsa_generate_random_keys(OtbRsa *rsa, size_t key_size);
 unsigned char *otb_rsa_create_encryption_buffer(const OtbRsa *rsa, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
 unsigned char *otb_rsa_create_decryption_buffer(const OtbRsa *rsa, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
 OtbRsaContext *otb_rsa_init_encryption(const OtbRsa *rsa, GBytes **iv_out, GBytes **encrypted_key_out);

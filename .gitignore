@@ -21,3 +21,6 @@ po/one-time-bits.pot
 libtool
 autom4te.cache
 secure-using-real-openssl-functions.c
+tests/otb-tests.log
+tests/otb-tests.trs
+tests/test-suite.log

@@ -18,14 +18,12 @@
 
 static void test_rsa_properties()
 {
-	size_t EXPECTED_NEW_KEY_LENGTH=512;
 	const char *EXPECTED_CIPHER="RC2-64-CBC";
 	
-	OtbRsa *rsa=g_object_new(OTB_TYPE_RSA, OTB_RSA_PROP_NEW_KEY_LENGTH, EXPECTED_NEW_KEY_LENGTH, OTB_RSA_PROP_CIPHER, EXPECTED_CIPHER, NULL);
+	OtbRsa *rsa=g_object_new(OTB_TYPE_RSA, OTB_RSA_PROP_CIPHER, EXPECTED_CIPHER, NULL);
 	size_t actual_new_key_length=NULL;
 	char *actual_cipher=NULL;
-	g_object_get(rsa, OTB_RSA_PROP_NEW_KEY_LENGTH, &actual_new_key_length, OTB_CIPHER_PROP_CIPHER, &actual_cipher, NULL);
-	g_assert_cmpint(EXPECTED_NEW_KEY_LENGTH, ==, actual_new_key_length);
+	g_object_get(rsa, OTB_CIPHER_PROP_CIPHER, &actual_cipher, NULL);
 	g_assert_cmpstr(EXPECTED_CIPHER, ==, actual_cipher);
 	g_free(actual_cipher);
 	g_object_unref(rsa);
@@ -33,10 +31,9 @@ static void test_rsa_properties()
 
 static void otb_copy_public_key(OtbRsa *rsa_original, OtbRsa *rsa_public)
 {
-	GBytes *public_key=otb_rsa_get_public_key(rsa_original);
+	const char *public_key=otb_rsa_get_public_key(rsa_original);
 	g_assert(public_key!=NULL);
 	otb_rsa_set_public_key(rsa_public, public_key);
-	g_bytes_unref(public_key);
 }
 
 static void otb_copy_private_key(OtbRsa *rsa_original, OtbRsa *rsa_private)
@@ -55,11 +52,12 @@ static void otb_copy_private_key(OtbRsa *rsa_original, OtbRsa *rsa_private)
 
 static void test_rsa_encryption()
 {
+	const size_t NEW_KEY_LENGTH=512;
 	const char EXPECTED_MESSAGE_SIZE=74;
 	const char *EXPECTED_MESSAGE="Timid men prefer the calm of despotism to the tempestuous sea of liberty.";
 	
-	OtbRsa *rsa_original=g_object_new(OTB_TYPE_RSA, OTB_RSA_PROP_NEW_KEY_LENGTH, 512, NULL);
-	g_assert(otb_rsa_generate_random_keys(rsa_original));
+	OtbRsa *rsa_original=g_object_new(OTB_TYPE_RSA, NULL);
+	g_assert(otb_rsa_generate_random_keys(rsa_original, NEW_KEY_LENGTH));
 	OtbRsa *rsa_public=g_object_new(OTB_TYPE_RSA, NULL);
 	OtbRsa *rsa_private=g_object_new(OTB_TYPE_RSA, NULL);
 	otb_copy_public_key(rsa_original, rsa_public);
