@@ -6,9 +6,9 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_RSA_TESTS
-#define OTB_RSA_TESTS
+#ifndef OTB_ASYM_TESTS
+#define OTB_ASYM_TESTS
 
-void otb_add_rsa_tests();
+void otb_add_asym_cipher_tests();
 
 #endif

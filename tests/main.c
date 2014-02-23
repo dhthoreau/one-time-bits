@@ -12,12 +12,12 @@
 #include <locale.h>
 #include <main.h>
 
+#include "asym-cipher-tests.h"
 #include "cipher-tests.h"
 #include "local-crypto-tests.h"
 #include "friend-tests.h"
 #include "pad-db-tests.h"
 #include "pad-rec-tests.h"
-#include "rsa-tests.h"
 #include "settings-tests.h"
 #include "test-utils.h"
 
@@ -64,7 +64,7 @@ static void otb_add_tests()
 {
 	otb_add_settings_tests();
 	otb_add_cipher_tests();
-	otb_add_rsa_tests();
+	otb_add_asym_cipher_tests();
 	otb_add_local_crypto_tests();
 	otb_add_pad_rec_tests();
 	otb_add_pad_db_tests();
