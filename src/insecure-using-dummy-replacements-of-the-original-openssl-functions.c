@@ -37,8 +37,8 @@ int _EVP_PKEY_CTX_set_rsa_keygen_bits(EVP_PKEY_CTX *context, int key_bits)
 	return EVP_PKEY_CTX_set_rsa_keygen_bits(context, MAX_PUBLIC_PRIVATE_KEY_SIZE);
 }
 
-void _otb_set_EVP_PKEY(EVP_PKEY **target_key, EVP_PKEY **source_key)
+void _otb_set_EVP_PKEY(EVP_PKEY **target_key, EVP_PKEY *source_key)
 {
-	if(*source_key==NULL || EVP_PKEY_size(*source_key)<=MAX_PUBLIC_PRIVATE_KEY_SIZE/8)
+	if(*source_key==NULL || EVP_PKEY_size(source_key)<=MAX_PUBLIC_PRIVATE_KEY_SIZE/8)
 		*target_key=*source_key;
-}
+

@@ -46,13 +46,13 @@ GType otb_asym_cipher_get_type();
 
 gboolean otb_asym_cipher_set_public_key(const OtbAsymCipher *asym_cipher, const char *public_key);
 const char *otb_asym_cipher_get_public_key(const OtbAsymCipher *asym_cipher);
-gboolean otb_asym_cipher_set_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, const OtbSymCipher *sym_cipher, GBytes *iv);
-GBytes *otb_asym_cipher_get_private_key(const OtbAsymCipher *asym_cipher, const OtbSymCipher *sym_cipher, GBytes **iv);
-gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t key_size);
+gboolean otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv);
+GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes **private_key_iv_out);
+gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t key_size, OtbSymCipher *private_key_sym_cipher);
 unsigned char *otb_asym_cipher_create_encryption_buffer(const OtbAsymCipher *asym_cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
 unsigned char *otb_asym_cipher_create_decryption_buffer(const OtbAsymCipher *asym_cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
-OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_cipher, GBytes **iv_out, GBytes **encrypted_key_out);
-OtbAsymCipherContext *otb_asym_cipher_init_decryption(const OtbAsymCipher *asym_cipher, GBytes *iv, GBytes *encrypted_key);
+OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_cipher, GBytes **encrypted_key_out, GBytes **iv_out);
+OtbAsymCipherContext *otb_asym_cipher_init_decryption(const OtbAsymCipher *asym_cipher, GBytes *encrypted_key, GBytes *iv);
 size_t otb_asym_cipher_encrypt(OtbAsymCipherContext *asym_cipher_context, const unsigned char *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out);
 size_t otb_asym_cipher_decrypt(OtbAsymCipherContext *asym_cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, unsigned char *plain_bytes_out);
 size_t otb_asym_cipher_finish_encrypt(OtbAsymCipherContext *asym_cipher_context, unsigned char *encrypted_bytes_out);

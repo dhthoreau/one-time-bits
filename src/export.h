@@ -14,6 +14,6 @@
 const EVP_CIPHER *_EVP_get_cipherbyname(const char *name);
 int _RAND_bytes(unsigned char *buf, int num);
 int _EVP_PKEY_CTX_set_rsa_keygen_bits(EVP_PKEY_CTX *context, int key_bits);
-void _otb_set_EVP_PKEY(EVP_PKEY **target_key, EVP_PKEY **source_key);
+void _otb_set_EVP_PKEY(EVP_PKEY **target_key, EVP_PKEY *source_key);
 
 #endif

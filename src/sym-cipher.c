@@ -145,7 +145,7 @@ GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const cha
 	return hash;
 }
 
-gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, OtbSymCipherSalt salt)
+gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt salt)
 {
 	gboolean ret_val=FALSE;
 	size_t hash_size;
@@ -187,7 +187,7 @@ static OtbSymCipherContext *otb_sym_cipher_init_decryption_openssl(const EVP_CIP
 
 #define key_and_iv_size(sym_cipher)	(EVP_CIPHER_key_length((sym_cipher)->priv->sym_cipher_impl)+EVP_CIPHER_iv_length((sym_cipher)->priv->sym_cipher_impl))
 
-gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, OtbSymCipherSalt salt)
+gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt salt)
 {
 	gboolean ret_val=FALSE;
 	unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
