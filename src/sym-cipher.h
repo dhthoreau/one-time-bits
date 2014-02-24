@@ -18,8 +18,8 @@ typedef char OtbSymCipherSalt[PKCS5_SALT_LEN];
 #define otb_sym_cipher_context_free(sym_cipher_context)	EVP_CIPHER_CTX_free(sym_cipher_context)
 
 #define OTB_SYM_CIPHER_PROP_CIPHER			"cipher"
-#define OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST	"message_digest"
-#define OTB_SYM_CIPHER_PROP_HASH_ITERATIONS	"hash_iterations"
+#define OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST	"message-digest"
+#define OTB_SYM_CIPHER_PROP_HASH_ITERATIONS	"hash-iterations"
 
 #define OTB_TYPE_SYM_CIPHER				(otb_sym_cipher_get_type())
 #define OTB_SYM_CIPHER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_SYM_CIPHER, OtbSymCipher))

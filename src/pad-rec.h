@@ -25,10 +25,10 @@ typedef enum
 	OTB_PAD_REC_STATUS_OUT_OF_BOUNDS
 } OtbPadRecStatus;
 
-#define OTB_PAD_REC_PROP_UNIQUE_ID	"unique_id"
-#define OTB_PAD_REC_PROP_STATUS	"status"
-#define OTB_PAD_REC_PROP_BASE_PATH	"base_path"
-#define OTB_PAD_REC_PROP_BASE_NAME	"base_name"
+#define OTB_PAD_REC_PROP_UNIQUE_ID	"unique-id"
+#define OTB_PAD_REC_PROP_STATUS		"status"
+#define OTB_PAD_REC_PROP_BASE_PATH	"base-path"
+#define OTB_PAD_REC_PROP_BASE_NAME	"base-name"
 #define OTB_PAD_REC_PROP_SIZE		"size"
 
 #define OTB_TYPE_PAD_REC				(otb_pad_rec_get_type())
@@ -57,14 +57,14 @@ struct _OtbPadRecClass
 GType otb_pad_rec_get_type();
 
 const char *otb_pad_rec_get_base_name(const OtbPadRec *pad_rec);
-const uuid_t *otb_pad_rec_get_unique_id(const OtbPadRec *pad_rec);
+const uuid_t *otb_pad_rec_get_unique_id(const OtbPadRec *pad_rec);	// FARE - Dovrebbe venire da OTB_PAD_REC_PROP_UNIQUE_ID.
 int otb_pad_rec_compare_by_id(const gpointer p_pad_rec, const gpointer p_unique_id);
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec);
 OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name);
 gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec);
 OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec);
 OtbPadIO *otb_pad_rec_open_pad_for_read(const OtbPadRec *pad_rec, gboolean auto_rewind);
-off_t otb_pad_rec_get_size(const OtbPadRec *pad_rec);
+off_t otb_pad_rec_get_size(const OtbPadRec *pad_rec);	// FARE - Dovrebbe venire da OTB_PAD_REC_PROP_SIZE.
 gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec);
 gboolean otb_pad_write(const OtbPadIO *pad_io, const void *input_buffer, size_t input_buffer_size);
 gboolean otb_pad_read(OtbPadIO *pad_io, void **output_buffer, size_t *output_buffer_size);

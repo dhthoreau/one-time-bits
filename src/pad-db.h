@@ -26,10 +26,10 @@ typedef enum
 	OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT
 } OtbPadDbCryptResults;
 
-#define OTB_PAD_DB_PROP_BASE_PATH			"base_path"
-#define OTB_PAD_DB_PROP_MAX_SIZE			"max_size"
-#define OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE	"new_pad_min_size"
-#define OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE	"new_pad_max_size"
+#define OTB_PAD_DB_PROP_BASE_PATH			"base-path"
+#define OTB_PAD_DB_PROP_MAX_SIZE			"max-size"
+#define OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE	"new-pad-min-size"
+#define OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE	"new-pad-max-size"
 
 #define OTB_TYPE_PAD_DB				(otb_pad_db_get_type())
 #define OTB_PAD_DB(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_PAD_DB, OtbPadDb))
