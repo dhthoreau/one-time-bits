@@ -79,8 +79,6 @@ static void otb_friend_init(OtbFriend *friend)
 
 static const OtbPadDb *otb_friend_set_incoming_pads_no_save(const OtbFriend *friend, OtbPadDb *incoming_pads)
 {
-	if(incoming_pads!=NULL)
-		g_object_ref(incoming_pads);
 	if(friend->priv->incoming_pads!=NULL)
 		g_object_unref(friend->priv->incoming_pads);
 	friend->priv->incoming_pads=incoming_pads;
@@ -89,28 +87,24 @@ static const OtbPadDb *otb_friend_set_incoming_pads_no_save(const OtbFriend *fri
 
 static const OtbPadDb *otb_friend_set_outgoing_pads_no_save(const OtbFriend *friend, OtbPadDb *outgoing_pads)
 {
-	if(outgoing_pads!=NULL)
-		g_object_ref(outgoing_pads);
 	if(friend->priv->outgoing_pads!=NULL)
 		g_object_unref(friend->priv->outgoing_pads);
 	friend->priv->outgoing_pads=outgoing_pads;
 	return outgoing_pads;
 }
 
-static const char *otb_friend_set_public_key_no_save(const OtbFriend *friend, const char *public_key)
+static void otb_friend_set_public_key_no_save(const OtbFriend *friend, const char *public_key)
 {
 	g_free(friend->priv->public_key);
 	friend->priv->public_key=g_strdup(public_key);
-	return public_key;
 }
 
-static const char *otb_friend_set_onion_base_domain_no_save(const OtbFriend *friend, const char *onion_base_domain)
+static void otb_friend_set_onion_base_domain_no_save(const OtbFriend *friend, const char *onion_base_domain)
 {
 	g_free(friend->priv->onion_base_domain);
 	friend->priv->onion_base_domain=g_strdup(onion_base_domain);
 	g_free(friend->priv->onion_full_domain);
 	friend->priv->onion_full_domain=g_strconcat(friend->priv->onion_base_domain, ".onion", NULL);
-	return onion_base_domain;
 }
 
 static void otb_friend_dispose(GObject *object)
@@ -234,13 +228,22 @@ OtbFriend *otb_friend_create_in_directory(const uuid_t *unique_id, const char *b
 static gboolean otb_friend_load(const OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
+	char *public_key=NULL;
+	char *onion_base_domain=NULL;
 	GKeyFile *key_file=otb_settings_load_key_file(friend->priv->file_path);
 	if(key_file==NULL)
 		ret_val=FALSE;
-	else if(otb_friend_set_public_key_no_save(friend, otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, "otb_friend_load"))==NULL)
+	else if((public_key=otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, "otb_friend_load"))==NULL)
 		ret_val=FALSE;
-	else if(otb_friend_set_onion_base_domain_no_save(friend, otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, "otb_friend_load"))==NULL)
+	else if((onion_base_domain=otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, "otb_friend_load"))==NULL)
 		ret_val=FALSE;
+	if(ret_val)
+	{
+		otb_friend_set_public_key_no_save(friend, public_key);
+		otb_friend_set_onion_base_domain_no_save(friend, onion_base_domain);
+	}
+	g_free(public_key);
+	g_free(onion_base_domain);
 	if(key_file!=NULL)
 		g_key_file_unref(key_file);
 	return ret_val;

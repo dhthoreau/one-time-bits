@@ -43,8 +43,6 @@ static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCip
 	g_assert(private_key_iv!=NULL);
 	g_assert(encrypted_private_key!=NULL);
 	otb_asym_cipher_set_encrypted_private_key(asym_cipher_private, encrypted_private_key, private_key_sym_cipher, private_key_iv);
-	g_bytes_unref(private_key_iv);
-	g_bytes_unref(encrypted_private_key);
 }
 
 static void test_asym_cipher_encryption()
@@ -55,7 +53,7 @@ static void test_asym_cipher_encryption()
 	
 	OtbAsymCipher *asym_cipher_original=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	OtbSymCipher *private_key_sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, "AES-256-CBC", NULL);
-	otb_sym_cipher_generate_random_key(private_key_sym_cipher);
+	g_assert(otb_sym_cipher_generate_random_key(private_key_sym_cipher));
 	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original, NEW_KEY_LENGTH, private_key_sym_cipher));
 	OtbAsymCipher *asym_cipher_public=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	OtbAsymCipher *asym_cipher_private=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
@@ -84,6 +82,7 @@ static void test_asym_cipher_encryption()
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, decrypted_message);
 	g_free(decrypted_message);
 	g_free(encrypted_message);
+	g_bytes_unref(encrypted_key);
 	g_bytes_unref(iv);
 	g_object_unref(asym_cipher_private);
 	g_object_unref(asym_cipher_public);

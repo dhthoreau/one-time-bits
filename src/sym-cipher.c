@@ -72,10 +72,8 @@ static void otb_sym_cipher_init(OtbSymCipher *sym_cipher)
 static void otb_sym_cipher_set_key(OtbSymCipher *sym_cipher, unsigned char *key, size_t key_size)
 {
 	if(sym_cipher->priv->key!=NULL)
-	{
 		smemset(sym_cipher->priv->key, 0, sym_cipher->priv->key_size);
-		g_free(sym_cipher->priv->key);
-	}
+	g_free(sym_cipher->priv->key);
 	sym_cipher->priv->key=key;
 	sym_cipher->priv->key_size=key_size;
 }
@@ -205,6 +203,7 @@ gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key
 			ret_val=TRUE;
 		}
 	}
+	g_free(wrapping_key_and_iv);
 	return ret_val;
 }
 

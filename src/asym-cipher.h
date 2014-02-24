@@ -44,7 +44,7 @@ struct _OtbAsymCipherClass
 
 GType otb_asym_cipher_get_type();
 
-gboolean otb_asym_cipher_set_public_key(const OtbAsymCipher *asym_cipher, const char *public_key);
+void otb_asym_cipher_set_public_key(const OtbAsymCipher *asym_cipher, const char *public_key);
 const char *otb_asym_cipher_get_public_key(const OtbAsymCipher *asym_cipher);
 gboolean otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv);
 GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes **private_key_iv_out);

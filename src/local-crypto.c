@@ -151,8 +151,8 @@ gboolean otb_local_crypto_unlock_sym_cipher(const char *passphrase)
 		unlock_successful=FALSE;
 	else if(!otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, passphrase, *wrapped_key_salt))
 		unlock_successful=FALSE;
-	g_free(wrapped_key_salt);
 	g_bytes_unref(wrapped_key);
+	g_free(wrapped_key_salt);
 	if(!unlock_successful)
 		g_object_unref(sym_cipher);
 	else
