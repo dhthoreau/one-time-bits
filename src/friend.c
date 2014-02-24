@@ -17,6 +17,7 @@
 enum
 {
 	PROP_0,
+	PROP_UNIQUE_ID,
 	PROP_BASE_PATH,
 	PROP_INCOMING_PADS,
 	PROP_OUTGOING_PADS,
@@ -33,6 +34,7 @@ G_DEFINE_TYPE(OtbFriend, otb_friend, G_TYPE_OBJECT);
 
 struct _OtbFriendPrivate
 {
+	uuid_t *unique_id;
 	char *base_path;
 	char *file_path;
 	char *incoming_pads_path;
@@ -51,17 +53,19 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	object_class->finalize=otb_friend_finalize;
 	object_class->set_property=otb_friend_set_property;
 	object_class->get_property=otb_friend_get_property;
-	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_FRIEND_PROP_BASE_PATH, _("Base path"), _("Directory where the friend's data will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_pointer(OTB_FRIEND_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the friend"), G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_FRIEND_PROP_BASE_PATH, _("Base path"), _("Directory where the friend's data will be saved"), NULL, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_INCOMING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_INCOMING_PADS, _("Incoming pads"), _("Database of incoming pads"), G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_OUTGOING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_OUTGOING_PADS, _("Outgoing pads"), _("Database of outgoing pads"), G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_pointer(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_ONION_BASE_DOMAIN, g_param_spec_string(OTB_FRIEND_PROP_ONION_BASE_DOMAIN, _("Onion base domain"), _("The domain of the friend's Tor hidden service (minus the \".onion\")."), NULL, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_ONION_BASE_DOMAIN, g_param_spec_string(OTB_FRIEND_PROP_ONION_BASE_DOMAIN, _("Onion base domain"), _("The domain of the friend's Tor hidden service (minus the \".onion\")."), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbFriendPrivate));
 }
 
 static void otb_friend_init(OtbFriend *friend)
 {
 	friend->priv=G_TYPE_INSTANCE_GET_PRIVATE(friend, OTB_TYPE_FRIEND, OtbFriendPrivate);
+	friend->priv->unique_id=NULL;
 	friend->priv->base_path=NULL;
 	friend->priv->file_path=NULL;
 	friend->priv->incoming_pads=NULL;
@@ -125,6 +129,7 @@ static void otb_friend_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_FRIEND(object));
 	OtbFriend *friend=OTB_FRIEND(object);
+	g_free(friend->priv->unique_id);
 	g_free(friend->priv->base_path);
 	g_free(friend->priv->file_path);
 	g_free(friend->priv->incoming_pads_path);
@@ -151,8 +156,14 @@ static void otb_friend_set_property(GObject *object, unsigned int prop_id, const
 	OtbFriend *friend=OTB_FRIEND(object);
 	switch(prop_id)
 	{
+		case PROP_UNIQUE_ID:
+			break;
 		case PROP_BASE_PATH:
 			otb_friend_set_base_path(friend, g_value_get_string(value));
+			break;
+		case PROP_PUBLIC_KEY:
+			break;
+		case PROP_ONION_BASE_DOMAIN:
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -165,6 +176,9 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 	OtbFriend *friend=OTB_FRIEND(object);
 	switch(prop_id)
 	{
+		case PROP_UNIQUE_ID:
+			g_value_set_pointer(value, friend->priv->unique_id);
+			break;
 		case PROP_BASE_PATH:
 			g_value_set_string(value, friend->priv->base_path);
 			break;
@@ -175,7 +189,7 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 			g_value_set_pointer(value, friend->priv->outgoing_pads);
 			break;
 		case PROP_PUBLIC_KEY:
-			g_value_set_pointer(value, friend->priv->public_key);
+			g_value_set_string(value, friend->priv->public_key);
 			break;
 		case PROP_ONION_BASE_DOMAIN:
 			g_value_set_string(value, friend->priv->onion_base_domain);
@@ -206,9 +220,9 @@ static gboolean otb_friend_save(const OtbFriend *friend)
 	return ret_val;
 }
 
-OtbFriend *otb_friend_create_in_directory(const char *base_path)
+OtbFriend *otb_friend_create_in_directory(const uuid_t *unique_id, const char *base_path)
 {
-	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
+	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_UNIQUE_ID, unique_id, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	if(g_file_test(friend->priv->file_path, G_FILE_TEST_EXISTS) || !otb_friend_save(friend) || otb_friend_set_incoming_pads_no_save(friend, otb_pad_db_create_in_directory(friend->priv->incoming_pads_path))==NULL || otb_friend_set_outgoing_pads_no_save(friend, otb_pad_db_create_in_directory(friend->priv->outgoing_pads_path))==NULL)
 	{
 		g_object_unref(friend);
@@ -242,9 +256,9 @@ static gboolean otb_friend_load_databases(const OtbFriend *friend)
 	return ret_val;
 }
 
-OtbFriend *otb_friend_load_from_directory(const char *base_path)
+OtbFriend *otb_friend_load_from_directory(const uuid_t *unique_id, const char *base_path)
 {
-	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
+	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_UNIQUE_ID, unique_id, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	gboolean load_successful=TRUE;
 	if(!otb_friend_load(friend))
 		load_successful=FALSE;

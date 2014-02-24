@@ -13,11 +13,12 @@
 
 #include "pad-db.h"
 
-#define OTB_FRIEND_PROP_BASE_PATH			"base_path"
-#define OTB_FRIEND_PROP_INCOMING_PADS		"incoming_pads"
-#define OTB_FRIEND_PROP_OUTGOING_PADS		"outgoing_pads"
-#define OTB_FRIEND_PROP_PUBLIC_KEY			"public_key"
-#define OTB_FRIEND_PROP_ONION_BASE_DOMAIN	"onion_base_domain"
+#define OTB_FRIEND_PROP_UNIQUE_ID			"unique-id"
+#define OTB_FRIEND_PROP_BASE_PATH			"base-path"
+#define OTB_FRIEND_PROP_INCOMING_PADS		"incoming-pads"
+#define OTB_FRIEND_PROP_OUTGOING_PADS		"outgoing-pads"
+#define OTB_FRIEND_PROP_PUBLIC_KEY			"public-key"
+#define OTB_FRIEND_PROP_ONION_BASE_DOMAIN	"onion-base-domain"
 
 #define OTB_TYPE_FRIEND				(otb_friend_get_type())
 #define OTB_FRIEND(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_FRIEND, OtbFriend))
@@ -43,8 +44,8 @@ struct _OtbFriendClass
 
 GType otb_friend_get_type();
 
-OtbFriend *otb_friend_create_in_directory(const char *base_path);
-OtbFriend *otb_friend_load_from_directory(const char *base_path);
+OtbFriend *otb_friend_create_in_directory(const uuid_t *unique_id, const char *base_path);
+OtbFriend *otb_friend_load_from_directory(const uuid_t *unique_id, const char *base_path);
 gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_key);
 gboolean otb_friend_set_onion_base_domain(const OtbFriend *friend, const char *onion_base_domain);
 
