@@ -32,7 +32,8 @@ struct _OtbAsymCipherPrivate
 enum
 {
 	PROP_0,
-	PROP_SYM_CIPHER
+	PROP_SYM_CIPHER,
+	PROP_PUBLIC_KEY
 };
 
 static void otb_asym_cipher_dispose(GObject *object);
@@ -51,6 +52,7 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 	object_class->set_property=otb_asym_cipher_set_property;
 	object_class->get_property=otb_asym_cipher_get_property;
 	g_object_class_install_property(object_class, PROP_SYM_CIPHER, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, _("Public key"), _("The public key used for encryption"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbAsymCipherPrivate));
 }
 
@@ -92,6 +94,10 @@ static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, 
 			string_value=g_value_get_string(value);
 			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(string_value);
 			break;
+		case PROP_PUBLIC_KEY:
+			g_free(asym_cipher->priv->public_key);
+			asym_cipher->priv->public_key=g_value_dup_string(value);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
@@ -106,21 +112,13 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 		case PROP_SYM_CIPHER:
 			g_value_set_string(value, EVP_CIPHER_name(asym_cipher->priv->cipher_impl));
 			break;
+		case PROP_PUBLIC_KEY:
+			g_value_set_string(value, asym_cipher->priv->public_key);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
 	}
-}
-
-void otb_asym_cipher_set_public_key(const OtbAsymCipher *asym_cipher, const char *public_key)	// FARE - Dovrebbe essere una property.
-{
-	g_free(asym_cipher->priv->public_key);
-	asym_cipher->priv->public_key=g_strdup(public_key);
-}
-
-const char *otb_asym_cipher_get_public_key(const OtbAsymCipher *asym_cipher)	// FARE - Dovrebbe essere una property.
-{
-	return asym_cipher->priv->public_key;
 }
 
 gboolean otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv)
@@ -209,7 +207,7 @@ static gboolean otb_asym_cipher_set_both_keys(OtbAsymCipher *asym_cipher, EVP_PK
 		g_object_ref(private_key_sym_cipher);
 		otb_asym_cipher_set_encrypted_private_key(asym_cipher, encrypted_private_key, private_key_sym_cipher, private_key_iv);
 		char *public_key=otb_asym_cipher_public_key_impl_to_public_key(public_key_impl);
-		otb_asym_cipher_set_public_key(asym_cipher, public_key);
+		g_object_set(asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, public_key, NULL);
 		g_free(public_key);
 		if(encrypted_private_key!=NULL && public_key!=NULL)
 			ret_val=TRUE;

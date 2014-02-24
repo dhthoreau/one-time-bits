@@ -19,6 +19,7 @@ typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 #define otb_asym_cipher_context_free(cipher_context)	EVP_CIPHER_CTX_free(cipher_context)
 
 #define OTB_ASYM_CIPHER_PROP_SYM_CIPHER	"sym-cipher"
+#define OTB_ASYM_CIPHER_PROP_PUBLIC_KEY	"public-key"
 
 #define OTB_TYPE_ASYM_CIPHER			(otb_asym_cipher_get_type())
 #define OTB_ASYM_CIPHER(obj)			(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_ASYM_CIPHER, OtbAsymCipher))
@@ -44,8 +45,6 @@ struct _OtbAsymCipherClass
 
 GType otb_asym_cipher_get_type();
 
-void otb_asym_cipher_set_public_key(const OtbAsymCipher *asym_cipher, const char *public_key);
-const char *otb_asym_cipher_get_public_key(const OtbAsymCipher *asym_cipher);
 gboolean otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv);
 GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes **private_key_iv_out);
 gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t key_size, OtbSymCipher *private_key_sym_cipher);
