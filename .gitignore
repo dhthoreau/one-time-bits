@@ -20,6 +20,7 @@ po/missing
 po/one-time-bits.pot
 libtool
 autom4te.cache
+insecure-using-dummy-replacements-of-the-original-openssl-functions.c
 secure-using-real-openssl-functions.c
 tests/otb-tests.log
 tests/otb-tests.trs
