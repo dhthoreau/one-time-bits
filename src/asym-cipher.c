@@ -123,11 +123,17 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 
 gboolean otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv)
 {
+	if(encrypted_private_key!=NULL)
+		g_bytes_ref(encrypted_private_key);
 	g_bytes_unref(asym_cipher->priv->encrypted_private_key);
 	asym_cipher->priv->encrypted_private_key=encrypted_private_key;
+	if(private_key_sym_cipher!=NULL)
+		g_object_ref(private_key_sym_cipher);
 	if(asym_cipher->priv->private_key_sym_cipher!=NULL)
 		g_object_unref(asym_cipher->priv->private_key_sym_cipher);
 	asym_cipher->priv->private_key_sym_cipher=private_key_sym_cipher;
+	if(private_key_iv!=NULL)
+		g_bytes_ref(private_key_iv);
 	g_bytes_unref(asym_cipher->priv->private_key_iv);
 	asym_cipher->priv->private_key_iv=private_key_iv;
 }
@@ -204,8 +210,9 @@ static gboolean otb_asym_cipher_set_both_keys(OtbAsymCipher *asym_cipher, EVP_PK
 	{
 		GBytes *private_key_iv=NULL;
 		GBytes *encrypted_private_key=otb_asym_cipher_private_key_impl_to_encrypted_private_key(private_key_impl, private_key_sym_cipher, &private_key_iv);
-		g_object_ref(private_key_sym_cipher);
 		otb_asym_cipher_set_encrypted_private_key(asym_cipher, encrypted_private_key, private_key_sym_cipher, private_key_iv);
+		g_bytes_unref(private_key_iv);
+		g_bytes_unref(encrypted_private_key);
 		char *public_key=otb_asym_cipher_public_key_impl_to_public_key(public_key_impl);
 		g_object_set(asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, public_key, NULL);
 		g_free(public_key);
@@ -373,7 +380,6 @@ size_t otb_asym_cipher_finish_decrypt(OtbAsymCipherContext *asym_cipher_context,
 		g_free(error);
 		plain_bytes_size=0;
 	}
-	
 	otb_asym_cipher_context_free(asym_cipher_context);
 	return (size_t)plain_bytes_size;
 }
