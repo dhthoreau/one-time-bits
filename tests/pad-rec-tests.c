@@ -57,10 +57,10 @@ static void otb_assert_pad_file_does_not_exist(const OtbPadRec *pad_rec)
 	g_free(expected_pad_file_path);
 }
 
-static void otb_assert_pad_file(const OtbPadRec *pad_rec, const unsigned char *expected_pad_bytes, off_t expected_pad_size, gboolean auto_rewind)
+static void otb_assert_pad_file(OtbPadRec *pad_rec, const unsigned char *expected_pad_bytes, off_t expected_pad_size, gboolean auto_rewind)
 {
 	off_t actual_pad_size;
-	actual_pad_size=otb_pad_rec_get_size(pad_rec);
+	g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &actual_pad_size, NULL);
 	g_assert_cmpint(expected_pad_size, ==, actual_pad_size);
 	OtbPadIO *pad_io=otb_pad_rec_open_pad_for_read(pad_rec, auto_rewind);
 	g_assert(pad_io!=NULL);

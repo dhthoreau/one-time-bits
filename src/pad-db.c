@@ -222,10 +222,11 @@ static off_t otb_pad_db_get_curr_size(const OtbPadDb *pad_db)
 	off_t curr_size=0;
 	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
 	{
-		const OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		off_t pad_rec_size;
-		if((pad_rec_size=otb_pad_rec_get_size(pad_rec))>0)
-			curr_size+=pad_rec_size;
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		off_t pad_size;
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
+		if(pad_size>0)
+			curr_size+=pad_size;
 	}
 	return curr_size;
 }
@@ -234,12 +235,14 @@ static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_re
 {
 	gboolean ret_val=TRUE;
 	const uuid_t *unique_id=otb_pad_rec_get_unique_id(pad_rec);
+	off_t pad_size;
+	g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
 	if(otb_pad_db_find_pad_rec_by_id(pad_db, unique_id)!=NULL)
 	{
 		g_message(_("%s: Failed to add record due to non-unique ID."), "otb_pad_db_add");
 		ret_val=FALSE;
 	}
-	else if(otb_pad_db_get_curr_size(pad_db)+otb_pad_rec_get_size(pad_rec)>pad_db->priv->max_size)
+	else if(otb_pad_db_get_curr_size(pad_db)+pad_size>pad_db->priv->max_size)
 	{
 		g_message(_("%s: Failed to add record due to database size limitation."), "otb_pad_db_add");
 		ret_val=FALSE;
@@ -545,10 +548,12 @@ const uuid_t *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecSt
 off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const uuid_t *unique_id)
 {
 	otb_pad_db_lock(pad_db);
-	const OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id);
-	off_t size=(pad_rec==NULL?-1:otb_pad_rec_get_size(pad_rec));
+	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id);
+	off_t pad_size=-1;
+	if(pad_rec!=NULL)
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
 	otb_pad_db_unlock(pad_db);
-	return size;
+	return pad_size;
 }
 
 OtbPadIO *otb_pad_db_open_pad_for_read(const OtbPadDb *pad_db, const uuid_t *unique_id)
@@ -583,8 +588,10 @@ static gboolean otb_pad_db_can_encrypt_file(const OtbPadDb *pad_db, const char *
 	off_t bytes_available_for_encryption=0;
 	for(const GSList *curr_element=pad_db->priv->pad_recs; !ret_val && curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
 	{
-		const OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		bytes_available_for_encryption+=otb_pad_rec_get_size(pad_rec)-sizeof(uuid_t);
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		off_t pad_size;
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
+		bytes_available_for_encryption+=pad_size-sizeof(uuid_t);
 		if(bytes_available_for_encryption>=bytes_needed_for_encryption)
 			ret_val=TRUE;
 	}
@@ -648,7 +655,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt_file(const OtbPadDb *pad_db, const char 
 			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 		else if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))==NULL)
 			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-		else if((pad_size=otb_pad_rec_get_size(pad_rec))<0)
+		else if(g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL), pad_size<0)
 			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 		else if((current_pad_io=otb_pad_rec_open_pad_for_read(pad_rec, TRUE))==NULL)
 			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
@@ -706,7 +713,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt_file(const OtbPadDb *pad_db, const char 
 			decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 		else if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, (const uuid_t*)&unique_id))==NULL)
 			decryption_result=OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD;
-		else if((pad_size=otb_pad_rec_get_size(pad_rec))<0)
+		else if(g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL), pad_size<0)
 			decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 		else if((current_pad_io=otb_pad_rec_open_pad_for_read(pad_rec, TRUE))==NULL)
 			decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;

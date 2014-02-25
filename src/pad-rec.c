@@ -76,7 +76,7 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	g_object_class_install_property(object_class, PROP_STATUS, g_param_spec_uint(OTB_PAD_REC_PROP_STATUS, _("Status"), _("Status of the record"), 0, OTB_PAD_REC_STATUS_OUT_OF_BOUNDS-1, OTB_PAD_REC_STATUS_UNSENT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int64(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT64, -1, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int64(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT64, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_type_class_add_private(klass, sizeof(OtbPadRecPrivate));
 }
 
@@ -176,6 +176,9 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 	{
 		case PROP_STATUS:
 			g_value_set_uint(value, pad_rec->priv->status);
+			break;
+		case PROP_SIZE:
+			g_value_set_int64(value, pad_rec->priv->size);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -292,11 +295,6 @@ OtbPadIO *otb_pad_rec_open_pad_for_read(const OtbPadRec *pad_rec, gboolean auto_
 		pad_io->sym_cipher_context=otb_sym_cipher_init_decryption(otb_local_crypto_get_sym_cipher(), pad_rec->priv->pad_iv);
 	}
 	return pad_io;
-}
-
-off_t otb_pad_rec_get_size(const OtbPadRec *pad_rec)
-{
-	return pad_rec->priv->size;
 }
 
 gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec)
