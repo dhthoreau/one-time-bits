@@ -17,9 +17,9 @@
 #include "random.h"
 #include "settings.h"
 #include "smem.h"
+#include "uuid-util.h"
 
 #define INPUT_BUFFER_SIZE	4096
-#define UNIQUE_ID_STR_BYTES	37
 
 struct _OtbPadRecPrivate
 {

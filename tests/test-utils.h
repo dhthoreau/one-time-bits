@@ -9,8 +9,6 @@
 #ifndef OTB_TEST_UTILS
 #define OTB_TEST_UTILS
 
-#define UNIQUE_ID_STR_BYTES	37
-
 void otb_recreate_test_dir();
 void otb_delete_test_dir();
 const char *otb_get_test_dir_path();

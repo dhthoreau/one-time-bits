@@ -12,6 +12,7 @@
 #include <glib-object.h>
 
 #include "pad-db.h"
+#include "uuid-util.h"
 
 #define OTB_FRIEND_PROP_UNIQUE_ID			"unique-id"
 #define OTB_FRIEND_PROP_BASE_PATH			"base-path"

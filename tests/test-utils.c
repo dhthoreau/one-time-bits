@@ -16,6 +16,7 @@
 #include "../src/local-crypto.h"
 #include "../src/settings.h"
 #include "../src/sym-cipher.h"
+#include "../src/uuid-util.h"
 
 char *otb_test_dir_path=NULL;
 
