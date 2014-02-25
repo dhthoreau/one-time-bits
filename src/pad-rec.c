@@ -84,7 +84,6 @@ static void otb_pad_generate_unique_id(OtbPadRec *pad_rec)
 {
 	pad_rec->priv->unique_id=g_malloc(sizeof(uuid_t));
 	uuid_generate(*pad_rec->priv->unique_id);
-	pad_rec->priv->base_path=NULL;
 }
 
 static void otb_pad_generate_base_name(OtbPadRec *pad_rec)

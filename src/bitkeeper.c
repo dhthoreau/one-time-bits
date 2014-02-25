@@ -16,6 +16,7 @@ G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
 
 struct _OtbBitkeeperPrivate
 {
+	uuid_t unique_id;
 	GSList *friends;
 };
 
