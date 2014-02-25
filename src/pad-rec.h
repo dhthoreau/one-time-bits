@@ -56,8 +56,6 @@ struct _OtbPadRecClass
 
 GType otb_pad_rec_get_type();
 
-const char *otb_pad_rec_get_base_name(const OtbPadRec *pad_rec);
-const uuid_t *otb_pad_rec_get_unique_id(const OtbPadRec *pad_rec);	// FARE - Dovrebbe venire da OTB_PAD_REC_PROP_UNIQUE_ID.
 int otb_pad_rec_compare_by_id(const gpointer p_pad_rec, const gpointer p_unique_id);
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec);
 OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name);

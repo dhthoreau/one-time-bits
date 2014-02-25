@@ -27,7 +27,6 @@ struct _OtbSymCipherPrivate
 	unsigned char *key;
 	size_t key_size;
 	const EVP_CIPHER *sym_cipher_impl;
-	// FARE - message_digest_impl ed hash_iterations dovrebbero essere input a otb_cipher_hash_passphrase(), etc. invece di membri di OtbSymCipherPrivate.
 	const EVP_MD *message_digest_impl;
 	unsigned int hash_iterations;
 };

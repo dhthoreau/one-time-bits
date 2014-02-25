@@ -234,7 +234,8 @@ static off_t otb_pad_db_get_curr_size(const OtbPadDb *pad_db)
 static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_rec)
 {
 	gboolean ret_val=TRUE;
-	const uuid_t *unique_id=otb_pad_rec_get_unique_id(pad_rec);
+	const uuid_t *unique_id=NULL;
+	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
 	off_t pad_size;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
 	if(otb_pad_db_find_pad_rec_by_id(pad_db, unique_id)!=NULL)
@@ -458,7 +459,8 @@ GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecSt
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 		if(pad_rec_status==status)
 		{
-			const uuid_t *unique_id=otb_pad_rec_get_unique_id(pad_rec);
+			const uuid_t *unique_id=NULL;
+			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
 			selected_pad_recs=g_slist_prepend(selected_pad_recs, unique_id);
 		}
 	}
@@ -494,7 +496,11 @@ static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, Otb
 		OtbPadRecStatus pad_rec_status;
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 		if(pad_rec_status==prerequisite_status)
-			ret_val=otb_pad_db_transition_status_of_pad(pad_db, otb_pad_rec_get_unique_id(pad_rec), prerequisite_status, new_status);
+		{
+			const uuid_t *unique_id=NULL;
+			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
+			ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, prerequisite_status, new_status);
+		}
 	}
 	return ret_val;
 }
@@ -520,7 +526,9 @@ static const uuid_t *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb *pad_
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 		if(pad_rec_status==status)
 		{
-			candidate_pads=g_slist_prepend(candidate_pads, otb_pad_rec_get_unique_id(pad_rec));
+			const uuid_t *unique_id=NULL;
+			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
+			candidate_pads=g_slist_prepend(candidate_pads, unique_id);
 			candidate_count++;
 		}
 	}

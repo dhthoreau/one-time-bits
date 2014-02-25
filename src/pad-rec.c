@@ -72,10 +72,10 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	object_class->finalize=otb_pad_rec_finalize;
 	object_class->set_property=otb_pad_rec_set_property;
 	object_class->get_property=otb_pad_rec_get_property;
-	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_pointer(OTB_PAD_REC_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the record"), G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_pointer(OTB_PAD_REC_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the record"), G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_STATUS, g_param_spec_uint(OTB_PAD_REC_PROP_STATUS, _("Status"), _("Status of the record"), 0, OTB_PAD_REC_STATUS_OUT_OF_BOUNDS-1, OTB_PAD_REC_STATUS_UNSENT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int64(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT64, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_type_class_add_private(klass, sizeof(OtbPadRecPrivate));
 }
@@ -174,8 +174,17 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 	OtbPadRec *pad_rec=OTB_PAD_REC(object);
 	switch(prop_id)
 	{
+		case PROP_UNIQUE_ID:
+			g_value_set_pointer(value, pad_rec->priv->unique_id);
+			break;
 		case PROP_STATUS:
 			g_value_set_uint(value, pad_rec->priv->status);
+			break;
+		case PROP_BASE_PATH:
+			g_value_set_string(value, pad_rec->priv->base_path);
+			break;
+		case PROP_BASE_NAME:
+			g_value_set_string(value, pad_rec->priv->base_name);
 			break;
 		case PROP_SIZE:
 			g_value_set_int64(value, pad_rec->priv->size);
@@ -184,15 +193,6 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
 	}
-}
-const gchar *otb_pad_rec_get_base_name(const OtbPadRec *pad_rec)
-{
-	return pad_rec->priv->base_name;
-}
-
-const uuid_t *otb_pad_rec_get_unique_id(const OtbPadRec *pad_rec)
-{
-	return (const uuid_t*)pad_rec->priv->unique_id;
 }
 
 int otb_pad_rec_compare_by_id(gpointer p_pad_rec, gpointer p_unique_id)
