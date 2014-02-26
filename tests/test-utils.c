@@ -27,7 +27,7 @@ static void otb_delete_dir(const char *dir_path)
 	if(test_dir)
 	{
 		const char *file_name;
-		while((file_name=g_dir_read_name(test_dir)))
+		while((file_name=g_dir_read_name(test_dir))!=NULL)
 		{
 			char *file_path=g_build_filename(dir_path, file_name, NULL);
 			if(g_file_test(file_path, G_FILE_TEST_IS_DIR))

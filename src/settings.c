@@ -65,19 +65,19 @@ static void otb_settings_load_config_file()
 	g_key_file_set_integer(config_key_file, CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, CURRENT_CONFIG_FILE_VERSION);
 }
 
-static void otb_settings_initialize_directory_paths(const char *app_name)
+static void otb_settings_initialize_directory_paths(const char *app_name, const char *otb_sub_dir)
 {
-	otb_config_directory_path=g_build_filename(g_get_user_config_dir(), app_name, NULL);
-	otb_data_directory_path=g_build_filename(g_get_user_data_dir(), app_name, NULL);
+	otb_config_directory_path=g_build_filename(g_get_user_config_dir(), app_name, otb_sub_dir, NULL);
+	otb_data_directory_path=g_build_filename(g_get_user_data_dir(), app_name, otb_sub_dir, NULL);
 }
 
-void otb_settings_initialize(const char *app_name)
+void otb_settings_initialize(const char *app_name, const char *otb_sub_dir)
 {
 	static gboolean otb_settings_directory_paths_initialized=FALSE;
 	if(g_once_init_enter(&otb_settings_directory_paths_initialized))
 	{
 		bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
-		otb_settings_initialize_directory_paths(app_name);
+		otb_settings_initialize_directory_paths(app_name, otb_sub_dir);
 		otb_settings_load_config_file();
 		g_once_init_leave(&otb_settings_directory_paths_initialized, TRUE);
 	}
@@ -166,6 +166,16 @@ int otb_settings_get_config_int(const char *group_name, const char *key, int err
 	return ret_val;
 }
 
+gboolean otb_settings_set_config_uint(const char *group_name, const char *key, unsigned int value)
+{
+	return otb_settings_set_config_int(group_name, key, (int)value);
+}
+
+unsigned int otb_settings_get_config_uint(const char *group_name, const char *key, unsigned int error_value)
+{
+	return (unsigned int)otb_settings_get_config_int(group_name, key, (int)error_value);
+}
+
 long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value, const char *func_name)
 {
 	GError *error=NULL;
@@ -200,10 +210,10 @@ char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const 
 	return value;
 }
 
-char *otb_settings_get_config_string(const char *group_name, const char *key, const char *func_name)
+char *otb_settings_get_config_string(const char *group_name, const char *key)
 {
 	otb_settings_lock_config();
-	char *ret_val=otb_settings_get_string(config_key_file, group_name, key, func_name);
+	char *ret_val=otb_settings_get_string(config_key_file, group_name, key, "otb_settings_get_config_string");
 	otb_settings_unlock_config();
 	return ret_val;
 }

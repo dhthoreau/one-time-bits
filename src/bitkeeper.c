@@ -8,7 +8,13 @@
 
 #include "../config.h"
 
+#include <glib.h>
+#include <uuid/uuid.h>
+
+#include "asym-cipher.h"
 #include "bitkeeper.h"
+#include "friend.h"
+#include "settings.h"
 
 static void otb_bitkeeper_dispose(GObject *object);
 
@@ -16,7 +22,6 @@ G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
 
 struct _OtbBitkeeperPrivate
 {
-	uuid_t unique_id;
 	GSList *friends;
 };
 
@@ -42,6 +47,47 @@ static void otb_bitkeeper_dispose(GObject *object)
 	G_OBJECT_CLASS(otb_bitkeeper_parent_class)->dispose(object);
 }
 
+gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
+{
+	gboolean ret_val=TRUE;
+	char *friends_base_path=g_build_filename(otb_settings_get_data_directory_path(), "friends", NULL);
+	GError *error=NULL;
+	GDir *friends_dir=g_dir_open(friends_base_path, 0, &error);
+	if(friends_dir)
+	{
+		const char *file_name;
+		while(ret_val && (file_name=g_dir_read_name(friends_dir))!=NULL)
+		{
+			char *file_path=g_build_filename(friends_base_path, file_name, NULL);
+			if(g_file_test(file_path, G_FILE_TEST_IS_DIR))
+			{
+				uuid_t friend_unique_id;
+				uuid_parse(file_name, friend_unique_id);
+				OtbFriend *friend=otb_friend_load_from_directory((const uuid_t*)&friend_unique_id, friends_base_path);
+				if(friend==NULL)
+					ret_val=FALSE;
+				else
+					bitkeeper->priv->friends=g_slist_prepend(bitkeeper->priv->friends, friend);
+			}
+			g_free(file_path);
+		}
+		g_dir_close(friends_dir);
+	}
+	else
+	{
+		g_error_free(error);
+		ret_val=FALSE;
+	}
+	g_free(friends_base_path);
+}
+
 OtbBitkeeper *otb_bitkeeper_load()
 {
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
+	if(!otb_bitkeeper_load_friends(bitkeeper))
+	{
+		g_object_unref(bitkeeper);
+		bitkeeper=NULL;
+	}
+	return bitkeeper;
 }

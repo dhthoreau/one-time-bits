@@ -15,7 +15,7 @@
 #include "settings.h"
 
 #define CONFIG_GROUP			"local-crypto"
-#define CONFIG_CIPHER			"cipher"
+#define CONFIG_SYM_CIPHER		"sym-cipher"
 #define CONFIG_MESSAGE_DIGEST	"message-digest"
 #define CONFIG_HASH_ITERATIONS	"hash-iterations"
 #define CONFIG_KEY				"key"
@@ -23,22 +23,22 @@
 #define CONFIG_PASSPHRASE_HASH	"passphrase-hash"
 #define CONFIG_PASSPHRASE_SALT	"passphrase-salt"
 
-static GMutex mutex;
-static OtbSymCipher *local_sym_cipher=NULL;
+static GMutex otb_local_crypto_mutex;
+static OtbSymCipher *otb_local_crypto_sym_cipher=NULL;
 
 static void otb_local_crypto_lock()
 {
-	g_mutex_lock(&mutex);
+	g_mutex_lock(&otb_local_crypto_mutex);
 }
 
 static void otb_local_crypto_unlock()
 {
-	g_mutex_unlock(&mutex);
+	g_mutex_unlock(&otb_local_crypto_mutex);
 }
 
 static void otb_local_crypto_new_sym_cipher_initialize_string_property(OtbSymCipher *sym_cipher, const char *config_key, const char *sym_cipher_property)
 {
-	char *value=otb_settings_get_config_string(CONFIG_GROUP, config_key, "otb_local_crypto_new_sym_cipher_initialize_string_property");
+	char *value=otb_settings_get_config_string(CONFIG_GROUP, config_key);
 	if(value==NULL)
 	{
 		char *defaulted_value;
@@ -67,7 +67,7 @@ static void otb_local_crypto_new_sym_cipher_initialize_int_property(OtbSymCipher
 static OtbSymCipher *otb_local_crypto_new_sym_cipher()
 {
 	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
-	otb_local_crypto_new_sym_cipher_initialize_string_property(sym_cipher, CONFIG_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER);
+	otb_local_crypto_new_sym_cipher_initialize_string_property(sym_cipher, CONFIG_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER);
 	otb_local_crypto_new_sym_cipher_initialize_string_property(sym_cipher, CONFIG_MESSAGE_DIGEST, OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST);
 	otb_local_crypto_new_sym_cipher_initialize_int_property(sym_cipher, CONFIG_HASH_ITERATIONS, 0, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS);
 	return sym_cipher;
@@ -99,8 +99,8 @@ static gboolean otb_local_crypto_set_passphrase(OtbSymCipher *sym_cipher, const 
 static void otb_local_crypto_set_local_sym_cipher(OtbSymCipher *sym_cipher)
 {
 	otb_local_crypto_lock();
-	OtbSymCipher *old_sym_cipher=local_sym_cipher;
-	local_sym_cipher=sym_cipher;
+	OtbSymCipher *old_sym_cipher=otb_local_crypto_sym_cipher;
+	otb_local_crypto_sym_cipher=sym_cipher;
 	otb_local_crypto_unlock();
 	if(old_sym_cipher!=NULL)
 		g_object_unref(old_sym_cipher);
@@ -164,11 +164,11 @@ gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const ch
 {
 	gboolean ret_val=TRUE;
 	otb_local_crypto_lock();
-	if(local_sym_cipher==NULL)
+	if(otb_local_crypto_sym_cipher==NULL)
 		ret_val=FALSE;
-	else if(!otb_local_crypto_validate_passphrase(local_sym_cipher, old_passphrase))
+	else if(!otb_local_crypto_validate_passphrase(otb_local_crypto_sym_cipher, old_passphrase))
 		ret_val=FALSE;
-	else if(!otb_local_crypto_set_passphrase(local_sym_cipher, new_passphrase))
+	else if(!otb_local_crypto_set_passphrase(otb_local_crypto_sym_cipher, new_passphrase))
 		ret_val=FALSE;
 	otb_local_crypto_unlock();
 	return ret_val;
@@ -177,7 +177,7 @@ gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const ch
 OtbSymCipher *otb_local_crypto_get_sym_cipher_with_ref()
 {
 	otb_local_crypto_lock();
-	OtbSymCipher *sym_cipher=local_sym_cipher;
+	OtbSymCipher *sym_cipher=otb_local_crypto_sym_cipher;
 	g_object_ref(sym_cipher);
 	otb_local_crypto_unlock();
 	return sym_cipher;

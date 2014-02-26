@@ -144,16 +144,7 @@ GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_ciph
 	return asym_cipher->priv->encrypted_private_key;
 }
 
-static EVP_PKEY *otb_asym_cipher_get_private_key_impl_from_joint_key(EVP_PKEY *key_impl)
-{
-	BIO *private_buff_io=BIO_new(BIO_s_mem());
-	PEM_write_bio_PrivateKey(private_buff_io, key_impl, NULL, NULL, 0, NULL, NULL);
-	EVP_PKEY *private_key_impl=PEM_read_bio_PrivateKey(private_buff_io, NULL, NULL, NULL);
-	BIO_free_all(private_buff_io);
-	return private_key_impl;
-}
-
-static EVP_PKEY *otb_asym_cipher_get_public_key_impl_from_joint_key(EVP_PKEY *key_impl)
+static EVP_PKEY *otb_asym_cipher_get_public_key_impl_from_private_key(EVP_PKEY *key_impl)
 {
 	BIO *public_buff_io=BIO_new(BIO_s_mem());
 	PEM_write_bio_PUBKEY(public_buff_io, key_impl);
@@ -192,12 +183,11 @@ static GBytes *otb_asym_cipher_private_key_impl_to_encrypted_private_key(EVP_PKE
 	return encrypted_private_key;
 }
 
-static gboolean otb_asym_cipher_set_both_keys(OtbAsymCipher *asym_cipher, EVP_PKEY *key_impl, OtbSymCipher *private_key_sym_cipher)
+static gboolean otb_asym_cipher_set_both_keys(OtbAsymCipher *asym_cipher, EVP_PKEY *private_key_impl, OtbSymCipher *private_key_sym_cipher)
 {
 	gboolean ret_val=FALSE;
-	EVP_PKEY *private_key_impl=otb_asym_cipher_get_private_key_impl_from_joint_key(key_impl);
-	EVP_PKEY *public_key_impl=otb_asym_cipher_get_public_key_impl_from_joint_key(key_impl);
-	if(private_key_impl!=NULL && public_key_impl!=NULL)
+	EVP_PKEY *public_key_impl=otb_asym_cipher_get_public_key_impl_from_private_key(private_key_impl);
+	if(public_key_impl!=NULL)
 	{
 		GBytes *private_key_iv=NULL;
 		GBytes *encrypted_private_key=otb_asym_cipher_private_key_impl_to_encrypted_private_key(private_key_impl, private_key_sym_cipher, &private_key_iv);
@@ -212,8 +202,6 @@ static gboolean otb_asym_cipher_set_both_keys(OtbAsymCipher *asym_cipher, EVP_PK
 	}
 	if(public_key_impl!=NULL)
 		EVP_PKEY_free(public_key_impl);
-	if(private_key_impl!=NULL)
-		EVP_PKEY_free(private_key_impl);
 	return ret_val;
 }
 
@@ -222,18 +210,18 @@ gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t
 	gboolean ret_val=TRUE;
 	// FARE - Potrebbe essere bene se c'erano più di EVP_PKEY_RSA. Fai EVP_PKEY_RSA come un input?
 	EVP_PKEY_CTX *context=EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-	EVP_PKEY *key_impl=NULL;
+	EVP_PKEY *private_key_impl=NULL;
 	if(EVP_PKEY_keygen_init(context)<=0)
 		ret_val=FALSE;
 	else if(_EVP_PKEY_CTX_set_rsa_keygen_bits(context, key_size)<=0)
 		ret_val=FALSE;
-	else if(EVP_PKEY_keygen(context, &key_impl)<=0)
+	else if(EVP_PKEY_keygen(context, &private_key_impl)<=0)
 		ret_val=FALSE;
 	EVP_PKEY_CTX_free(context);
 	if(ret_val)
-		ret_val=otb_asym_cipher_set_both_keys(asym_cipher, key_impl, private_key_sym_cipher);
-	if(key_impl!=NULL)
-		EVP_PKEY_free(key_impl);
+		ret_val=otb_asym_cipher_set_both_keys(asym_cipher, private_key_impl, private_key_sym_cipher);
+	if(private_key_impl!=NULL)
+		EVP_PKEY_free(private_key_impl);
 	return ret_val;
 }
 

@@ -9,9 +9,11 @@
 #ifndef OTB_SETTINGS_H
 #define OTB_SETTINGS_H
 
+#include <glib.h>
+
 gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path, const char *func_name);
 GKeyFile *otb_settings_load_key_file(const char *file_path);
-void otb_settings_initialize(const char *app_name);
+void otb_settings_initialize(const char *app_name, const char *otb_sub_dir);
 const char *otb_settings_get_config_directory_path();
 void otb_settings_set_config_directory_path(const char *config_directory_path);
 const char *otb_settings_get_data_directory_path();
@@ -19,10 +21,12 @@ void otb_settings_set_data_directory_path(const char *data_directory_path);
 gboolean otb_settings_set_config_int(const char *group_name, const char *key, int value);
 int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char *key, int error_value, const char *func_name);
 int otb_settings_get_config_int(const char *group_name, const char *key, int error_value);
+gboolean otb_settings_set_config_uint(const char *group_name, const char *key, unsigned int value);
+unsigned int otb_settings_get_config_uint(const char *group_name, const char *key, unsigned int error_value);
 long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value, const char *func_name);
 gboolean otb_settings_set_config_string(const char *group_name, const char *key, const char *value);
 char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const char *key, const char *func_name);
-char *otb_settings_get_config_string(const char *group_name, const char *key, const char *func_name);
+char *otb_settings_get_config_string(const char *group_name, const char *key);
 void otb_settings_set_bytes(GKeyFile *key_file, const char *group_name, const char *key, const void *value, size_t value_length);
 gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, const void *value, size_t value_length);
 void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t* value_length, const char *func_name);

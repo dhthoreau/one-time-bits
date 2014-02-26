@@ -11,12 +11,6 @@
 
 #include <glib-object.h>
 
-#include "pad-db.h"
-
-#define OTB_BITKEEPER_PROP_BASE_PATH	"base-path"
-#define OTB_BITKEEPER_PROP_UNIQUE_ID	"unique-id"
-#define OTB_BITKEEPER_PROP_PUBLIC_KEY	"public-key"
-
 #define OTB_TYPE_BITKEEPER				(otb_bitkeeper_get_type())
 #define OTB_BITKEEPER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_BITKEEPER, OtbBitkeeper))
 #define OTB_IS_BITKEEPER(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_BITKEEPER))
@@ -41,6 +35,6 @@ struct _OtbBitkeeperClass
 
 GType otb_bitkeeper_get_type();
 
-OtbBitkeeper *otb_bitkeeper_load();
+OtbBitkeeper *otb_bitkeeper_load();	// FARE - Ha bisogno di unit test.
 
 #endif
