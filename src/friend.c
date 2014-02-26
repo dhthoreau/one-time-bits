@@ -234,8 +234,8 @@ static gboolean otb_friend_save(const OtbFriend *friend)
 	{
 		GBytes *public_key_iv=NULL;
 		GBytes *onion_base_domain_iv=NULL;
-		unsigned char *encrypted_public_key=NULL;
-		unsigned char *encrypted_onion_base_domain=NULL;
+		void *encrypted_public_key=NULL;
+		void *encrypted_onion_base_domain=NULL;
 		size_t encrypted_public_key_size;
 		size_t encrypted_onion_base_domain_size;
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
@@ -282,8 +282,8 @@ static gboolean otb_friend_load(const OtbFriend *friend)
 	gboolean ret_val=TRUE;
 	GBytes *public_key_iv=NULL;
 	GBytes *onion_base_domain_iv=NULL;
-	unsigned char *encrypted_public_key=NULL;
-	unsigned char *encrypted_onion_base_domain=NULL;
+	void *encrypted_public_key=NULL;
+	void *encrypted_onion_base_domain=NULL;
 	size_t encrypted_public_key_size;
 	size_t encrypted_onion_base_domain_size;
 	GKeyFile *key_file=otb_settings_load_key_file(friend->priv->file_path);
@@ -296,12 +296,12 @@ static gboolean otb_friend_load(const OtbFriend *friend)
 		onion_base_domain_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN_IV, "otb_friend_load");
 		encrypted_onion_base_domain=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, &encrypted_onion_base_domain_size, "otb_friend_load");
 		g_key_file_unref(key_file);
-		char *public_key=NULL;
-		char *onion_base_domain=NULL;
+		void *public_key=NULL;
+		void *onion_base_domain=NULL;
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		if(encrypted_public_key!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_public_key, encrypted_public_key_size, public_key_iv, (unsigned char**)&public_key)==0)
+		if(encrypted_public_key!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_public_key, encrypted_public_key_size, public_key_iv, &public_key)==0)
 			ret_val=FALSE;
-		else if(encrypted_onion_base_domain!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_onion_base_domain, encrypted_onion_base_domain_size, onion_base_domain_iv, (unsigned char**)&onion_base_domain)==0)
+		else if(encrypted_onion_base_domain!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_onion_base_domain, encrypted_onion_base_domain_size, onion_base_domain_iv, &onion_base_domain)==0)
 			ret_val=FALSE;
 		g_object_unref(local_crypto_sym_cipher);
 		if(ret_val)

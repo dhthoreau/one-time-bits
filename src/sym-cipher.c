@@ -267,7 +267,7 @@ OtbSymCipherContext *otb_sym_cipher_init_decryption(const OtbSymCipher *sym_ciph
 	return otb_sym_cipher_init_decryption_openssl(sym_cipher->priv->sym_cipher_impl, sym_cipher->priv->key, g_bytes_get_data(iv, NULL));
 }
 
-size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, const unsigned char *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out)
+size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, const void *plain_bytes, size_t plain_bytes_size, void *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
 	if(!EVP_EncryptUpdate(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size))
@@ -280,7 +280,7 @@ size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, cons
 	return (size_t)encrypted_bytes_size;
 }
 
-size_t otb_sym_cipher_decrypt_next(OtbSymCipherContext *sym_cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, unsigned char *plain_bytes_out)
+size_t otb_sym_cipher_decrypt_next(OtbSymCipherContext *sym_cipher_context, const void *encrypted_bytes, size_t encrypted_bytes_size, void *plain_bytes_out)
 {
 	int plain_bytes_size;
 	if(!EVP_DecryptUpdate(sym_cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size))
@@ -293,7 +293,7 @@ size_t otb_sym_cipher_decrypt_next(OtbSymCipherContext *sym_cipher_context, cons
 	return (size_t)plain_bytes_size;
 }
 
-size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, unsigned char *encrypted_bytes_out)
+size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, void *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
 	if(!EVP_EncryptFinal_ex(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size))
@@ -307,7 +307,7 @@ size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, un
 	return (size_t)encrypted_bytes_size;
 }
 
-size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, unsigned char *plain_bytes_out)
+size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, void *plain_bytes_out)
 {
 	int plain_bytes_size;
 	if(!EVP_DecryptFinal_ex(sym_cipher_context, plain_bytes_out, &plain_bytes_size))
@@ -322,7 +322,7 @@ size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, un
 	return (size_t)plain_bytes_size;
 }
 
-size_t otb_sym_cipher_encrypt(const OtbSymCipher *sym_cipher, const unsigned char *plain_bytes, size_t plain_bytes_size, GBytes **iv_out, unsigned char **encrypted_bytes_out)
+size_t otb_sym_cipher_encrypt(const OtbSymCipher *sym_cipher, const void *plain_bytes, size_t plain_bytes_size, GBytes **iv_out, void **encrypted_bytes_out)
 {
 	*encrypted_bytes_out=otb_sym_cipher_create_encryption_buffer(sym_cipher, plain_bytes_size, NULL);
 	OtbSymCipherContext *sym_cipher_context=otb_sym_cipher_init_encryption(sym_cipher, iv_out);
@@ -331,7 +331,7 @@ size_t otb_sym_cipher_encrypt(const OtbSymCipher *sym_cipher, const unsigned cha
 	return ret_val;
 }
 
-size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *iv, unsigned char **plain_bytes_out)
+size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const void *encrypted_bytes, size_t encrypted_bytes_size, GBytes *iv, void **plain_bytes_out)
 {
 	*plain_bytes_out=otb_sym_cipher_create_decryption_buffer(sym_cipher, encrypted_bytes_size, NULL);
 	OtbSymCipherContext *sym_cipher_context=otb_sym_cipher_init_decryption(sym_cipher, iv);
