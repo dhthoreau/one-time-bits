@@ -93,15 +93,17 @@ static void otb_user_initialize_asym_cipher(OtbUser *user)
 	g_free(sym_cipher_name);
 	GBytes *private_key_iv=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV);
 	GBytes *encrypted_private_key=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY);
-	OtbSymCipher *sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 	if(private_key_iv!=NULL && encrypted_private_key!=NULL)
+	{
+		OtbSymCipher *sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		otb_asym_cipher_set_encrypted_private_key(user->priv->asym_cipher, encrypted_private_key, sym_cipher, private_key_iv);
+		g_object_unref(sym_cipher);
+	}
 	else
 	{
 		size_t key_size=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV, OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE);
-		otb_asym_cipher_generate_random_keys(user->priv->asym_cipher, key_size, sym_cipher);
+		otb_asym_cipher_generate_random_keys(user->priv->asym_cipher, key_size);
 	}
-	g_object_unref(sym_cipher);
 	g_bytes_unref(private_key_iv);
 	g_bytes_unref(encrypted_private_key);
 }

@@ -31,20 +31,22 @@ static void test_asym_cipher_properties()
 
 static void otb_copy_public_key(OtbAsymCipher *asym_cipher_original, OtbAsymCipher *asym_cipher_public)
 {
-	char *public_key=NULL;
-	g_object_get(asym_cipher_original, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &public_key, NULL);
+	char *public_key=otb_asym_cipher_get_public_key(asym_cipher_original);
 	g_assert(public_key!=NULL);
-	g_object_set(asym_cipher_public, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, public_key, NULL);
+	otb_asym_cipher_set_public_key(asym_cipher_public, public_key);
 	g_free(public_key);
 }
 
-static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCipher *asym_cipher_private, OtbSymCipher *private_key_sym_cipher)
+static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCipher *asym_cipher_private)
 {
+	OtbSymCipher *private_key_sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, "AES-256-CBC", NULL);
+	g_assert(otb_sym_cipher_generate_random_key(private_key_sym_cipher));
 	GBytes *private_key_iv=NULL;
-	GBytes *encrypted_private_key=otb_asym_cipher_get_encrypted_private_key(asym_cipher_original, &private_key_iv);
+	GBytes *encrypted_private_key=otb_asym_cipher_get_encrypted_private_key(asym_cipher_original, private_key_sym_cipher, &private_key_iv);
 	g_assert(private_key_iv!=NULL);
 	g_assert(encrypted_private_key!=NULL);
 	otb_asym_cipher_set_encrypted_private_key(asym_cipher_private, encrypted_private_key, private_key_sym_cipher, private_key_iv);
+	g_object_unref(private_key_sym_cipher);
 }
 
 static void test_asym_cipher_encryption()
@@ -54,14 +56,11 @@ static void test_asym_cipher_encryption()
 	const char *EXPECTED_MESSAGE="Timid men prefer the calm of despotism to the tempestuous sea of liberty.";
 	
 	OtbAsymCipher *asym_cipher_original=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	OtbSymCipher *private_key_sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, "AES-256-CBC", NULL);
-	g_assert(otb_sym_cipher_generate_random_key(private_key_sym_cipher));
-	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original, NEW_KEY_LENGTH, private_key_sym_cipher));
+	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original, NEW_KEY_LENGTH));
 	OtbAsymCipher *asym_cipher_public=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	OtbAsymCipher *asym_cipher_private=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	otb_copy_public_key(asym_cipher_original, asym_cipher_public);
-	otb_copy_private_key(asym_cipher_original, asym_cipher_private, private_key_sym_cipher);
-	g_object_unref(private_key_sym_cipher);
+	otb_copy_private_key(asym_cipher_original, asym_cipher_private);
 	g_object_unref(asym_cipher_original);
 	unsigned char *encrypted_message=otb_asym_cipher_create_encryption_buffer(asym_cipher_public, EXPECTED_MESSAGE_SIZE, NULL);
 	GBytes *iv=NULL;
