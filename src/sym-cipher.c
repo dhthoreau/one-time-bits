@@ -212,7 +212,6 @@ GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *pass
 	if(otb_random_bytes(salt_out, sizeof salt_out))
 	{
 		unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
-		// FARE - iv non deve essere un output di PKCS5_PBKDF2_HMAC()!!!
 		if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt_out, sizeof salt_out, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 		{
 			unsigned char *wrapped_key_bytes=otb_sym_cipher_create_encryption_buffer(sym_cipher, sym_cipher->priv->key_size, NULL);

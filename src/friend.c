@@ -229,19 +229,39 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 
 static gboolean otb_friend_save(const OtbFriend *friend)
 {
-	gboolean ret_val=TRUE;
+	gboolean ret_val=FALSE;
 	if(otb_mkdir_with_parents(friend->priv->base_path_including_unique_id, "otb_friend_save"))
 	{
+		GBytes *public_key_iv=NULL;
+		GBytes *onion_base_domain_iv=NULL;
+		unsigned char *encrypted_public_key=NULL;
+		unsigned char *encrypted_onion_base_domain=NULL;
+		size_t encrypted_public_key_size;
+		size_t encrypted_onion_base_domain_size;
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		GKeyFile *key_file=g_key_file_new();
-		//FARE - Cifra tutti i seguenti con local-crypto...
 		if(friend->priv->public_key!=NULL)
-			g_key_file_set_string(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, friend->priv->public_key);
+			encrypted_public_key_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, friend->priv->public_key, strlen(friend->priv->public_key)+1, &public_key_iv, &encrypted_public_key);
 		if(friend->priv->onion_base_domain!=NULL)
-			g_key_file_set_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, friend->priv->onion_base_domain);
+			encrypted_onion_base_domain_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, friend->priv->onion_base_domain, strlen(friend->priv->onion_base_domain)+1, &onion_base_domain_iv, &encrypted_onion_base_domain);
+		g_object_unref(local_crypto_sym_cipher);
+		GKeyFile *key_file=g_key_file_new();
+		if(encrypted_public_key!=NULL)
+		{
+			otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY_IV, public_key_iv);
+			otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, encrypted_public_key, encrypted_public_key_size);
+		}
+		if(encrypted_onion_base_domain!=NULL)
+		{
+			otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN_IV, onion_base_domain_iv);
+			otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, encrypted_onion_base_domain, encrypted_onion_base_domain_size);
+		}
 		ret_val=otb_settings_save_key_file(key_file, friend->priv->file_path, "otb_friend_save");
 		g_key_file_unref(key_file);
-		g_object_unref(local_crypto_sym_cipher);
+		g_bytes_unref(public_key_iv);
+		g_bytes_unref(onion_base_domain_iv);
+		g_free(encrypted_public_key);
+		g_free(encrypted_onion_base_domain);
+		ret_val=TRUE;
 	}
 	return ret_val;
 }
@@ -260,24 +280,42 @@ OtbFriend *otb_friend_create_in_directory(const uuid_t *unique_id, const char *b
 static gboolean otb_friend_load(const OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
-	char *public_key=NULL;
-	char *onion_base_domain=NULL;
+	GBytes *public_key_iv=NULL;
+	GBytes *onion_base_domain_iv=NULL;
+	unsigned char *encrypted_public_key=NULL;
+	unsigned char *encrypted_onion_base_domain=NULL;
+	size_t encrypted_public_key_size;
+	size_t encrypted_onion_base_domain_size;
 	GKeyFile *key_file=otb_settings_load_key_file(friend->priv->file_path);
 	if(key_file==NULL)
 		ret_val=FALSE;
-	else if((public_key=otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, "otb_friend_load"))==NULL)
-		ret_val=FALSE;
-	else if((onion_base_domain=otb_settings_get_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, "otb_friend_load"))==NULL)
-		ret_val=FALSE;
-	if(ret_val)
+	else
 	{
-		otb_friend_set_public_key_no_save(friend, public_key);
-		otb_friend_set_onion_base_domain_no_save(friend, onion_base_domain);
-	}
-	g_free(public_key);
-	g_free(onion_base_domain);
-	if(key_file!=NULL)
+		public_key_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY_IV, "otb_friend_load");
+		encrypted_public_key=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, &encrypted_public_key_size, "otb_friend_load");
+		onion_base_domain_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN_IV, "otb_friend_load");
+		encrypted_onion_base_domain=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, &encrypted_onion_base_domain_size, "otb_friend_load");
 		g_key_file_unref(key_file);
+		char *public_key=NULL;
+		char *onion_base_domain=NULL;
+		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+		if(encrypted_public_key!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_public_key, encrypted_public_key_size, public_key_iv, (unsigned char**)&public_key)==0)
+			ret_val=FALSE;
+		else if(encrypted_onion_base_domain!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_onion_base_domain, encrypted_onion_base_domain_size, onion_base_domain_iv, (unsigned char**)&onion_base_domain)==0)
+			ret_val=FALSE;
+		g_object_unref(local_crypto_sym_cipher);
+		if(ret_val)
+		{
+			otb_friend_set_public_key_no_save(friend, public_key);
+			otb_friend_set_onion_base_domain_no_save(friend, onion_base_domain);
+		}
+		g_bytes_unref(public_key_iv);
+		g_bytes_unref(onion_base_domain_iv);
+		g_free(encrypted_public_key);
+		g_free(encrypted_onion_base_domain);
+		g_free(public_key);
+		g_free(onion_base_domain);
+	}
 	return ret_val;
 }
 

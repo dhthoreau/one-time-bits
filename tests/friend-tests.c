@@ -66,6 +66,7 @@ static void test_otb_friend_create_load()
 	const char *UNEXPECTED_PATH="garbage";
 	const uuid_t unexpected_unique_id;
 	
+	otb_test_setup_local_crypto();
 	char *friend_dir_path=otb_generate_unique_test_subdir_path();
 	uuid_t unique_id;
 	uuid_generate(unique_id);
