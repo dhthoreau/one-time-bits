@@ -54,9 +54,11 @@ unsigned char *otb_sym_cipher_create_encryption_buffer(const OtbSymCipher *sym_c
 unsigned char *otb_sym_cipher_create_decryption_buffer(const OtbSymCipher *sym_cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
 OtbSymCipherContext *otb_sym_cipher_init_encryption(const OtbSymCipher *sym_cipher, GBytes **iv_out);
 OtbSymCipherContext *otb_sym_cipher_init_decryption(const OtbSymCipher *sym_cipher, GBytes *iv);
-size_t otb_sym_cipher_encrypt(OtbSymCipherContext *sym_cipher_context, const unsigned char *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out);
-size_t otb_sym_cipher_decrypt(OtbSymCipherContext *sym_cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, unsigned char *plain_bytes_out);
+size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, const unsigned char *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out);
+size_t otb_sym_cipher_decrypt_next(OtbSymCipherContext *sym_cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, unsigned char *plain_bytes_out);
 size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, unsigned char *encrypted_bytes_out);
 size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, unsigned char *plain_bytes_out);
+size_t otb_sym_cipher_encrypt(const OtbSymCipher *sym_cipher, const unsigned char *plain_bytes, size_t plain_bytes_size, GBytes **iv_out, unsigned char **encrypted_bytes_out);
+size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *iv, unsigned char **plain_bytes_out);
 
 #endif

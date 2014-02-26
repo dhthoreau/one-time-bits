@@ -174,10 +174,11 @@ gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const ch
 	return ret_val;
 }
 
-const OtbSymCipher *otb_local_crypto_get_sym_cipher()
+OtbSymCipher *otb_local_crypto_get_sym_cipher_with_ref()
 {
 	otb_local_crypto_lock();
 	OtbSymCipher *sym_cipher=local_sym_cipher;
+	g_object_ref(sym_cipher);
 	otb_local_crypto_unlock();
 	return sym_cipher;
 }

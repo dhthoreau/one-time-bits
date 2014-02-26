@@ -52,7 +52,7 @@ static void test_sym_cipher_hash_passphrase()
 	g_object_unref(sym_cipher);
 }
 
-static void test_sym_cipher_encryption()
+static void test_sym_cipher_encryption_in_steps()
 {
 	const size_t EXPECTED_MESSAGE_SIZE=523;
 	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
@@ -65,7 +65,7 @@ static void test_sym_cipher_encryption()
 	OtbSymCipherContext *encryption_context=otb_sym_cipher_init_encryption(sym_cipher, &iv);
 	g_assert(encryption_context!=NULL);
 	g_assert(iv!=NULL);
-	size_t encrypted_message_size=otb_sym_cipher_encrypt(encryption_context, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, encrypted_message);
+	size_t encrypted_message_size=otb_sym_cipher_encrypt_next(encryption_context, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, encrypted_message);
 	encrypted_message_size+=otb_sym_cipher_finish_encrypt(encryption_context, encrypted_message+encrypted_message_size);
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
@@ -76,8 +76,36 @@ static void test_sym_cipher_encryption()
 	char *decrypted_message=otb_sym_cipher_create_decryption_buffer(sym_cipher, encrypted_message_size, NULL);
 	OtbSymCipherContext *decryption_context=otb_sym_cipher_init_decryption(sym_cipher, iv);
 	g_assert(decryption_context!=NULL);
-	size_t actual_message_size=otb_sym_cipher_decrypt(decryption_context, encrypted_message, encrypted_message_size, decrypted_message);
+	size_t actual_message_size=otb_sym_cipher_decrypt_next(decryption_context, encrypted_message, encrypted_message_size, decrypted_message);
 	actual_message_size+=otb_sym_cipher_finish_decrypt(decryption_context, decrypted_message+actual_message_size);
+	g_assert_cmpint(0, !=, actual_message_size);
+	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
+	g_assert_cmpstr(EXPECTED_MESSAGE, ==, decrypted_message);
+	g_free(decrypted_message);
+	g_free(encrypted_message);
+	g_bytes_unref(iv);
+	g_object_unref(sym_cipher);
+}
+
+static void test_sym_cipher_encryption()
+{
+	const size_t EXPECTED_MESSAGE_SIZE=523;
+	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
+	const char *PASSPHRASE="All is for the best in the best of all possible worlds!";
+	
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, "AES-256-CBC", OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST, "SHA512", OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, 2048, NULL);
+	g_assert(otb_sym_cipher_generate_random_key(sym_cipher));
+	unsigned char *encrypted_message=NULL;
+	GBytes *iv=NULL;
+	size_t encrypted_message_size=otb_sym_cipher_encrypt(sym_cipher, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, &iv, &encrypted_message);
+	g_assert_cmpint(0, !=, encrypted_message_size);
+	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
+	OtbSymCipherSalt salt;
+	GBytes *wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, PASSPHRASE, salt);
+	g_assert(otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, PASSPHRASE, salt));
+	g_bytes_unref(wrapped_key);
+	char *decrypted_message=NULL;
+	size_t actual_message_size=otb_sym_cipher_decrypt(sym_cipher, encrypted_message, encrypted_message_size, iv, (unsigned char**)&decrypted_message);
 	g_assert_cmpint(0, !=, actual_message_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, decrypted_message);
@@ -91,5 +119,6 @@ void otb_add_sym_cipher_tests()
 {
 	otb_add_test_func("/sym_cipher/test_sym_cipher_properties", test_sym_cipher_properties);
 	otb_add_test_func("/sym_cipher/test_sym_cipher_hash_passphrase", test_sym_cipher_hash_passphrase);
+	otb_add_test_func("/sym_cipher/test_sym_cipher_encryption_in_steps", test_sym_cipher_encryption_in_steps);
 	otb_add_test_func("/sym_cipher/test_sym_cipher_encryption", test_sym_cipher_encryption);
 }

@@ -12,6 +12,7 @@
 
 #include "friend.h"
 #include "io.h"
+#include "local-crypto.h"
 #include "settings.h"
 #include "uuid-util.h"
 
@@ -220,15 +221,18 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 	}
 }
 
-#define SAVE_GROUP					"friend"
-#define SAVE_KEY_PUBLIC_KEY			"public-key"
-#define SAVE_KEY_ONION_BASE_DOMAIN	"onion-base-domain"
+#define SAVE_GROUP						"friend"
+#define SAVE_KEY_PUBLIC_KEY_IV			"public-key-iv"
+#define SAVE_KEY_PUBLIC_KEY				"public-key"
+#define SAVE_KEY_ONION_BASE_DOMAIN_IV	"onion-base-domain-iv"
+#define SAVE_KEY_ONION_BASE_DOMAIN		"onion-base-domain"
 
 static gboolean otb_friend_save(const OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
 	if(otb_mkdir_with_parents(friend->priv->base_path_including_unique_id, "otb_friend_save"))
 	{
+		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		GKeyFile *key_file=g_key_file_new();
 		//FARE - Cifra tutti i seguenti con local-crypto...
 		if(friend->priv->public_key!=NULL)
@@ -237,6 +241,7 @@ static gboolean otb_friend_save(const OtbFriend *friend)
 			g_key_file_set_string(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, friend->priv->onion_base_domain);
 		ret_val=otb_settings_save_key_file(key_file, friend->priv->file_path, "otb_friend_save");
 		g_key_file_unref(key_file);
+		g_object_unref(local_crypto_sym_cipher);
 	}
 	return ret_val;
 }

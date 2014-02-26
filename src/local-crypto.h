@@ -14,6 +14,6 @@
 gboolean otb_local_crypto_create_sym_cipher(const char *passphrase);
 gboolean otb_local_crypto_unlock_sym_cipher(const char *passphrase);
 gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const char *new_passphrase);
-const OtbSymCipher *otb_local_crypto_get_sym_cipher();
+OtbSymCipher *otb_local_crypto_get_sym_cipher_with_ref();
 
 #endif

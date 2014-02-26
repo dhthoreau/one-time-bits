@@ -27,11 +27,15 @@ static void test_local_crypto()
 	g_assert(otb_local_crypto_create_sym_cipher(EXPECTED_PASSPHRASE));
 	g_assert(!otb_local_crypto_unlock_sym_cipher(NEW_PASSPHRASE));
 	g_assert(otb_local_crypto_unlock_sym_cipher(EXPECTED_PASSPHRASE));
-	g_assert(otb_local_crypto_get_sym_cipher()!=NULL);
+	OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+	g_assert(local_crypto_sym_cipher!=NULL);
+	g_object_unref(local_crypto_sym_cipher);
 	g_assert(otb_local_crypto_change_passphrase(EXPECTED_PASSPHRASE, NEW_PASSPHRASE));
 	g_assert(!otb_local_crypto_unlock_sym_cipher(EXPECTED_PASSPHRASE));
 	g_assert(otb_local_crypto_unlock_sym_cipher(NEW_PASSPHRASE));
-	g_assert(otb_local_crypto_get_sym_cipher()!=NULL);
+	local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+	g_assert(local_crypto_sym_cipher!=NULL);
+	g_object_unref(local_crypto_sym_cipher);
 }
 
 void otb_add_local_crypto_tests()
