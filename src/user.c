@@ -8,6 +8,7 @@
 
 #include "../config.h"
 
+#include <glib/gi18n.h>
 #include <uuid/uuid.h>
 
 #include "local-crypto.h"
@@ -21,8 +22,17 @@
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY		"asym-cipher-private-key"
 #define CONFIG_ONION_BASE_DOMAIN			"onion-base-domain"
 
+enum
+{
+	PROP_0,
+	PROP_UNIQUE_ID,
+	PROP_ASYM_CIPHER,
+	PROP_ONION_BASE_DOMAIN
+};
+
 static void otb_user_dispose(GObject *object);
 static void otb_user_finalize(GObject *object);
+static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
 
 G_DEFINE_TYPE(OtbUser, otb_user, G_TYPE_OBJECT);
 
@@ -38,6 +48,11 @@ static void otb_user_class_init(OtbUserClass *klass)
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_user_dispose;
 	object_class->finalize=otb_user_finalize;
+	object_class->get_property=otb_user_get_property;
+	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_pointer(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_pointer(OTB_USER_PROP_ASYM_CIPHER, _("Private key"), _("Key that is used to identify the user"), G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_ONION_BASE_DOMAIN, g_param_spec_string(OTB_USER_PROP_ONION_BASE_DOMAIN, _("Onion base domain"), _("The domain of the user's Tor hidden service (minus the \".onion\")"), NULL, G_PARAM_READABLE));
+	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
 static void otb_user_init(OtbUser *user)
@@ -71,6 +86,26 @@ static void otb_user_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_user_parent_class)->finalize(object);
 }
 
+static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
+{
+	OtbUser *user=OTB_USER(object);
+	switch(prop_id)
+	{
+		case PROP_UNIQUE_ID:
+			g_value_set_pointer(value, user->priv->unique_id);
+			break;
+		case PROP_ASYM_CIPHER:
+			g_value_set_pointer(value, user->priv->asym_cipher);
+			break;
+		case PROP_ONION_BASE_DOMAIN:
+			g_value_set_string(value, user->priv->onion_base_domain);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+			break;
+	}
+}
+
 static void otb_user_initialize_unique_id(OtbUser *user)
 {
 	g_free(user->priv->unique_id);
@@ -86,7 +121,7 @@ static void otb_user_initialize_unique_id(OtbUser *user)
 
 static void otb_user_initialize_asym_cipher(OtbUser *user)
 {
-	user->priv->asym_cipher=g_object_new(OTB_TYPE_USER, NULL);
+	user->priv->asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	char *sym_cipher_name=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_SYM_CIPHER);
 	if(sym_cipher_name!=NULL)
 		g_object_set(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, sym_cipher_name, NULL);
@@ -120,4 +155,11 @@ OtbUser *otb_user_create()
 	otb_user_initialize_asym_cipher(user);
 	otb_user_initialize_onion_base_domain(user);
 	return user;
+}
+
+gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain)
+{
+	g_free(user->priv->onion_base_domain);
+	user->priv->onion_base_domain=g_strdup(onion_base_domain);
+	return otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN, user->priv->onion_base_domain);
 }

@@ -214,7 +214,7 @@ gboolean otb_pad_rec_save(const OtbPadRec *pad_rec)
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_STATUS, pad_rec->priv->status);
 	g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_SIZE, pad_rec->priv->size);
 	otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV, pad_rec->priv->pad_iv);
-	gboolean ret_val=otb_settings_save_key_file(key_file, pad_rec->priv->pad_rec_file_path, "otb_pad_rec_save");
+	gboolean ret_val=otb_settings_save_key_file(key_file, pad_rec->priv->pad_rec_file_path);
 	g_key_file_unref(key_file);
 	return ret_val;
 }
@@ -232,13 +232,13 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 	GKeyFile *key_file=otb_settings_load_key_file(pad_rec->priv->pad_rec_file_path);
 	if(key_file==NULL)
 		load_successful=FALSE;
-	else if((pad_rec->priv->unique_id=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, NULL, "otb_pad_rec_load"))==NULL)
+	else if((pad_rec->priv->unique_id=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, NULL))==NULL)
 		load_successful=FALSE;
-	else if((pad_rec->priv->status=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_STATUS, -1, "otb_pad_rec_load"))==-1)
+	else if((pad_rec->priv->status=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_STATUS, -1))==-1)
 		load_successful=FALSE;
-	else if((pad_rec->priv->size=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_SIZE, -2, "otb_pad_rec_load"))==-2)
+	else if((pad_rec->priv->size=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_SIZE, -2))==-2)
 		load_successful=FALSE;
-	else if((pad_rec->priv->pad_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV, "otb_pad_rec_load"))==NULL)
+	else if((pad_rec->priv->pad_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV))==NULL)
 		load_successful=FALSE;
 	if(key_file!=NULL)
 		g_key_file_unref(key_file);
@@ -253,7 +253,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
 {
 	OtbPadIO *pad_io=NULL;
-	FILE *file=otb_open_for_write(pad_rec->priv->pad_file_path, "otb_pad_rec_open_pad_for_write");
+	FILE *file=otb_open_for_write(pad_rec->priv->pad_file_path);
 	if(file!=NULL)
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
@@ -279,7 +279,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
 OtbPadIO *otb_pad_rec_open_pad_for_read(const OtbPadRec *pad_rec, gboolean auto_rewind)
 {
 	OtbPadIO *pad_io=NULL;
-	FILE *file=otb_open_for_read(pad_rec->priv->pad_file_path, "otb_pad_rec_open_pad_for_read");
+	FILE *file=otb_open_for_read(pad_rec->priv->pad_file_path);
 	if(file!=NULL)
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
@@ -326,9 +326,9 @@ gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec)
 gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec)
 {
 	gboolean ret_val=TRUE;
-	if(!otb_unlink_if_exists(pad_rec->priv->pad_rec_file_path, "otb_pad_rec_delete"))
+	if(!otb_unlink_if_exists(pad_rec->priv->pad_rec_file_path))
 		ret_val=FALSE;
-	else if(!otb_unlink_if_exists(pad_rec->priv->pad_file_path, "otb_pad_rec_delete"))
+	else if(!otb_unlink_if_exists(pad_rec->priv->pad_file_path))
 		ret_val=FALSE;
 	return ret_val;
 }
@@ -339,7 +339,7 @@ gboolean otb_pad_write(const OtbPadIO *pad_io, const void *input_buffer, size_t 
 	for(int buffer_offset=0; buffer_offset<input_buffer_size && ret_val; buffer_offset+=INPUT_BUFFER_SIZE)
 	{
 		size_t encrypted_bytes_size=otb_sym_cipher_encrypt_next(pad_io->sym_cipher_context, input_buffer+buffer_offset, (input_buffer_size-buffer_offset>INPUT_BUFFER_SIZE?INPUT_BUFFER_SIZE:input_buffer_size-buffer_offset), pad_io->output_buffer);
-		if(encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof(char), encrypted_bytes_size, pad_io->file, "otb_pad_write")==encrypted_bytes_size)
+		if(encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof(char), encrypted_bytes_size, pad_io->file)==encrypted_bytes_size)
 			ret_val=FALSE;
 	}
 	return ret_val;
@@ -380,7 +380,7 @@ static void otb_pad_copy_final_bytes_to_output_buffer_if_needed(OtbPadIO *pad_io
 static gboolean otb_read_fill_output_buffer(OtbPadIO *pad_io)
 {
 	gboolean ret_val=FALSE;
-	size_t input_buffer_size=otb_read(pad_io->input_buffer, sizeof(char), INPUT_BUFFER_SIZE, pad_io->file, "otb_pad_read");
+	size_t input_buffer_size=otb_read(pad_io->input_buffer, sizeof(char), INPUT_BUFFER_SIZE, pad_io->file);
 	if(input_buffer_size>0)
 	{
 		pad_io->output_buffer_size=otb_sym_cipher_decrypt_next(pad_io->sym_cipher_context, pad_io->input_buffer, input_buffer_size, pad_io->output_buffer);
@@ -447,14 +447,14 @@ gboolean otb_pad_io_free(OtbPadIO *pad_io)
 	{
 		size_t final_encrypted_bytes_size=otb_sym_cipher_finish_encrypt(pad_io->sym_cipher_context, pad_io->output_buffer);
 		pad_io->sym_cipher_context=NULL;
-		if(final_encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof(char), final_encrypted_bytes_size, pad_io->file, "otb_pad_finish_write")==final_encrypted_bytes_size)
+		if(final_encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof(char), final_encrypted_bytes_size, pad_io->file)==final_encrypted_bytes_size)
 			final_encrypt_successful=FALSE;
 	}
 	if(pad_io->output_buffer!=NULL)
 		smemset(pad_io->output_buffer, 0, pad_io->output_buffer_allocated_size);
 	if(pad_io->final_output_buffer!=NULL)
 		smemset(pad_io->final_output_buffer, 0, pad_io->final_output_buffer_allocated_size);
-	gboolean final_close_successful=otb_close(pad_io->file, "otb_pad_free");
+	gboolean final_close_successful=otb_close(pad_io->file);
 	g_free(pad_io->input_buffer);
 	g_free(pad_io->output_buffer);
 	g_free(pad_io->final_output_buffer);

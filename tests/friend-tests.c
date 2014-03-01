@@ -61,7 +61,7 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 
 static void test_otb_friend_create_load()
 {
-	const char *EXPECTED_PUBLIC_KEY="-----BEGIN RSA PRIVATE KEY-----\nMGICAQACEQDpsP08qyst63NtwDBJrnnXAgMBAAECEBC3aGX+mIggPJCnzVg8hoEC\nCQD6tX3yRztLWwIJAO6fjl12HaA1AggQGPctR0WXYQIJAL9wXqT4t/fpAgh9tF7u\nzqapLQ==\n-----END RSA PRIVATE KEY-----";
+	const char *EXPECTED_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_ONION_BASE_DOMAIN="SoyMilkRoad";
 	const char *UNEXPECTED_PATH="garbage";
 	const uuid_t unexpected_unique_id;

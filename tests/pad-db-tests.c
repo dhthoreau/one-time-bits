@@ -22,7 +22,7 @@
 
 static void otb_assert_file_size(const char *file_path, size_t expected_size)
 {
-	size_t actual_size=otb_get_file_size(file_path, "otb_assert_file_size");
+	size_t actual_size=otb_get_file_size(file_path);
 	g_assert_cmpint(expected_size, ==, actual_size);
 }
 
@@ -361,10 +361,10 @@ static void test_pad_rec_mark_as_sent()
 static char *otb_input_create_file(const char *pad_db_dir_path, const unsigned char *bytes, size_t number_of_bytes)
 {
 	char *input_file_path=g_strconcat(pad_db_dir_path, "/input_file", NULL);
-	FILE *input_file=otb_open_for_write(input_file_path, "otb_input_create_file");
+	FILE *input_file=otb_open_for_write(input_file_path);
 	g_assert(input_file!=NULL);
-	g_assert_cmpint(number_of_bytes, ==, otb_write(bytes, sizeof(char), number_of_bytes, input_file, "otb_input_create_file"));
-	g_assert(otb_close(input_file, "otb_input_create_file"));
+	g_assert_cmpint(number_of_bytes, ==, otb_write(bytes, sizeof(char), number_of_bytes, input_file));
+	g_assert(otb_close(input_file));
 	return input_file_path;
 }
 
@@ -410,13 +410,13 @@ static void test_encryption_with_one_pad()
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt_file(pad_db, input_file_path, output_file_path));
 	g_free(input_file_path);
 	otb_assert_file_size(output_file_path, EXPECTED_ENCRYPTED_FILE_SIZE);
-	FILE *output_file=otb_open_for_read(output_file_path, "test_encryption_with_one_pad");
+	FILE *output_file=otb_open_for_read(output_file_path);
 	g_assert(output_file!=NULL);
 	g_free(output_file_path);
 	unsigned char encrypted_bytes[EXPECTED_ENCRYPTED_FILE_SIZE];
-	g_assert_cmpint(EXPECTED_ENCRYPTED_FILE_SIZE, ==, otb_read(encrypted_bytes, sizeof(char), EXPECTED_ENCRYPTED_FILE_SIZE, output_file, "test_encryption_with_one_pad"));
+	g_assert_cmpint(EXPECTED_ENCRYPTED_FILE_SIZE, ==, otb_read(encrypted_bytes, sizeof(char), EXPECTED_ENCRYPTED_FILE_SIZE, output_file));
 	g_assert(!otb_file_has_more_bytes(output_file));
-	g_assert(otb_close(output_file, "test_encryption_with_one_pad"));
+	g_assert(otb_close(output_file));
 	g_assert_cmpint(0, ==, (guint8)encrypted_bytes[0]);
 	g_assert_cmpint(0, ==, uuid_compare(*expected_unique_id, *((uuid_t*)(encrypted_bytes+sizeof(guint8)))));
 	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(pad_db, expected_unique_id);
@@ -518,10 +518,10 @@ static void otb_send_random_pads(const OtbPadDb *sender_pad_db, const OtbPadDb *
 static char *otb_encrypt_file_for_two_pad_test(const char *pad_db_dir_path, const OtbPadDb *pad_db, const unsigned char *message, size_t message_size)
 {
 	char *input_file_path=g_strconcat(pad_db_dir_path, "/original_file", NULL);
-	FILE *input_file=otb_open_for_write(input_file_path, "otb_encrypt_file_for_two_pad_test");
+	FILE *input_file=otb_open_for_write(input_file_path);
 	g_assert(input_file!=NULL);
-	g_assert_cmpint(message_size, ==, otb_write(message, sizeof(char), message_size, input_file, "otb_encrypt_file_for_two_pad_test"));
-	g_assert(otb_close(input_file, "otb_encrypt_file_for_two_pad_test"));
+	g_assert_cmpint(message_size, ==, otb_write(message, sizeof(char), message_size, input_file));
+	g_assert(otb_close(input_file));
 	char *encrypted_file_path=g_strconcat(pad_db_dir_path, "/encrypted_file", NULL);
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt_file(pad_db, input_file_path, encrypted_file_path));
 	g_free(input_file_path);
@@ -561,12 +561,12 @@ static void test_encryption_decryption_with_two_pads()
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_decrypt_file(recipient_pad_db, encrypted_file_path, decrypted_file_path));
 	otb_assert_number_of_pads_in_status(recipient_pad_db, 1, OTB_PAD_REC_STATUS_RECEIVED);
 	g_object_unref(recipient_pad_db);
-	FILE *decrypted_file=otb_open_for_read(decrypted_file_path, "test_encryption_decryption_with_two_pads");
+	FILE *decrypted_file=otb_open_for_read(decrypted_file_path);
 	g_assert(decrypted_file!=NULL);
 	char actual_message[MESSAGE_SIZE];
-	g_assert_cmpint(MESSAGE_SIZE, ==, otb_read(actual_message, sizeof(char), MESSAGE_SIZE, decrypted_file, "test_encryption_decryption_with_two_pads"));
+	g_assert_cmpint(MESSAGE_SIZE, ==, otb_read(actual_message, sizeof(char), MESSAGE_SIZE, decrypted_file));
 	g_assert(!otb_file_has_more_bytes(decrypted_file));
-	g_assert(otb_close(decrypted_file, "test_encryption_decryption_with_two_pads"));
+	g_assert(otb_close(decrypted_file));
 	g_assert_cmpint(0, ==, memcmp(EXPECTED_MESSAGE, actual_message, MESSAGE_SIZE));
 	g_free(decrypted_file_path);
 	g_free(encrypted_file_path);

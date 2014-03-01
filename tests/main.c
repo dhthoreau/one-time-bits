@@ -20,6 +20,7 @@
 #include "settings-tests.h"
 #include "sym-cipher-tests.h"
 #include "test-utils.h"
+#include "user-tests.h"
 
 GSList *otb_test_funcs=NULL;
 
@@ -69,6 +70,7 @@ static void otb_add_tests()
 	otb_add_pad_rec_tests();
 	otb_add_pad_db_tests();
 	otb_add_friend_tests();
+	otb_add_user_tests();
 }
 
 static void otb_run_tests()

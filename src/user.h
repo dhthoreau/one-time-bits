@@ -11,6 +11,10 @@
 
 #include "asym-cipher.h"
 
+#define OTB_USER_PROP_UNIQUE_ID			"base-path"
+#define OTB_USER_PROP_ASYM_CIPHER		"asym-cipher"
+#define OTB_USER_PROP_ONION_BASE_DOMAIN	"onion-base-domains"
+
 #define OTB_TYPE_USER				(otb_user_get_type())
 #define OTB_USER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_USER, OtbUser))
 #define OTB_IS_USER(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_USER))
@@ -36,5 +40,6 @@ struct _OtbUserClass
 GType otb_user_get_type();
 
 OtbUser *otb_user_create();
+gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain);
 
 #endif

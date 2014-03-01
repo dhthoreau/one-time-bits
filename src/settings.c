@@ -111,17 +111,17 @@ static char *otb_settings_config_file_path(const char *file_name)
 	return g_build_filename(otb_data_directory_path, file_name, NULL);
 }
 
-gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path, const char *func_name)
+gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path)
 {
 	gboolean ret_val=TRUE;
 	gsize key_file_data_size;
 	char *key_file_data=g_key_file_to_data(key_file, &key_file_data_size, NULL);
-	FILE *file=otb_open_for_write(file_path, func_name);
+	FILE *file=otb_open_for_write(file_path);
 	if(file==NULL)
 		ret_val=FALSE;
-	else if(otb_write(key_file_data, sizeof(char), key_file_data_size, file, func_name)!=key_file_data_size)
+	else if(otb_write(key_file_data, sizeof(char), key_file_data_size, file)!=key_file_data_size)
 		ret_val=FALSE;
-	if(!otb_close(file, func_name))
+	if(!otb_close(file))
 		ret_val=FALSE;
 	g_free(key_file_data);
 	return ret_val;
@@ -131,7 +131,7 @@ static gboolean otb_settings_save_config_key_file()
 {
 	char *config_file_path=otb_settings_get_config_file_path();
 	otb_settings_lock_config();
-	gboolean ret_val=otb_settings_save_key_file(config_key_file, config_file_path, "otb_settings_save_config_key_file");
+	gboolean ret_val=otb_settings_save_key_file(config_key_file, config_file_path);
 	otb_settings_unlock_config();
 	g_free(config_file_path);
 	return ret_val;
@@ -145,14 +145,14 @@ gboolean otb_settings_set_config_int(const char *group_name, const char *key, in
 	return otb_settings_save_config_key_file();
 }
 
-int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char *key, int error_value, const char *func_name)
+int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char *key, int error_value)
 {
 	GError *error=NULL;
 	int value=g_key_file_get_integer(key_file, group_name, key, &error);
 	if(error!=NULL)
 	{
 		value=error_value;
-		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message);
+		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -161,7 +161,7 @@ int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char 
 int otb_settings_get_config_int(const char *group_name, const char *key, int error_value)
 {
 	otb_settings_lock_config();
-	int ret_val=otb_settings_get_int(config_key_file, group_name, key, error_value, "otb_settings_get_config_int");
+	int ret_val=otb_settings_get_int(config_key_file, group_name, key, error_value);
 	otb_settings_unlock_config();
 	return ret_val;
 }
@@ -176,14 +176,14 @@ unsigned int otb_settings_get_config_uint(const char *group_name, const char *ke
 	return (unsigned int)otb_settings_get_config_int(group_name, key, (int)error_value);
 }
 
-long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value, const char *func_name)
+long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value)
 {
 	GError *error=NULL;
 	long long value=g_key_file_get_int64(key_file, group_name, key, &error);
 	if(error!=NULL)
 	{
 		value=error_value;
-		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message);
+		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -197,14 +197,14 @@ gboolean otb_settings_set_config_string(const char *group_name, const char *key,
 	return otb_settings_save_config_key_file();
 }
 
-char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const char *key, const char *func_name)
+char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const char *key)
 {
 	GError *error=NULL;
 	char *value=g_key_file_get_string(key_file, group_name, key, &error);
 	if(error!=NULL)
 	{
 		g_free(value);
-		g_message("%s: Failed to read %s / %s from config file. Error == %s", func_name, group_name, key, error->message);
+		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -213,7 +213,7 @@ char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const 
 char *otb_settings_get_config_string(const char *group_name, const char *key)
 {
 	otb_settings_lock_config();
-	char *ret_val=otb_settings_get_string(config_key_file, group_name, key, "otb_settings_get_config_string");
+	char *ret_val=otb_settings_get_string(config_key_file, group_name, key);
 	otb_settings_unlock_config();
 	return ret_val;
 }
@@ -232,9 +232,9 @@ gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, 
 	return otb_settings_save_config_key_file();
 }
 
-void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t *value_length, const char *func_name)
+void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t *value_length)
 {
-	char *bytes=otb_settings_get_string(key_file, group_name, key, func_name);
+	char *bytes=otb_settings_get_string(key_file, group_name, key);
 	if(bytes!=NULL)
 	{
 		size_t value_length_temp;
@@ -249,7 +249,7 @@ void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const c
 void *otb_settings_get_config_bytes(const char *group_name, const char *key, size_t* value_length)
 {
 	otb_settings_lock_config();
-	void *ret_val=otb_settings_get_bytes(config_key_file, group_name, key, value_length, "otb_settings_get_config_bytes");
+	void *ret_val=otb_settings_get_bytes(config_key_file, group_name, key, value_length);
 	otb_settings_unlock_config();
 	return ret_val;
 }
@@ -264,11 +264,11 @@ gboolean otb_settings_set_config_gbytes(const char *group_name, const char *key,
 	return otb_settings_set_config_bytes(group_name, key, g_bytes_get_data(value, NULL), g_bytes_get_size(value));
 }
 
-GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, const char *key, const char *func_name)
+GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, const char *key)
 {
 	GBytes *value=NULL;
 	size_t value_length;
-	void *value_bytes=otb_settings_get_bytes(key_file, group_name, key, &value_length, func_name);
+	void *value_bytes=otb_settings_get_bytes(key_file, group_name, key, &value_length);
 	if(value_bytes!=NULL)
 		value=g_bytes_new_take(value_bytes, value_length);
 	return value;
@@ -277,7 +277,7 @@ GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, cons
 GBytes *otb_settings_get_config_gbytes(const char *group_name, const char *key)
 {
 	otb_settings_lock_config();
-	GBytes *ret_val=otb_settings_get_gbytes(config_key_file, group_name, key, "otb_settings_get_config_gbytes");
+	GBytes *ret_val=otb_settings_get_gbytes(config_key_file, group_name, key);
 	otb_settings_unlock_config();
 	return ret_val;
 }
