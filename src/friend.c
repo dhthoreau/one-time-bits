@@ -181,14 +181,20 @@ static void otb_friend_set_property(GObject *object, unsigned int prop_id, const
 	switch(prop_id)
 	{
 		case PROP_UNIQUE_ID:
+		{
 			otb_friend_set_unique_id(friend, g_value_get_pointer(value));
 			break;
+		}
 		case PROP_BASE_PATH:
+		{
 			otb_friend_set_base_path(friend, g_value_get_string(value));
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
@@ -198,26 +204,40 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 	switch(prop_id)
 	{
 		case PROP_UNIQUE_ID:
+		{
 			g_value_set_pointer(value, friend->priv->unique_id);
 			break;
+		}
 		case PROP_BASE_PATH:
+		{
 			g_value_set_string(value, friend->priv->base_path);
 			break;
+		}
 		case PROP_INCOMING_PADS:
+		{
 			g_value_set_pointer(value, friend->priv->incoming_pads);
 			break;
+		}
 		case PROP_OUTGOING_PADS:
+		{
 			g_value_set_pointer(value, friend->priv->outgoing_pads);
 			break;
+		}
 		case PROP_PUBLIC_KEY:
+		{
 			g_value_set_string(value, friend->priv->public_key);
 			break;
+		}
 		case PROP_ONION_BASE_DOMAIN:
+		{
 			g_value_set_string(value, friend->priv->onion_base_domain);
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 

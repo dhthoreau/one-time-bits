@@ -103,10 +103,12 @@ static void test_otb_user_create()
 	char *actual_onion_base_domain=NULL;
 	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
 	g_assert_cmpint(0, ==, uuid_compare(expected_unique_id, *actual_unique_id));
-	char *expected_public_key=otb_asym_cipher_get_public_key(expected_asym_cipher);
+	char *expected_public_key=NULL;
+	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
+	g_assert(expected_public_key!=NULL);
 	char *actual_sym_cipher_name=NULL;
-	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, NULL);
-	char *actual_public_key=otb_asym_cipher_get_public_key(actual_asym_cipher);
+	char *actual_public_key=NULL;
+	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_free(expected_public_key);
@@ -124,4 +126,5 @@ static void test_otb_user_create()
 void otb_add_user_tests()
 {
 	otb_add_test_func("/user/test_otb_user_create", test_otb_user_create);
+	// FARE - Unit test che controlla che otb_user_create() funziona sensa otb.conf e che crea otb.conf con dati guisti.
 }

@@ -31,9 +31,10 @@ static void test_asym_cipher_properties()
 
 static void otb_copy_public_key(OtbAsymCipher *asym_cipher_original, OtbAsymCipher *asym_cipher_public)
 {
-	char *public_key=otb_asym_cipher_get_public_key(asym_cipher_original);
+	char *public_key=NULL;
+	g_object_get(asym_cipher_original, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &public_key, NULL);
 	g_assert(public_key!=NULL);
-	otb_asym_cipher_set_public_key(asym_cipher_public, public_key);
+	g_object_set(asym_cipher_public, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, public_key, NULL);
 	g_free(public_key);
 }
 

@@ -92,17 +92,25 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 	switch(prop_id)
 	{
 		case PROP_UNIQUE_ID:
+		{
 			g_value_set_pointer(value, user->priv->unique_id);
 			break;
+		}
 		case PROP_ASYM_CIPHER:
+		{
 			g_value_set_pointer(value, user->priv->asym_cipher);
 			break;
+		}
 		case PROP_ONION_BASE_DOMAIN:
+		{
 			g_value_set_string(value, user->priv->onion_base_domain);
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 

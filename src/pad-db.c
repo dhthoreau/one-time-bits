@@ -117,11 +117,15 @@ static void otb_pad_db_set_property(GObject *object, unsigned int prop_id, const
 	switch(prop_id)
 	{
 		case PROP_BASE_PATH:
+		{
 			otb_pad_db_set_base_path(pad_db, g_value_get_string(value));
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
@@ -131,20 +135,30 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 	switch(prop_id)
 	{
 		case PROP_BASE_PATH:
+		{
 			g_value_set_string(value, pad_db->priv->base_path);
 			break;
+		}
 		case PROP_MAX_SIZE:
+		{
 			g_value_set_int64(value, pad_db->priv->max_size);
 			break;
+		}
 		case PROP_NEW_PAD_MIN_SIZE:
+		{
 			g_value_set_int64(value, pad_db->priv->new_pad_min_size);
 			break;
+		}
 		case PROP_NEW_PAD_MAX_SIZE:
+		{
 			g_value_set_int64(value, pad_db->priv->new_pad_max_size);
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
@@ -211,7 +225,7 @@ static OtbPadRec *otb_pad_db_find_pad_rec_by_id(const OtbPadDb *pad_db, const uu
 	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		if(otb_pad_rec_compare_by_id((gpointer)pad_rec, (gpointer)unique_id)==0)
+		if(otb_pad_rec_compare_by_id((void*)pad_rec, (void*)unique_id)==0)
 			return pad_rec;
 	}
 	return NULL;

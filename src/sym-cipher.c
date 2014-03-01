@@ -90,23 +90,30 @@ static void otb_sym_cipher_finalize(GObject *object)
 static void otb_sym_cipher_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
 	OtbSymCipher *sym_cipher=OTB_SYM_CIPHER(object);
-	const char *string_value;
 	switch(prop_id)
 	{
 		case PROP_CIPHER:
-			string_value=g_value_get_string(value);
+		{
+			const char *string_value=g_value_get_string(value);
 			sym_cipher->priv->sym_cipher_impl=_EVP_get_cipherbyname(string_value);
 			break;
+		}
 		case PROP_MESSAGE_DIGEST:
-			string_value=g_value_get_string(value);
+		{
+			const char *string_value=g_value_get_string(value);
 			sym_cipher->priv->message_digest_impl=EVP_get_digestbyname(string_value);
 			break;
+		}
 		case PROP_HASH_ITERATIONS:
+		{
 			sym_cipher->priv->hash_iterations=g_value_get_uint(value);
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
@@ -116,17 +123,25 @@ static void otb_sym_cipher_get_property(GObject *object, unsigned int prop_id, G
 	switch(prop_id)
 	{
 		case PROP_CIPHER:
+		{
 			g_value_set_string(value, EVP_CIPHER_name(sym_cipher->priv->sym_cipher_impl));
 			break;
+		}
 		case PROP_MESSAGE_DIGEST:
+		{
 			g_value_set_string(value, EVP_MD_name(sym_cipher->priv->message_digest_impl));
 			break;
+		}
 		case PROP_HASH_ITERATIONS:
+		{
 			g_value_set_uint(value, sym_cipher->priv->hash_iterations);
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
@@ -162,7 +177,7 @@ static OtbSymCipherContext *otb_sym_cipher_init_encryption_openssl(const EVP_CIP
 	{
 		otb_sym_cipher_context_free(sym_cipher_context);
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to initialize encryption. Error == %s"), "otb_sym_cipher_init_encryption_openssl", error);
+		g_warning(_("Failed to initialize encryption. Error == %s"), error);
 		g_free(error);
 	}
 	return sym_cipher_context;
@@ -176,7 +191,7 @@ static OtbSymCipherContext *otb_sym_cipher_init_decryption_openssl(const EVP_CIP
 	{
 		otb_sym_cipher_context_free(sym_cipher_context);
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to initialize decryption. Error == %s"), "otb_sym_cipher_init_decryption_openssl", error);
+		g_warning(_("Failed to initialize decryption. Error == %s"), error);
 		g_free(error);
 	}
 	return sym_cipher_context;
@@ -273,7 +288,7 @@ size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, cons
 	if(!EVP_EncryptUpdate(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to encrypt data. Error == %s"), "otb_sym_cipher_encrypt", error);
+		g_warning(_("Failed to encrypt data. Error == %s"), error);
 		g_free(error);
 		encrypted_bytes_size=0;
 	}
@@ -286,7 +301,7 @@ size_t otb_sym_cipher_decrypt_next(OtbSymCipherContext *sym_cipher_context, cons
 	if(!EVP_DecryptUpdate(sym_cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to decrypt data. Error == %s"), "otb_sym_cipher_decrypt", error);
+		g_warning(_("Failed to decrypt data. Error == %s"), error);
 		g_free(error);
 		plain_bytes_size=0;
 	}
@@ -299,7 +314,7 @@ size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, vo
 	if(!EVP_EncryptFinal_ex(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to encrypt final data. Error == %s"), "otb_sym_cipher_finish_encrypt", error);
+		g_warning(_("Failed to encrypt final data. Error == %s"), error);
 		g_free(error);
 		encrypted_bytes_size=0;
 	}
@@ -313,7 +328,7 @@ size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, vo
 	if(!EVP_DecryptFinal_ex(sym_cipher_context, plain_bytes_out, &plain_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to decrypt final data. Error == %s"), "otb_sym_cipher_finish_decrypt", error);
+		g_warning(_("Failed to decrypt final data. Error == %s"), error);
 		g_free(error);
 		plain_bytes_size=0;
 	}

@@ -29,7 +29,8 @@ struct _OtbAsymCipherPrivate
 enum
 {
 	PROP_0,
-	PROP_SYM_CIPHER
+	PROP_SYM_CIPHER,
+	PROP_PUBLIC_KEY
 };
 
 static void otb_asym_cipher_finalize(GObject *object);
@@ -46,6 +47,7 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 	object_class->set_property=otb_asym_cipher_set_property;
 	object_class->get_property=otb_asym_cipher_get_property;
 	g_object_class_install_property(object_class, PROP_SYM_CIPHER, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, _("Public key"), _("The public key to use for encryption"), NULL, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbAsymCipherPrivate));
 }
 
@@ -65,19 +67,37 @@ static void otb_asym_cipher_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_asym_cipher_parent_class)->finalize(object);
 }
 
+static void otb_asym_cipher_set_key_impl(const OtbAsymCipher *asym_cipher, EVP_PKEY *key_impl)
+{
+	if(asym_cipher->priv->key_impl!=NULL)
+		EVP_PKEY_free(asym_cipher->priv->key_impl);
+	_otb_set_EVP_PKEY(&asym_cipher->priv->key_impl, key_impl);
+}
+
 static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
-	const char *string_value;
 	switch(prop_id)
 	{
 		case PROP_SYM_CIPHER:
-			string_value=g_value_get_string(value);
-			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(string_value);
+		{
+			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(g_value_get_string(value));
 			break;
+		}
+		case PROP_PUBLIC_KEY:
+		{
+			char *string_value=g_value_dup_string(value);
+			BIO *buff_io=BIO_new_mem_buf(string_value, strlen(string_value));
+			otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PUBKEY(buff_io, NULL, NULL, NULL));
+			BIO_free_all(buff_io);
+			g_free(string_value);
+			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
@@ -87,19 +107,28 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 	switch(prop_id)
 	{
 		case PROP_SYM_CIPHER:
+		{
 			g_value_set_string(value, EVP_CIPHER_name(asym_cipher->priv->cipher_impl));
 			break;
+		}
+		case PROP_PUBLIC_KEY:
+		{
+			BIO *buff_io=BIO_new(BIO_s_mem());
+			if(PEM_write_bio_PUBKEY(buff_io, asym_cipher->priv->key_impl))
+			{
+				char *public_key=NULL;
+				long public_key_size=BIO_get_mem_data(buff_io, &public_key);
+				g_value_set_string(value, public_key);
+			}
+			BIO_free(buff_io);
+			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
-}
-
-static void otb_asym_cipher_set_key_impl(const OtbAsymCipher *asym_cipher, EVP_PKEY *key_impl)
-{
-	if(asym_cipher->priv->key_impl!=NULL)
-		EVP_PKEY_free(asym_cipher->priv->key_impl);
-	_otb_set_EVP_PKEY(&asym_cipher->priv->key_impl, key_impl);
 }
 
 void otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv)
@@ -127,27 +156,6 @@ GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_ciph
 	}
 	BIO_free(buff_io);
 	return encrypted_private_key;
-}
-
-void otb_asym_cipher_set_public_key(const OtbAsymCipher *asym_cipher, char *public_key)
-{
-	BIO *buff_io=BIO_new_mem_buf(public_key, strlen(public_key));
-	otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PUBKEY(buff_io, NULL, NULL, NULL));
-	BIO_free_all(buff_io);
-}
-
-char *otb_asym_cipher_get_public_key(const OtbAsymCipher *asym_cipher)
-{
-	char *ret_val=NULL;
-	BIO *buff_io=BIO_new(BIO_s_mem());
-	if(PEM_write_bio_PUBKEY(buff_io, asym_cipher->priv->key_impl))
-	{
-		char *public_key=NULL;
-		long public_key_size=BIO_get_mem_data(buff_io, &public_key);
-		ret_val=g_strdup(public_key);
-	}
-	BIO_free(buff_io);
-	return ret_val;
 }
 
 gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t key_size)
@@ -199,7 +207,7 @@ OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_
 		g_free(iv_bytes);
 		g_free(encrypted_key_bytes);
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to initialize encryption. Error == %s"), "otb_asym_cipher_init_encryption", error);
+		g_warning(_("Failed to initialize encryption. Error == %s"), error);
 		g_free(error);
 	}
 	return asym_cipher_context;
@@ -213,7 +221,7 @@ OtbAsymCipherContext *otb_asym_cipher_init_decryption(const OtbAsymCipher *asym_
 	{
 		otb_asym_cipher_context_free(asym_cipher_context);
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to initialize decryption. Error == %s"), "otb_asym_cipher_init_decryption", error);
+		g_warning(_("Failed to initialize decryption. Error == %s"), error);
 		g_free(error);
 	}
 	return asym_cipher_context;
@@ -225,7 +233,7 @@ size_t otb_asym_cipher_encrypt(OtbAsymCipherContext *asym_cipher_context, const 
 	if(!EVP_SealUpdate(asym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to encrypt data. Error == %s"), "otb_asym_cipher_encrypt", error);
+		g_warning(_("Failed to encrypt data. Error == %s"), error);
 		g_free(error);
 		encrypted_bytes_size=0;
 	}
@@ -238,7 +246,7 @@ size_t otb_asym_cipher_decrypt(OtbAsymCipherContext *asym_cipher_context, const 
 	if(!EVP_OpenUpdate(asym_cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to decrypt data. Error == %s"), "otb_asym_cipher_decrypt", error);
+		g_warning(_("Failed to decrypt data. Error == %s"), error);
 		g_free(error);
 		plain_bytes_size=0;
 	}
@@ -251,7 +259,7 @@ size_t otb_asym_cipher_finish_encrypt(OtbAsymCipherContext *asym_cipher_context,
 	if(!EVP_SealFinal(asym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to encrypt final data. Error == %s"), "otb_asym_cipher_finish_encrypt", error);
+		g_warning(_("Failed to encrypt final data. Error == %s"), error);
 		g_free(error);
 		encrypted_bytes_size=0;
 	}
@@ -265,7 +273,7 @@ size_t otb_asym_cipher_finish_decrypt(OtbAsymCipherContext *asym_cipher_context,
 	if(!EVP_OpenFinal(asym_cipher_context, plain_bytes_out, &plain_bytes_size))
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to decrypt final data. Error == %s"), "otb_asym_cipher_finish_decrypt", error);
+		g_warning(_("Failed to decrypt final data. Error == %s"), error);
 		g_free(error);
 		plain_bytes_size=0;
 	}

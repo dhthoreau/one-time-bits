@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-02-28 16:31-0500\n"
-"PO-Revision-Date: 2014-02-28 16:31-0500\n"
+"POT-Creation-Date: 2014-02-28 22:19-0500\n"
+"PO-Revision-Date: 2014-02-28 22:20-0500\n"
 "Last-Translator: the OTB author\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -16,57 +16,57 @@ msgstr ""
 
 #: src/io.c:22
 #, c-format
-msgid "%s: Failed to open file %s. Error == %s"
-msgstr "%s: Non è riuscito a aprire il file %s. Errore == %s"
+msgid "Failed to open file %s. Error == %s"
+msgstr "Non è riuscito a aprire il file %s. Errore == %s"
 
 #: src/io.c:43
 #, c-format
-msgid "%s: Failed to write file. Error == %s"
-msgstr "%s: Non è riuscito a scrivere un file. Errore == %s"
+msgid "Failed to write file. Error == %s"
+msgstr "Non è riuscito a scrivere un file. Errore == %s"
 
 #: src/io.c:55
 #, c-format
-msgid "%s: Failed to write byte to file. Error == %s"
-msgstr "%s: Non è riuscito a scrivere un byte a un file. Errore == %s"
+msgid "Failed to write byte to file. Error == %s"
+msgstr "Non è riuscito a scrivere un byte a un file. Errore == %s"
 
 #: src/io.c:67
 #, c-format
-msgid "%s: Failed to read file. Error == %s"
-msgstr "%s: Non è riuscito a leggere un file. Errore == %s"
+msgid "Failed to read file. Error == %s"
+msgstr "Non è riuscito a leggere un file. Errore == %s"
 
 #: src/io.c:79
 #, c-format
 msgid ""
-"%s: Failed read byte from file, or tried to read past the end of the file. "
-"Error == %s"
+"Failed read byte from file, or tried to read past the end of the file. Error "
+"== %s"
 msgstr ""
-"%s: Non è riuscito a leggere un byte a un file, o era provato a leggere "
-"oltre la fine del file. Errore == %s"
+"Non è riuscito a leggere un byte a un file, o era provato a leggere oltre la "
+"fine del file. Errore == %s"
 
 #: src/io.c:93
 #, c-format
-msgid "%s: Failed close file. Error == %s"
-msgstr "%s: Non è riuscito a chiudere un file. Errore == %s"
+msgid "Failed close file. Error == %s"
+msgstr "Non è riuscito a chiudere un file. Errore == %s"
 
 #: src/io.c:105
 #, c-format
-msgid "%s: Failed delete file %s. Error == %s"
-msgstr "%s: Non è riuscito a cancellare un file %s. Errore == %s"
+msgid "Failed delete file %s. Error == %s"
+msgstr "Non è riuscito a cancellare un file %s. Errore == %s"
 
 #: src/io.c:120
 #, c-format
-msgid "%s: Failed to read status of file %s. Error == %s"
-msgstr "%s: Non è riuscito a leggere lo status di file %s. Errore == %s"
+msgid "Failed to read status of file %s. Error == %s"
+msgstr "Non è riuscito a leggere lo status di file %s. Errore == %s"
 
 #: src/io.c:132
 #, c-format
-msgid "%s: Failed create directory %s. Error == %s"
-msgstr "%s: Non è riuscito a creare la directory %s. Errore == %s"
+msgid "Failed create directory %s. Error == %s"
+msgstr "Non è riuscito a creare la directory %s. Errore == %s"
 
 #: src/io.c:144
 #, c-format
-msgid "%s: Failed open directory %s. Error == %s"
-msgstr "%s: Non è riuscito a aprire la directory %s. Errore == %s"
+msgid "Failed open directory %s. Error == %s"
+msgstr "Non è riuscito a aprire la directory %s. Errore == %s"
 
 #: src/sym-cipher.c:55
 msgid "Cipher"
@@ -92,45 +92,53 @@ msgstr "Iterazioni di hash"
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."
 
-#: src/sym-cipher.c:165 src/asym-cipher.c:202
+#: src/sym-cipher.c:180 src/asym-cipher.c:210
 #, c-format
-msgid "%s: Failed to initialize encryption. Error == %s"
-msgstr "%s: Non è riuscito ad inizializzare la crittografia. Errore == %s"
+msgid "Failed to initialize encryption. Error == %s"
+msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/sym-cipher.c:179 src/asym-cipher.c:216
+#: src/sym-cipher.c:194 src/asym-cipher.c:224
 #, c-format
-msgid "%s: Failed to initialize decryption. Error == %s"
-msgstr "%s: Non è riuscito ad inizializzare la decrittazione. Errore == %s"
+msgid "Failed to initialize decryption. Error == %s"
+msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/sym-cipher.c:276 src/asym-cipher.c:228
+#: src/sym-cipher.c:291 src/asym-cipher.c:236
 #, c-format
-msgid "%s: Failed to encrypt data. Error == %s"
-msgstr "%s: Non è riuscito a cifrare dati. Errore == %s"
+msgid "Failed to encrypt data. Error == %s"
+msgstr "Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/sym-cipher.c:289 src/asym-cipher.c:241
+#: src/sym-cipher.c:304 src/asym-cipher.c:249
 #, c-format
-msgid "%s: Failed to decrypt data. Error == %s"
-msgstr "%s: Non è riuscito a decifrare dati. Errore == %s"
+msgid "Failed to decrypt data. Error == %s"
+msgstr "Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/sym-cipher.c:302 src/asym-cipher.c:254
+#: src/sym-cipher.c:317 src/asym-cipher.c:262
 #, c-format
-msgid "%s: Failed to encrypt final data. Error == %s"
-msgstr "%s: Non è riuscito a cifrare dati finali. Errore == %s"
+msgid "Failed to encrypt final data. Error == %s"
+msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/sym-cipher.c:316 src/asym-cipher.c:268
+#: src/sym-cipher.c:331 src/asym-cipher.c:276
 #, c-format
-msgid "%s: Failed to decrypt final data. Error == %s"
-msgstr "%s: Non è riuscito a decifrare dati finali. Errore == %s"
+msgid "Failed to decrypt final data. Error == %s"
+msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
 
-#: src/asym-cipher.c:48
+#: src/asym-cipher.c:49
 msgid "Symmetric cipher"
 msgstr "Cifra simmetrica"
 
-#: src/asym-cipher.c:48
+#: src/asym-cipher.c:49
 msgid "Name of the symmetric cipher to use"
 msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/friend.c:59 src/user.c:54 src/pad-rec.c:75
+#: src/asym-cipher.c:50 src/friend.c:63
+msgid "Public key"
+msgstr "Chiave pubblica"
+
+#: src/asym-cipher.c:50
+msgid "The public key to use for encryption"
+msgstr "La chiave pubblica che è usata per crittografia"
+
+#: src/friend.c:59 src/user.c:52 src/pad-rec.c:75
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -163,14 +171,10 @@ msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
 #: src/friend.c:63
-msgid "Public key"
-msgstr "Chiave pubblica"
-
-#: src/friend.c:63
 msgid "Key that is used to identify the friend"
 msgstr "La chiave usata per identificare l'amico"
 
-#: src/friend.c:64 src/user.c:56
+#: src/friend.c:64 src/user.c:54
 msgid "Onion base domain"
 msgstr "Dominio di base di onion"
 
@@ -206,61 +210,55 @@ msgstr "Dimensione massima di blocchi nuovi"
 msgid "Maximum size for a newly created pad"
 msgstr "Dimensione massima di blocchi creati di fresco"
 
-#: src/pad-db.c:243
-#, c-format
-msgid "%s: Failed to add record due to non-unique ID."
-msgstr "%s: Non è riuscito ad aggiungere record a causa di ID non univoco."
+#: src/pad-db.c:257
+msgid "Failed to add record due to non-unique ID."
+msgstr "Non è riuscito ad aggiungere record a causa di ID non univoco."
 
-#: src/pad-db.c:248
-#, c-format
-msgid "%s: Failed to add record due to database size limitation."
+#: src/pad-db.c:262
+msgid "Failed to add record due to database size limitation."
 msgstr ""
-"%s: Non è riuscito ad aggiungere record a causa di la limitazione di "
-"dimensione del database."
+"Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
+"del database."
 
-#: src/pad-db.c:687
-#, c-format
+#: src/pad-db.c:701
 msgid ""
-"%s: Failed to update the status of all pads used to encrypt a file, though "
-"file itself was fully encrypted. This could cause problems for the recipient "
-"of your encrypted files. Recomendation is that the encrypted file not be "
-"used."
+"Failed to update the status of all pads used to encrypt a file, though file "
+"itself was fully encrypted. This could cause problems for the recipient of "
+"your encrypted files. Recomendation is that the encrypted file not be used."
 msgstr ""
-"%s: Non è riuscito a aggiornare lo stato di tutti blocchi utilizzati per "
-"cifrare un file, sebbene il file era cifrato completamente. Quello potrebbe "
-"causare problemi per il destinatario dei tuoi file cifrati. La "
-"raccomandazione è che il file cifrato non sia utilizzato."
+"Non è riuscito a aggiornare lo stato di tutti blocchi utilizzati per cifrare "
+"un file, sebbene il file era cifrato completamente. Quello potrebbe causare "
+"problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
+"il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:714
-#, c-format
-msgid "%s: Failed to decrypt file due to unsupported file version number."
+#: src/pad-db.c:728
+msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
-"%s: Non è riuscito a decifrare il file a causa di numero di versione non "
+"Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:745
-#, c-format
+#: src/pad-db.c:759
 msgid ""
-"%s: Failed to delete all pads used to decrypt a file, though file itself was "
+"Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."
 msgstr ""
-"%s: Non è riuscito a cancellare tutti blocchi utilizzati per decifrare un "
-"file, sebbene il file era decifrato completamente. La raccomandazione è "
-"azzerare il database di blocchi."
+"Non è riuscito a cancellare tutti blocchi utilizzati per decifrare un file, "
+"sebbene il file era decifrato completamente. La raccomandazione è azzerare "
+"il database di blocchi."
 
-#: src/user.c:54
+#: src/user.c:52
 msgid "UUID of the user"
 msgstr "UUID dell'utente"
 
-#: src/user.c:55
+#: src/user.c:53
 msgid "Private key"
 msgstr "Chiave privata"
 
-#: src/user.c:55
+#: src/user.c:53
 msgid "Key that is used to identify the user"
 msgstr "La chiave usata per identificare l'utente"
 
-#: src/user.c:56
+#: src/user.c:54
 msgid "The domain of the user's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'utente (senza \".onion\")"
 
@@ -298,58 +296,5 @@ msgstr "Dimensione del file di blocco"
 
 #: src/random.c:23
 #, c-format
-msgid "%s: Failed to generate random data. Error == %s"
-msgstr "%s: Non è riuscito a generare dati casuali. Errore == %s"
-
-#~ msgid "The public key used for encryption"
-#~ msgstr "La chiave pubblica utilizzata per crittografia"
-
-#~ msgid "New key length"
-#~ msgstr "Dimensione di chiavi nuove"
-
-#~ msgid "The bit length of new keys"
-#~ msgstr "La dimensione di bit di chiavi nuove"
-
-#~ msgid "Key size"
-#~ msgstr "Dimensione della chiave"
-
-#~ msgid "The size of the key, using bits"
-#~ msgstr "Dimensione della chiave (usando i bit)"
-
-#~ msgid "%s: Failed to generate random key."
-#~ msgstr "%s: Non è riuscito a generare una chiave casuale."
-
-#~ msgid "%s: Failed to generate random IV."
-#~ msgstr "%s: Non è riuscito a generare un IV casuale."
-
-#~ msgid ""
-#~ "%s: Failed to load pad database due to unsupported file version number."
-#~ msgstr ""
-#~ "%s: Non è riuscito a caricare il database di blocchi a causa di numero di "
-#~ "versione non supportata di file."
-
-#~ msgid ""
-#~ "%s: Failed to load pad record due to unsupported file version number."
-#~ msgstr ""
-#~ "%s: Non è riuscito a caricare il record di blocco a causa di numero di "
-#~ "versione non supportata di file."
-
-#~ msgid ""
-#~ "%s: Failed to load pad record due to wrong file extension on file name %s."
-#~ msgstr ""
-#~ "%s: Non è riuscito a caricare il record di blocco a causa di estensione "
-#~ "inaspettata di file per file nome %s."
-
-#~ msgid "%s: Failed to load pad record due to bad file name %s."
-#~ msgstr ""
-#~ "%s: Non è riuscito a caricare il record di blocco a causa di nome file "
-#~ "danneggiato %s."
-
-#~ msgid "Key"
-#~ msgstr "Chiave"
-
-#~ msgid "%s: Attempted to load unsupported cipher %i."
-#~ msgstr "%s: Ha provato a caricare una cifra non supportata %i."
-
-#~ msgid "%s: Attempted to load unsupported message digest %i."
-#~ msgstr "%s: Ha provato a caricare un message digest non supportato %i."
+msgid "Failed to generate random data. Error == %s"
+msgstr "Non è riuscito a generare dati casuali. Errore == %s"

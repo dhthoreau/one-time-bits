@@ -134,24 +134,30 @@ static void otb_pad_rec_compute_file_paths(const OtbPadRec *pad_rec)
 
 static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
-	gpointer pointer_value;
 	OtbPadRec *pad_rec=OTB_PAD_REC(object);
 	switch(prop_id)
 	{
 		case PROP_UNIQUE_ID:
-			pointer_value=g_value_get_pointer(value);
+		{
+			void *pointer_value=g_value_get_pointer(value);
 			if(pointer_value!=NULL)
 				uuid_copy(*pad_rec->priv->unique_id, pointer_value);
 			break;
+		}
 		case PROP_STATUS:
+		{
 			pad_rec->priv->status=g_value_get_uint(value);
 			break;
+		}
 		case PROP_BASE_PATH:
+		{
 			g_free(pad_rec->priv->base_path);
 			pad_rec->priv->base_path=g_value_dup_string(value);
 			otb_pad_rec_compute_file_paths(pad_rec);
 			break;
+		}
 		case PROP_BASE_NAME:
+		{
 			if(g_value_get_string(value)!=NULL)
 			{
 				g_free(pad_rec->priv->base_name);
@@ -159,12 +165,17 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 				otb_pad_rec_compute_file_paths(pad_rec);
 			}
 			break;
+		}
 		case PROP_SIZE:
+		{
 			pad_rec->priv->size=g_value_get_int64(value);
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
@@ -174,27 +185,39 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 	switch(prop_id)
 	{
 		case PROP_UNIQUE_ID:
+		{
 			g_value_set_pointer(value, pad_rec->priv->unique_id);
 			break;
+		}
 		case PROP_STATUS:
+		{
 			g_value_set_uint(value, pad_rec->priv->status);
 			break;
+		}
 		case PROP_BASE_PATH:
+		{
 			g_value_set_string(value, pad_rec->priv->base_path);
 			break;
+		}
 		case PROP_BASE_NAME:
+		{
 			g_value_set_string(value, pad_rec->priv->base_name);
 			break;
+		}
 		case PROP_SIZE:
+		{
 			g_value_set_int64(value, pad_rec->priv->size);
 			break;
+		}
 		default:
+		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
+		}
 	}
 }
 
-int otb_pad_rec_compare_by_id(gpointer p_pad_rec, gpointer p_unique_id)
+int otb_pad_rec_compare_by_id(void *p_pad_rec, void *p_unique_id)
 {
 	const OtbPadRec *pad_rec=OTB_PAD_REC(p_pad_rec);
 	const uuid_t *unique_id=(const uuid_t*)p_unique_id;

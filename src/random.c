@@ -20,7 +20,7 @@ gboolean otb_random_bytes(void *bytes, size_t num_bytes)
 	if(rand_results<=0)
 	{
 		char *error=otb_openssl_errors_as_string();
-		g_warning(_("%s: Failed to generate random data. Error == %s"), "otb_secure_random_bytes", error);
+		g_warning(_("Failed to generate random data. Error == %s"), error);
 		g_free(error);
 		ret_val=FALSE;
 	}
