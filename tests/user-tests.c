@@ -8,6 +8,7 @@
 
 #include "../config.h"
 
+#include <glib/gstdio.h>
 #include <string.h>
 #include <uuid/uuid.h>
 
@@ -18,6 +19,33 @@
 #include "../src/settings.h"
 #include "../src/uuid-util.h"
 #include "../src/user.h"
+
+static void test_otb_user_create_with_no_config_file()
+{
+	const char *EXPECTED_DEFAULT_SYM_CIPHER_NAME="AES-256-CBC";
+	
+	otb_settings_initialize("otb-tests", "otb");
+	otb_settings_set_config_directory_path(otb_get_test_dir_path());
+	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
+	g_unlink(config_file_path);
+	g_free(config_file_path);
+	OtbUser *user=otb_user_create();
+	g_assert(user!=NULL);
+	const uuid_t *actual_unique_id=NULL;
+	OtbAsymCipher *actual_asym_cipher=NULL;
+	char *actual_onion_base_domain=NULL;
+	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
+	g_assert(actual_unique_id!=NULL);
+	char *expected_public_key=NULL;
+	char *actual_sym_cipher_name=NULL;
+	char *actual_public_key=NULL;
+	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
+	g_assert_cmpstr(EXPECTED_DEFAULT_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
+	g_assert(actual_public_key!=NULL);
+	g_free(expected_public_key);
+	g_free(actual_public_key);
+	g_assert(actual_onion_base_domain==NULL);
+}
 
 static void otb_write_unique_id(FILE *file, uuid_t unique_id)
 {
@@ -81,7 +109,7 @@ static void otb_setup_config_file_for_user_tests(uuid_t unique_id, const char *s
 	g_assert(otb_close(file));
 }
 
-static void test_otb_user_create()
+static void test_otb_user_create_from_existing_config_file()
 {
 	const size_t NEW_KEY_LENGTH=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
@@ -125,6 +153,6 @@ static void test_otb_user_create()
 
 void otb_add_user_tests()
 {
-	otb_add_test_func("/user/test_otb_user_create", test_otb_user_create);
-	// FARE - Unit test che controlla che otb_user_create() funziona sensa otb.conf e che crea otb.conf con dati guisti.
+	otb_add_test_func("/user/test_otb_user_create_with_no_config_file", test_otb_user_create_with_no_config_file);
+	otb_add_test_func("/user/test_otb_user_create_from_existing_config_file", test_otb_user_create_from_existing_config_file);
 }
