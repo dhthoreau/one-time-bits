@@ -47,6 +47,8 @@ static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCip
 	g_assert(private_key_iv!=NULL);
 	g_assert(encrypted_private_key!=NULL);
 	otb_asym_cipher_set_encrypted_private_key(asym_cipher_private, encrypted_private_key, private_key_sym_cipher, private_key_iv);
+	g_bytes_unref(private_key_iv);
+	g_bytes_unref(encrypted_private_key);
 	g_object_unref(private_key_sym_cipher);
 }
 

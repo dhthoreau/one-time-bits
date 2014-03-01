@@ -276,7 +276,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
 {
 	OtbPadIO *pad_io=NULL;
-	FILE *file=otb_open_for_write(pad_rec->priv->pad_file_path);
+	FILE *file=otb_open_binary_for_write(pad_rec->priv->pad_file_path);
 	if(file!=NULL)
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
@@ -302,7 +302,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
 OtbPadIO *otb_pad_rec_open_pad_for_read(const OtbPadRec *pad_rec, gboolean auto_rewind)
 {
 	OtbPadIO *pad_io=NULL;
-	FILE *file=otb_open_for_read(pad_rec->priv->pad_file_path);
+	FILE *file=otb_open_binary_for_read(pad_rec->priv->pad_file_path);
 	if(file!=NULL)
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();

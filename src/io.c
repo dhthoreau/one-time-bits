@@ -24,14 +24,24 @@ static FILE *otb_open_file_with_logging(const char *file_path, const char *mode)
 	return file;
 }
 
-FILE *otb_open_for_write(const char *file_path)
+FILE *otb_open_binary_for_write(const char *file_path)
 {
 	return otb_open_file_with_logging(file_path, "wb");
 }
 
-FILE *otb_open_for_read(const char *file_path)
+FILE *otb_open_binary_for_read(const char *file_path)
 {
 	return otb_open_file_with_logging(file_path, "rb");
+}
+
+FILE *otb_open_text_for_write(const char *file_path)
+{
+	return otb_open_file_with_logging(file_path, "w");
+}
+
+FILE *otb_open_text_for_read(const char *file_path)
+{
+	return otb_open_file_with_logging(file_path, "r");
 }
 
 size_t otb_write(const void *buffer, size_t size, size_t num_items, FILE *file)

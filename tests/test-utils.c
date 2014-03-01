@@ -76,7 +76,7 @@ char *otb_generate_unique_test_subdir_path()
 void otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long()
 {
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
-	FILE *file=otb_open_for_write(config_file_path);
+	FILE *file=otb_open_text_for_write(config_file_path);
 	g_free(config_file_path);
 	g_assert(file!=NULL);
 	g_assert(otb_write("[local-crypto]\n", 1, 15, file)==15);

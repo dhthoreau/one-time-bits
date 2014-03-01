@@ -116,7 +116,7 @@ gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path)
 	gboolean ret_val=TRUE;
 	gsize key_file_data_size;
 	char *key_file_data=g_key_file_to_data(key_file, &key_file_data_size, NULL);
-	FILE *file=otb_open_for_write(file_path);
+	FILE *file=otb_open_text_for_write(file_path);
 	if(file==NULL)
 		ret_val=FALSE;
 	else if(otb_write(key_file_data, sizeof(char), key_file_data_size, file)!=key_file_data_size)

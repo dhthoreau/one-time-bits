@@ -662,9 +662,9 @@ OtbPadDbCryptResults otb_pad_db_encrypt_file(const OtbPadDb *pad_db, const char 
 	otb_pad_db_lock(pad_db);
 	if(!otb_pad_db_can_encrypt_file(pad_db, input_file_path))
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS;
-	else if((input_file=otb_open_for_read(input_file_path))==NULL)
+	else if((input_file=otb_open_binary_for_read(input_file_path))==NULL)
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-	else if((output_file=otb_open_for_write(output_file_path))==NULL)
+	else if((output_file=otb_open_binary_for_write(output_file_path))==NULL)
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 	else if(otb_write(&FILE_FORMAT_VERSION, sizeof FILE_FORMAT_VERSION, 1, output_file)!=1)
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
@@ -717,9 +717,9 @@ OtbPadDbCryptResults otb_pad_db_decrypt_file(const OtbPadDb *pad_db, const char 
 	OtbPadRec *pad_rec;
 	off_t pad_size;
 	otb_pad_db_lock(pad_db);
-	if((input_file=otb_open_for_read(input_file_path))==NULL)
+	if((input_file=otb_open_binary_for_read(input_file_path))==NULL)
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-	else if((output_file=otb_open_for_write(output_file_path))==NULL)
+	else if((output_file=otb_open_binary_for_write(output_file_path))==NULL)
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 	else if(otb_read(&file_format_version, sizeof file_format_version, 1, input_file)!=1)
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;

@@ -37,15 +37,16 @@ static void test_otb_user_create_with_no_config_file()
 	char *actual_onion_base_domain=NULL;
 	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
 	g_assert(actual_unique_id!=NULL);
-	char *expected_public_key=NULL;
 	char *actual_sym_cipher_name=NULL;
 	char *actual_public_key=NULL;
 	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_DEFAULT_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
+	g_free(actual_sym_cipher_name);
 	g_assert(actual_public_key!=NULL);
-	g_free(expected_public_key);
 	g_free(actual_public_key);
+	g_object_unref(actual_asym_cipher);
 	g_assert(actual_onion_base_domain==NULL);
+	g_object_unref(user);
 }
 
 static void otb_write_unique_id(FILE *file, uuid_t unique_id)
@@ -78,6 +79,7 @@ static void otb_write_asym_cipher(FILE *file, const OtbAsymCipher *asym_cipher)
 	char *encoded_iv=g_base64_encode(g_bytes_get_data(iv, NULL), g_bytes_get_size(iv));
 	g_bytes_unref(iv);
 	char *encoded_encrypted_private_key=g_base64_encode(g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key));
+// Local crypto è rotto da questo:
 	g_bytes_unref(encrypted_private_key);
 	g_assert(otb_write("asym-cipher-private-key-iv=", 1, 27, file)==27);
 	g_assert(otb_write(encoded_iv, 1, strlen(encoded_iv), file)==strlen(encoded_iv));
@@ -99,7 +101,7 @@ static void otb_write_onion_base_domain(FILE *file, const char *onion_base_domai
 static void otb_setup_config_file_for_user_tests(uuid_t unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *onion_base_domain)
 {
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
-	FILE *file=otb_open_for_write(config_file_path);
+	FILE *file=otb_open_text_for_write(config_file_path);
 	g_free(config_file_path);
 	g_assert(file!=NULL);
 	g_assert(otb_write("[user]\n", 1, 7, file)==7);
@@ -139,6 +141,7 @@ static void test_otb_user_create_from_existing_config_file()
 	char *actual_public_key=NULL;
 	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
+	g_free(actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_free(expected_public_key);
 	g_free(actual_public_key);
@@ -149,8 +152,8 @@ static void test_otb_user_create_from_existing_config_file()
 	g_object_get(user, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
 	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN_2, ==, actual_onion_base_domain);
 	g_free(actual_onion_base_domain);
-	g_object_unref(expected_asym_cipher);
 	g_object_unref(user);
+	g_object_unref(expected_asym_cipher);
 }
 
 void otb_add_user_tests()
