@@ -81,6 +81,8 @@ void otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_tes
 	g_assert(file!=NULL);
 	g_assert(otb_write("[local-crypto]\n", 1, 15, file)==15);
 	g_assert(otb_write("hash-iterations=1\n", 1, 18, file)==18);
+	g_assert(otb_write("[user]\n", 1, 7, file)==7);
+	g_assert(otb_write("asym-cipher-new-key-size=256\n", 1, 29, file)==29);
 	g_assert(otb_close(file));
 }
 

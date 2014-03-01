@@ -29,6 +29,7 @@ static void test_otb_user_create_with_no_config_file()
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	g_unlink(config_file_path);
 	g_free(config_file_path);
+	otb_test_setup_local_crypto();
 	OtbUser *user=otb_user_create();
 	g_assert(user!=NULL);
 	const uuid_t *actual_unique_id=NULL;

@@ -18,6 +18,7 @@
 #define CONFIG_GROUP						"user"
 #define CONFIG_UNIQUE_ID					"unique-id"
 #define CONFIG_SYM_CIPHER					"sym-cipher"
+#define CONFIG_ASYM_CIPHER_NEW_KEY_SIZE		"asym-cipher-new-key-size"
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV	"asym-cipher-private-key-iv"
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY		"asym-cipher-private-key"
 #define CONFIG_ONION_BASE_DOMAIN			"onion-base-domain"
@@ -144,7 +145,7 @@ static void otb_user_initialize_asym_cipher(OtbUser *user)
 	}
 	else
 	{
-		size_t key_size=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV, OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE);
+		size_t key_size=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_ASYM_CIPHER_NEW_KEY_SIZE, OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE);
 		otb_asym_cipher_generate_random_keys(user->priv->asym_cipher, key_size);
 	}
 	g_bytes_unref(private_key_iv);
