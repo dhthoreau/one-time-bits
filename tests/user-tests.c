@@ -141,6 +141,7 @@ static void test_otb_user_create_from_existing_config_file()
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_free(expected_public_key);
 	g_free(actual_public_key);
+	g_object_unref(actual_asym_cipher);
 	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN_1, ==, actual_onion_base_domain);
 	g_free(actual_onion_base_domain);
 	g_assert(otb_user_set_onion_base_domain(user, EXPECTED_BASE_ONION_DOMAIN_2));

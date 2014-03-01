@@ -50,7 +50,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 	object_class->finalize=otb_user_finalize;
 	object_class->get_property=otb_user_get_property;
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_pointer(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_pointer(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_object(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), OTB_TYPE_ASYM_CIPHER, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ONION_BASE_DOMAIN, g_param_spec_string(OTB_USER_PROP_ONION_BASE_DOMAIN, _("Onion base domain"), _("The domain of the user's Tor hidden service (minus the \".onion\")"), NULL, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
@@ -98,7 +98,7 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 		}
 		case PROP_ASYM_CIPHER:
 		{
-			g_value_set_pointer(value, user->priv->asym_cipher);
+			g_value_set_object(value, user->priv->asym_cipher);
 			break;
 		}
 		case PROP_ONION_BASE_DOMAIN:
