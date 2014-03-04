@@ -52,9 +52,6 @@ static void test_otb_user_create_with_no_config_file()
 static void otb_write_unique_id(FILE *file, uuid_t unique_id)
 {
 	char *encoded_unique_id=g_base64_encode(unique_id, sizeof(uuid_t));
-	unsigned char *yo=(unsigned char*)unique_id;
-	int wussup;
-	unsigned char *hey=(unsigned char*)g_base64_decode(encoded_unique_id, &wussup);
 	g_assert(otb_write("unique-id=", 1, 10, file)==10);
 	g_assert(otb_write(encoded_unique_id, 1, strlen(encoded_unique_id), file)==strlen(encoded_unique_id));
 	g_assert(otb_write("\n", 1, 1, file)==1);
@@ -79,8 +76,8 @@ static void otb_write_asym_cipher(FILE *file, const OtbAsymCipher *asym_cipher)
 	char *encoded_iv=g_base64_encode(g_bytes_get_data(iv, NULL), g_bytes_get_size(iv));
 	g_bytes_unref(iv);
 	char *encoded_encrypted_private_key=g_base64_encode(g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key));
-// Local crypto è rotto da questo:
-	g_bytes_unref(encrypted_private_key);
+// FARE - Local crypto è rotto da questo:
+//	g_bytes_unref(encrypted_private_key);
 	g_assert(otb_write("asym-cipher-private-key-iv=", 1, 27, file)==27);
 	g_assert(otb_write(encoded_iv, 1, strlen(encoded_iv), file)==strlen(encoded_iv));
 	g_assert(otb_write("\n", 1, 1, file)==1);

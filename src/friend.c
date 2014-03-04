@@ -281,7 +281,6 @@ static gboolean otb_friend_save(const OtbFriend *friend)
 		g_bytes_unref(onion_base_domain_iv);
 		g_free(encrypted_public_key);
 		g_free(encrypted_onion_base_domain);
-		ret_val=TRUE;
 	}
 	return ret_val;
 }
@@ -300,21 +299,17 @@ OtbFriend *otb_friend_create_in_directory(const uuid_t *unique_id, const char *b
 static gboolean otb_friend_load(const OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
-	GBytes *public_key_iv=NULL;
-	GBytes *onion_base_domain_iv=NULL;
-	void *encrypted_public_key=NULL;
-	void *encrypted_onion_base_domain=NULL;
-	size_t encrypted_public_key_size;
-	size_t encrypted_onion_base_domain_size;
 	GKeyFile *key_file=otb_settings_load_key_file(friend->priv->file_path);
 	if(key_file==NULL)
 		ret_val=FALSE;
 	else
 	{
-		public_key_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY_IV);
-		encrypted_public_key=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, &encrypted_public_key_size);
-		onion_base_domain_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN_IV);
-		encrypted_onion_base_domain=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, &encrypted_onion_base_domain_size);
+		size_t encrypted_public_key_size;
+		GBytes *public_key_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY_IV);
+		void *encrypted_public_key=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, &encrypted_public_key_size);
+		size_t encrypted_onion_base_domain_size;
+		GBytes *onion_base_domain_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN_IV);
+		void *encrypted_onion_base_domain=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, &encrypted_onion_base_domain_size);
 		g_key_file_unref(key_file);
 		void *public_key=NULL;
 		void *onion_base_domain=NULL;

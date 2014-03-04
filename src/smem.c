@@ -20,13 +20,12 @@ volatile void *smemset(volatile void *buffer, int value, int size)
 int smemcmp(const void *buffer1, const void *buffer2, size_t size)
 /// This to ensure that the memcmp executes every byte, no short circuiting.
 {
-	int retVal=0;
-	int compare;
+	volatile int retVal=0;
 	const unsigned char *buffPtr1;
 	const unsigned char *buffPtr2;
 	for(buffPtr1=buffer1, buffPtr2=buffer2; (void*)buffPtr1-buffer1<size; buffPtr1++, buffPtr2++)
 	{
-		compare=*buffPtr1-*buffPtr2;
+		volatile int compare=*buffPtr1-*buffPtr2;
 		retVal=(retVal?retVal:compare);
 	}
 	return retVal;

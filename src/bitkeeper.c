@@ -79,6 +79,7 @@ gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 		ret_val=FALSE;
 	}
 	g_free(friends_base_path);
+	return ret_val;
 }
 
 OtbBitkeeper *otb_bitkeeper_load()

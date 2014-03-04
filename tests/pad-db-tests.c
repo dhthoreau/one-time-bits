@@ -235,7 +235,6 @@ static void test_pads_save_and_load()
 	g_assert_cmpint(0, ==, uuid_compare(*expected_unsent_unique_id, *actual_unsent_unique_id));
 	const uuid_t *actual_received_unique_id=otb_pad_db_fetch_random_rec_id_with_null_assertion(load_pad_db, OTB_PAD_REC_STATUS_RECEIVED);
 	g_assert_cmpint(0, ==, uuid_compare(expected_received_unique_id, *actual_received_unique_id));
-	char actual_unsent_bytes[EXPECTED_DEFAULT_NEW_PAD_SIZE];
 	OtbPadIO *unsent_load_pad_io=otb_pad_db_open_pad_for_read(load_pad_db, actual_unsent_unique_id);
 	g_assert(unsent_load_pad_io!=NULL);
 	otb_assert_pad_read(unsent_load_pad_io, expected_unsent_bytes, EXPECTED_DEFAULT_NEW_PAD_SIZE);

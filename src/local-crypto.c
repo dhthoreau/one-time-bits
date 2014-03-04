@@ -94,6 +94,7 @@ static gboolean otb_local_crypto_set_passphrase(OtbSymCipher *sym_cipher, const 
 		ret_val=FALSE;
 	g_bytes_unref(passphrase_hash);
 	g_bytes_unref(wrapped_key);
+	return ret_val;
 }
 
 static void otb_local_crypto_set_local_sym_cipher(OtbSymCipher *sym_cipher)

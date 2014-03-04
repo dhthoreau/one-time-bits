@@ -21,7 +21,6 @@ static void test_asym_cipher_properties()
 	const char *EXPECTED_CIPHER="RC2-64-CBC";
 	
 	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, EXPECTED_CIPHER, NULL);
-	size_t actual_new_key_length=NULL;
 	char *actual_cipher=NULL;
 	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_cipher, NULL);
 	g_assert_cmpstr(EXPECTED_CIPHER, ==, actual_cipher);

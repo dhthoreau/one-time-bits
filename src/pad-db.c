@@ -657,7 +657,6 @@ OtbPadDbCryptResults otb_pad_db_encrypt_file(const OtbPadDb *pad_db, const char 
 	FILE *output_file=NULL;
 	OtbPadIO *current_pad_io=NULL;
 	OtbPadIO *previous_pad_io=NULL;
-	OtbPadRec *pad_rec;
 	off_t pad_size;
 	otb_pad_db_lock(pad_db);
 	if(!otb_pad_db_can_encrypt_file(pad_db, input_file_path))
@@ -671,6 +670,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt_file(const OtbPadDb *pad_db, const char 
 	while(encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && otb_file_has_more_bytes(input_file))
 	{
 		const uuid_t *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
+		OtbPadRec *pad_rec=NULL;
 		if(unique_id==NULL)
 			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 		else if(!otb_pad_db_crypt_bytes(sizeof *unique_id, *unique_id, NULL, NULL, output_file, current_pad_io, previous_pad_io))
@@ -714,7 +714,6 @@ OtbPadDbCryptResults otb_pad_db_decrypt_file(const OtbPadDb *pad_db, const char 
 	FILE *output_file=NULL;
 	OtbPadIO *current_pad_io=NULL;
 	OtbPadIO *previous_pad_io=NULL;
-	OtbPadRec *pad_rec;
 	off_t pad_size;
 	otb_pad_db_lock(pad_db);
 	if((input_file=otb_open_binary_for_read(input_file_path))==NULL)
@@ -731,6 +730,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt_file(const OtbPadDb *pad_db, const char 
 	while(decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && otb_file_has_more_bytes(input_file))
 	{
 		uuid_t unique_id;
+		OtbPadRec *pad_rec=NULL;
 		if(!otb_pad_db_crypt_bytes(sizeof unique_id, NULL, input_file, unique_id, NULL, current_pad_io, previous_pad_io))
 			decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 		else if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, (const uuid_t*)&unique_id))==NULL)
