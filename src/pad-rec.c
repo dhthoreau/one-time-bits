@@ -12,7 +12,6 @@
 
 #include "io.h"
 #include "local-crypto.h"
-#include "memory.h"
 #include "pad-rec.h"
 #include "random.h"
 #include "settings.h"

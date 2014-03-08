@@ -195,7 +195,7 @@ GKeyFile *otb_user_export(const OtbUser *user)
 {
 	GKeyFile *export_file=g_key_file_new();
 	otb_user_export_unique_id(user, export_file);
-	otb_user_export_unique_id(user, export_file);
+	otb_user_export_public_key(user, export_file);
 	otb_user_export_onion_base_domain(user, export_file);
 	return export_file;
 }

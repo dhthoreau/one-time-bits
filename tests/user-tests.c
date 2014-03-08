@@ -14,6 +14,7 @@
 
 #include "main.h"
 #include "test-utils.h"
+#include "../src/friend.h"
 #include "../src/io.h"
 #include "../src/local-crypto.h"
 #include "../src/settings.h"
@@ -49,7 +50,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_object_unref(user);
 }
 
-static void otb_write_unique_id(FILE *file, uuid_t unique_id)
+static void otb_write_unique_id(FILE *file, const uuid_t unique_id)
 {
 	char *encoded_unique_id=g_base64_encode(unique_id, sizeof(uuid_t));
 	g_assert(otb_write("unique-id=", 1, 10, file)==10);
@@ -94,7 +95,7 @@ static void otb_write_onion_base_domain(FILE *file, const char *onion_base_domai
 	g_assert(otb_write("\n", 1, 1, file)==1);
 }
 
-static void otb_setup_config_file_for_user_tests(uuid_t unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *onion_base_domain)
+static void otb_setup_config_file_for_user_tests(const uuid_t unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *onion_base_domain)
 {
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	FILE *file=otb_open_text_for_write(config_file_path);
@@ -108,6 +109,17 @@ static void otb_setup_config_file_for_user_tests(uuid_t unique_id, const char *s
 	g_assert(otb_close(file));
 }
 
+static OtbUser *otb_load_user_from_existing_config_file(const uuid_t unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *onion_base_domain)
+{
+	otb_test_setup_local_crypto();
+	otb_setup_config_file_for_user_tests(unique_id, sym_cipher_name, asym_cipher, onion_base_domain);
+	otb_settings_initialize("otb-tests", "otb");
+	otb_settings_set_config_directory_path(otb_get_test_dir_path());
+	OtbUser *user=otb_user_load_from_settings_config();
+	g_assert(user!=NULL);
+	return user;
+}
+
 static void test_otb_user_create_from_existing_config_file()
 {
 	const size_t NEW_KEY_LENGTH=512;
@@ -115,16 +127,11 @@ static void test_otb_user_create_from_existing_config_file()
 	const char *EXPECTED_BASE_ONION_DOMAIN_1="akjsdhkljashgd";
 	const char *EXPECTED_BASE_ONION_DOMAIN_2="kjshdfjkhgssdj";
 	
-	otb_test_setup_local_crypto();
 	uuid_t expected_unique_id;
 	uuid_generate(expected_unique_id);
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
-	otb_setup_config_file_for_user_tests(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN_1);
-	otb_settings_initialize("otb-tests", "otb");
-	otb_settings_set_config_directory_path(otb_get_test_dir_path());
-	OtbUser *user=otb_user_load_from_settings_config();
-	g_assert(user!=NULL);
+	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN_1);
 	const uuid_t *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
 	char *actual_onion_base_domain=NULL;
@@ -152,8 +159,41 @@ static void test_otb_user_create_from_existing_config_file()
 	g_object_unref(expected_asym_cipher);
 }
 
+static void test_otb_user_export()
+{
+	const size_t NEW_KEY_LENGTH=512;
+	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
+	const char *EXPECTED_BASE_ONION_DOMAIN="kdjhgkfgjhfhj";
+	
+	uuid_t expected_unique_id;
+	uuid_generate(expected_unique_id);
+	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
+	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN);
+	char *expected_public_key=NULL;
+	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
+	g_assert(expected_public_key!=NULL);
+	GKeyFile *export_file=otb_user_export(user);
+	uuid_t actual_unique_id;
+	char *unique_id_string=otb_settings_get_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID);
+	uuid_parse(unique_id_string, actual_unique_id);
+	g_free(unique_id_string);
+	char *actual_public_key=otb_settings_get_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
+	char *actual_onion_base_domain=otb_settings_get_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN);
+	g_key_file_unref(export_file);
+	g_assert_cmpint(0, ==, uuid_compare(expected_unique_id, actual_unique_id));
+	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
+	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN, ==, actual_onion_base_domain);
+	g_free(expected_public_key);
+	g_free(actual_public_key);
+	g_free(actual_onion_base_domain);
+	g_object_unref(user);
+	g_object_unref(expected_asym_cipher);
+}
+
 void otb_add_user_tests()
 {
 	otb_add_test_func("/user/test_otb_user_create_with_no_config_file", test_otb_user_create_with_no_config_file);
 	otb_add_test_func("/user/test_otb_user_create_from_existing_config_file", test_otb_user_create_from_existing_config_file);
+	otb_add_test_func("/user/test_otb_user_export", test_otb_user_export);
 }

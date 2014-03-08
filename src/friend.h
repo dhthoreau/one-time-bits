@@ -17,7 +17,7 @@
 #define OTB_FRIEND_IMPORT_GROUP				"otb-user"
 #define OTB_FRIEND_IMPORT_UNIQUE_ID			"unique-id"
 #define OTB_FRIEND_IMPORT_PUBLIC_KEY		"public-key"
-#define OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN	"public-key"
+#define OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN	"onion-base-domain"
 
 #define OTB_FRIEND_PROP_BASE_PATH			"base-path"
 #define OTB_FRIEND_PROP_INCOMING_PADS		"incoming-pads"

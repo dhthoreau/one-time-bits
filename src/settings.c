@@ -12,7 +12,6 @@
 #include <glib/gi18n.h>
 
 #include "io.h"
-#include "memory.h"
 #include "settings.h"
 
 #define CONFIG_FILE_NAME			"otb.conf"

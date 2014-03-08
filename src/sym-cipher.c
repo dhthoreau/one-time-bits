@@ -13,7 +13,6 @@
 #include "sym-cipher.h"
 #include "export.h"
 #include "io.h"
-#include "memory.h"
 #include "openssl-util.h"
 #include "random.h"
 #include "smem.h"
