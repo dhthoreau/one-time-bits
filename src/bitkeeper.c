@@ -15,6 +15,7 @@
 #include "bitkeeper.h"
 #include "friend.h"
 #include "settings.h"
+#include "user.h"
 
 static void otb_bitkeeper_dispose(GObject *object);
 
@@ -22,6 +23,7 @@ G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
 
 struct _OtbBitkeeperPrivate
 {
+	OtbUser *user;
 	GSList *friends;
 };
 
@@ -34,6 +36,7 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
 {
 	bitkeeper->priv=G_TYPE_INSTANCE_GET_PRIVATE(bitkeeper, OTB_TYPE_BITKEEPER, OtbBitkeeperPrivate);
+	bitkeeper->priv->user=NULL;
 	bitkeeper->priv->friends=NULL;
 }
 
@@ -42,6 +45,11 @@ static void otb_bitkeeper_dispose(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_BITKEEPER(object));
 	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
+	if(bitkeeper->priv->user!=NULL)
+	{
+		g_object_unref(bitkeeper->priv->user);
+		bitkeeper->priv->user=NULL;
+	}
 	g_slist_free_full(bitkeeper->priv->friends, g_object_unref);
 	bitkeeper->priv->friends=NULL;
 	G_OBJECT_CLASS(otb_bitkeeper_parent_class)->dispose(object);
@@ -85,7 +93,7 @@ gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 OtbBitkeeper *otb_bitkeeper_load()
 {
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
-	if(!otb_bitkeeper_load_friends(bitkeeper))
+	if((bitkeeper->priv->user=otb_user_load_from_settings_config())==NULL || !otb_bitkeeper_load_friends(bitkeeper))
 	{
 		g_object_unref(bitkeeper);
 		bitkeeper=NULL;

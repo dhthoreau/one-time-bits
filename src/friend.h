@@ -31,7 +31,7 @@
 #define OTB_IS_FRIEND(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_FRIEND))
 #define OTB_FRIEND_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), OTB_TYPE_FRIEND, OtbFriendClass))
 #define OTB_IS_FRIEND_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), OTB_TYPE_FRIEND))
-#define OTB_FRIEND_GET_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((obj), OTB_TYPE_FRIEND, OtbFriendClass))
+#define OTB_FRIEND_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), OTB_TYPE_FRIEND, OtbFriendClass))
 
 typedef struct _OtbFriend OtbFriend;
 typedef struct _OtbFriendClass OtbFriendClass;

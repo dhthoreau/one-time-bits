@@ -40,8 +40,7 @@ GKeyFile *otb_settings_load_key_file(const char *file_path)
 {
 	GKeyFile *key_file=g_key_file_new();
 	GError *error=NULL;
-	if(g_file_test(file_path, G_FILE_TEST_EXISTS) && !g_key_file_load_from_file(key_file, file_path, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
-	if(g_file_test(file_path, G_FILE_TEST_EXISTS) && !g_key_file_load_from_file(key_file, file_path, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
+	if(g_file_test(file_path, G_FILE_TEST_EXISTS) && !g_key_file_load_from_data(key_file, file_path, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
 	{
 		g_message("%s: Failed to load settings file %s. Error == %s", "otb_settings_load_key_file", file_path, error->message);
 		g_error_free(error);

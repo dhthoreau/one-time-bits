@@ -36,7 +36,7 @@ typedef enum
 #define OTB_IS_PAD_REC(obj)				(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_PAD_REC))
 #define OTB_PAD_REC_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), OTB_TYPE_PAD_REC, OtbPadRecClass))
 #define OTB_IS_PAD_REC_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE((klass), OTB_TYPE_PAD_REC))
-#define OTB_PAD_REC_GET_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE((obj), OTB_TYPE_PAD_REC, OtbPadRecClass))
+#define OTB_PAD_REC_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), OTB_TYPE_PAD_REC, OtbPadRecClass))
 
 typedef struct _OtbPadRec OtbPadRec;
 typedef struct _OtbPadRecClass OtbPadRecClass;

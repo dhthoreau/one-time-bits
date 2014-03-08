@@ -26,7 +26,7 @@ typedef char OtbSymCipherSalt[PKCS5_SALT_LEN];
 #define OTB_IS_SYM_CIPHER(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_SYM_CIPHER))
 #define OTB_SYM_CIPHER_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), OTB_TYPE_SYM_CIPHER, OtbSymCipherClass))
 #define OTB_IS_SYM_CIPHER_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), OTB_TYPE_SYM_CIPHER))
-#define OTB_SYM_CIPHER_GET_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((obj), OTB_TYPE_SYM_CIPHER, OtbSymCipherClass))
+#define OTB_SYM_CIPHER_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), OTB_TYPE_SYM_CIPHER, OtbSymCipherClass))
 
 typedef struct _OtbSymCipher OtbSymCipher;
 typedef struct _OtbSymCipherClass OtbSymCipherClass;

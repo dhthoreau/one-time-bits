@@ -20,7 +20,7 @@
 #define OTB_IS_USER(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_USER))
 #define OTB_USER_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), OTB_TYPE_USER, OtbUserClass))
 #define OTB_IS_USER_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), OTB_TYPE_USER))
-#define OTB_USER_GET_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE((obj), OTB_TYPE_USER, OtbUserClass))
+#define OTB_USER_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS((obj), OTB_TYPE_USER, OtbUserClass))
 
 typedef struct _OtbUser OtbUser;
 typedef struct _OtbUserClass OtbUserClass;
@@ -35,12 +35,13 @@ struct _OtbUser
 struct _OtbUserClass
 {
 	GObjectClass parent_class;
+	GKeyFile *(*otb_user_export_key_file_private)(const OtbUser *user);
 };
 
 GType otb_user_get_type();
 
 OtbUser *otb_user_load_from_settings_config();
 gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain);
-GKeyFile *otb_user_export(const OtbUser *user);
+char *otb_user_export(const OtbUser *user);
 
 #endif

@@ -36,7 +36,7 @@ typedef enum
 #define OTB_IS_PAD_DB(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_PAD_DB))
 #define OTB_PAD_DB_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass), OTB_TYPE_PAD_DB, OtbPadDbClass))
 #define OTB_IS_PAD_DB_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), OTB_TYPE_PAD_DB))
-#define OTB_PAD_DB_GET_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((obj), OTB_TYPE_PAD_DB, OtbPadDbClass))
+#define OTB_PAD_DB_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), OTB_TYPE_PAD_DB, OtbPadDbClass))
 
 typedef struct _OtbPadDb OtbPadDb;
 typedef struct _OtbPadDbClass OtbPadDbClass;

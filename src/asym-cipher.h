@@ -28,7 +28,7 @@ typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 #define OTB_IS_ASYM_CIPHER(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_ASYM_CIPHER))
 #define OTB_ASYM_CIPHER_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass), OTB_TYPE_ASYM_CIPHER, OtbAsymCipherClass))
 #define OTB_IS_ASYM_CIPHER_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass), OTB_TYPE_ASYM_CIPHER))
-#define OTB_ASYM_CIPHER_GET_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((obj), OTB_TYPE_ASYM_CIPHER, OtbAsymCipherClass))
+#define OTB_ASYM_CIPHER_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS((obj), OTB_TYPE_ASYM_CIPHER, OtbAsymCipherClass))
 
 typedef struct _OtbAsymCipher OtbAsymCipher;
 typedef struct _OtbAsymCipherClass OtbAsymCipherClass;

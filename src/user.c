@@ -32,6 +32,7 @@ enum
 	PROP_ONION_BASE_DOMAIN
 };
 
+static GKeyFile *otb_user_export_key_file(const OtbUser *user);
 static void otb_user_dispose(GObject *object);
 static void otb_user_finalize(GObject *object);
 static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
@@ -47,6 +48,7 @@ struct _OtbUserPrivate
 
 static void otb_user_class_init(OtbUserClass *klass)
 {
+	klass->otb_user_export_key_file_private=otb_user_export_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_user_dispose;
 	object_class->finalize=otb_user_finalize;
@@ -191,11 +193,19 @@ static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_fil
 
 #define otb_user_export_onion_base_domain(user, export_file)	(g_key_file_set_string((export_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, (user)->priv->onion_base_domain))
 
-GKeyFile *otb_user_export(const OtbUser *user)
+static GKeyFile *otb_user_export_key_file(const OtbUser *user)
 {
 	GKeyFile *export_file=g_key_file_new();
 	otb_user_export_unique_id(user, export_file);
 	otb_user_export_public_key(user, export_file);
 	otb_user_export_onion_base_domain(user, export_file);
 	return export_file;
+}
+
+char *otb_user_export(const OtbUser *user)
+{
+	GKeyFile *export_file=OTB_USER_GET_CLASS(user)->otb_user_export_key_file_private(user);
+	char *export_string=g_key_file_to_data(export_file, NULL, NULL);
+	g_key_file_unref(export_file);
+	return export_string;
 }
