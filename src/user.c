@@ -11,6 +11,7 @@
 #include <glib/gi18n.h>
 #include <uuid/uuid.h>
 
+#include "friend.h"
 #include "local-crypto.h"
 #include "settings.h"
 #include "user.h"
@@ -157,7 +158,7 @@ static void otb_user_initialize_onion_base_domain(OtbUser *user)
 	user->priv->onion_base_domain=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN);
 }
 
-OtbUser *otb_user_create()
+OtbUser *otb_user_load_from_settings_config()
 {
 	OtbUser *user=g_object_new(OTB_TYPE_USER, NULL);
 	otb_user_initialize_unique_id(user);
@@ -171,4 +172,30 @@ gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_b
 	g_free(user->priv->onion_base_domain);
 	user->priv->onion_base_domain=g_strdup(onion_base_domain);
 	return otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN, user->priv->onion_base_domain);
+}
+
+static void otb_user_export_unique_id(const OtbUser *user, GKeyFile *export_file)
+{
+	char unique_id_string[UNIQUE_ID_STR_BYTES];
+	uuid_unparse_lower(*user->priv->unique_id, unique_id_string);
+	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);
+}
+
+static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_file)
+{
+	char *public_key=NULL;
+	g_object_get(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &public_key, NULL);
+	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
+	g_free(public_key);
+}
+
+#define otb_user_export_onion_base_domain(user, export_file)	(g_key_file_set_string((export_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, (user)->priv->onion_base_domain))
+
+GKeyFile *otb_user_export(const OtbUser *user)
+{
+	GKeyFile *export_file=g_key_file_new();
+	otb_user_export_unique_id(user, export_file);
+	otb_user_export_unique_id(user, export_file);
+	otb_user_export_onion_base_domain(user, export_file);
+	return export_file;
 }

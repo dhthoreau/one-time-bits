@@ -59,6 +59,17 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 	g_free(load_outgoing_pads_path);
 }
 
+static GKeyFile *otb_create_import_file(const uuid_t unique_id, const char *public_key, const char *onion_base_domain)
+{
+	GKeyFile *import_file=g_key_file_new();
+	char unique_id_string[UNIQUE_ID_STR_BYTES];
+	uuid_unparse_lower(unique_id, unique_id_string);
+	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);
+	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
+	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, onion_base_domain);
+	return import_file;
+}
+
 static void test_otb_friend_create_load()
 {
 	const char *EXPECTED_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
@@ -68,18 +79,22 @@ static void test_otb_friend_create_load()
 	
 	otb_test_setup_local_crypto();
 	char *friend_dir_path=otb_generate_unique_test_subdir_path();
-	uuid_t unique_id;
-	uuid_generate(unique_id);
-	OtbFriend *create_friend=otb_friend_create_in_directory((const uuid_t*)&unique_id, friend_dir_path);
+	uuid_t expected_unique_id;
+	uuid_generate(expected_unique_id);
+char unique_id_path[UNIQUE_ID_STR_BYTES];
+uuid_unparse_lower(expected_unique_id, unique_id_path);
+	GKeyFile *import_file=otb_create_import_file(expected_unique_id, EXPECTED_PUBLIC_KEY, EXPECTED_ONION_BASE_DOMAIN);
+	OtbFriend *create_friend=otb_friend_import_to_directory(import_file, friend_dir_path);
+	g_key_file_unref(import_file);
 	g_assert(create_friend!=NULL);
-	otb_assert_friend_files_exist(unique_id, friend_dir_path);
+	otb_assert_friend_files_exist(expected_unique_id, friend_dir_path);
 	g_assert(otb_friend_set_public_key(create_friend, EXPECTED_PUBLIC_KEY));
 	g_assert(otb_friend_set_onion_base_domain(create_friend, EXPECTED_ONION_BASE_DOMAIN));
-	OtbFriend *load_friend=otb_friend_load_from_directory((const uuid_t*)&unique_id, UNEXPECTED_PATH);
+	OtbFriend *load_friend=otb_friend_load_from_directory((const uuid_t*)&expected_unique_id, UNEXPECTED_PATH);
 	g_assert(load_friend==NULL);
 	load_friend=otb_friend_load_from_directory((const uuid_t*)&unexpected_unique_id, friend_dir_path);
 	g_assert(load_friend==NULL);
-	load_friend=otb_friend_load_from_directory((const uuid_t*)&unique_id, friend_dir_path);
+	load_friend=otb_friend_load_from_directory((const uuid_t*)&expected_unique_id, friend_dir_path);
 	g_assert(load_friend!=NULL);
 	char *actual_base_path=NULL;
 	char *actual_public_key=NULL;

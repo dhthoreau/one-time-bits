@@ -30,7 +30,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_unlink(config_file_path);
 	g_free(config_file_path);
 	otb_test_setup_local_crypto();
-	OtbUser *user=otb_user_create();
+	OtbUser *user=otb_user_load_from_settings_config();
 	g_assert(user!=NULL);
 	const uuid_t *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
@@ -76,8 +76,7 @@ static void otb_write_asym_cipher(FILE *file, const OtbAsymCipher *asym_cipher)
 	char *encoded_iv=g_base64_encode(g_bytes_get_data(iv, NULL), g_bytes_get_size(iv));
 	g_bytes_unref(iv);
 	char *encoded_encrypted_private_key=g_base64_encode(g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key));
-// FARE - Local crypto è rotto da questo:
-//	g_bytes_unref(encrypted_private_key);
+	g_bytes_unref(encrypted_private_key);
 	g_assert(otb_write("asym-cipher-private-key-iv=", 1, 27, file)==27);
 	g_assert(otb_write(encoded_iv, 1, strlen(encoded_iv), file)==strlen(encoded_iv));
 	g_assert(otb_write("\n", 1, 1, file)==1);
@@ -124,7 +123,7 @@ static void test_otb_user_create_from_existing_config_file()
 	otb_setup_config_file_for_user_tests(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN_1);
 	otb_settings_initialize("otb-tests", "otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
-	OtbUser *user=otb_user_create();
+	OtbUser *user=otb_user_load_from_settings_config();
 	g_assert(user!=NULL);
 	const uuid_t *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;

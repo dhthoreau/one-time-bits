@@ -39,7 +39,8 @@ struct _OtbUserClass
 
 GType otb_user_get_type();
 
-OtbUser *otb_user_create();
+OtbUser *otb_user_load_from_settings_config();
 gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain);
+GKeyFile *otb_user_export(const OtbUser *user);	// FARE - Unit test.
 
 #endif
