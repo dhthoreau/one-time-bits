@@ -176,8 +176,9 @@ static void test_otb_user_export()
 	char *export_string=otb_user_export(user);
 	GKeyFile *export_file=g_key_file_new();
 	GError *error=NULL;
-	g_key_file_load_from_data(export_file, export_string, strlen(export_string), G_KEY_FILE_NONE, &error);
+	g_assert(g_key_file_load_from_data(export_file, export_string, strlen(export_string), G_KEY_FILE_NONE, &error));
 	g_assert(error==NULL);
+	g_free(export_string);
 	uuid_t actual_unique_id;
 	char *unique_id_string=otb_settings_get_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID);
 	uuid_parse(unique_id_string, actual_unique_id);

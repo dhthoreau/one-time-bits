@@ -82,8 +82,10 @@ static void test_otb_friend_create_import()
 	uuid_t expected_unique_id;
 	uuid_generate(expected_unique_id);
 	GKeyFile *import_file=otb_create_import_file(expected_unique_id, EXPECTED_PUBLIC_KEY, EXPECTED_ONION_BASE_DOMAIN);
-	OtbFriend *create_friend=otb_friend_import_to_directory(import_file, friend_dir_path);
+	char *import_string=g_key_file_to_data(import_file, NULL, NULL);
 	g_key_file_unref(import_file);
+	OtbFriend *create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
+	g_free(import_string);
 	g_assert(create_friend!=NULL);
 	otb_assert_friend_files_exist(expected_unique_id, friend_dir_path);
 	g_assert(otb_friend_set_public_key(create_friend, EXPECTED_PUBLIC_KEY));
