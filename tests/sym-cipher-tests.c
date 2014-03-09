@@ -95,7 +95,7 @@ static void test_sym_cipher_encryption()
 	
 	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, "AES-256-CBC", OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST, "SHA512", OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, 2048, NULL);
 	g_assert(otb_sym_cipher_generate_random_key(sym_cipher));
-	void *encrypted_message=NULL;
+	unsigned char *encrypted_message=NULL;
 	GBytes *iv=NULL;
 	size_t encrypted_message_size=otb_sym_cipher_encrypt(sym_cipher, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, &iv, &encrypted_message);
 	g_assert_cmpint(0, !=, encrypted_message_size);

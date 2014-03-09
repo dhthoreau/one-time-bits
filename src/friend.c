@@ -146,7 +146,7 @@ static void otb_friend_compute_file_paths(const OtbFriend *friend)
 static void otb_friend_set_unique_id(const OtbFriend *friend, const uuid_t *unique_id)
 {
 	if(friend->priv->unique_id!=NULL)
-		g_error(_("Tried to change unique ID of friend."));
+		g_error(_("Tried to change unique ID of a friend."));
 	if(unique_id==NULL)
 		friend->priv->unique_id=NULL;
 	else
@@ -257,8 +257,8 @@ static gboolean otb_friend_save(const OtbFriend *friend)	// FARE - Scrive il fil
 	{
 		GBytes *public_key_iv=NULL;
 		GBytes *onion_base_domain_iv=NULL;
-		void *encrypted_public_key=NULL;
-		void *encrypted_onion_base_domain=NULL;
+		unsigned char *encrypted_public_key=NULL;
+		unsigned char *encrypted_onion_base_domain=NULL;
 		size_t encrypted_public_key_size;
 		size_t encrypted_onion_base_domain_size;
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();

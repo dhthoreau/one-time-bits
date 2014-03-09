@@ -63,13 +63,13 @@ static void otb_run_tests_to_find_memory_leaks()
 
 static void otb_add_tests()
 {
-/*	otb_add_settings_tests();
+	otb_add_settings_tests();
 	otb_add_sym_cipher_tests();
 	otb_add_asym_cipher_tests();
 	otb_add_local_crypto_tests();
 	otb_add_pad_rec_tests();
 	otb_add_pad_db_tests();
-	otb_add_friend_tests();*/
+	otb_add_friend_tests();
 	otb_add_user_tests();
 }
 

@@ -45,7 +45,7 @@ unsigned char *otb_openssl_create_encryption_buffer(const EVP_CIPHER *cipher_imp
 	return g_malloc(size);
 }
 
-unsigned char *otb_openssl_create_decryption_buffer(const EVP_CIPHER *cipher_impl, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out)
+void *otb_openssl_create_decryption_buffer(const EVP_CIPHER *cipher_impl, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out)
 {
 	size_t size=encrypted_bytes_buffer_size+EVP_CIPHER_block_size(cipher_impl);
 	if(decryption_buffer_size_out!=NULL)

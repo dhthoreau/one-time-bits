@@ -69,7 +69,7 @@ off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const uuid_t *unique_id);
 OtbPadIO *otb_pad_db_open_pad_for_read(const OtbPadDb *pad_db, const uuid_t *unique_id);
 gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const uuid_t *unique_id);
-OtbPadDbCryptResults otb_pad_db_encrypt_file(const OtbPadDb *pad_db, const char *input_file_path, const char *output_file_path);
-OtbPadDbCryptResults otb_pad_db_decrypt_file(const OtbPadDb *pad_db, const char *input_file_path, const char *output_file_path);
+OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);
+OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
 
 #endif

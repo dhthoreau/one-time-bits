@@ -75,7 +75,7 @@ static void test_asym_cipher_encryption()
 	encrypted_message_size+=otb_asym_cipher_finish_encrypt(encryption_context, encrypted_message+encrypted_message_size);
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
-	char *decrypted_message=otb_asym_cipher_create_encryption_buffer(asym_cipher_private, encrypted_message_size, NULL);
+	char *decrypted_message=otb_asym_cipher_create_decryption_buffer(asym_cipher_private, encrypted_message_size, NULL);
 	OtbAsymCipherContext *decryption_context=otb_asym_cipher_init_decryption(asym_cipher_private, encrypted_key, iv);
 	g_assert(decryption_context!=NULL);
 	size_t actual_message_size=otb_asym_cipher_decrypt(decryption_context, encrypted_message, encrypted_message_size, decrypted_message);
