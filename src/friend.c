@@ -16,6 +16,8 @@
 #include "settings.h"
 #include "uuid-util.h"
 
+static GType otb_friend_type;
+
 enum
 {
 	PROP_0,
@@ -52,6 +54,7 @@ struct _OtbFriendPrivate
 
 static void otb_friend_class_init(OtbFriendClass *klass)
 {
+	otb_friend_type=OTB_TYPE_FRIEND;
 	klass->otb_friend_import_key_file_private=otb_friend_import_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_friend_dispose;
@@ -311,10 +314,16 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 	g_free(onion_base_domain);
 }
 
+void otb_friend_set_type(GType friend_type)
+{
+	g_return_if_fail(OTB_IS_FRIEND_CLASS(friend_type));
+	otb_friend_type=friend_type;
+}
+
 OtbFriend *otb_friend_import_to_directory(const char *import_string, const char *base_path)
 {
 	gboolean success=TRUE;
-	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
+	OtbFriend *friend=g_object_new(otb_friend_type, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	GKeyFile *key_file=g_key_file_new();
 	GError *error=NULL;
 	if(!g_key_file_load_from_data(key_file, import_string, strlen(import_string), G_KEY_FILE_NONE, &error))

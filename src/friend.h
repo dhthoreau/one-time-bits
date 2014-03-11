@@ -51,6 +51,7 @@ struct _OtbFriendClass
 
 GType otb_friend_get_type();
 
+void otb_friend_set_type(GType friend_ctype); // FARE - Unit test.
 OtbFriend *otb_friend_import_to_directory(const char *import_file, const char *base_path);
 OtbFriend *otb_friend_load_from_directory(const uuid_t *unique_id, const char *base_path);
 gboolean otb_friend_set_public_key(OtbFriend *friend, const char *public_key);

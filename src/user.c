@@ -24,6 +24,8 @@
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY		"asym-cipher-private-key"
 #define CONFIG_ONION_BASE_DOMAIN			"onion-base-domain"
 
+static GType otb_user_type;
+
 enum
 {
 	PROP_0,
@@ -48,6 +50,7 @@ struct _OtbUserPrivate
 
 static void otb_user_class_init(OtbUserClass *klass)
 {
+	otb_user_type=OTB_TYPE_FRIEND;
 	klass->otb_user_export_key_file_private=otb_user_export_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_user_dispose;
@@ -61,7 +64,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 
 static void otb_user_init(OtbUser *user)
 {
-	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, OTB_TYPE_USER, OtbUserPrivate);
+	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, otb_user_type, OtbUserPrivate);
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
 	user->priv->onion_base_domain=NULL;
@@ -160,9 +163,15 @@ static void otb_user_initialize_onion_base_domain(OtbUser *user)
 	user->priv->onion_base_domain=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN);
 }
 
+void otb_user_set_type(GType user_type)
+{
+	g_return_if_fail(OTB_IS_USER_CLASS(user_type));
+	otb_user_type=user_type;
+}
+
 OtbUser *otb_user_load_from_settings_config()
 {
-	OtbUser *user=g_object_new(OTB_TYPE_USER, NULL);
+	OtbUser *user=g_object_new(otb_user_type, NULL);
 	otb_user_initialize_unique_id(user);
 	otb_user_initialize_asym_cipher(user);
 	otb_user_initialize_onion_base_domain(user);
