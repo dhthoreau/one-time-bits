@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-03-09 14:51-0500\n"
-"PO-Revision-Date: 2014-03-09 14:52-0500\n"
+"POT-Creation-Date: 2014-03-10 22:36-0500\n"
+"PO-Revision-Date: 2014-03-10 22:36-0500\n"
 "Last-Translator: the OTB author\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -130,7 +130,7 @@ msgstr "Cifra simmetrica"
 msgid "Name of the symmetric cipher to use"
 msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/asym-cipher.c:50 src/friend.c:65
+#: src/asym-cipher.c:50 src/friend.c:69
 msgid "Public key"
 msgstr "Chiave pubblica"
 
@@ -138,47 +138,55 @@ msgstr "Chiave pubblica"
 msgid "The public key to use for encryption"
 msgstr "La chiave pubblica che è usata per crittografia"
 
-#: src/friend.c:61 src/pad-db.c:58 src/pad-rec.c:76
+#: src/friend.c:64
+msgid "Import text"
+msgstr "Testo della importazione"
+
+#: src/friend.c:64
+msgid "Imported text that created the friend record"
+msgstr "Testo importato che ha creato il record dell'amico"
+
+#: src/friend.c:65 src/pad-db.c:58 src/pad-rec.c:76
 msgid "Base path"
 msgstr "Precorso di base"
 
-#: src/friend.c:61
+#: src/friend.c:65
 msgid "Directory where the friend's data will be saved"
 msgstr "La directory dove i dati del amico saranno salvati"
 
-#: src/friend.c:62
+#: src/friend.c:66
 msgid "Incoming pads"
 msgstr "Blocchi in arrivo"
 
-#: src/friend.c:62
+#: src/friend.c:66
 msgid "Database of incoming pads"
 msgstr "Il database di blocchi in arrivo"
 
-#: src/friend.c:63
+#: src/friend.c:67
 msgid "Outgoing pads"
 msgstr "Blocchi in partenza"
 
-#: src/friend.c:63
+#: src/friend.c:67
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:64 src/user.c:56 src/pad-rec.c:74
+#: src/friend.c:68 src/user.c:58 src/pad-rec.c:74
 msgid "Unique ID"
 msgstr "ID univoco"
 
-#: src/friend.c:64
+#: src/friend.c:68
 msgid "UUID of the friend"
 msgstr "UUID dell'amico"
 
-#: src/friend.c:65
+#: src/friend.c:69
 msgid "Key that is used to identify the friend"
 msgstr "La chiave usata per identificare l'amico"
 
-#: src/friend.c:66 src/user.c:58
+#: src/friend.c:70 src/user.c:60
 msgid "Onion base domain"
 msgstr "Dominio di base di onion"
 
-#: src/friend.c:66
+#: src/friend.c:70
 msgid "The domain of the friend's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'amico (senza \".onion\")"
 
@@ -250,22 +258,22 @@ msgstr ""
 "sebbene il file era decifrato completamente. La raccomandazione è azzerare "
 "il database di blocchi."
 
-#: src/user.c:56
+#: src/user.c:58
 msgid "UUID of the user"
 msgstr "UUID dell'utente"
 
-#: src/user.c:57
+#: src/user.c:59
 msgid "Asymetrical cipher"
 msgstr "Cifra asimmetrica"
 
-#: src/user.c:57
+#: src/user.c:59
 msgid ""
 "Asymetrical cipher that is used to identify the user and communicate with "
 "friends"
 msgstr ""
 "Cifra asimmetrica usata per identificare l'utente e comunicare con amici."
 
-#: src/user.c:58
+#: src/user.c:60
 msgid "The domain of the user's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'utente (senza \".onion\")"
 

@@ -19,6 +19,7 @@
 #define OTB_FRIEND_IMPORT_PUBLIC_KEY		"public-key"
 #define OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN	"onion-base-domain"
 
+#define OTB_FRIEND_PROP_IMPORT_STRING		"import-string"
 #define OTB_FRIEND_PROP_BASE_PATH			"base-path"
 #define OTB_FRIEND_PROP_INCOMING_PADS		"incoming-pads"
 #define OTB_FRIEND_PROP_OUTGOING_PADS		"outgoing-pads"
@@ -53,7 +54,7 @@ GType otb_friend_get_type();
 
 void otb_friend_set_type(GType friend_ctype); // FARE - Unit test.
 OtbFriend *otb_friend_import_to_directory(const char *import_file, const char *base_path);
-OtbFriend *otb_friend_load_from_directory(const uuid_t *unique_id, const char *base_path);
+OtbFriend *otb_friend_load_from_directory(const char *base_path);
 gboolean otb_friend_set_public_key(OtbFriend *friend, const char *public_key);
 gboolean otb_friend_set_onion_base_domain(OtbFriend *friend, const char *onion_base_domain);
 

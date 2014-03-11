@@ -21,6 +21,7 @@ static GType otb_friend_type;
 enum
 {
 	PROP_0,
+	PROP_IMPORT_STRING,
 	PROP_BASE_PATH,
 	PROP_INCOMING_PADS,
 	PROP_OUTGOING_PADS,
@@ -39,9 +40,9 @@ G_DEFINE_TYPE(OtbFriend, otb_friend, G_TYPE_OBJECT);
 
 struct _OtbFriendPrivate
 {
+	char *import_string;
 	uuid_t *unique_id;
 	char *base_path;
-	char *base_path_including_unique_id;
 	char *file_path;
 	char *incoming_pads_path;
 	OtbPadDb *incoming_pads;
@@ -54,13 +55,13 @@ struct _OtbFriendPrivate
 
 static void otb_friend_class_init(OtbFriendClass *klass)
 {
-	otb_friend_type=OTB_TYPE_FRIEND;
 	klass->otb_friend_import_key_file_private=otb_friend_import_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_friend_dispose;
 	object_class->finalize=otb_friend_finalize;
 	object_class->set_property=otb_friend_set_property;
 	object_class->get_property=otb_friend_get_property;
+	g_object_class_install_property(object_class, PROP_IMPORT_STRING, g_param_spec_string(OTB_FRIEND_PROP_IMPORT_STRING, _("Import text"), _("Imported text that created the friend record"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_FRIEND_PROP_BASE_PATH, _("Base path"), _("Directory where the friend's data will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_INCOMING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_INCOMING_PADS, _("Incoming pads"), _("Database of incoming pads"), G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_OUTGOING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_OUTGOING_PADS, _("Outgoing pads"), _("Database of outgoing pads"), G_PARAM_READABLE));
@@ -73,9 +74,9 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 static void otb_friend_init(OtbFriend *friend)
 {
 	friend->priv=G_TYPE_INSTANCE_GET_PRIVATE(friend, OTB_TYPE_FRIEND, OtbFriendPrivate);
+	friend->priv->import_string=NULL;
 	friend->priv->unique_id=NULL;
 	friend->priv->base_path=NULL;
-	friend->priv->base_path_including_unique_id=NULL;
 	friend->priv->file_path=NULL;
 	friend->priv->incoming_pads=NULL;
 	friend->priv->incoming_pads_path=NULL;
@@ -117,9 +118,9 @@ static void otb_friend_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_FRIEND(object));
 	OtbFriend *friend=OTB_FRIEND(object);
+	g_free(friend->priv->import_string);
 	g_free(friend->priv->unique_id);
 	g_free(friend->priv->base_path);
-	g_free(friend->priv->base_path_including_unique_id);
 	g_free(friend->priv->file_path);
 	g_free(friend->priv->incoming_pads_path);
 	g_free(friend->priv->outgoing_pads_path);
@@ -131,18 +132,14 @@ static void otb_friend_finalize(GObject *object)
 
 static void otb_friend_compute_file_paths(const OtbFriend *friend)
 {
-	if(friend->priv->unique_id!=NULL && friend->priv->base_path!=NULL)
+	if(friend->priv->base_path!=NULL)
 	{
-		char unique_id_path[UNIQUE_ID_STR_BYTES];
-		uuid_unparse_lower(*friend->priv->unique_id, unique_id_path);
-		g_free(friend->priv->base_path_including_unique_id);
-		friend->priv->base_path_including_unique_id=g_build_filename(friend->priv->base_path, unique_id_path, NULL);
 		g_free(friend->priv->file_path);
-		friend->priv->file_path=g_build_filename(friend->priv->base_path_including_unique_id, "friend.otb", NULL);
+		friend->priv->file_path=g_build_filename(friend->priv->base_path, "friend.otb", NULL);
 		g_free(friend->priv->incoming_pads_path);
-		friend->priv->incoming_pads_path=g_build_filename(friend->priv->base_path_including_unique_id, "incoming", NULL);
+		friend->priv->incoming_pads_path=g_build_filename(friend->priv->base_path, "incoming", NULL);
 		g_free(friend->priv->outgoing_pads_path);
-		friend->priv->outgoing_pads_path=g_build_filename(friend->priv->base_path_including_unique_id, "outgoing", NULL);
+		friend->priv->outgoing_pads_path=g_build_filename(friend->priv->base_path, "outgoing", NULL);
 	}
 }
 
@@ -160,6 +157,12 @@ static void otb_friend_set_unique_id(const OtbFriend *friend, const uuid_t *uniq
 	otb_friend_compute_file_paths(friend);
 }
 
+static void otb_friend_set_import_string(const OtbFriend *friend, const char *import_string)
+{
+	g_free(friend->priv->import_string);
+	friend->priv->import_string=g_strdup(import_string);
+}
+
 static void otb_friend_set_base_path(const OtbFriend *friend, const char *base_path)
 {
 	g_free(friend->priv->base_path);
@@ -172,6 +175,11 @@ static void otb_friend_set_property(GObject *object, unsigned int prop_id, const
 	OtbFriend *friend=OTB_FRIEND(object);
 	switch(prop_id)
 	{
+		case PROP_IMPORT_STRING:
+		{
+			otb_friend_set_import_string(friend, g_value_get_string(value));
+			break;
+		}
 		case PROP_BASE_PATH:
 		{
 			otb_friend_set_base_path(friend, g_value_get_string(value));
@@ -247,46 +255,28 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 	}
 }
 
-#define SAVE_GROUP						"friend"
-#define SAVE_KEY_PUBLIC_KEY_IV			"public-key-iv"
-#define SAVE_KEY_PUBLIC_KEY				"public-key"
-#define SAVE_KEY_ONION_BASE_DOMAIN_IV	"onion-base-domain-iv"
-#define SAVE_KEY_ONION_BASE_DOMAIN		"onion-base-domain"
+#define SAVE_GROUP					"friend"
+#define SAVE_KEY_IMPORT_STRING_IV	"import-string-iv"
+#define SAVE_KEY_IMPORT_STRING		"import-string"
 
-static gboolean otb_friend_save(const OtbFriend *friend)	// FARE - Scrive il file originale da import.
+static gboolean otb_friend_save(const OtbFriend *friend)
 {
 	gboolean ret_val=FALSE;
-	if(otb_mkdir_with_parents(friend->priv->base_path_including_unique_id))
+	if(otb_mkdir_with_parents(friend->priv->base_path))
 	{
-		GBytes *public_key_iv=NULL;
-		GBytes *onion_base_domain_iv=NULL;
-		unsigned char *encrypted_public_key=NULL;
-		unsigned char *encrypted_onion_base_domain=NULL;
-		size_t encrypted_public_key_size;
-		size_t encrypted_onion_base_domain_size;
+		GBytes *import_string_iv=NULL;
+		size_t encrypted_import_string_size;
+		unsigned char *encrypted_import_string=NULL;
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		if(friend->priv->public_key!=NULL)
-			encrypted_public_key_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, friend->priv->public_key, strlen(friend->priv->public_key)+1, &public_key_iv, &encrypted_public_key);
-		if(friend->priv->onion_base_domain!=NULL)
-			encrypted_onion_base_domain_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, friend->priv->onion_base_domain, strlen(friend->priv->onion_base_domain)+1, &onion_base_domain_iv, &encrypted_onion_base_domain);
+		encrypted_import_string_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, friend->priv->import_string, strlen(friend->priv->import_string)+1, &import_string_iv, &encrypted_import_string);
 		g_object_unref(local_crypto_sym_cipher);
 		GKeyFile *key_file=g_key_file_new();
-		if(encrypted_public_key!=NULL)
-		{
-			otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY_IV, public_key_iv);
-			otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, encrypted_public_key, encrypted_public_key_size);
-		}
-		if(encrypted_onion_base_domain!=NULL)
-		{
-			otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN_IV, onion_base_domain_iv);
-			otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, encrypted_onion_base_domain, encrypted_onion_base_domain_size);
-		}
+		otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING_IV, import_string_iv);
+		otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING, encrypted_import_string, encrypted_import_string_size);
 		ret_val=otb_settings_save_key_file(key_file, friend->priv->file_path);
 		g_key_file_unref(key_file);
-		g_bytes_unref(public_key_iv);
-		g_bytes_unref(onion_base_domain_iv);
-		g_free(encrypted_public_key);
-		g_free(encrypted_onion_base_domain);
+		g_bytes_unref(import_string_iv);
+		g_free(encrypted_import_string);
 	}
 	return ret_val;
 }
@@ -314,16 +304,27 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 	g_free(onion_base_domain);
 }
 
+static GType *otb_friend_get_runtime_type()
+{
+	static gboolean otb_friend_runtime_path_initialized=FALSE;
+	if(g_once_init_enter(&otb_friend_runtime_path_initialized))
+	{
+		otb_friend_type=OTB_TYPE_FRIEND;
+		g_once_init_leave(&otb_friend_runtime_path_initialized, TRUE);
+	}
+	return &otb_friend_type;
+}
+
 void otb_friend_set_type(GType friend_type)
 {
 	g_return_if_fail(OTB_IS_FRIEND_CLASS(friend_type));
-	otb_friend_type=friend_type;
+	*otb_friend_get_runtime_type()=friend_type;
 }
 
 OtbFriend *otb_friend_import_to_directory(const char *import_string, const char *base_path)
 {
 	gboolean success=TRUE;
-	OtbFriend *friend=g_object_new(otb_friend_type, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
+	OtbFriend *friend=g_object_new(*otb_friend_get_runtime_type(), OTB_FRIEND_PROP_IMPORT_STRING, import_string, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	GKeyFile *key_file=g_key_file_new();
 	GError *error=NULL;
 	if(!g_key_file_load_from_data(key_file, import_string, strlen(import_string), G_KEY_FILE_NONE, &error))
@@ -347,34 +348,35 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 static gboolean otb_friend_load(OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
-	GKeyFile *key_file=otb_settings_load_key_file(friend->priv->file_path);
-	if(key_file==NULL)
+	GKeyFile *settings_key_file=otb_settings_load_key_file(friend->priv->file_path);
+	if(settings_key_file==NULL)
 		ret_val=FALSE;
 	else
 	{
-		size_t encrypted_public_key_size;
-		GBytes *public_key_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY_IV);
-		void *encrypted_public_key=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_PUBLIC_KEY, &encrypted_public_key_size);
-		size_t encrypted_onion_base_domain_size;
-		GBytes *onion_base_domain_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN_IV);
-		void *encrypted_onion_base_domain=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_ONION_BASE_DOMAIN, &encrypted_onion_base_domain_size);
-		g_key_file_unref(key_file);
-		void *public_key=NULL;
-		void *onion_base_domain=NULL;
+		size_t encrypted_import_string_size;
+		GBytes *import_string_iv=otb_settings_get_gbytes(settings_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING_IV);
+		char *encrypted_import_string=otb_settings_get_bytes(settings_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING, &encrypted_import_string_size);
+		g_key_file_unref(settings_key_file);
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		if(encrypted_public_key!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_public_key, encrypted_public_key_size, public_key_iv, &public_key)==0)
-			ret_val=FALSE;
-		else if(encrypted_onion_base_domain!=NULL && otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_onion_base_domain, encrypted_onion_base_domain_size, onion_base_domain_iv, &onion_base_domain)==0)
+		char *import_string=NULL;
+		if(import_string_iv==NULL || encrypted_import_string==NULL || otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_import_string, encrypted_import_string_size, import_string_iv, (void**)&import_string)==0)
 			ret_val=FALSE;
 		g_object_unref(local_crypto_sym_cipher);
 		if(ret_val)
-			g_object_set(friend, OTB_FRIEND_PROP_PUBLIC_KEY, public_key, OTB_FRIEND_PROP_PUBLIC_KEY, public_key, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, onion_base_domain, NULL);
-		g_bytes_unref(public_key_iv);
-		g_bytes_unref(onion_base_domain_iv);
-		g_free(encrypted_public_key);
-		g_free(encrypted_onion_base_domain);
-		g_free(public_key);
-		g_free(onion_base_domain);
+		{
+			GKeyFile *import_key_file=g_key_file_new();
+			GError *error=NULL;
+			if(g_key_file_load_from_data(import_key_file, import_string, strlen(import_string), G_KEY_FILE_NONE, &error))
+				OTB_FRIEND_GET_CLASS(friend)->otb_friend_import_key_file_private(friend, import_key_file);
+			else
+			{
+				g_error_free(error);
+				ret_val=FALSE;
+			}
+		}
+		g_free(import_string);
+		g_bytes_unref(import_string_iv);
+		g_free(encrypted_import_string);
 	}
 	return ret_val;
 }
@@ -389,9 +391,9 @@ static gboolean otb_friend_load_databases(const OtbFriend *friend)
 	return ret_val;
 }
 
-OtbFriend *otb_friend_load_from_directory(const uuid_t *unique_id, const char *base_path)
+OtbFriend *otb_friend_load_from_directory(const char *base_path)
 {
-	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_UNIQUE_ID, unique_id, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
+	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	gboolean load_successful=TRUE;
 	if(!otb_friend_load(friend))
 		load_successful=FALSE;

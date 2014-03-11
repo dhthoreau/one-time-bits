@@ -15,13 +15,11 @@
 #include "../src/friend.h"
 #include "../src/uuid-util.h"
 
-static void otb_assert_friend_files_exist(const uuid_t expected_unique_id, const char *expected_base_path)
+static void otb_assert_friend_files_exist(const char *expected_base_path)
 {
-	char expected_unique_id_path[UNIQUE_ID_STR_BYTES];
-	uuid_unparse_lower(expected_unique_id, expected_unique_id_path);
-	char *expected_file_path=g_build_filename(expected_base_path, expected_unique_id_path, "friend.otb", NULL);
-	char *expected_incoming_path=g_build_filename(expected_base_path, expected_unique_id_path, "incoming", "db.otb", NULL);
-	char *expected_outgoing_path=g_build_filename(expected_base_path, expected_unique_id_path, "outgoing", "db.otb", NULL);
+	char *expected_file_path=g_build_filename(expected_base_path, "friend.otb", NULL);
+	char *expected_incoming_path=g_build_filename(expected_base_path, "incoming", "db.otb", NULL);
+	char *expected_outgoing_path=g_build_filename(expected_base_path, "outgoing", "db.otb", NULL);
 	g_assert(g_file_test(expected_file_path, G_FILE_TEST_EXISTS));
 	g_assert(g_file_test(expected_incoming_path, G_FILE_TEST_EXISTS));
 	g_assert(g_file_test(expected_outgoing_path, G_FILE_TEST_EXISTS));
@@ -87,14 +85,12 @@ static void test_otb_friend_create_import()
 	OtbFriend *create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
 	g_free(import_string);
 	g_assert(create_friend!=NULL);
-	otb_assert_friend_files_exist(expected_unique_id, friend_dir_path);
+	otb_assert_friend_files_exist(friend_dir_path);
 	g_assert(otb_friend_set_public_key(create_friend, EXPECTED_PUBLIC_KEY));
 	g_assert(otb_friend_set_onion_base_domain(create_friend, EXPECTED_ONION_BASE_DOMAIN));
-	OtbFriend *load_friend=otb_friend_load_from_directory((const uuid_t*)&expected_unique_id, UNEXPECTED_PATH);
+	OtbFriend *load_friend=otb_friend_load_from_directory(UNEXPECTED_PATH);
 	g_assert(load_friend==NULL);
-	load_friend=otb_friend_load_from_directory((const uuid_t*)&unexpected_unique_id, friend_dir_path);
-	g_assert(load_friend==NULL);
-	load_friend=otb_friend_load_from_directory((const uuid_t*)&expected_unique_id, friend_dir_path);
+	load_friend=otb_friend_load_from_directory(friend_dir_path);
 	g_assert(load_friend!=NULL);
 	char *actual_base_path=NULL;
 	char *actual_public_key=NULL;

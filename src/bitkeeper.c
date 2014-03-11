@@ -69,9 +69,7 @@ gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 			char *file_path=g_build_filename(friends_base_path, file_name, NULL);
 			if(g_file_test(file_path, G_FILE_TEST_IS_DIR))
 			{
-				uuid_t friend_unique_id;
-				uuid_parse(file_name, friend_unique_id);
-				OtbFriend *friend=otb_friend_load_from_directory((const uuid_t*)&friend_unique_id, friends_base_path);
+				OtbFriend *friend=otb_friend_load_from_directory(file_path);
 				if(friend==NULL)
 					ret_val=FALSE;
 				else

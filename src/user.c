@@ -50,7 +50,6 @@ struct _OtbUserPrivate
 
 static void otb_user_class_init(OtbUserClass *klass)
 {
-	otb_user_type=OTB_TYPE_FRIEND;
 	klass->otb_user_export_key_file_private=otb_user_export_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_user_dispose;
@@ -62,9 +61,20 @@ static void otb_user_class_init(OtbUserClass *klass)
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
+static GType *otb_user_get_runtime_type()
+{
+	static gboolean otb_user_runtime_path_initialized=FALSE;
+	if(g_once_init_enter(&otb_user_runtime_path_initialized))
+	{
+		otb_user_type=OTB_TYPE_USER;
+		g_once_init_leave(&otb_user_runtime_path_initialized, TRUE);
+	}
+	return &otb_user_type;
+}
+
 static void otb_user_init(OtbUser *user)
 {
-	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, otb_user_type, OtbUserPrivate);
+	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, *otb_user_get_runtime_type(), OtbUserPrivate);
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
 	user->priv->onion_base_domain=NULL;
@@ -166,12 +176,12 @@ static void otb_user_initialize_onion_base_domain(OtbUser *user)
 void otb_user_set_type(GType user_type)
 {
 	g_return_if_fail(OTB_IS_USER_CLASS(user_type));
-	otb_user_type=user_type;
+	*otb_user_get_runtime_type()=user_type;
 }
 
 OtbUser *otb_user_load_from_settings_config()
 {
-	OtbUser *user=g_object_new(otb_user_type, NULL);
+	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
 	otb_user_initialize_unique_id(user);
 	otb_user_initialize_asym_cipher(user);
 	otb_user_initialize_onion_base_domain(user);
