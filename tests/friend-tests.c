@@ -73,7 +73,6 @@ static void test_otb_friend_create_import()
 	const char *EXPECTED_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_ONION_BASE_DOMAIN="SoyMilkRoad";
 	const char *UNEXPECTED_PATH="garbage";
-	const uuid_t unexpected_unique_id;
 	
 	otb_test_setup_local_crypto();
 	char *friend_dir_path=otb_generate_unique_test_subdir_path();
