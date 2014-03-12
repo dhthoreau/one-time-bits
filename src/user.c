@@ -24,7 +24,7 @@
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY		"asym-cipher-private-key"
 #define CONFIG_ONION_BASE_DOMAIN			"onion-base-domain"
 
-static GType otb_user_type;
+static GType otb_user_runtime_type;
 
 enum
 {
@@ -34,7 +34,7 @@ enum
 	PROP_ONION_BASE_DOMAIN
 };
 
-static GKeyFile *otb_user_export_key_file(const OtbUser *user);
+static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
 static void otb_user_dispose(GObject *object);
 static void otb_user_finalize(GObject *object);
 static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
@@ -66,10 +66,10 @@ static GType *otb_user_get_runtime_type()
 	static gboolean otb_user_runtime_path_initialized=FALSE;
 	if(g_once_init_enter(&otb_user_runtime_path_initialized))
 	{
-		otb_user_type=OTB_TYPE_USER;
+		otb_user_runtime_type=OTB_TYPE_USER;
 		g_once_init_leave(&otb_user_runtime_path_initialized, TRUE);
 	}
-	return &otb_user_type;
+	return &otb_user_runtime_type;
 }
 
 static void otb_user_init(OtbUser *user)
@@ -175,7 +175,7 @@ static void otb_user_initialize_onion_base_domain(OtbUser *user)
 
 void otb_user_set_type(GType user_type)
 {
-	g_return_if_fail(OTB_IS_USER_CLASS(user_type));
+	g_return_if_fail(g_type_is_a(user_type, OTB_TYPE_USER));
 	*otb_user_get_runtime_type()=user_type;
 }
 
@@ -212,18 +212,17 @@ static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key
 
 #define otb_user_export_onion_base_domain(user, export_key_file)	(g_key_file_set_string((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, (user)->priv->onion_base_domain))
 
-static GKeyFile *otb_user_export_key_file(const OtbUser *user)
+static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file)
 {
-	GKeyFile *export_key_file=g_key_file_new();
 	otb_user_export_unique_id(user, export_key_file);
 	otb_user_export_public_key(user, export_key_file);
 	otb_user_export_onion_base_domain(user, export_key_file);
-	return export_key_file;
 }
 
 char *otb_user_export(const OtbUser *user)
 {
-	GKeyFile *export_key_file=OTB_USER_GET_CLASS(user)->otb_user_export_key_file_private(user);
+	GKeyFile *export_key_file=g_key_file_new();
+	OTB_USER_GET_CLASS(user)->otb_user_export_key_file_private(user, export_key_file);
 	char *export_string=g_key_file_to_data(export_key_file, NULL, NULL);
 	g_key_file_unref(export_key_file);
 	return export_string;

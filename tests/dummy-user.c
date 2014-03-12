@@ -8,9 +8,10 @@
 
 #include "../config.h"
 
+#include "dummy-friend.h"
 #include "dummy-user.h"
 
-static GKeyFile *otb_dummy_user_export_key_file(const OtbUser *user);
+static void otb_dummy_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
 
 G_DEFINE_TYPE(OtbDummyUser, otb_dummy_user, OTB_TYPE_USER);
 
@@ -21,12 +22,10 @@ static void otb_dummy_user_class_init(OtbDummyUserClass *klass)
 
 static void otb_dummy_user_init(OtbDummyUser *dummy_user)
 {
-	dummy_user->export_call_count=0;
 }
 
-static GKeyFile *otb_dummy_user_export_key_file(const OtbUser *user)
+static void otb_dummy_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file)
 {
-	OtbDummyUser *dummy_user=OTB_DUMMY_USER(user);
-	dummy_user->export_call_count++;
-	OTB_USER_CLASS(otb_dummy_user_parent_class)->otb_user_export_key_file_private(user);
+	OTB_USER_CLASS(otb_dummy_user_parent_class)->otb_user_export_key_file_private(user, export_key_file);
+	g_key_file_set_string(export_key_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, OTB_DUMMY_FRIEND_VALUE);
 }

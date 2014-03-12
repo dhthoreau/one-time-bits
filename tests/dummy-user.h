@@ -6,10 +6,10 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#include "../src/user.h"
-
 #ifndef OTB_DUMMY_USER_H
 #define OTB_DUMMY_USER_H
+
+#include "../src/user.h"
 
 #define OTB_TYPE_DUMMY_USER				(otb_dummy_user_get_type())
 #define OTB_DUMMY_USER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_DUMMY_USER, OtbDummyUser))
@@ -24,12 +24,11 @@ typedef struct _OtbDummyUserClass OtbDummyUserClass;
 struct _OtbDummyUser
 {
 	OtbUser parent_instance;
-	unsigned int export_call_count;
 };
 
 struct _OtbDummyUserClass
 {
-	GObjectClass parent_class;
+	OtbUserClass parent_class;
 };
 
 GType otb_dummy_user_get_type();

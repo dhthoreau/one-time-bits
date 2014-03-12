@@ -16,7 +16,7 @@
 #include "settings.h"
 #include "uuid-util.h"
 
-static GType otb_friend_type;
+static GType otb_friend_runtime_type;
 
 enum
 {
@@ -253,7 +253,7 @@ static void otb_friend_export_key_file(const OtbFriend *friend, GKeyFile *export
 #define SAVE_KEY_IMPORT_STRING_IV	"import-string-iv"
 #define SAVE_KEY_IMPORT_STRING		"import-string"
 
-static gboolean otb_friend_save(const OtbFriend *friend)	// FARE - Problema: non salverà le property dal sottotipo.
+static gboolean otb_friend_save(const OtbFriend *friend)
 {
 	gboolean ret_val=FALSE;
 	if(otb_mkdir_with_parents(friend->priv->base_path))
@@ -308,15 +308,15 @@ static GType *otb_friend_get_runtime_type()
 	static gboolean otb_friend_runtime_path_initialized=FALSE;
 	if(g_once_init_enter(&otb_friend_runtime_path_initialized))
 	{
-		otb_friend_type=OTB_TYPE_FRIEND;
+		otb_friend_runtime_type=OTB_TYPE_FRIEND;
 		g_once_init_leave(&otb_friend_runtime_path_initialized, TRUE);
 	}
-	return &otb_friend_type;
+	return &otb_friend_runtime_type;
 }
 
 void otb_friend_set_type(GType friend_type)
 {
-	g_return_if_fail(OTB_IS_FRIEND_CLASS(friend_type));
+	g_return_if_fail(g_type_is_a(friend_type, OTB_TYPE_FRIEND));
 	*otb_friend_get_runtime_type()=friend_type;
 }
 
@@ -373,10 +373,11 @@ static gboolean otb_friend_load(OtbFriend *friend)
 				g_error_free(error);
 				ret_val=FALSE;
 			}
+			g_key_file_unref(import_key_file);
 		}
 		g_free(import_string);
-		g_bytes_unref(import_string_iv);
 		g_free(encrypted_import_string);
+		g_bytes_unref(import_string_iv);
 	}
 	return ret_val;
 }
@@ -393,7 +394,7 @@ static gboolean otb_friend_load_databases(const OtbFriend *friend)
 
 OtbFriend *otb_friend_load_from_directory(const char *base_path)
 {
-	OtbFriend *friend=g_object_new(OTB_TYPE_FRIEND, OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
+	OtbFriend *friend=g_object_new(*otb_friend_get_runtime_type(), OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	gboolean load_successful=TRUE;
 	if(!otb_friend_load(friend))
 		load_successful=FALSE;

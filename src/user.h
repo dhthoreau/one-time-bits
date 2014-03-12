@@ -35,12 +35,12 @@ struct _OtbUser
 struct _OtbUserClass
 {
 	GObjectClass parent_class;
-	GKeyFile *(*otb_user_export_key_file_private)(const OtbUser *user);
+	void (*otb_user_export_key_file_private)(const OtbUser *user, GKeyFile *);
 };
 
 GType otb_user_get_type();
 
-void otb_user_set_type(GType user_type);	// FARE - Unit test.
+void otb_user_set_type(GType user_type);
 OtbUser *otb_user_load_from_settings_config();
 gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain);
 char *otb_user_export(const OtbUser *user);

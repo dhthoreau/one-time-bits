@@ -13,6 +13,8 @@
 #include <uuid/uuid.h>
 
 #include "main.h"
+#include "dummy-friend.h"
+#include "dummy-user.h"
 #include "test-utils.h"
 #include "../src/friend.h"
 #include "../src/io.h"
@@ -159,7 +161,7 @@ static void test_otb_user_create_from_existing_config_file()
 	g_object_unref(expected_asym_cipher);
 }
 
-static void test_otb_user_export()
+static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 {
 	const size_t NEW_KEY_LENGTH=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
@@ -169,31 +171,56 @@ static void test_otb_user_export()
 	uuid_generate(expected_unique_id);
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
-	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN);
+	*user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN);
 	char *expected_public_key=NULL;
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
 	g_assert(expected_public_key!=NULL);
-	char *export_string=otb_user_export(user);
-	GKeyFile *export_file=g_key_file_new();
+	char *export_string=otb_user_export(*user);
+	*export_key_file=g_key_file_new();
 	GError *error=NULL;
-	g_assert(g_key_file_load_from_data(export_file, export_string, strlen(export_string), G_KEY_FILE_NONE, &error));
+	g_assert(g_key_file_load_from_data(*export_key_file, export_string, strlen(export_string), G_KEY_FILE_NONE, &error));
 	g_assert(error==NULL);
 	g_free(export_string);
 	uuid_t actual_unique_id;
-	char *unique_id_string=otb_settings_get_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID);
+	char *unique_id_string=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID);
 	uuid_parse(unique_id_string, actual_unique_id);
 	g_free(unique_id_string);
-	char *actual_public_key=otb_settings_get_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
-	char *actual_onion_base_domain=otb_settings_get_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN);
-	g_key_file_unref(export_file);
+	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
+	char *actual_onion_base_domain=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN);
 	g_assert_cmpint(0, ==, uuid_compare(expected_unique_id, actual_unique_id));
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN, ==, actual_onion_base_domain);
 	g_free(expected_public_key);
 	g_free(actual_public_key);
 	g_free(actual_onion_base_domain);
-	g_object_unref(user);
 	g_object_unref(expected_asym_cipher);
+}
+
+static void test_otb_user_export()
+{
+	OtbUser *user=NULL;
+	GKeyFile *export_key_file=NULL;
+	otb_do_user_export_test(&user, &export_key_file);
+	g_key_file_unref(export_key_file);
+	g_assert(OTB_IS_USER(user));
+	g_assert(!OTB_IS_DUMMY_USER(user));
+	g_object_unref(user);
+}
+
+static void test_otb_dummy_user_export()
+{
+	OtbUser *user=NULL;
+	GKeyFile *export_key_file=NULL;
+	otb_user_set_type(OTB_TYPE_DUMMY_USER);
+	otb_do_user_export_test(&user, &export_key_file);
+	char *actual_dummy_value=otb_settings_get_string(export_key_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY);
+	g_key_file_unref(export_key_file);
+	g_assert_cmpstr(OTB_DUMMY_FRIEND_VALUE, ==, actual_dummy_value);
+	g_free(actual_dummy_value);
+	g_assert(OTB_IS_USER(user));
+	g_assert(OTB_IS_DUMMY_USER(user));
+	g_object_unref(user);
+	otb_user_set_type(OTB_TYPE_USER);
 }
 
 void otb_add_user_tests()
@@ -201,4 +228,5 @@ void otb_add_user_tests()
 	otb_add_test_func("/user/test_otb_user_create_with_no_config_file", test_otb_user_create_with_no_config_file);
 	otb_add_test_func("/user/test_otb_user_create_from_existing_config_file", test_otb_user_create_from_existing_config_file);
 	otb_add_test_func("/user/test_otb_user_export", test_otb_user_export);
+	otb_add_test_func("/user/test_otb_dummy_user_export", test_otb_dummy_user_export);
 }

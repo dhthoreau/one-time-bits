@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include "dummy-friend.h"
 #include "main.h"
 #include "test-utils.h"
 #include "../src/friend.h"
@@ -65,10 +66,11 @@ static GKeyFile *otb_create_import_file(const uuid_t unique_id, const char *publ
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, onion_base_domain);
+	g_key_file_set_string(import_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, OTB_DUMMY_FRIEND_VALUE);
 	return import_file;
 }
 
-static void test_otb_friend_create_import()
+static void otb_do_friend_create_import_test(OtbFriend **create_friend, OtbFriend **load_friend)
 {
 	const char *EXPECTED_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_ONION_BASE_DOMAIN="SoyMilkRoad";
@@ -81,33 +83,62 @@ static void test_otb_friend_create_import()
 	GKeyFile *import_file=otb_create_import_file(expected_unique_id, EXPECTED_PUBLIC_KEY, EXPECTED_ONION_BASE_DOMAIN);
 	char *import_string=g_key_file_to_data(import_file, NULL, NULL);
 	g_key_file_unref(import_file);
-	OtbFriend *create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
+	*create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
 	g_free(import_string);
-	g_assert(create_friend!=NULL);
+	g_assert(*create_friend!=NULL);
 	otb_assert_friend_files_exist(friend_dir_path);
-	g_assert(otb_friend_set_public_key(create_friend, EXPECTED_PUBLIC_KEY));
-	g_assert(otb_friend_set_onion_base_domain(create_friend, EXPECTED_ONION_BASE_DOMAIN));
-	OtbFriend *load_friend=otb_friend_load_from_directory(UNEXPECTED_PATH);
-	g_assert(load_friend==NULL);
-	load_friend=otb_friend_load_from_directory(friend_dir_path);
-	g_assert(load_friend!=NULL);
+	g_assert(otb_friend_set_public_key(*create_friend, EXPECTED_PUBLIC_KEY));
+	g_assert(otb_friend_set_onion_base_domain(*create_friend, EXPECTED_ONION_BASE_DOMAIN));
+	*load_friend=otb_friend_load_from_directory(UNEXPECTED_PATH);
+	g_assert(*load_friend==NULL);
+	*load_friend=otb_friend_load_from_directory(friend_dir_path);
+	g_assert(*load_friend!=NULL);
 	char *actual_base_path=NULL;
 	char *actual_public_key=NULL;
 	char *actual_onion_base_domain=NULL;
-	g_object_get(load_friend, OTB_FRIEND_PROP_BASE_PATH, &actual_base_path, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
+	g_object_get(*load_friend, OTB_FRIEND_PROP_BASE_PATH, &actual_base_path, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
 	g_assert_cmpstr(friend_dir_path, ==, actual_base_path);
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ONION_BASE_DOMAIN, ==, actual_onion_base_domain);
 	g_free(actual_base_path);
 	g_free(actual_public_key);
 	g_free(actual_onion_base_domain);
-	otb_assert_friends_saved_dbs_in_same_place(create_friend, load_friend);
-	g_object_unref(load_friend);
-	g_object_unref(create_friend);
+	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
 	g_free(friend_dir_path);
+}
+
+static void test_otb_friend_create_import()
+{
+	OtbFriend *create_friend=NULL;
+	OtbFriend *load_friend=NULL;
+	otb_do_friend_create_import_test(&create_friend, &load_friend);
+	g_assert(OTB_IS_FRIEND(create_friend));
+	g_assert(!OTB_IS_DUMMY_FRIEND(create_friend));
+	g_assert(OTB_IS_FRIEND(load_friend));
+	g_assert(!OTB_IS_DUMMY_FRIEND(load_friend));
+	g_object_unref(create_friend);
+	g_object_unref(load_friend);
+}
+
+static void test_otb_dummy_friend_create_import()
+{
+	OtbFriend *create_friend=NULL;
+	OtbFriend *load_friend=NULL;
+	otb_friend_set_type(OTB_TYPE_DUMMY_FRIEND);
+	otb_do_friend_create_import_test(&create_friend, &load_friend);
+	g_assert(OTB_IS_FRIEND(create_friend));
+	g_assert(OTB_IS_DUMMY_FRIEND(create_friend));
+	g_assert(OTB_IS_FRIEND(load_friend));
+	g_assert(OTB_IS_DUMMY_FRIEND(load_friend));
+	g_assert_cmpstr(OTB_DUMMY_FRIEND_VALUE, ==, OTB_DUMMY_FRIEND(create_friend)->imported_dummy_value);
+	g_assert_cmpstr(OTB_DUMMY_FRIEND_VALUE, ==, OTB_DUMMY_FRIEND(load_friend)->imported_dummy_value);
+	g_object_unref(create_friend);
+	g_object_unref(load_friend);
+	otb_friend_set_type(OTB_TYPE_FRIEND);
 }
 
 void otb_add_friend_tests()
 {
 	otb_add_test_func("/friend/test_otb_friend_create_import", test_otb_friend_create_import);
+	otb_add_test_func("/friend/test_otb_dummy_friend_export", test_otb_dummy_friend_create_import);
 }

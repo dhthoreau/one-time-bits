@@ -11,6 +11,10 @@
 #ifndef OTB_DUMMY_FRIEND_H
 #define OTB_DUMMY_FRIEND_H
 
+#define OTB_DUMMY_FRIEND_GROUP	"dummy-group"
+#define OTB_DUMMY_FRIEND_KEY	"dummy-key"
+#define OTB_DUMMY_FRIEND_VALUE	"dummy-value"
+
 #define OTB_TYPE_DUMMY_FRIEND				(otb_dummy_friend_get_type())
 #define OTB_DUMMY_FRIEND(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_DUMMY_FRIEND, OtbDummyFriend))
 #define OTB_IS_DUMMY_FRIEND(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_DUMMY_FRIEND))
@@ -24,13 +28,12 @@ typedef struct _OtbDummyFriendClass OtbDummyFriendClass;
 struct _OtbDummyFriend
 {
 	OtbFriend parent_instance;
-	unsigned int export_call_count;
-	unsigned int import_call_count;
+	char *imported_dummy_value;
 };
 
 struct _OtbDummyFriendClass
 {
-	GObjectClass parent_class;
+	OtbFriendClass parent_class;
 };
 
 GType otb_dummy_friend_get_type();
