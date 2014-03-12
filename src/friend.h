@@ -19,7 +19,6 @@
 #define OTB_FRIEND_IMPORT_PUBLIC_KEY		"public-key"
 #define OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN	"onion-base-domain"
 
-#define OTB_FRIEND_PROP_IMPORT_STRING		"import-string"
 #define OTB_FRIEND_PROP_BASE_PATH			"base-path"
 #define OTB_FRIEND_PROP_INCOMING_PADS		"incoming-pads"
 #define OTB_FRIEND_PROP_OUTGOING_PADS		"outgoing-pads"
@@ -48,6 +47,7 @@ struct _OtbFriendClass
 {
 	GObjectClass parent_class;
 	void (*otb_friend_import_key_file_private)(OtbFriend *friend, GKeyFile *);
+	void (*otb_friend_export_key_file_private)(const OtbFriend *friend, GKeyFile *);
 };
 
 GType otb_friend_get_type();
