@@ -40,7 +40,7 @@ struct _OtbUserClass
 
 GType otb_user_get_type();
 
-void otb_user_set_type(GType user_type);
+void otb_user_set_runtime_type(GType user_runtime_type);
 OtbUser *otb_user_load_from_settings_config();
 gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain);
 char *otb_user_export(const OtbUser *user);

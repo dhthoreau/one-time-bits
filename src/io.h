@@ -30,5 +30,6 @@ gboolean otb_unlink_if_exists(const char *file_path);
 off_t otb_get_file_size(const char *file_path);
 gboolean otb_mkdir_with_parents(const char *file_path);
 GDir *otb_open_directory(const char *directory_path);
+gboolean otb_delete_dir(const char *dir_path);
 
 #endif

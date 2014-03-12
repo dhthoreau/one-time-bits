@@ -156,3 +156,28 @@ GDir *otb_open_directory(const char *directory_path)
 	}
 	return directory;
 }
+
+gboolean otb_delete_dir(const char *dir_path)
+{
+	gboolean ret_val=TRUE;
+	GError *error=NULL;
+	GDir *test_dir=g_dir_open(dir_path, 0, &error);
+	if(test_dir)
+	{
+		const char *file_name;
+		while((file_name=g_dir_read_name(test_dir))!=NULL)
+		{
+			char *file_path=g_build_filename(dir_path, file_name, NULL);
+			if(g_file_test(file_path, G_FILE_TEST_IS_DIR))
+				ret_val=(otb_delete_dir(file_path) && ret_val);
+			else
+				ret_val==(g_unlink(file_path)==0 && ret_val);
+			g_free(file_path);
+		}
+		g_dir_close(test_dir);
+	}
+	else
+		g_error_free(error);
+	g_rmdir(dir_path);
+	return ret_val;
+}

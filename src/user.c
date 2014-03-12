@@ -173,10 +173,10 @@ static void otb_user_initialize_onion_base_domain(OtbUser *user)
 	user->priv->onion_base_domain=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN);
 }
 
-void otb_user_set_type(GType user_type)
+void otb_user_set_runtime_type(GType user_runtime_type)
 {
-	g_return_if_fail(g_type_is_a(user_type, OTB_TYPE_USER));
-	*otb_user_get_runtime_type()=user_type;
+	g_return_if_fail(g_type_is_a(user_runtime_type, OTB_TYPE_USER));
+	*otb_user_get_runtime_type()=user_runtime_type;
 }
 
 OtbUser *otb_user_load_from_settings_config()

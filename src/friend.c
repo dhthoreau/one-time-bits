@@ -314,10 +314,10 @@ static GType *otb_friend_get_runtime_type()
 	return &otb_friend_runtime_type;
 }
 
-void otb_friend_set_type(GType friend_type)
+void otb_friend_set_runtime_type(GType friend_runtime_type)
 {
-	g_return_if_fail(g_type_is_a(friend_type, OTB_TYPE_FRIEND));
-	*otb_friend_get_runtime_type()=friend_type;
+	g_return_if_fail(g_type_is_a(friend_runtime_type, OTB_TYPE_FRIEND));
+	*otb_friend_get_runtime_type()=friend_runtime_type;
 }
 
 OtbFriend *otb_friend_import_to_directory(const char *import_string, const char *base_path)
@@ -406,6 +406,11 @@ OtbFriend *otb_friend_load_from_directory(const char *base_path)
 		friend=NULL;
 	}
 	return friend;
+}
+
+gboolean otb_friend_delete(OtbFriend *friend)
+{
+	return otb_delete_dir(friend->priv->base_path);
 }
 
 gboolean otb_friend_set_public_key(OtbFriend *friend, const char *public_key)
