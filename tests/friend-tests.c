@@ -70,7 +70,7 @@ static GKeyFile *otb_create_import_file(const uuid_t unique_id, const char *publ
 	return import_file;
 }
 
-static void otb_do_friend_create_import_test(OtbFriend **create_friend, OtbFriend **load_friend)
+static void otb_do_friend_create_import_delete_test(OtbFriend **create_friend, OtbFriend **load_friend)
 {
 	const char *EXPECTED_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_ONION_BASE_DOMAIN="SoyMilkRoad";
@@ -86,6 +86,7 @@ static void otb_do_friend_create_import_test(OtbFriend **create_friend, OtbFrien
 	*create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
 	g_free(import_string);
 	g_assert(*create_friend!=NULL);
+	g_assert(g_file_test(friend_dir_path, G_FILE_TEST_EXISTS));
 	otb_assert_friend_files_exist(friend_dir_path);
 	g_assert(otb_friend_set_public_key(*create_friend, EXPECTED_PUBLIC_KEY));
 	g_assert(otb_friend_set_onion_base_domain(*create_friend, EXPECTED_ONION_BASE_DOMAIN));
@@ -104,14 +105,16 @@ static void otb_do_friend_create_import_test(OtbFriend **create_friend, OtbFrien
 	g_free(actual_public_key);
 	g_free(actual_onion_base_domain);
 	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
+	otb_friend_delete(*load_friend);
+	g_assert(!g_file_test(friend_dir_path, G_FILE_TEST_EXISTS));
 	g_free(friend_dir_path);
 }
 
-static void test_otb_friend_create_import()
+static void test_otb_friend_create_import_delete()
 {
 	OtbFriend *create_friend=NULL;
 	OtbFriend *load_friend=NULL;
-	otb_do_friend_create_import_test(&create_friend, &load_friend);
+	otb_do_friend_create_import_delete_test(&create_friend, &load_friend);
 	g_assert(OTB_IS_FRIEND(create_friend));
 	g_assert(!OTB_IS_DUMMY_FRIEND(create_friend));
 	g_assert(OTB_IS_FRIEND(load_friend));
@@ -120,12 +123,12 @@ static void test_otb_friend_create_import()
 	g_object_unref(load_friend);
 }
 
-static void test_otb_dummy_friend_create_import()
+static void test_otb_dummy_friend_create_import_delete()
 {
 	OtbFriend *create_friend=NULL;
 	OtbFriend *load_friend=NULL;
 	otb_friend_set_runtime_type(OTB_TYPE_DUMMY_FRIEND);
-	otb_do_friend_create_import_test(&create_friend, &load_friend);
+	otb_do_friend_create_import_delete_test(&create_friend, &load_friend);
 	g_assert(OTB_IS_FRIEND(create_friend));
 	g_assert(OTB_IS_DUMMY_FRIEND(create_friend));
 	g_assert(OTB_IS_FRIEND(load_friend));
@@ -139,6 +142,6 @@ static void test_otb_dummy_friend_create_import()
 
 void otb_add_friend_tests()
 {
-	otb_add_test_func("/friend/test_otb_friend_create_import", test_otb_friend_create_import);
-	otb_add_test_func("/friend/test_otb_dummy_friend_export", test_otb_dummy_friend_create_import);
+	otb_add_test_func("/friend/test_otb_friend_create_import_delete", test_otb_friend_create_import_delete);
+	otb_add_test_func("/friend/test_otb_dummy_friend_export_delete", test_otb_dummy_friend_create_import_delete);
 }

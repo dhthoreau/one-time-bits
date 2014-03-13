@@ -55,7 +55,7 @@ GType otb_friend_get_type();
 void otb_friend_set_runtime_type(GType friend_runtime_type);
 OtbFriend *otb_friend_import_to_directory(const char *import_string, const char *base_path);
 OtbFriend *otb_friend_load_from_directory(const char *base_path);
-gboolean otb_friend_delete(OtbFriend *friend);	// FARE - Unit test è bisognato.
+gboolean otb_friend_delete(OtbFriend *friend);
 gboolean otb_friend_set_public_key(OtbFriend *friend, const char *public_key);
 gboolean otb_friend_set_onion_base_domain(OtbFriend *friend, const char *onion_base_domain);
 

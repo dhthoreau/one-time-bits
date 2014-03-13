@@ -198,7 +198,7 @@ static void *otb_assert_pad_read(OtbPadIO *pad_io, const void *expected_bytes, s
 	return pad_byte_array==NULL?NULL:g_byte_array_free(pad_byte_array, FALSE);
 }
 
-static void test_pads_save_and_load_and_delete()
+static void test_pads_save_load_delete()
 {
 	const off_t EXPECTED_DEFAULT_NEW_PAD_SIZE=10240;
 	
@@ -555,7 +555,7 @@ void otb_add_pad_db_tests()
 	otb_add_test_func("/pad-db/test_otb_pad_db_rejects_pads_too_large", test_otb_pad_db_rejects_pads_too_large);
 	otb_add_test_func("/pad-db/test_otb_pad_db_rejects_pads_duplicate_id", test_otb_pad_db_rejects_pads_duplicate_id);
 	otb_add_test_func("/pad-db/test_create_unsent_pad_results_in_proper_pad_file", test_create_unsent_pad_results_in_proper_pad_file);
-	otb_add_test_func("/pad-db/test_pads_save_and_load_and_delete", test_pads_save_and_load_and_delete);
+	otb_add_test_func("/pad-db/test_pads_save_load_delete", test_pads_save_load_delete);
 	otb_add_test_func("/pad-db/test_add_received_pad", test_add_received_pad);
 	otb_add_test_func("/pad-db/test_get_random_rec_id", test_get_random_rec_id);
 	otb_add_test_func("/pad-db/test_close_pad_fails_when_nothing_is_opened", test_close_pad_fails_when_nothing_is_opened);

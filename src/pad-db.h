@@ -57,7 +57,7 @@ GType otb_pad_db_get_type();
 
 OtbPadDb *otb_pad_db_create_in_directory(const char *base_path);
 OtbPadDb *otb_pad_db_load_from_directory(const char *base_path);
-gboolean otb_pad_db_delete(OtbPadDb *pad_db);	// FARE - Unit test è bisognato.
+gboolean otb_pad_db_delete(OtbPadDb *pad_db);
 gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, off_t max_size);
 gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, off_t new_pad_min_size);
 gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_max_size);
