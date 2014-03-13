@@ -124,7 +124,7 @@ static void test_otb_dummy_friend_create_import()
 {
 	OtbFriend *create_friend=NULL;
 	OtbFriend *load_friend=NULL;
-	otb_friend_set_type(OTB_TYPE_DUMMY_FRIEND);
+	otb_friend_set_runtime_type(OTB_TYPE_DUMMY_FRIEND);
 	otb_do_friend_create_import_test(&create_friend, &load_friend);
 	g_assert(OTB_IS_FRIEND(create_friend));
 	g_assert(OTB_IS_DUMMY_FRIEND(create_friend));
@@ -134,7 +134,7 @@ static void test_otb_dummy_friend_create_import()
 	g_assert_cmpstr(OTB_DUMMY_FRIEND_VALUE, ==, OTB_DUMMY_FRIEND(load_friend)->imported_dummy_value);
 	g_object_unref(create_friend);
 	g_object_unref(load_friend);
-	otb_friend_set_type(OTB_TYPE_FRIEND);
+	otb_friend_set_runtime_type(OTB_TYPE_FRIEND);
 }
 
 void otb_add_friend_tests()

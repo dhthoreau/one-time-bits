@@ -309,6 +309,15 @@ OtbPadDb *otb_pad_db_load_from_directory(const char *base_path)
 	return pad_db;
 }
 
+gboolean otb_pad_db_delete(OtbPadDb *pad_db)
+{
+	otb_pad_db_lock(pad_db);
+	gboolean ret_val=otb_delete_dir(pad_db->priv->base_path);
+	otb_pad_db_free_pad_rec_list(pad_db);
+	otb_pad_db_unlock(pad_db);
+	return ret_val;
+}
+
 gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, off_t max_size)
 {
 	gboolean ret_val=TRUE;

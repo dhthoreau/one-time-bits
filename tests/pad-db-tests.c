@@ -198,7 +198,7 @@ static void *otb_assert_pad_read(OtbPadIO *pad_io, const void *expected_bytes, s
 	return pad_byte_array==NULL?NULL:g_byte_array_free(pad_byte_array, FALSE);
 }
 
-static void test_pads_save_and_load()
+static void test_pads_save_and_load_and_delete()
 {
 	const off_t EXPECTED_DEFAULT_NEW_PAD_SIZE=10240;
 	
@@ -206,6 +206,7 @@ static void test_pads_save_and_load()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *save_pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(save_pad_db!=NULL);
+	g_assert(g_file_test(pad_db_dir_path, G_FILE_TEST_EXISTS));
 	g_assert(otb_pad_db_set_new_pad_min_size(save_pad_db, EXPECTED_DEFAULT_NEW_PAD_SIZE));
 	g_assert(otb_pad_db_set_new_pad_max_size(save_pad_db, EXPECTED_DEFAULT_NEW_PAD_SIZE));
 	g_assert(otb_pad_db_create_unsent_pad(save_pad_db));
@@ -237,6 +238,8 @@ static void test_pads_save_and_load()
 	otb_assert_pad_read(received_load_pad_io, expected_received_bytes, EXPECTED_DEFAULT_NEW_PAD_SIZE);
 	g_assert(otb_pad_db_close_pad(load_pad_db));
 	g_free(expected_unsent_bytes);
+	g_assert(otb_pad_db_delete(load_pad_db));
+	g_assert(!g_file_test(pad_db_dir_path, G_FILE_TEST_EXISTS));
 	g_object_unref(save_pad_db);
 	g_object_unref(load_pad_db);
 }
@@ -552,7 +555,7 @@ void otb_add_pad_db_tests()
 	otb_add_test_func("/pad-db/test_otb_pad_db_rejects_pads_too_large", test_otb_pad_db_rejects_pads_too_large);
 	otb_add_test_func("/pad-db/test_otb_pad_db_rejects_pads_duplicate_id", test_otb_pad_db_rejects_pads_duplicate_id);
 	otb_add_test_func("/pad-db/test_create_unsent_pad_results_in_proper_pad_file", test_create_unsent_pad_results_in_proper_pad_file);
-	otb_add_test_func("/pad-db/test_pads_save_and_load", test_pads_save_and_load);
+	otb_add_test_func("/pad-db/test_pads_save_and_load_and_delete", test_pads_save_and_load_and_delete);
 	otb_add_test_func("/pad-db/test_add_received_pad", test_add_received_pad);
 	otb_add_test_func("/pad-db/test_get_random_rec_id", test_get_random_rec_id);
 	otb_add_test_func("/pad-db/test_close_pad_fails_when_nothing_is_opened", test_close_pad_fails_when_nothing_is_opened);

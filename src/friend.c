@@ -410,7 +410,9 @@ OtbFriend *otb_friend_load_from_directory(const char *base_path)
 
 gboolean otb_friend_delete(OtbFriend *friend)
 {
-	return otb_delete_dir(friend->priv->base_path);
+	gboolean ret_val=otb_pad_db_delete(friend->priv->incoming_pads);
+	ret_val=(otb_pad_db_delete(friend->priv->outgoing_pads) && ret_val);
+	return otb_delete_dir(friend->priv->base_path) && ret_val;
 }
 
 gboolean otb_friend_set_public_key(OtbFriend *friend, const char *public_key)
