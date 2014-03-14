@@ -474,7 +474,7 @@ static void test_pad_db_get_pad_size_range()
 	g_object_unref(pad_db);
 }
 
-static void otb_send_random_pad(const OtbPadDb *sender_pad_db, const OtbPadDb *recipient_pad_db)
+static void otb_send_random_pad(OtbPadDb *sender_pad_db, const OtbPadDb *recipient_pad_db)
 {
 	const OtbUniqueId *unique_id=otb_mark_random_pad_as_sent(sender_pad_db);
 	OtbPadIO *output_pad_io=otb_pad_db_add_received_pad(recipient_pad_db, unique_id, otb_pad_db_get_pad_size(sender_pad_db, unique_id));
@@ -489,7 +489,7 @@ static void otb_send_random_pad(const OtbPadDb *sender_pad_db, const OtbPadDb *r
 	g_assert(otb_pad_db_close_pad(recipient_pad_db));
 }
 
-static void otb_send_random_pads(const OtbPadDb *sender_pad_db, const OtbPadDb *recipient_pad_db, size_t number_of_pads)
+static void otb_send_random_pads(OtbPadDb *sender_pad_db, const OtbPadDb *recipient_pad_db, size_t number_of_pads)
 {
 	for(size_t iter=0; iter<number_of_pads; iter++)
 		otb_send_random_pad(sender_pad_db, recipient_pad_db);

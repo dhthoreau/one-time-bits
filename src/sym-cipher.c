@@ -21,6 +21,8 @@
 #define DEFAULT_MESSAGE_DIGEST	"SHA512"
 #define DEFAULT_HASH_ITERATIONS	20480
 
+// FARE - MTS.
+
 struct _OtbSymCipherPrivate
 {
 	unsigned char *key;

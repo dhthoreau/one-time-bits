@@ -57,7 +57,7 @@ GType otb_pad_db_get_type();
 
 OtbPadDb *otb_pad_db_create_in_directory(const char *base_path);
 OtbPadDb *otb_pad_db_load_from_directory(const char *base_path);
-gboolean otb_pad_db_delete(OtbPadDb *pad_db);
+gboolean otb_pad_db_delete(const OtbPadDb *pad_db);
 gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, off_t max_size);
 gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, off_t new_pad_min_size);
 gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_max_size);
@@ -67,7 +67,7 @@ GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecSt
 gboolean otb_pad_db_mark_pad_as_sent(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 const OtbUniqueId *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecStatus status);
 off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
-OtbPadIO *otb_pad_db_open_pad_for_read(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
+OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);

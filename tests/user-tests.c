@@ -179,10 +179,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	g_assert(g_key_file_load_from_data(*export_key_file, export_string, strlen(export_string), G_KEY_FILE_NONE, &error));
 	g_assert(error==NULL);
 	g_free(export_string);
-	OtbUniqueId *actual_unique_id;
-	char *unique_id_string=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID);
-	actual_unique_id=otb_unique_id_from_string(unique_id_string);
-	g_free(unique_id_string);
+	OtbUniqueId *actual_unique_id=otb_settings_get_bytes(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL);
 	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
 	char *actual_onion_base_domain=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));

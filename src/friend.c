@@ -41,6 +41,7 @@ G_DEFINE_TYPE(OtbFriend, otb_friend, G_TYPE_OBJECT);
 
 struct _OtbFriendPrivate
 {
+	GRWLock lock;
 	OtbUniqueId *unique_id;
 	char *base_path;
 	char *file_path;
@@ -74,6 +75,7 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 static void otb_friend_init(OtbFriend *friend)
 {
 	friend->priv=G_TYPE_INSTANCE_GET_PRIVATE(friend, OTB_TYPE_FRIEND, OtbFriendPrivate);
+	g_rw_lock_init(&friend->priv->lock);
 	friend->priv->unique_id=NULL;
 	friend->priv->base_path=NULL;
 	friend->priv->file_path=NULL;
@@ -117,6 +119,7 @@ static void otb_friend_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_FRIEND(object));
 	OtbFriend *friend=OTB_FRIEND(object);
+	g_rw_lock_clear(&friend->priv->lock);
 	g_free(friend->priv->unique_id);
 	g_free(friend->priv->base_path);
 	g_free(friend->priv->file_path);
@@ -159,6 +162,11 @@ static void otb_friend_set_base_path(const OtbFriend *friend, const char *base_p
 	otb_friend_compute_file_paths(friend);
 }
 
+#define otb_friend_lock_read(friend)	(g_rw_lock_reader_lock(&friend->priv->lock))
+#define otb_friend_unlock_read(friend)	(g_rw_lock_reader_unlock(&friend->priv->lock))
+#define otb_friend_lock_write(friend)	(g_rw_lock_writer_lock(&friend->priv->lock))
+#define otb_friend_unlock_write(friend)	(g_rw_lock_writer_unlock(&friend->priv->lock))
+
 static void otb_friend_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
 	OtbFriend *friend=OTB_FRIEND(object);
@@ -176,16 +184,20 @@ static void otb_friend_set_property(GObject *object, unsigned int prop_id, const
 		}
 		case PROP_PUBLIC_KEY:
 		{
+			otb_friend_lock_write(friend);
 			g_free(friend->priv->public_key);
 			friend->priv->public_key=g_value_dup_string(value);
+			otb_friend_unlock_write(friend);
 			break;
 		}
 		case PROP_ONION_BASE_DOMAIN:
 		{
+			otb_friend_lock_write(friend);
 			g_free(friend->priv->onion_base_domain);
 			friend->priv->onion_base_domain=g_value_dup_string(value);
 			g_free(friend->priv->onion_full_domain);
 			friend->priv->onion_full_domain=g_strconcat(friend->priv->onion_base_domain, ".onion", NULL);
+			otb_friend_unlock_write(friend);
 			break;
 		}
 		default:
@@ -223,12 +235,16 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 		}
 		case PROP_PUBLIC_KEY:
 		{
+			otb_friend_lock_read(friend);
 			g_value_set_string(value, friend->priv->public_key);
+			otb_friend_unlock_read(friend);
 			break;
 		}
 		case PROP_ONION_BASE_DOMAIN:
 		{
+			otb_friend_lock_read(friend);
 			g_value_set_string(value, friend->priv->onion_base_domain);
+			otb_friend_unlock_read(friend);
 			break;
 		}
 		default:
@@ -277,14 +293,7 @@ static gboolean otb_friend_save(const OtbFriend *friend)
 	return ret_val;
 }
 
-static OtbUniqueId *otb_friend_import_unique_id(GKeyFile *import_file)
-{
-	char *unique_id_string=otb_settings_get_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID);
-	OtbUniqueId *unique_id=otb_unique_id_from_string(unique_id_string);
-	g_free(unique_id_string);
-	return unique_id;
-}
-
+#define otb_friend_import_unique_id(import_file)			(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, NULL))
 #define otb_friend_import_public_key(import_file)			(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
 #define otb_friend_import_onion_base_domain(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN))
 
@@ -408,17 +417,24 @@ gboolean otb_friend_delete(OtbFriend *friend)
 {
 	gboolean ret_val=otb_pad_db_delete(friend->priv->incoming_pads);
 	ret_val=(otb_pad_db_delete(friend->priv->outgoing_pads) && ret_val);
-	return otb_delete_dir(friend->priv->base_path) && ret_val;
+	ret_val=otb_delete_dir(friend->priv->base_path) && ret_val;
+	return ret_val;
 }
 
 gboolean otb_friend_set_public_key(OtbFriend *friend, const char *public_key)
 {
 	g_object_set(friend, OTB_FRIEND_PROP_PUBLIC_KEY, public_key, NULL);
-	return otb_friend_save(friend);
+	otb_friend_lock_read(friend);
+	gboolean ret_val=otb_friend_save(friend);
+	otb_friend_unlock_read(friend);
+	return ret_val;
 }
 
 gboolean otb_friend_set_onion_base_domain(OtbFriend *friend, const char *onion_base_domain)
 {
 	g_object_set(friend, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, onion_base_domain, NULL);
-	return otb_friend_save(friend);
+	otb_friend_lock_read(friend);
+	gboolean ret_val=otb_friend_save(friend);
+	otb_friend_unlock_read(friend);
+	return ret_val;
 }

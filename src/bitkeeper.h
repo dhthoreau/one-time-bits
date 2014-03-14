@@ -39,7 +39,7 @@ struct _OtbBitkeeperClass
 GType otb_bitkeeper_get_type();
 
 OtbBitkeeper *otb_bitkeeper_load();	// FARE - Ha bisogno di unit test.
-OtbUser *otb_bitkeeper_get_user(const OtbBitkeeper *bitkeeper);	// FARE - Ha bisogno di unit test.
+OtbUser *otb_bitkeeper_get_user(const OtbBitkeeper *bitkeeper);	// FARE - Ha bisogno di unit test. Or forse drovrebbe essere una property?
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);	// FARE - Ha bisogno di unit test.
 OtbFriend *otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string);	// FARE - Ha bisogno di unit test.
 gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);	// FARE - Ha bisogno di unit test.

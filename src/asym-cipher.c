@@ -20,6 +20,8 @@
 
 #define DEFAULT_CIPHER			"AES-256-CBC"
 
+// FARE - MTS.
+
 struct _OtbAsymCipherPrivate
 {
 	const EVP_CIPHER *cipher_impl;

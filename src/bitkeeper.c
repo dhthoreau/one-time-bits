@@ -133,7 +133,7 @@ OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniq
 	{
 		OtbFriend *current_friend=OTB_FRIEND(curr_element->data);
 		const OtbUniqueId *current_unique_id=NULL;
-		g_object_get(current_friend, OTB_FRIEND_IMPORT_UNIQUE_ID, &current_unique_id, NULL);
+		g_object_get(current_friend, OTB_FRIEND_PROP_UNIQUE_ID, &current_unique_id, NULL);
 		if(otb_unique_id_compare(unique_id, current_unique_id)==0)
 		{
 			friend=current_friend;

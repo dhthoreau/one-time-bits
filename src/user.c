@@ -113,7 +113,6 @@ static void otb_user_finalize(GObject *object)
 static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {
 	OtbUser *user=OTB_USER(object);
-	otb_user_lock_read(user);
 	switch(prop_id)
 	{
 		case PROP_UNIQUE_ID:
@@ -128,7 +127,9 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 		}
 		case PROP_ONION_BASE_DOMAIN:
 		{
+			otb_user_lock_read(user);
 			g_value_set_string(value, user->priv->onion_base_domain);
+			otb_user_unlock_read(user);
 			break;
 		}
 		default:
@@ -137,7 +138,6 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 			break;
 		}
 	}
-	otb_user_unlock_read(user);
 }
 
 static void otb_user_initialize_unique_id(OtbUser *user)
@@ -206,12 +206,7 @@ gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_b
 	return ret_val;
 }
 
-static void otb_user_export_unique_id(const OtbUser *user, GKeyFile *export_key_file)
-{
-	char *unique_id_string=otb_unique_id_to_string(user->priv->unique_id);
-	g_key_file_set_string(export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);
-	g_free(unique_id_string);
-}
+#define otb_user_export_unique_id(user, export_key_file)	(otb_settings_set_bytes((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, (user)->priv->unique_id, sizeof(OtbUniqueId)))
 
 static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key_file)
 {

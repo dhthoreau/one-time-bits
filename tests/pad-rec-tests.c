@@ -140,8 +140,8 @@ static void test_otb_pad_rec_specifying_unique_id()
 	const OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	g_free(expected_unique_id);
 	g_object_unref(pad_rec);
+	g_free(expected_unique_id);
 }
 
 static void test_otb_pad_rec_without_specifying_unique_id()

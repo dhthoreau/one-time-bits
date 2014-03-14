@@ -21,6 +21,7 @@
 
 struct _OtbPadRecPrivate
 {
+	GRecMutex recursive_mutex;
 	OtbUniqueId *unique_id;
 	OtbPadRecStatus status;
 	char *base_path;
@@ -33,6 +34,7 @@ struct _OtbPadRecPrivate
 
 struct _OtbPadIO
 {
+	OtbPadRec *pad_rec;
 	gboolean is_for_write;
 	gboolean auto_rewind;
 	FILE *file;
@@ -81,6 +83,7 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 static void otb_pad_rec_init(OtbPadRec *pad_rec)
 {
 	pad_rec->priv=G_TYPE_INSTANCE_GET_PRIVATE(pad_rec, OTB_TYPE_PAD_REC, OtbPadRecPrivate);
+	g_rec_mutex_init(&pad_rec->priv->recursive_mutex);
 	pad_rec->priv->unique_id=otb_unique_id_create();
 	pad_rec->priv->base_name=otb_unique_id_string_create();
 	pad_rec->priv->pad_rec_file_path=NULL;
@@ -94,14 +97,18 @@ static void otb_pad_rec_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_PAD_REC(object));
 	OtbPadRec *pad_rec=OTB_PAD_REC(object);
-	g_bytes_unref(pad_rec->priv->pad_iv);
+	g_rec_mutex_clear(&pad_rec->priv->recursive_mutex);
 	g_free(pad_rec->priv->unique_id);
 	g_free(pad_rec->priv->base_path);
 	g_free(pad_rec->priv->base_name);
 	g_free(pad_rec->priv->pad_rec_file_path);
 	g_free(pad_rec->priv->pad_file_path);
+	g_bytes_unref(pad_rec->priv->pad_iv);
 	G_OBJECT_CLASS(otb_pad_rec_parent_class)->finalize(object);
 }
+
+#define otb_pad_rec_lock(pad_rec)	(g_rec_mutex_lock(&(pad_rec)->priv->recursive_mutex))
+#define otb_pad_rec_unlock(pad_rec)	(g_rec_mutex_unlock(&(pad_rec)->priv->recursive_mutex))
 
 static void otb_pad_rec_compute_file_paths(const OtbPadRec *pad_rec)
 {
@@ -125,12 +132,17 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 		{
 			OtbUniqueId *unique_id=g_value_dup_boxed(value);
 			if(unique_id!=NULL)
+			{
+				g_free(pad_rec->priv->unique_id);
 				pad_rec->priv->unique_id=unique_id;
+			}
 			break;
 		}
 		case PROP_STATUS:
 		{
+			otb_pad_rec_lock(pad_rec);
 			pad_rec->priv->status=g_value_get_uint(value);
+			otb_pad_rec_unlock(pad_rec);
 			break;
 		}
 		case PROP_BASE_PATH:
@@ -175,7 +187,9 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 		}
 		case PROP_STATUS:
 		{
+			otb_pad_rec_lock(pad_rec);
 			g_value_set_uint(value, pad_rec->priv->status);
+			otb_pad_rec_unlock(pad_rec);
 			break;
 		}
 		case PROP_BASE_PATH:
@@ -215,11 +229,13 @@ int otb_pad_rec_compare_by_id(const OtbPadRec *pad_rec, const OtbUniqueId *uniqu
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec)
 {
 	GKeyFile *key_file=g_key_file_new();
+	otb_pad_rec_lock(pad_rec);
 	otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, pad_rec->priv->unique_id, sizeof *pad_rec->priv->unique_id);
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_STATUS, pad_rec->priv->status);
 	g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_SIZE, pad_rec->priv->size);
 	otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV, pad_rec->priv->pad_iv);
 	gboolean ret_val=otb_settings_save_key_file(key_file, pad_rec->priv->pad_rec_file_path);
+	otb_pad_rec_unlock(pad_rec);
 	g_key_file_unref(key_file);
 	return ret_val;
 }
@@ -255,7 +271,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 	return pad_rec;
 }
 
-OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
+OtbPadIO *otb_pad_rec_open_pad_for_write(OtbPadRec *pad_rec)
 {
 	OtbPadIO *pad_io=NULL;
 	FILE *file=otb_open_binary_for_write(pad_rec->priv->pad_file_path);
@@ -263,13 +279,15 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		pad_io=g_malloc(sizeof(OtbPadIO));
-		pad_io->pad_iv=NULL;
+		pad_io->pad_rec=pad_rec;
+		g_object_ref(pad_io->pad_rec);
+		otb_pad_rec_lock(pad_io->pad_rec);
 		pad_io->is_for_write=TRUE;
 		pad_io->file=file;
 		pad_io->input_buffer=NULL;
 		pad_io->output_buffer=otb_sym_cipher_create_encryption_buffer(local_crypto_sym_cipher, INPUT_BUFFER_SIZE, &pad_io->output_buffer_allocated_size);
 		pad_io->final_output_buffer=NULL;
-		g_bytes_unref(pad_rec->priv->pad_iv);
+		pad_io->pad_iv=NULL;
 		pad_io->sym_cipher_context=otb_sym_cipher_init_encryption(local_crypto_sym_cipher, &pad_rec->priv->pad_iv);
 		g_object_unref(local_crypto_sym_cipher);
 		if(!otb_pad_rec_save(pad_rec))
@@ -281,7 +299,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(const OtbPadRec *pad_rec)
 	return pad_io;
 }
 
-OtbPadIO *otb_pad_rec_open_pad_for_read(const OtbPadRec *pad_rec, gboolean auto_rewind)
+OtbPadIO *otb_pad_rec_open_pad_for_read(OtbPadRec *pad_rec, gboolean auto_rewind)
 {
 	OtbPadIO *pad_io=NULL;
 	FILE *file=otb_open_binary_for_read(pad_rec->priv->pad_file_path);
@@ -289,6 +307,9 @@ OtbPadIO *otb_pad_rec_open_pad_for_read(const OtbPadRec *pad_rec, gboolean auto_
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		pad_io=g_malloc(sizeof(OtbPadIO));
+		pad_io->pad_rec=pad_rec;
+		g_object_ref(pad_io->pad_rec);
+		otb_pad_rec_lock(pad_io->pad_rec);
 		pad_io->is_for_write=FALSE;
 		pad_io->auto_rewind=auto_rewind;
 		pad_io->file=file;
@@ -331,10 +352,12 @@ gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec)
 gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec)
 {
 	gboolean ret_val=TRUE;
+	otb_pad_rec_lock(pad_rec);
 	if(!otb_unlink_if_exists(pad_rec->priv->pad_rec_file_path))
 		ret_val=FALSE;
 	else if(!otb_unlink_if_exists(pad_rec->priv->pad_file_path))
 		ret_val=FALSE;
+	otb_pad_rec_unlock(pad_rec);
 	return ret_val;
 }
 
@@ -460,6 +483,8 @@ gboolean otb_pad_io_free(OtbPadIO *pad_io)
 	if(pad_io->final_output_buffer!=NULL)
 		smemset(pad_io->final_output_buffer, 0, pad_io->final_output_buffer_allocated_size);
 	gboolean final_close_successful=otb_close(pad_io->file);
+	otb_pad_rec_unlock(pad_io->pad_rec);
+	g_object_unref(pad_io->pad_rec);
 	g_free(pad_io->input_buffer);
 	g_free(pad_io->output_buffer);
 	g_free(pad_io->final_output_buffer);

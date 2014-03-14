@@ -14,6 +14,7 @@
 #include "main.h"
 #include "test-utils.h"
 #include "../src/friend.h"
+#include "../src/settings.h"
 #include "../src/unique-id.h"
 
 static void otb_assert_friend_files_exist(const char *expected_base_path)
@@ -61,9 +62,9 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 static GKeyFile *otb_create_import_file(const char *public_key, const char *onion_base_domain)
 {
 	GKeyFile *import_file=g_key_file_new();
-	char *unique_id_string=otb_unique_id_string_create();
-	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);	// FARE - Usa byte invece di string?
-	g_free(unique_id_string);
+	OtbUniqueId *unique_id=otb_unique_id_create();
+	otb_settings_set_bytes(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id, sizeof(OtbUniqueId));
+	g_free(unique_id);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, onion_base_domain);
 	g_key_file_set_string(import_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, OTB_DUMMY_FRIEND_VALUE);
