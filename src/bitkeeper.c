@@ -9,7 +9,6 @@
 #include "../config.h"
 
 #include <glib.h>
-#include <uuid/uuid.h>
 
 #include "asym-cipher.h"
 #include "bitkeeper.h"

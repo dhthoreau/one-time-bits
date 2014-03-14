@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-03-10 22:36-0500\n"
-"PO-Revision-Date: 2014-03-10 22:36-0500\n"
+"POT-Creation-Date: 2014-03-14 09:09-0500\n"
+"PO-Revision-Date: 2014-03-14 09:09-0500\n"
 "Last-Translator: the OTB author\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -138,15 +138,7 @@ msgstr "Chiave pubblica"
 msgid "The public key to use for encryption"
 msgstr "La chiave pubblica che è usata per crittografia"
 
-#: src/friend.c:64
-msgid "Import text"
-msgstr "Testo della importazione"
-
-#: src/friend.c:64
-msgid "Imported text that created the friend record"
-msgstr "Testo importato che ha creato il record dell'amico"
-
-#: src/friend.c:65 src/pad-db.c:58 src/pad-rec.c:76
+#: src/friend.c:65 src/pad-db.c:58 src/pad-rec.c:75
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -170,7 +162,7 @@ msgstr "Blocchi in partenza"
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:68 src/user.c:58 src/pad-rec.c:74
+#: src/friend.c:68 src/user.c:58 src/pad-rec.c:73
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -190,7 +182,7 @@ msgstr "Dominio di base di onion"
 msgid "The domain of the friend's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'amico (senza \".onion\")"
 
-#: src/friend.c:149
+#: src/friend.c:147
 msgid "Tried to change unique ID of a friend."
 msgstr "Si è provato a cambiare ID univoco d'un amico."
 
@@ -222,17 +214,17 @@ msgstr "Dimensione massima di blocchi nuovi"
 msgid "Maximum size for a newly created pad"
 msgstr "Dimensione massima di blocchi creati di fresco"
 
-#: src/pad-db.c:257
+#: src/pad-db.c:256
 msgid "Failed to add record due to non-unique ID."
 msgstr "Non è riuscito ad aggiungere record a causa di ID non univoco."
 
-#: src/pad-db.c:262
+#: src/pad-db.c:261
 msgid "Failed to add record due to database size limitation."
 msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:703
+#: src/pad-db.c:711
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -243,13 +235,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:726
+#: src/pad-db.c:734
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:763
+#: src/pad-db.c:771
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."
@@ -277,35 +269,35 @@ msgstr ""
 msgid "The domain of the user's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'utente (senza \".onion\")"
 
-#: src/pad-rec.c:74
+#: src/pad-rec.c:73
 msgid "UUID of the record"
 msgstr "UUID del record"
 
-#: src/pad-rec.c:75
+#: src/pad-rec.c:74
 msgid "Status"
 msgstr "Stato"
 
-#: src/pad-rec.c:75
+#: src/pad-rec.c:74
 msgid "Status of the record"
 msgstr "Stato del record"
 
-#: src/pad-rec.c:76
+#: src/pad-rec.c:75
 msgid "Directory where the record will be saved"
 msgstr "La directory dove il record sarà salvato"
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:76
 msgid "Base name"
 msgstr "Name di base"
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:76
 msgid "Name of file where the record will be saved, excluding file extension"
 msgstr "Il nome del file per salvare il record, senza estensione"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:77
 msgid "Size"
 msgstr "Dimensione"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:77
 msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 
@@ -313,9 +305,3 @@ msgstr "Dimensione del file di blocco"
 #, c-format
 msgid "Failed to generate random data. Error == %s"
 msgstr "Non è riuscito a generare dati casuali. Errore == %s"
-
-#~ msgid "Private key"
-#~ msgstr "Chiave privata"
-
-#~ msgid "Key that is used to identify the user"
-#~ msgstr "La chiave usata per identificare l'utente"

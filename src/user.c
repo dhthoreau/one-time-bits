@@ -9,7 +9,6 @@
 #include "../config.h"
 
 #include <glib/gi18n.h>
-#include <uuid/uuid.h>
 
 #include "friend.h"
 #include "local-crypto.h"

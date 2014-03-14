@@ -9,7 +9,6 @@
 #include "../config.h"
 
 #include <glib-object.h>
-#include <uuid/uuid.h>
 
 #include "unique-id.h"
 

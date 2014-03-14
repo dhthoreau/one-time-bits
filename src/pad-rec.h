@@ -12,7 +12,6 @@
 #include <glib-object.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <uuid/uuid.h>
 
 #include "unique-id.h"
 

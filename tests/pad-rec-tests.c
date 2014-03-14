@@ -144,7 +144,7 @@ static void test_otb_pad_rec_specifying_unique_id()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_without_specifying_uuid()
+static void test_otb_pad_rec_without_specifying_unique_id()
 {
 	otb_test_setup_local_crypto();
 	OtbUniqueId *expected_unique_id=otb_unique_id_create();
@@ -229,7 +229,7 @@ void otb_add_pad_rec_tests()
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_initializing_base_path", test_otb_pad_rec_initializing_base_path);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_initializing_base_name", test_otb_pad_rec_initializing_base_name);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_specifying_unique_id", test_otb_pad_rec_specifying_unique_id);
-	otb_add_test_func("/pad-rec/test_otb_pad_rec_without_specifying_uuid", test_otb_pad_rec_without_specifying_uuid);
+	otb_add_test_func("/pad-rec/test_otb_pad_rec_without_specifying_unique_id", test_otb_pad_rec_without_specifying_unique_id);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_compare_by_id", test_otb_pad_rec_compare_by_id);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_save_load", test_otb_pad_rec_save_load);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_generate_pad_file", test_otb_pad_rec_generate_pad_file);

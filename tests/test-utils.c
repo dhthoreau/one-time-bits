@@ -9,7 +9,6 @@
 #include "../config.h"
 
 #include <glib/gstdio.h>
-#include <uuid.h>
 
 #include "test-utils.h"
 #include "../src/io.h"

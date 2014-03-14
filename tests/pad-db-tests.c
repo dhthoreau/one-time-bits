@@ -378,7 +378,7 @@ static void test_encryption_with_one_pad()
 {
 	const size_t MESSAGE_SIZE=1008;
 	const char *EXPECTED_MESSAGE="I heartily accept the motto, \"That government is best which governs least\"; and I should like to see it acted up to more rapidly and systematically. Carried out, it finally amounts to this, which also I believe - \"That government is best which governs not at all\"; and when men are prepared for it, that will be the kind of government which they will have. Government is at best but an expedient; but most governments are usually, and all governments are sometimes, inexpedient. The objections which have been brought against a standing army, and they are many and weighty, and deserve to prevail, may also at last be brought against a standing government. The standing army is only an arm of the standing government. The government itself, which is only the mode which the people have chosen to execute their will, is equally liable to be abused and perverted before the people can act through it. Witness the present Mexican war, the work of comparatively a few individuals using the standing government as";
-	const size_t START_OF_ENCRYPTED_MESSAGE=sizeof(unsigned char)+sizeof(uuid_t);
+	const size_t START_OF_ENCRYPTED_MESSAGE=sizeof(unsigned char)+sizeof(OtbUniqueId);
 	const off_t EXPECTED_ENCRYPTED_MESSAGE_SIZE=START_OF_ENCRYPTED_MESSAGE+MESSAGE_SIZE;
 	
 	otb_test_setup_local_crypto();
@@ -418,11 +418,11 @@ static void test_decryption_fails_due_to_unsupported_file_format()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
-	unsigned char input_bytes[sizeof(FORMAT_VERSION)+sizeof(uuid_t)];
+	unsigned char input_bytes[sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId)];
 	memcpy(input_bytes, &FORMAT_VERSION, sizeof(FORMAT_VERSION));
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof(FORMAT_VERSION)+sizeof(uuid_t), &decrypted_bytes, &decrypted_bytes_size));
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId), &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	g_free(pad_db_dir_path);
@@ -437,11 +437,11 @@ static void test_decryption_fails_due_to_missing_pad()
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
 	g_free(pad_db_dir_path);
-	unsigned char input_bytes[sizeof(FORMAT_VERSION)+sizeof(uuid_t)];
+	unsigned char input_bytes[sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId)];
 	memcpy(input_bytes, &FORMAT_VERSION, sizeof(FORMAT_VERSION));
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof(FORMAT_VERSION)+sizeof(uuid_t), &decrypted_bytes, &decrypted_bytes_size));
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId), &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	g_object_unref(pad_db);

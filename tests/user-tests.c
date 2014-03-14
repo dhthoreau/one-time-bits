@@ -10,7 +10,6 @@
 
 #include <glib/gstdio.h>
 #include <string.h>
-#include <uuid/uuid.h>
 
 #include "main.h"
 #include "dummy-friend.h"
