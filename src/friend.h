@@ -12,7 +12,7 @@
 #include <glib-object.h>
 
 #include "pad-db.h"
-#include "uuid-util.h"
+#include "unique-id.h"
 
 #define OTB_FRIEND_IMPORT_GROUP				"otb-user"
 #define OTB_FRIEND_IMPORT_UNIQUE_ID			"unique-id"

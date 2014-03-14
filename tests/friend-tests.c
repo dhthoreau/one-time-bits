@@ -14,7 +14,7 @@
 #include "main.h"
 #include "test-utils.h"
 #include "../src/friend.h"
-#include "../src/uuid-util.h"
+#include "../src/unique-id.h"
 
 static void otb_assert_friend_files_exist(const char *expected_base_path)
 {
@@ -58,12 +58,12 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 	g_free(load_outgoing_pads_path);
 }
 
-static GKeyFile *otb_create_import_file(const uuid_t unique_id, const char *public_key, const char *onion_base_domain)
+static GKeyFile *otb_create_import_file(const char *public_key, const char *onion_base_domain)
 {
 	GKeyFile *import_file=g_key_file_new();
-	char unique_id_string[UNIQUE_ID_STR_BYTES];
-	uuid_unparse_lower(unique_id, unique_id_string);
-	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);
+	char *unique_id_string=otb_unique_id_string_create();
+	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);	// FARE - Usa byte invece di string?
+	g_free(unique_id_string);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, onion_base_domain);
 	g_key_file_set_string(import_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, OTB_DUMMY_FRIEND_VALUE);
@@ -78,9 +78,7 @@ static void otb_do_friend_create_import_delete_test(OtbFriend **create_friend, O
 	
 	otb_test_setup_local_crypto();
 	char *friend_dir_path=otb_generate_unique_test_subdir_path();
-	uuid_t expected_unique_id;
-	uuid_generate(expected_unique_id);
-	GKeyFile *import_file=otb_create_import_file(expected_unique_id, EXPECTED_PUBLIC_KEY, EXPECTED_ONION_BASE_DOMAIN);
+	GKeyFile *import_file=otb_create_import_file(EXPECTED_PUBLIC_KEY, EXPECTED_ONION_BASE_DOMAIN);
 	char *import_string=g_key_file_to_data(import_file, NULL, NULL);
 	g_key_file_unref(import_file);
 	*create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);

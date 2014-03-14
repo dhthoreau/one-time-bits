@@ -14,7 +14,7 @@
 #include "io.h"
 #include "local-crypto.h"
 #include "settings.h"
-#include "uuid-util.h"
+#include "unique-id.h"
 
 static GType otb_friend_runtime_type;
 
@@ -41,7 +41,7 @@ G_DEFINE_TYPE(OtbFriend, otb_friend, G_TYPE_OBJECT);
 
 struct _OtbFriendPrivate
 {
-	uuid_t *unique_id;
+	OtbUniqueId *unique_id;
 	char *base_path;
 	char *file_path;
 	char *incoming_pads_path;
@@ -141,17 +141,14 @@ static void otb_friend_compute_file_paths(const OtbFriend *friend)
 	}
 }
 
-static void otb_friend_set_unique_id(const OtbFriend *friend, const uuid_t *unique_id)
+static void otb_friend_set_unique_id(const OtbFriend *friend, const OtbUniqueId *unique_id)
 {
 	if(friend->priv->unique_id!=NULL)
 		g_error(_("Tried to change unique ID of a friend."));
 	if(unique_id==NULL)
 		friend->priv->unique_id=NULL;
 	else
-	{
-		friend->priv->unique_id=g_malloc(sizeof(uuid_t));
-		uuid_copy(*friend->priv->unique_id, *unique_id);
-	}
+		friend->priv->unique_id=otb_unique_id_copy(unique_id);
 	otb_friend_compute_file_paths(friend);
 }
 
@@ -244,7 +241,7 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 
 static void otb_friend_export_key_file(const OtbFriend *friend, GKeyFile *export_file)
 {
-	otb_settings_set_bytes(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, friend->priv->unique_id, sizeof(uuid_t));
+	otb_settings_set_bytes(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, friend->priv->unique_id, sizeof(OtbUniqueId));
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, friend->priv->public_key);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, friend->priv->onion_base_domain);
 }
@@ -280,11 +277,10 @@ static gboolean otb_friend_save(const OtbFriend *friend)
 	return ret_val;
 }
 
-static uuid_t *otb_friend_import_unique_id(GKeyFile *import_file)
+static OtbUniqueId *otb_friend_import_unique_id(GKeyFile *import_file)
 {
 	char *unique_id_string=otb_settings_get_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID);
-	uuid_t *unique_id=g_malloc(sizeof(uuid_t));
-	uuid_parse(unique_id_string, *unique_id);
+	OtbUniqueId *unique_id=otb_unique_id_from_string(unique_id_string);
 	g_free(unique_id_string);
 	return unique_id;
 }
@@ -294,7 +290,7 @@ static uuid_t *otb_friend_import_unique_id(GKeyFile *import_file)
 
 static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 {
-	uuid_t *unique_id=otb_friend_import_unique_id(import_file);
+	OtbUniqueId *unique_id=otb_friend_import_unique_id(import_file);
 	char *public_key=otb_friend_import_public_key(import_file);
 	char *onion_base_domain=otb_friend_import_onion_base_domain(import_file);
 	g_object_set(friend, OTB_FRIEND_PROP_UNIQUE_ID, unique_id, OTB_FRIEND_PROP_PUBLIC_KEY, public_key, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, onion_base_domain, NULL);

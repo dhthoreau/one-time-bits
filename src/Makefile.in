@@ -129,7 +129,7 @@ libotb_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am__libotb_la_SOURCES_DIST = asym-cipher.c bitkeeper.c friend.c io.c \
 	local-crypto.c openssl-util.c pad-db.c pad-rec.c random.c \
-	settings.c smem.c sym-cipher.c user.c \
+	settings.c smem.c sym-cipher.c unique-id.c user.c \
 	secure-using-real-openssl-functions.c \
 	insecure-using-dummy-replacements-of-the-original-openssl-functions.c
 @EXPORTABLE_TRUE@am__objects_1 =  \
@@ -137,8 +137,8 @@ am__libotb_la_SOURCES_DIST = asym-cipher.c bitkeeper.c friend.c io.c \
 @EXPORTABLE_FALSE@am__objects_2 = insecure-using-dummy-replacements-of-the-original-openssl-functions.lo
 am_libotb_la_OBJECTS = asym-cipher.lo bitkeeper.lo friend.lo io.lo \
 	local-crypto.lo openssl-util.lo pad-db.lo pad-rec.lo random.lo \
-	settings.lo smem.lo sym-cipher.lo user.lo $(am__objects_1) \
-	$(am__objects_2)
+	settings.lo smem.lo sym-cipher.lo unique-id.lo user.lo \
+	$(am__objects_1) $(am__objects_2)
 libotb_la_OBJECTS = $(am_libotb_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -366,8 +366,8 @@ lib_LTLIBRARIES = libotb.la
 libotb_la_LDFLAGS = -version-info 0:0:0
 libotb_la_SOURCES = asym-cipher.c bitkeeper.c friend.c io.c \
 	local-crypto.c openssl-util.c pad-db.c pad-rec.c random.c \
-	settings.c smem.c sym-cipher.c user.c $(am__append_1) \
-	$(am__append_2)
+	settings.c smem.c sym-cipher.c unique-id.c user.c \
+	$(am__append_1) $(am__append_2)
 libotb_la_LIBADD = $(libglib_LIBS) $(libgobject_LIBS) $(libuuid_LIBS) $(openssl_LIBS)
 AM_CPPFLAGS = $(libglib_CFLAGS) $(libgobject_CFLAGS) $(libuuid_CFLAGS) $(openssl_CFLAGS) -DLOCALEDIR=\""$(datadir)/locale"\"
 all: all-am
@@ -463,6 +463,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/settings.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sym-cipher.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unique-id.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/user.Plo@am__quote@
 
 .c.o:

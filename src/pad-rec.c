@@ -16,13 +16,12 @@
 #include "random.h"
 #include "settings.h"
 #include "smem.h"
-#include "uuid-util.h"
 
 #define INPUT_BUFFER_SIZE	4096
 
 struct _OtbPadRecPrivate
 {
-	uuid_t *unique_id;
+	OtbUniqueId *unique_id;
 	OtbPadRecStatus status;
 	char *base_path;
 	char *base_name;
@@ -71,7 +70,7 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	object_class->finalize=otb_pad_rec_finalize;
 	object_class->set_property=otb_pad_rec_set_property;
 	object_class->get_property=otb_pad_rec_get_property;
-	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_pointer(OTB_PAD_REC_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the record"), G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_PAD_REC_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the record"), OTB_TYPE_UNIQUE_ID, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_STATUS, g_param_spec_uint(OTB_PAD_REC_PROP_STATUS, _("Status"), _("Status of the record"), 0, OTB_PAD_REC_STATUS_OUT_OF_BOUNDS-1, OTB_PAD_REC_STATUS_UNSENT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
@@ -79,25 +78,11 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	g_type_class_add_private(klass, sizeof(OtbPadRecPrivate));
 }
 
-static void otb_pad_generate_unique_id(OtbPadRec *pad_rec)
-{
-	pad_rec->priv->unique_id=g_malloc(sizeof(uuid_t));
-	uuid_generate(*pad_rec->priv->unique_id);
-}
-
-static void otb_pad_generate_base_name(OtbPadRec *pad_rec)
-{
-	uuid_t base_name_unique_id;
-	uuid_generate(base_name_unique_id);
-	pad_rec->priv->base_name=g_malloc(UNIQUE_ID_STR_BYTES);
-	uuid_unparse_lower(base_name_unique_id, pad_rec->priv->base_name);
-}
-
 static void otb_pad_rec_init(OtbPadRec *pad_rec)
 {
 	pad_rec->priv=G_TYPE_INSTANCE_GET_PRIVATE(pad_rec, OTB_TYPE_PAD_REC, OtbPadRecPrivate);
-	otb_pad_generate_unique_id(pad_rec);
-	otb_pad_generate_base_name(pad_rec);
+	pad_rec->priv->unique_id=otb_unique_id_create();
+	pad_rec->priv->base_name=otb_unique_id_string_create();
 	pad_rec->priv->pad_rec_file_path=NULL;
 	pad_rec->priv->pad_file_path=NULL;
 	pad_rec->priv->size=-1;
@@ -138,9 +123,9 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 	{
 		case PROP_UNIQUE_ID:
 		{
-			void *pointer_value=g_value_get_pointer(value);
-			if(pointer_value!=NULL)
-				uuid_copy(*pad_rec->priv->unique_id, pointer_value);
+			OtbUniqueId *unique_id=g_value_dup_boxed(value);
+			if(unique_id!=NULL)
+				pad_rec->priv->unique_id=unique_id;
 			break;
 		}
 		case PROP_STATUS:
@@ -185,7 +170,7 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 	{
 		case PROP_UNIQUE_ID:
 		{
-			g_value_set_pointer(value, pad_rec->priv->unique_id);
+			g_value_set_boxed(value, pad_rec->priv->unique_id);
 			break;
 		}
 		case PROP_STATUS:
@@ -216,11 +201,9 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 	}
 }
 
-int otb_pad_rec_compare_by_id(void *p_pad_rec, void *p_unique_id)
+int otb_pad_rec_compare_by_id(const OtbPadRec *pad_rec, const OtbUniqueId *unique_id)
 {
-	const OtbPadRec *pad_rec=OTB_PAD_REC(p_pad_rec);
-	const uuid_t *unique_id=(const uuid_t*)p_unique_id;
-	return uuid_compare(*pad_rec->priv->unique_id, *unique_id);
+	return otb_unique_id_compare(pad_rec->priv->unique_id, unique_id);
 }
 
 #define SAVE_GROUP			"pad-rec"
@@ -232,7 +215,7 @@ int otb_pad_rec_compare_by_id(void *p_pad_rec, void *p_unique_id)
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec)
 {
 	GKeyFile *key_file=g_key_file_new();
-	otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, *pad_rec->priv->unique_id, sizeof *pad_rec->priv->unique_id);
+	otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, pad_rec->priv->unique_id, sizeof *pad_rec->priv->unique_id);
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_STATUS, pad_rec->priv->status);
 	g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_SIZE, pad_rec->priv->size);
 	otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV, pad_rec->priv->pad_iv);

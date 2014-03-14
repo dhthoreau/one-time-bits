@@ -43,7 +43,8 @@ G_DEFINE_TYPE(OtbUser, otb_user, G_TYPE_OBJECT);
 
 struct _OtbUserPrivate
 {
-	uuid_t *unique_id;
+	GRWLock lock;
+	OtbUniqueId *unique_id;
 	OtbAsymCipher *asym_cipher;
 	char *onion_base_domain;
 };
@@ -75,6 +76,7 @@ static GType *otb_user_get_runtime_type()
 static void otb_user_init(OtbUser *user)
 {
 	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, *otb_user_get_runtime_type(), OtbUserPrivate);
+	g_rw_lock_init(&user->priv->lock);
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
 	user->priv->onion_base_domain=NULL;
@@ -98,14 +100,21 @@ static void otb_user_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_USER(object));
 	OtbUser *user=OTB_USER(object);
+	g_rw_lock_clear(&user->priv->lock);
 	g_free(user->priv->unique_id);
 	g_free(user->priv->onion_base_domain);
 	G_OBJECT_CLASS(otb_user_parent_class)->finalize(object);
 }
 
+#define otb_user_lock_read(user)	(g_rw_lock_reader_lock(&user->priv->lock))
+#define otb_user_unlock_read(user)	(g_rw_lock_reader_unlock(&user->priv->lock))
+#define otb_user_lock_write(user)	(g_rw_lock_writer_lock(&user->priv->lock))
+#define otb_user_unlock_write(user)	(g_rw_lock_writer_unlock(&user->priv->lock))
+
 static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {
 	OtbUser *user=OTB_USER(object);
+	otb_user_lock_read(user);
 	switch(prop_id)
 	{
 		case PROP_UNIQUE_ID:
@@ -129,6 +138,7 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 			break;
 		}
 	}
+	otb_user_unlock_read(user);
 }
 
 static void otb_user_initialize_unique_id(OtbUser *user)
@@ -136,11 +146,10 @@ static void otb_user_initialize_unique_id(OtbUser *user)
 	g_free(user->priv->unique_id);
 	size_t bytes_length;
 	user->priv->unique_id=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
-	if(user->priv->unique_id==NULL || bytes_length!=sizeof(uuid_t))
+	if(user->priv->unique_id==NULL || bytes_length!=sizeof(OtbUniqueId))
 	{
 		g_free(user->priv->unique_id);
-		user->priv->unique_id=g_malloc(sizeof(uuid_t));
-		uuid_generate(*user->priv->unique_id);
+		user->priv->unique_id=otb_unique_id_create();
 	}
 }
 
@@ -190,16 +199,19 @@ OtbUser *otb_user_load_from_settings_config()
 
 gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain)
 {
+	otb_user_lock_write(user);
 	g_free(user->priv->onion_base_domain);
 	user->priv->onion_base_domain=g_strdup(onion_base_domain);
-	return otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN, user->priv->onion_base_domain);
+	gboolean ret_val=otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN, user->priv->onion_base_domain);
+	otb_user_unlock_write(user);
+	return ret_val;
 }
 
 static void otb_user_export_unique_id(const OtbUser *user, GKeyFile *export_key_file)
 {
-	char unique_id_string[UNIQUE_ID_STR_BYTES];
-	uuid_unparse_lower(*user->priv->unique_id, unique_id_string);
+	char *unique_id_string=otb_unique_id_to_string(user->priv->unique_id);
 	g_key_file_set_string(export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id_string);
+	g_free(unique_id_string);
 }
 
 static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key_file)
@@ -222,7 +234,9 @@ static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_f
 char *otb_user_export(const OtbUser *user)
 {
 	GKeyFile *export_key_file=g_key_file_new();
+	otb_user_lock_read(user);
 	OTB_USER_GET_CLASS(user)->otb_user_export_key_file_private(user, export_key_file);
+	otb_user_unlock_read(user);
 	char *export_string=g_key_file_to_data(export_key_file, NULL, NULL);
 	g_key_file_unref(export_key_file);
 	return export_string;

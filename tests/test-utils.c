@@ -16,7 +16,7 @@
 #include "../src/local-crypto.h"
 #include "../src/settings.h"
 #include "../src/sym-cipher.h"
-#include "../src/uuid-util.h"
+#include "../src/unique-id.h"
 
 char *otb_test_dir_path=NULL;
 
@@ -43,11 +43,10 @@ const char *otb_get_test_dir_path()
 
 char *otb_generate_unique_test_subdir_path()
 {
-	uuid_t unique_id;
-	uuid_generate(unique_id);
-	char unique_id_str[UNIQUE_ID_STR_BYTES];
-	uuid_unparse_lower(unique_id, unique_id_str);
-	return g_build_filename(otb_test_dir_path, unique_id_str, NULL);
+	char *unique_id_str=otb_unique_id_string_create();
+	char *subdir_path=g_build_filename(otb_test_dir_path, unique_id_str, NULL);
+	g_free(unique_id_str);
+	return subdir_path;
 }
 
 void otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long()

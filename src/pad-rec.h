@@ -14,6 +14,8 @@
 #include <sys/types.h>
 #include <uuid/uuid.h>
 
+#include "unique-id.h"
+
 typedef enum
 {
 	OTB_PAD_REC_STATUS_UNSENT,
@@ -56,7 +58,7 @@ struct _OtbPadRecClass
 
 GType otb_pad_rec_get_type();
 
-int otb_pad_rec_compare_by_id(const gpointer p_pad_rec, const gpointer p_unique_id);
+int otb_pad_rec_compare_by_id(const OtbPadRec *pad_rec, const OtbUniqueId *unique_id);
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec);
 OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name);
 gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec);

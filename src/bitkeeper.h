@@ -40,9 +40,9 @@ GType otb_bitkeeper_get_type();
 
 OtbBitkeeper *otb_bitkeeper_load();	// FARE - Ha bisogno di unit test.
 OtbUser *otb_bitkeeper_get_user(const OtbBitkeeper *bitkeeper);	// FARE - Ha bisogno di unit test.
-OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const uuid_t *unique_id);	// FARE - Ha bisogno di unit test.
+OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);	// FARE - Ha bisogno di unit test.
 OtbFriend *otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string);	// FARE - Ha bisogno di unit test.
-gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const uuid_t *unique_id);	// FARE - Ha bisogno di unit test.
+gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);	// FARE - Ha bisogno di unit test.
 GSList *otb_bitkeeper_get_ids_of_friends(const OtbBitkeeper *bitkeeper);	// FARE - Ha bisogno di unit test.
 
 #endif
