@@ -17,7 +17,7 @@
 
 struct _OtbPadDbPrivate
 {
-	GMutex mutex;
+	GRWLock lock;
 	char *base_path;
 	char *file_path;
 	off_t max_size;
@@ -65,7 +65,7 @@ static void otb_pad_db_class_init(OtbPadDbClass *klass)
 static void otb_pad_db_init(OtbPadDb *pad_db)
 {
 	pad_db->priv=G_TYPE_INSTANCE_GET_PRIVATE(pad_db, OTB_TYPE_PAD_DB, OtbPadDbPrivate);
-	g_mutex_init(&pad_db->priv->mutex);
+	g_rw_lock_init(&pad_db->priv->lock);
 	pad_db->priv->base_path=NULL;
 	pad_db->priv->file_path=NULL;
 	pad_db->priv->max_size=DEFAULT_MAX_SIZE;
@@ -95,7 +95,7 @@ static void otb_pad_db_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_PAD_DB(object));
 	OtbPadDb *pad_db=OTB_PAD_DB(object);
-	g_mutex_clear(&pad_db->priv->mutex);
+	g_rw_lock_clear(&pad_db->priv->lock);
 	g_free(pad_db->priv->base_path);
 	g_free(pad_db->priv->file_path);
 	if(pad_db->priv->open_pad_io!=NULL)
@@ -111,9 +111,15 @@ static void otb_pad_db_set_base_path(const OtbPadDb *pad_db, const char *base_pa
 	pad_db->priv->file_path=g_build_filename(base_path, "db.otb", NULL);
 }
 
+#define otb_pad_db_lock_read(pad_db)	(g_rw_lock_reader_lock(&pad_db->priv->lock))
+#define otb_pad_db_unlock_read(pad_db)	(g_rw_lock_reader_unlock(&pad_db->priv->lock))
+#define otb_pad_db_lock_write(pad_db)	(g_rw_lock_writer_lock(&pad_db->priv->lock))
+#define otb_pad_db_unlock_write(pad_db)	(g_rw_lock_writer_unlock(&pad_db->priv->lock))
+
 static void otb_pad_db_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
 	OtbPadDb *pad_db=OTB_PAD_DB(object);
+	otb_pad_db_lock_write(pad_db);
 	switch(prop_id)
 	{
 		case PROP_BASE_PATH:
@@ -127,11 +133,13 @@ static void otb_pad_db_set_property(GObject *object, unsigned int prop_id, const
 			break;
 		}
 	}
+	otb_pad_db_unlock_write(pad_db);
 }
 
 static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {
 	OtbPadDb *pad_db=OTB_PAD_DB(object);
+	otb_pad_db_lock_read(pad_db);
 	switch(prop_id)
 	{
 		case PROP_BASE_PATH:
@@ -160,6 +168,7 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 			break;
 		}
 	}
+	otb_pad_db_unlock_read(pad_db);
 }
 
 #define SAVE_GROUP					"pad-db"
@@ -180,16 +189,6 @@ static gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 		g_key_file_unref(key_file);
 	}
 	return ret_val;
-}
-
-static void otb_pad_db_lock(const OtbPadDb *pad_db)
-{
-	g_mutex_lock(&pad_db->priv->mutex);
-}
-
-static void otb_pad_db_unlock(const OtbPadDb *pad_db)
-{
-	g_mutex_unlock(&pad_db->priv->mutex);
 }
 
 OtbPadDb *otb_pad_db_create_in_directory(const char *base_path)
@@ -311,17 +310,17 @@ OtbPadDb *otb_pad_db_load_from_directory(const char *base_path)
 
 gboolean otb_pad_db_delete(OtbPadDb *pad_db)
 {
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	gboolean ret_val=otb_delete_dir(pad_db->priv->base_path);
 	otb_pad_db_free_pad_rec_list(pad_db);
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
 }
 
 gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, off_t max_size)
 {
 	gboolean ret_val=TRUE;
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	off_t old_max_size=pad_db->priv->max_size;
 	pad_db->priv->max_size=max_size;
 	if(!otb_pad_db_save(pad_db))
@@ -329,7 +328,7 @@ gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, off_t max_size)
 		pad_db->priv->max_size=old_max_size;
 		ret_val=FALSE;
 	}
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
 }
 
@@ -340,7 +339,7 @@ gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, off_t new_pad_m
 		ret_val=FALSE;
 	else
 	{
-		otb_pad_db_lock(pad_db);
+		otb_pad_db_lock_write(pad_db);
 		off_t old_pad_min_size=pad_db->priv->new_pad_min_size;
 		off_t old_pad_max_size=pad_db->priv->new_pad_max_size;
 		pad_db->priv->new_pad_min_size=new_pad_min_size;
@@ -352,7 +351,7 @@ gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, off_t new_pad_m
 			pad_db->priv->new_pad_max_size=old_pad_max_size;
 			ret_val=FALSE;
 		}
-		otb_pad_db_unlock(pad_db);
+		otb_pad_db_unlock_write(pad_db);
 	}
 	return ret_val;
 }
@@ -364,7 +363,7 @@ gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_m
 		ret_val=FALSE;
 	else
 	{
-		otb_pad_db_lock(pad_db);
+		otb_pad_db_lock_write(pad_db);
 		off_t old_pad_min_size=pad_db->priv->new_pad_min_size;
 		off_t old_pad_max_size=pad_db->priv->new_pad_max_size;
 		pad_db->priv->new_pad_max_size=new_pad_max_size;
@@ -376,7 +375,7 @@ gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_m
 			pad_db->priv->new_pad_max_size=old_pad_max_size;
 			ret_val=FALSE;
 		}
-		otb_pad_db_unlock(pad_db);
+		otb_pad_db_unlock_write(pad_db);
 	}
 	return ret_val;
 }
@@ -397,11 +396,11 @@ static gboolean otb_pad_db_remove_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const uuid_t *unique_id)
 {
 	gboolean ret_val=TRUE;
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id);
 	if(pad_rec!=NULL && !otb_pad_db_remove_pad_rec(pad_db, pad_rec))
 		ret_val=FALSE;
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
 }
 
@@ -430,7 +429,7 @@ static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
 gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	off_t new_pad_size;
 	if(!otb_random_bytes(&new_pad_size, sizeof new_pad_size))
 		ret_val=FALSE;
@@ -449,14 +448,14 @@ gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db)
 			ret_val=FALSE;
 		}
 	}
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
 }
 
 OtbPadIO *otb_pad_db_add_received_pad(const OtbPadDb *pad_db, const uuid_t *unique_id, off_t size)
 {
 	OtbPadIO *pad_io=NULL;
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	if(pad_db->priv->open_pad_io==NULL)
 	{
 		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_RECEIVED, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, NULL);
@@ -466,7 +465,7 @@ OtbPadIO *otb_pad_db_add_received_pad(const OtbPadDb *pad_db, const uuid_t *uniq
 			otb_pad_db_remove_pad_rec(pad_db, pad_rec);
 	}
 	if(pad_io==NULL)
-		otb_pad_db_unlock(pad_db);
+		otb_pad_db_unlock_write(pad_db);
 	else
 		pad_db->priv->open_pad_io=pad_io;
 	return pad_io;
@@ -531,9 +530,9 @@ static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, Otb
 gboolean otb_pad_db_mark_pad_as_sent(const OtbPadDb *pad_db, const uuid_t *unique_id)
 {
 	gboolean ret_val;
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, OTB_PAD_REC_STATUS_UNSENT, OTB_PAD_REC_STATUS_SENT);
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
 }
 
@@ -570,20 +569,20 @@ static const uuid_t *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb *pad_
 
 const uuid_t *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecStatus status)
 {
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_read(pad_db);
 	const uuid_t *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, status);
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_read(pad_db);
 	return unique_id;
 }
 
 off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const uuid_t *unique_id)
 {
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_read(pad_db);
 	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id);
 	off_t pad_size=-1;
 	if(pad_rec!=NULL)
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_read(pad_db);
 	return pad_size;
 }
 
@@ -591,12 +590,12 @@ OtbPadIO *otb_pad_db_open_pad_for_read(const OtbPadDb *pad_db, const uuid_t *uni
 {
 	const OtbPadRec *pad_rec;
 	OtbPadIO *pad_io=NULL;
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	if(pad_db->priv->open_pad_io==NULL)
 		if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))==NULL);
 			pad_io=otb_pad_rec_open_pad_for_read(pad_rec, FALSE);
 	if(pad_io==NULL)
-		otb_pad_db_unlock(pad_db);
+		otb_pad_db_unlock_write(pad_db);
 	else
 		pad_db->priv->open_pad_io=pad_io;
 	return pad_io;
@@ -608,7 +607,7 @@ gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db)
 		return FALSE;
 	otb_pad_io_free(pad_db->priv->open_pad_io);
 	pad_db->priv->open_pad_io=NULL;
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return TRUE;
 }
 
@@ -655,7 +654,7 @@ static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const void *input_
 OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out)
 {
 	OtbPadDbCryptResults encryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	if(!otb_pad_db_can_encrypt_data(pad_db, plain_bytes_size))
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS;
 	else
@@ -721,7 +720,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 		*encrypted_bytes_out=NULL;
 		*encrypted_bytes_size_out=0;
 	}
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return encryption_result;
 }
 
@@ -729,7 +728,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 {
 	OtbPadDbCryptResults decryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 	const unsigned char format_version=encrypted_bytes[0];
-	otb_pad_db_lock(pad_db);
+	otb_pad_db_lock_write(pad_db);
 	if(format_version!=CURRENT_ENCRYPTION_FORMAT_VERSION)
 	{
 		g_message(_("Failed to decrypt file due to unsupported file version number."));
@@ -781,6 +780,6 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 		*plain_bytes_out=NULL;
 		*plain_bytes_size_out=0;
 	}
-	otb_pad_db_unlock(pad_db);
+	otb_pad_db_unlock_write(pad_db);
 	return decryption_result;
 }

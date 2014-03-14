@@ -23,18 +23,13 @@
 #define CONFIG_PASSPHRASE_HASH	"passphrase-hash"
 #define CONFIG_PASSPHRASE_SALT	"passphrase-salt"
 
-static GMutex otb_local_crypto_mutex;
+static GRWLock otb_local_crypto_lock;
 static OtbSymCipher *otb_local_crypto_sym_cipher=NULL;
 
-static void otb_local_crypto_lock()
-{
-	g_mutex_lock(&otb_local_crypto_mutex);
-}
-
-static void otb_local_crypto_unlock()
-{
-	g_mutex_unlock(&otb_local_crypto_mutex);
-}
+#define otb_local_crypto_lock_read()	(g_rw_lock_reader_lock(&otb_local_crypto_lock))
+#define otb_local_crypto_unlock_read()	(g_rw_lock_reader_unlock(&otb_local_crypto_lock))
+#define otb_local_crypto_lock_write()	(g_rw_lock_writer_lock(&otb_local_crypto_lock))
+#define otb_local_crypto_unlock_write()	(g_rw_lock_writer_unlock(&otb_local_crypto_lock))
 
 static void otb_local_crypto_new_sym_cipher_initialize_string_property(OtbSymCipher *sym_cipher, const char *config_key, const char *sym_cipher_property)
 {
@@ -99,10 +94,10 @@ static gboolean otb_local_crypto_set_passphrase(OtbSymCipher *sym_cipher, const 
 
 static void otb_local_crypto_set_local_sym_cipher(OtbSymCipher *sym_cipher)
 {
-	otb_local_crypto_lock();
+	otb_local_crypto_lock_write();
 	OtbSymCipher *old_sym_cipher=otb_local_crypto_sym_cipher;
 	otb_local_crypto_sym_cipher=sym_cipher;
-	otb_local_crypto_unlock();
+	otb_local_crypto_unlock_write();
 	if(old_sym_cipher!=NULL)
 		g_object_unref(old_sym_cipher);
 }
@@ -164,22 +159,22 @@ gboolean otb_local_crypto_unlock_sym_cipher(const char *passphrase)
 gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const char *new_passphrase)
 {
 	gboolean ret_val=TRUE;
-	otb_local_crypto_lock();
+	otb_local_crypto_lock_read();
 	if(otb_local_crypto_sym_cipher==NULL)
 		ret_val=FALSE;
 	else if(!otb_local_crypto_validate_passphrase(otb_local_crypto_sym_cipher, old_passphrase))
 		ret_val=FALSE;
 	else if(!otb_local_crypto_set_passphrase(otb_local_crypto_sym_cipher, new_passphrase))
 		ret_val=FALSE;
-	otb_local_crypto_unlock();
+	otb_local_crypto_unlock_read();
 	return ret_val;
 }
 
 OtbSymCipher *otb_local_crypto_get_sym_cipher_with_ref()
 {
-	otb_local_crypto_lock();
+	otb_local_crypto_lock_read();
 	OtbSymCipher *sym_cipher=otb_local_crypto_sym_cipher;
 	g_object_ref(sym_cipher);
-	otb_local_crypto_unlock();
+	otb_local_crypto_unlock_read();
 	return sym_cipher;
 }

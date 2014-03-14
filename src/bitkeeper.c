@@ -22,7 +22,7 @@ G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
 
 struct _OtbBitkeeperPrivate
 {
-	GMutex mutex;
+	GRWLock lock;
 	OtbUser *user;
 	GSList *friends;
 	char *friends_base_path;
@@ -38,7 +38,7 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
 {
 	bitkeeper->priv=G_TYPE_INSTANCE_GET_PRIVATE(bitkeeper, OTB_TYPE_BITKEEPER, OtbBitkeeperPrivate);
-	g_mutex_init(&bitkeeper->priv->mutex);
+	g_rw_lock_init(&bitkeeper->priv->lock);
 	bitkeeper->priv->user=NULL;
 	bitkeeper->priv->friends=NULL;
 	bitkeeper->priv->friends_base_path=g_build_filename(otb_settings_get_data_directory_path(), "friends", NULL);
@@ -64,20 +64,15 @@ static void otb_bitkeeper_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_BITKEEPER(object));
 	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
-	g_mutex_clear(&bitkeeper->priv->mutex);
+	g_rw_lock_clear(&bitkeeper->priv->lock);
 	g_free(bitkeeper->priv->friends_base_path);
 	G_OBJECT_CLASS(otb_bitkeeper_parent_class)->finalize(object);
 }
 
-static void otb_bitkeeper_lock(const OtbBitkeeper *bitkeeper)
-{
-	g_mutex_lock(&bitkeeper->priv->mutex);
-}
-
-static void otb_bitkeeper_unlock(const OtbBitkeeper *bitkeeper)
-{
-	g_mutex_unlock(&bitkeeper->priv->mutex);
-}
+#define otb_bitkeeper_lock_read(bitkeeper)		(g_rw_lock_reader_lock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_unlock_read(bitkeeper)	(g_rw_lock_reader_unlock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_lock_write(bitkeeper)		(g_rw_lock_writer_lock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_unlock_write(bitkeeper)	(g_rw_lock_writer_unlock(&bitkeeper->priv->lock))
 
 static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 {
@@ -123,18 +118,18 @@ OtbBitkeeper *otb_bitkeeper_load()
 
 OtbUser *otb_bitkeeper_get_user(const OtbBitkeeper *bitkeeper)
 {
-	otb_bitkeeper_lock(bitkeeper);
+	otb_bitkeeper_lock_read(bitkeeper);
 	OtbUser *user=bitkeeper->priv->user;
 	if(user!=NULL)
 		g_object_ref(user);
-	otb_bitkeeper_unlock(bitkeeper);
+	otb_bitkeeper_unlock_read(bitkeeper);
 	return user;
 }
 
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const uuid_t *unique_id)
 {
 	OtbFriend *friend=NULL;
-	otb_bitkeeper_lock(bitkeeper);
+	otb_bitkeeper_lock_read(bitkeeper);
 	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
 	{
 		OtbFriend *current_friend=OTB_FRIEND(curr_element->data);
@@ -147,11 +142,11 @@ OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const uuid_t 
 			break;
 		}
 	}
-	otb_bitkeeper_unlock(bitkeeper);
+	otb_bitkeeper_unlock_read(bitkeeper);
 	return friend;
 }
 
-OtbFriend *otb_bitkeeper_import_friend_to_disk(const OtbBitkeeper *bitkeeper, const char *import_string)
+static OtbFriend *otb_bitkeeper_import_friend_to_disk(const OtbBitkeeper *bitkeeper, const char *import_string)
 {
 	uuid_t friend_directory_id;
 	uuid_generate(friend_directory_id);
@@ -165,7 +160,7 @@ OtbFriend *otb_bitkeeper_import_friend_to_disk(const OtbBitkeeper *bitkeeper, co
 
 OtbFriend *otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string)
 {
-	otb_bitkeeper_lock(bitkeeper);
+	otb_bitkeeper_lock_write(bitkeeper);
 	OtbFriend *import_friend=otb_bitkeeper_import_friend_to_disk(bitkeeper, import_string);
 	const uuid_t *import_unique_id;
 	g_object_get(import_friend, OTB_FRIEND_PROP_UNIQUE_ID, &import_unique_id, NULL);
@@ -179,7 +174,7 @@ OtbFriend *otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *impo
 		g_object_unref(import_friend);
 		import_friend=NULL;
 	}
-	otb_bitkeeper_unlock(bitkeeper);
+	otb_bitkeeper_unlock_write(bitkeeper);
 	return import_friend;
 }
 
@@ -201,6 +196,7 @@ gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const uuid_t *uniq
 GSList *otb_bitkeeper_get_ids_of_friends(const OtbBitkeeper *bitkeeper)
 {
 	GSList *selected_friend_ids=NULL;
+	otb_bitkeeper_lock_read(bitkeeper);
 	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
 	{
 		OtbFriend *friend=OTB_FRIEND(curr_element->data);
@@ -208,5 +204,6 @@ GSList *otb_bitkeeper_get_ids_of_friends(const OtbBitkeeper *bitkeeper)
 		g_object_get(friend, OTB_FRIEND_PROP_UNIQUE_ID, &unique_id, NULL);
 		selected_friend_ids=g_slist_prepend(selected_friend_ids, unique_id);
 	}
+	otb_bitkeeper_unlock_read(bitkeeper);
 	return selected_friend_ids;
 }
