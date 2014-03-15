@@ -21,10 +21,9 @@
 #define DEFAULT_MESSAGE_DIGEST	"SHA512"
 #define DEFAULT_HASH_ITERATIONS	20480
 
-// FARE - MTS.
-
 struct _OtbSymCipherPrivate
 {
+	GRWLock lock;
 	unsigned char *key;
 	size_t key_size;
 	const EVP_CIPHER *sym_cipher_impl;
@@ -62,6 +61,7 @@ static void otb_sym_cipher_class_init(OtbSymCipherClass *klass)
 static void otb_sym_cipher_init(OtbSymCipher *sym_cipher)
 {
 	sym_cipher->priv=G_TYPE_INSTANCE_GET_PRIVATE(sym_cipher, OTB_TYPE_SYM_CIPHER, OtbSymCipherPrivate);
+	g_rw_lock_init(&sym_cipher->priv->lock);
 	sym_cipher->priv->key=NULL;
 	sym_cipher->priv->key_size=0;
 	sym_cipher->priv->sym_cipher_impl=NULL;
@@ -83,10 +83,16 @@ static void otb_sym_cipher_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_SYM_CIPHER(object));
 	OtbSymCipher *sym_cipher=OTB_SYM_CIPHER(object);
+	g_rw_lock_clear(&sym_cipher->priv->lock);
 	otb_sym_cipher_set_key(sym_cipher, NULL, 0);
 	sym_cipher->priv->key=NULL;
 	G_OBJECT_CLASS(otb_sym_cipher_parent_class)->finalize(object);
 }
+
+#define otb_sym_cipher_lock_read(sym_cipher)	(g_rw_lock_reader_lock(&sym_cipher->priv->lock))
+#define otb_sym_cipher_unlock_read(sym_cipher)	(g_rw_lock_reader_unlock(&sym_cipher->priv->lock))
+#define otb_sym_cipher_lock_write(sym_cipher)	(g_rw_lock_writer_lock(&sym_cipher->priv->lock))
+#define otb_sym_cipher_unlock_write(sym_cipher)	(g_rw_lock_writer_unlock(&sym_cipher->priv->lock))
 
 static void otb_sym_cipher_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
@@ -96,18 +102,24 @@ static void otb_sym_cipher_set_property(GObject *object, unsigned int prop_id, c
 		case PROP_CIPHER:
 		{
 			const char *string_value=g_value_get_string(value);
+			otb_sym_cipher_lock_write(sym_cipher);
 			sym_cipher->priv->sym_cipher_impl=_EVP_get_cipherbyname(string_value);
+			otb_sym_cipher_unlock_write(sym_cipher);
 			break;
 		}
 		case PROP_MESSAGE_DIGEST:
 		{
 			const char *string_value=g_value_get_string(value);
+			otb_sym_cipher_lock_write(sym_cipher);
 			sym_cipher->priv->message_digest_impl=EVP_get_digestbyname(string_value);
+			otb_sym_cipher_unlock_write(sym_cipher);
 			break;
 		}
 		case PROP_HASH_ITERATIONS:
 		{
+			otb_sym_cipher_lock_write(sym_cipher);
 			sym_cipher->priv->hash_iterations=g_value_get_uint(value);
+			otb_sym_cipher_unlock_write(sym_cipher);
 			break;
 		}
 		default:
@@ -125,17 +137,23 @@ static void otb_sym_cipher_get_property(GObject *object, unsigned int prop_id, G
 	{
 		case PROP_CIPHER:
 		{
+			otb_sym_cipher_lock_read(sym_cipher);
 			g_value_set_string(value, EVP_CIPHER_name(sym_cipher->priv->sym_cipher_impl));
+			otb_sym_cipher_unlock_read(sym_cipher);
 			break;
 		}
 		case PROP_MESSAGE_DIGEST:
 		{
+			otb_sym_cipher_lock_read(sym_cipher);
 			g_value_set_string(value, EVP_MD_name(sym_cipher->priv->message_digest_impl));
+			otb_sym_cipher_unlock_read(sym_cipher);
 			break;
 		}
 		case PROP_HASH_ITERATIONS:
 		{
+			otb_sym_cipher_lock_read(sym_cipher);
 			g_value_set_uint(value, sym_cipher->priv->hash_iterations);
+			otb_sym_cipher_unlock_read(sym_cipher);
 			break;
 		}
 		default:
@@ -149,12 +167,14 @@ static void otb_sym_cipher_get_property(GObject *object, unsigned int prop_id, G
 GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt salt_out)
 {
 	GBytes *hash=NULL;
+	otb_sym_cipher_lock_read(sym_cipher);
 	size_t hash_size=EVP_MD_size(sym_cipher->priv->message_digest_impl);
 	unsigned char *hash_bytes=g_malloc(hash_size);
 	if(otb_random_bytes(salt_out, sizeof(OtbSymCipherSalt)) && PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt_out, sizeof(OtbSymCipherSalt), sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes))
 		hash=g_bytes_new_take(hash_bytes, hash_size);
 	else
 		g_free(hash_bytes);
+	otb_sym_cipher_unlock_read(sym_cipher);
 	return hash;
 }
 
@@ -164,8 +184,10 @@ gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, cons
 	size_t hash_size;
 	const unsigned char *passphrase_hash_bytes=g_bytes_get_data(passphrase_hash, &hash_size);
 	unsigned char *hash_bytes=g_malloc(hash_size);
+	otb_sym_cipher_lock_read(sym_cipher);
 	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof(OtbSymCipherSalt), sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes) && smemcmp(passphrase_hash_bytes, hash_bytes, hash_size)==0)
 		ret_val=TRUE;
+	otb_sym_cipher_unlock_read(sym_cipher);
 	g_free(hash_bytes);
 	return ret_val;
 }
@@ -203,6 +225,7 @@ static OtbSymCipherContext *otb_sym_cipher_init_decryption_openssl(const EVP_CIP
 gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt salt)
 {
 	gboolean ret_val=FALSE;
+	otb_sym_cipher_lock_write(sym_cipher);
 	unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
 	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt, sizeof(OtbSymCipherSalt), sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 	{
@@ -218,6 +241,7 @@ gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key
 			ret_val=TRUE;
 		}
 	}
+	otb_sym_cipher_unlock_write(sym_cipher);
 	g_free(wrapping_key_and_iv);
 	return ret_val;
 }
@@ -227,6 +251,7 @@ GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *pass
 	GBytes *wrapped_key=NULL;
 	if(otb_random_bytes(salt_out, sizeof(OtbSymCipherSalt)))
 	{
+		otb_sym_cipher_lock_read(sym_cipher);
 		unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
 		if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt_out, sizeof(OtbSymCipherSalt), sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 		{
@@ -239,6 +264,7 @@ GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *pass
 			else
 				wrapped_key=g_bytes_new_take(wrapped_key_bytes, wrapped_key_size+final_bytes_size);
 		}
+		otb_sym_cipher_unlock_read(sym_cipher);
 		g_free(wrapping_key_and_iv);
 	}
 	return wrapped_key;
@@ -247,39 +273,52 @@ GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *pass
 gboolean otb_sym_cipher_generate_random_key(OtbSymCipher *sym_cipher)
 {
 	gboolean ret_val=TRUE;
+	otb_sym_cipher_lock_write(sym_cipher);
 	unsigned char *key=otb_create_random_bytes(EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl));
 	if(key==NULL)
 		ret_val=FALSE;
 	else
 		otb_sym_cipher_set_key(sym_cipher, key, EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl));
+	otb_sym_cipher_unlock_write(sym_cipher);
 	return ret_val;
 }
 
 unsigned char *otb_sym_cipher_create_encryption_buffer(const OtbSymCipher *sym_cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out)
 {
-	return otb_openssl_create_encryption_buffer(sym_cipher->priv->sym_cipher_impl, plain_bytes_buffer_size, encryption_buffer_size_out);
+	otb_sym_cipher_lock_read(sym_cipher);
+	unsigned char *buffer=otb_openssl_create_encryption_buffer(sym_cipher->priv->sym_cipher_impl, plain_bytes_buffer_size, encryption_buffer_size_out);
+	otb_sym_cipher_unlock_read(sym_cipher);
+	return buffer;
 }
 
 void *otb_sym_cipher_create_decryption_buffer(const OtbSymCipher *sym_cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out)
 {
-	return otb_openssl_create_decryption_buffer(sym_cipher->priv->sym_cipher_impl, encrypted_bytes_buffer_size, decryption_buffer_size_out);
+	otb_sym_cipher_lock_read(sym_cipher);
+	unsigned char *buffer=otb_openssl_create_decryption_buffer(sym_cipher->priv->sym_cipher_impl, encrypted_bytes_buffer_size, decryption_buffer_size_out);
+	otb_sym_cipher_unlock_read(sym_cipher);
+	return buffer;
 }
 
 OtbSymCipherContext *otb_sym_cipher_init_encryption(const OtbSymCipher *sym_cipher, GBytes **iv_out)
 {
+	otb_sym_cipher_lock_read(sym_cipher);
 	*iv_out=otb_openssl_generate_random_iv(sym_cipher->priv->sym_cipher_impl);
-	OtbSymCipherContext *ret_val=otb_sym_cipher_init_encryption_openssl(sym_cipher->priv->sym_cipher_impl, sym_cipher->priv->key, g_bytes_get_data(*iv_out, NULL));
-	if(ret_val==NULL)
+	OtbSymCipherContext *context=otb_sym_cipher_init_encryption_openssl(sym_cipher->priv->sym_cipher_impl, sym_cipher->priv->key, g_bytes_get_data(*iv_out, NULL));
+	otb_sym_cipher_unlock_read(sym_cipher);
+	if(context==NULL)
 	{
 		g_bytes_unref(*iv_out);
 		*iv_out=NULL;
 	}
-	return ret_val;
+	return context;
 }
 
 OtbSymCipherContext *otb_sym_cipher_init_decryption(const OtbSymCipher *sym_cipher, GBytes *iv)
 {
-	return otb_sym_cipher_init_decryption_openssl(sym_cipher->priv->sym_cipher_impl, sym_cipher->priv->key, g_bytes_get_data(iv, NULL));
+	otb_sym_cipher_lock_read(sym_cipher);
+	OtbSymCipherContext *context=otb_sym_cipher_init_decryption_openssl(sym_cipher->priv->sym_cipher_impl, sym_cipher->priv->key, g_bytes_get_data(iv, NULL));
+	otb_sym_cipher_unlock_read(sym_cipher);
+	return context;
 }
 
 size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out)
