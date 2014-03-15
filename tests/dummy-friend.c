@@ -19,8 +19,11 @@ G_DEFINE_TYPE(OtbDummyFriend, otb_dummy_friend, OTB_TYPE_FRIEND);
 
 static void otb_dummy_friend_class_init(OtbDummyFriendClass *klass)
 {
-	OTB_FRIEND_CLASS(klass)->otb_friend_import_key_file_private=otb_dummy_friend_import_key_file;
-	OTB_FRIEND_CLASS(klass)->otb_friend_export_key_file_private=otb_dummy_friend_export_key_file;
+	GObjectClass *object_class=G_OBJECT_CLASS(klass);
+	OtbFriendClass *friend_class=OTB_FRIEND_CLASS(klass);
+	friend_class->otb_friend_import_key_file_private=otb_dummy_friend_import_key_file;
+	friend_class->otb_friend_export_key_file_private=otb_dummy_friend_export_key_file;
+	object_class->finalize=otb_dummy_friend_finalize;
 }
 
 static void otb_dummy_friend_init(OtbDummyFriend *dummy_friend)
@@ -40,15 +43,15 @@ static void otb_dummy_friend_finalize(GObject *object)
 	g_return_if_fail(OTB_IS_DUMMY_FRIEND(object));
 	OtbDummyFriend *dummy_friend=OTB_DUMMY_FRIEND(object);
 	otb_dummy_friend_take_imported_dummy_value(dummy_friend, NULL);
-	G_OBJECT_CLASS(otb_dummy_friend_parent_class)->dispose(object);
+	G_OBJECT_CLASS(otb_dummy_friend_parent_class)->finalize(object);
 }
 
 static void otb_dummy_friend_import_key_file(OtbFriend *friend, GKeyFile *import_key_file)
 {
+	OTB_FRIEND_CLASS(otb_dummy_friend_parent_class)->otb_friend_import_key_file_private(friend, import_key_file);
 	OtbDummyFriend *dummy_friend=OTB_DUMMY_FRIEND(friend);
 	char *imported_dummy_value=otb_settings_get_string(import_key_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY);
 	otb_dummy_friend_take_imported_dummy_value(dummy_friend, imported_dummy_value);
-	OTB_FRIEND_CLASS(otb_dummy_friend_parent_class)->otb_friend_import_key_file_private(friend, import_key_file);
 }
 
 static void otb_dummy_friend_export_key_file(const OtbFriend *friend, GKeyFile *export_key_file)

@@ -100,7 +100,8 @@ am_otb_tests_OBJECTS = asym-cipher-tests.$(OBJEXT) \
 	friend-tests.$(OBJEXT) local-crypto-tests.$(OBJEXT) \
 	main.$(OBJEXT) pad-db-tests.$(OBJEXT) pad-rec-tests.$(OBJEXT) \
 	settings-tests.$(OBJEXT) sym-cipher-tests.$(OBJEXT) \
-	test-utils.$(OBJEXT) user-tests.$(OBJEXT)
+	test-utils.$(OBJEXT) unique-id-tests.$(OBJEXT) \
+	user-tests.$(OBJEXT)
 otb_tests_OBJECTS = $(am_otb_tests_OBJECTS)
 am__DEPENDENCIES_1 =
 otb_tests_DEPENDENCIES = ../src/libotb.la $(am__DEPENDENCIES_1) \
@@ -529,7 +530,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-otb_tests_SOURCES = asym-cipher-tests.c dummy-friend.c dummy-user.c friend-tests.c local-crypto-tests.c main.c pad-db-tests.c pad-rec-tests.c settings-tests.c sym-cipher-tests.c test-utils.c user-tests.c
+otb_tests_SOURCES = asym-cipher-tests.c dummy-friend.c dummy-user.c friend-tests.c local-crypto-tests.c main.c pad-db-tests.c pad-rec-tests.c settings-tests.c sym-cipher-tests.c test-utils.c unique-id-tests.c user-tests.c
 otb_tests_LDADD = ../src/libotb.la $(libglib_LIBS) $(libgobject_LIBS) $(libuuid_LIBS) $(openssl_LIBS)
 AM_CPPFLAGS = $(libglib_CFLAGS) $(libgobject_CFLAGS) $(libuuid_CFLAGS) -DLOCALEDIR=\""$(datadir)/locale"\"
 all: all-am
@@ -597,6 +598,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/settings-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sym-cipher-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unique-id-tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/user-tests.Po@am__quote@
 
 .c.o:

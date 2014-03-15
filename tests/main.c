@@ -20,6 +20,7 @@
 #include "settings-tests.h"
 #include "sym-cipher-tests.h"
 #include "test-utils.h"
+#include "unique-id-tests.h"
 #include "user-tests.h"
 
 GSList *otb_test_funcs=NULL;
@@ -63,6 +64,7 @@ static void otb_run_tests_to_find_memory_leaks()
 
 static void otb_add_tests()
 {
+	otb_add_unique_id_tests();
 	otb_add_settings_tests();
 	otb_add_sym_cipher_tests();
 	otb_add_asym_cipher_tests();

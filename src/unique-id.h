@@ -22,11 +22,12 @@ struct _OtbUniqueId
 	uuid_t value;
 };
 
+//FARE - Unit test per tutti.
 GType otb_unique_id_get_type();
 OtbUniqueId *otb_unique_id_create();
 char *otb_unique_id_to_string(OtbUniqueId *unique_id);
 OtbUniqueId *otb_unique_id_from_string(char *unique_id_string);
 char *otb_unique_id_string_create();
-OtbUniqueId *otb_unique_id_copy(const OtbUniqueId *unique_id);
+OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id);
 
 #endif
