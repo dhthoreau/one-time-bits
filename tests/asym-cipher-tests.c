@@ -51,7 +51,7 @@ static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCip
 	g_object_unref(private_key_sym_cipher);
 }
 
-static void test_asym_cipher_encryption()
+static void test_asym_cipher_encryption_in_steps()
 {
 	const size_t NEW_KEY_LENGTH=512;
 	const char EXPECTED_MESSAGE_SIZE=74;
@@ -71,19 +71,54 @@ static void test_asym_cipher_encryption()
 	g_assert(encryption_context!=NULL);
 	g_assert(iv!=NULL);
 	g_assert(encrypted_key!=NULL);
-	size_t encrypted_message_size=otb_asym_cipher_encrypt(encryption_context, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, encrypted_message);
+	size_t encrypted_message_size=otb_asym_cipher_encrypt_next(encryption_context, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, encrypted_message);
 	encrypted_message_size+=otb_asym_cipher_finish_encrypt(encryption_context, encrypted_message+encrypted_message_size);
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
-	char *decrypted_message=otb_asym_cipher_create_decryption_buffer(asym_cipher_private, encrypted_message_size, NULL);
+	char *actual_message=otb_asym_cipher_create_decryption_buffer(asym_cipher_private, encrypted_message_size, NULL);
 	OtbAsymCipherContext *decryption_context=otb_asym_cipher_init_decryption(asym_cipher_private, encrypted_key, iv);
 	g_assert(decryption_context!=NULL);
-	size_t actual_message_size=otb_asym_cipher_decrypt(decryption_context, encrypted_message, encrypted_message_size, decrypted_message);
-	actual_message_size+=otb_asym_cipher_finish_decrypt(decryption_context, decrypted_message+actual_message_size);
-	g_assert_cmpint(0, !=, actual_message_size);
+	size_t actual_message_size=otb_asym_cipher_decrypt_next(decryption_context, encrypted_message, encrypted_message_size, actual_message);
+	actual_message_size+=otb_asym_cipher_finish_decrypt(decryption_context, actual_message+actual_message_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
-	g_assert_cmpstr(EXPECTED_MESSAGE, ==, decrypted_message);
-	g_free(decrypted_message);
+	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
+	g_assert_cmpint(0, !=, actual_message_size);
+	g_free(actual_message);
+	g_free(encrypted_message);
+	g_bytes_unref(encrypted_key);
+	g_bytes_unref(iv);
+	g_object_unref(asym_cipher_private);
+	g_object_unref(asym_cipher_public);
+}
+
+static void test_asym_cipher_encryption()
+{
+	const size_t NEW_KEY_LENGTH=512;
+	const char EXPECTED_MESSAGE_SIZE=74;
+	const char *EXPECTED_MESSAGE="Timid men prefer the calm of despotism to the tempestuous sea of liberty.";
+	
+	OtbAsymCipher *asym_cipher_original=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original, NEW_KEY_LENGTH));
+	OtbAsymCipher *asym_cipher_public=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	OtbAsymCipher *asym_cipher_private=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	otb_copy_public_key(asym_cipher_original, asym_cipher_public);
+	otb_copy_private_key(asym_cipher_original, asym_cipher_private);
+	g_object_unref(asym_cipher_original);
+	GBytes *iv=NULL;
+	GBytes *encrypted_key=NULL;
+	unsigned char *encrypted_message;
+	size_t encrypted_message_size=otb_asym_cipher_encrypt(asym_cipher_public, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, &encrypted_key, &iv, &encrypted_message);
+	g_assert(iv!=NULL);
+	g_assert(encrypted_key!=NULL);
+	g_assert(encrypted_message!=NULL);
+	g_assert_cmpint(0, !=, encrypted_message_size);
+	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
+	char *actual_message=NULL;
+	size_t actual_message_size=otb_asym_cipher_decrypt(asym_cipher_public, encrypted_message, encrypted_message_size, encrypted_key, iv, (void**)&actual_message);
+	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
+	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
+	g_assert_cmpint(0, !=, actual_message_size);
+	g_free(actual_message);
 	g_free(encrypted_message);
 	g_bytes_unref(encrypted_key);
 	g_bytes_unref(iv);
@@ -94,5 +129,6 @@ static void test_asym_cipher_encryption()
 void otb_add_asym_cipher_tests()
 {
 	otb_add_test_func("/asym_cipher/test_asym_cipher_properties", test_asym_cipher_properties);
-	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption", test_asym_cipher_encryption);
+	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption_in_steps", test_asym_cipher_encryption_in_steps);
+	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption", test_asym_cipher_encryption_in_steps);
 }

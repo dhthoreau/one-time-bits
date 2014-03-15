@@ -286,17 +286,17 @@ gboolean otb_sym_cipher_generate_random_key(OtbSymCipher *sym_cipher)
 unsigned char *otb_sym_cipher_create_encryption_buffer(const OtbSymCipher *sym_cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out)
 {
 	otb_sym_cipher_lock_read(sym_cipher);
-	unsigned char *buffer=otb_openssl_create_encryption_buffer(sym_cipher->priv->sym_cipher_impl, plain_bytes_buffer_size, encryption_buffer_size_out);
+	const EVP_CIPHER *cipher_impl=sym_cipher->priv->sym_cipher_impl;
 	otb_sym_cipher_unlock_read(sym_cipher);
-	return buffer;
+	return otb_openssl_create_encryption_buffer(cipher_impl, plain_bytes_buffer_size, encryption_buffer_size_out);
 }
 
 void *otb_sym_cipher_create_decryption_buffer(const OtbSymCipher *sym_cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out)
 {
 	otb_sym_cipher_lock_read(sym_cipher);
-	unsigned char *buffer=otb_openssl_create_decryption_buffer(sym_cipher->priv->sym_cipher_impl, encrypted_bytes_buffer_size, decryption_buffer_size_out);
+	const EVP_CIPHER *cipher_impl=sym_cipher->priv->sym_cipher_impl;
 	otb_sym_cipher_unlock_read(sym_cipher);
-	return buffer;
+	return otb_openssl_create_decryption_buffer(cipher_impl, encrypted_bytes_buffer_size, decryption_buffer_size_out);
 }
 
 OtbSymCipherContext *otb_sym_cipher_init_encryption(const OtbSymCipher *sym_cipher, GBytes **iv_out)
