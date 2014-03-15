@@ -8,16 +8,23 @@
 
 #include "../config.h"
 
-#include <glib.h>
+#include <glib/gi18n.h>
 
 #include "asym-cipher.h"
 #include "bitkeeper.h"
 #include "settings.h"
 
-static void otb_bitkeeper_dispose(GObject *object);
-static void otb_bitkeeper_finalize(GObject *object);
+enum
+{
+	PROP_0,
+	PROP_USER
+};
 
 G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
+
+static void otb_bitkeeper_dispose(GObject *object);
+static void otb_bitkeeper_finalize(GObject *object);
+static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
 
 struct _OtbBitkeeperPrivate
 {
@@ -32,6 +39,8 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_bitkeeper_dispose;
 	object_class->finalize=otb_bitkeeper_finalize;
+	object_class->get_property=otb_bitkeeper_get_property;
+	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READABLE));
 }
 
 static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
@@ -72,6 +81,24 @@ static void otb_bitkeeper_finalize(GObject *object)
 #define otb_bitkeeper_unlock_read(bitkeeper)	(g_rw_lock_reader_unlock(&bitkeeper->priv->lock))
 #define otb_bitkeeper_lock_write(bitkeeper)		(g_rw_lock_writer_lock(&bitkeeper->priv->lock))
 #define otb_bitkeeper_unlock_write(bitkeeper)	(g_rw_lock_writer_unlock(&bitkeeper->priv->lock))
+
+static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
+{
+	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
+	switch(prop_id)
+	{
+		case PROP_USER:
+		{
+			g_value_set_object(value, bitkeeper->priv->user);
+			break;
+		}
+		default:
+		{
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+			break;
+		}
+	}
+}
 
 static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 {

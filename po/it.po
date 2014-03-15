@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-03-14 09:09-0500\n"
-"PO-Revision-Date: 2014-03-14 09:09-0500\n"
+"POT-Creation-Date: 2014-03-15 18:36-0500\n"
+"PO-Revision-Date: 2014-03-15 18:37-0500\n"
 "Last-Translator: the OTB author\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -68,121 +68,121 @@ msgstr "Non è riuscito a creare la directory %s. Errore == %s"
 msgid "Failed open directory %s. Error == %s"
 msgstr "Non è riuscito a aprire la directory %s. Errore == %s"
 
-#: src/sym-cipher.c:54
+#: src/sym-cipher.c:55
 msgid "Cipher"
 msgstr "Cifra"
 
-#: src/sym-cipher.c:54
+#: src/sym-cipher.c:55
 msgid "Name of the cipher to use"
 msgstr "Nome della cifra per utilizzare"
 
-#: src/sym-cipher.c:55
+#: src/sym-cipher.c:56
 msgid "Message digest"
 msgstr "Message digest"
 
-#: src/sym-cipher.c:55
+#: src/sym-cipher.c:56
 msgid "Message digest to use for hashes"
 msgstr "Il message digest da utilizzare per hash"
 
-#: src/sym-cipher.c:56
+#: src/sym-cipher.c:57
 msgid "Hash iterations"
 msgstr "Iterazioni di hash"
 
-#: src/sym-cipher.c:56
+#: src/sym-cipher.c:57
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."
 
-#: src/sym-cipher.c:179 src/asym-cipher.c:213
+#: src/sym-cipher.c:203 src/asym-cipher.c:242
 #, c-format
 msgid "Failed to initialize encryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/sym-cipher.c:193 src/asym-cipher.c:227
+#: src/sym-cipher.c:217 src/asym-cipher.c:258
 #, c-format
 msgid "Failed to initialize decryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/sym-cipher.c:289 src/asym-cipher.c:239
+#: src/sym-cipher.c:330 src/asym-cipher.c:271
 #, c-format
 msgid "Failed to encrypt data. Error == %s"
 msgstr "Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/sym-cipher.c:302 src/asym-cipher.c:252
+#: src/sym-cipher.c:343 src/asym-cipher.c:284
 #, c-format
 msgid "Failed to decrypt data. Error == %s"
 msgstr "Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/sym-cipher.c:315 src/asym-cipher.c:265
+#: src/sym-cipher.c:356 src/asym-cipher.c:297
 #, c-format
 msgid "Failed to encrypt final data. Error == %s"
 msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/sym-cipher.c:329 src/asym-cipher.c:279
+#: src/sym-cipher.c:370 src/asym-cipher.c:311
 #, c-format
 msgid "Failed to decrypt final data. Error == %s"
 msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
 
-#: src/asym-cipher.c:49
+#: src/asym-cipher.c:50
 msgid "Symmetric cipher"
 msgstr "Cifra simmetrica"
 
-#: src/asym-cipher.c:49
+#: src/asym-cipher.c:50
 msgid "Name of the symmetric cipher to use"
 msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/asym-cipher.c:50 src/friend.c:69
+#: src/asym-cipher.c:51 src/friend.c:70
 msgid "Public key"
 msgstr "Chiave pubblica"
 
-#: src/asym-cipher.c:50
+#: src/asym-cipher.c:51
 msgid "The public key to use for encryption"
 msgstr "La chiave pubblica che è usata per crittografia"
 
-#: src/friend.c:65 src/pad-db.c:58 src/pad-rec.c:75
+#: src/friend.c:66 src/pad-db.c:58 src/pad-rec.c:77
 msgid "Base path"
 msgstr "Precorso di base"
 
-#: src/friend.c:65
+#: src/friend.c:66
 msgid "Directory where the friend's data will be saved"
 msgstr "La directory dove i dati del amico saranno salvati"
 
-#: src/friend.c:66
+#: src/friend.c:67
 msgid "Incoming pads"
 msgstr "Blocchi in arrivo"
 
-#: src/friend.c:66
+#: src/friend.c:67
 msgid "Database of incoming pads"
 msgstr "Il database di blocchi in arrivo"
 
-#: src/friend.c:67
+#: src/friend.c:68
 msgid "Outgoing pads"
 msgstr "Blocchi in partenza"
 
-#: src/friend.c:67
+#: src/friend.c:68
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:68 src/user.c:58 src/pad-rec.c:73
+#: src/friend.c:69 src/user.c:58 src/pad-rec.c:75
 msgid "Unique ID"
 msgstr "ID univoco"
 
-#: src/friend.c:68
+#: src/friend.c:69
 msgid "UUID of the friend"
 msgstr "UUID dell'amico"
 
-#: src/friend.c:69
+#: src/friend.c:70
 msgid "Key that is used to identify the friend"
 msgstr "La chiave usata per identificare l'amico"
 
-#: src/friend.c:70 src/user.c:60
+#: src/friend.c:71 src/user.c:60
 msgid "Onion base domain"
 msgstr "Dominio di base di onion"
 
-#: src/friend.c:70
+#: src/friend.c:71
 msgid "The domain of the friend's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'amico (senza \".onion\")"
 
-#: src/friend.c:147
+#: src/friend.c:150
 msgid "Tried to change unique ID of a friend."
 msgstr "Si è provato a cambiare ID univoco d'un amico."
 
@@ -224,7 +224,7 @@ msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:711
+#: src/pad-db.c:709
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -235,13 +235,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:734
+#: src/pad-db.c:732
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:771
+#: src/pad-db.c:769
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."
@@ -269,35 +269,35 @@ msgstr ""
 msgid "The domain of the user's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'utente (senza \".onion\")"
 
-#: src/pad-rec.c:73
+#: src/pad-rec.c:75
 msgid "UUID of the record"
 msgstr "UUID del record"
 
-#: src/pad-rec.c:74
+#: src/pad-rec.c:76
 msgid "Status"
 msgstr "Stato"
 
-#: src/pad-rec.c:74
+#: src/pad-rec.c:76
 msgid "Status of the record"
 msgstr "Stato del record"
 
-#: src/pad-rec.c:75
+#: src/pad-rec.c:77
 msgid "Directory where the record will be saved"
 msgstr "La directory dove il record sarà salvato"
 
-#: src/pad-rec.c:76
+#: src/pad-rec.c:78
 msgid "Base name"
 msgstr "Name di base"
 
-#: src/pad-rec.c:76
+#: src/pad-rec.c:78
 msgid "Name of file where the record will be saved, excluding file extension"
 msgstr "Il nome del file per salvare il record, senza estensione"
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:79
 msgid "Size"
 msgstr "Dimensione"
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:79
 msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 
@@ -305,3 +305,11 @@ msgstr "Dimensione del file di blocco"
 #, c-format
 msgid "Failed to generate random data. Error == %s"
 msgstr "Non è riuscito a generare dati casuali. Errore == %s"
+
+#: src/bitkeeper.c:43
+msgid "User"
+msgstr "Utente"
+
+#: src/bitkeeper.c:43
+msgid "The user who is using the application"
+msgstr "L'utente chi sta usando l'applicazione"

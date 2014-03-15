@@ -22,7 +22,6 @@ struct _OtbUniqueId
 	uuid_t value;
 };
 
-//FARE - Unit test per tutti.
 GType otb_unique_id_get_type();
 OtbUniqueId *otb_unique_id_create();
 char *otb_unique_id_to_string(OtbUniqueId *unique_id);
