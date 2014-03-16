@@ -99,11 +99,6 @@ void otb_settings_set_data_directory_path(const char *data_directory_path)
 	otb_data_directory_path=g_strdup(data_directory_path);
 }
 
-static char *otb_settings_config_file_path(const char *file_name)
-{
-	return g_build_filename(otb_data_directory_path, file_name, NULL);
-}
-
 gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path)
 {
 	gboolean ret_val=TRUE;

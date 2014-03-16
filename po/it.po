@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-03-15 18:36-0500\n"
-"PO-Revision-Date: 2014-03-15 18:37-0500\n"
+"POT-Creation-Date: 2014-03-15 21:53-0500\n"
+"PO-Revision-Date: 2014-03-15 21:53-0500\n"
 "Last-Translator: the OTB author\n"
 "Language-Team: \n"
 "Language: it\n"
@@ -19,51 +19,32 @@ msgstr ""
 msgid "Failed to open file %s. Error == %s"
 msgstr "Non è riuscito a aprire il file %s. Errore == %s"
 
-#: src/io.c:53
+#: src/io.c:48
 #, c-format
 msgid "Failed to write file. Error == %s"
 msgstr "Non è riuscito a scrivere un file. Errore == %s"
 
-#: src/io.c:65
-#, c-format
-msgid "Failed to write byte to file. Error == %s"
-msgstr "Non è riuscito a scrivere un byte a un file. Errore == %s"
-
-#: src/io.c:77
+#: src/io.c:59
 #, c-format
 msgid "Failed to read file. Error == %s"
 msgstr "Non è riuscito a leggere un file. Errore == %s"
 
-#: src/io.c:89
-#, c-format
-msgid ""
-"Failed read byte from file, or tried to read past the end of the file. Error "
-"== %s"
-msgstr ""
-"Non è riuscito a leggere un byte a un file, o era provato a leggere oltre la "
-"fine del file. Errore == %s"
-
-#: src/io.c:103
+#: src/io.c:70
 #, c-format
 msgid "Failed close file. Error == %s"
 msgstr "Non è riuscito a chiudere un file. Errore == %s"
 
-#: src/io.c:115
+#: src/io.c:82
 #, c-format
 msgid "Failed delete file %s. Error == %s"
 msgstr "Non è riuscito a cancellare un file %s. Errore == %s"
 
-#: src/io.c:130
-#, c-format
-msgid "Failed to read status of file %s. Error == %s"
-msgstr "Non è riuscito a leggere lo status di file %s. Errore == %s"
-
-#: src/io.c:142
+#: src/io.c:94
 #, c-format
 msgid "Failed create directory %s. Error == %s"
 msgstr "Non è riuscito a creare la directory %s. Errore == %s"
 
-#: src/io.c:154
+#: src/io.c:106
 #, c-format
 msgid "Failed open directory %s. Error == %s"
 msgstr "Non è riuscito a aprire la directory %s. Errore == %s"
@@ -224,7 +205,7 @@ msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:709
+#: src/pad-db.c:707
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -235,13 +216,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:732
+#: src/pad-db.c:730
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:769
+#: src/pad-db.c:767
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."
@@ -306,10 +287,10 @@ msgstr "Dimensione del file di blocco"
 msgid "Failed to generate random data. Error == %s"
 msgstr "Non è riuscito a generare dati casuali. Errore == %s"
 
-#: src/bitkeeper.c:43
+#: src/bitkeeper.c:44
 msgid "User"
 msgstr "Utente"
 
-#: src/bitkeeper.c:43
+#: src/bitkeeper.c:44
 msgid "The user who is using the application"
 msgstr "L'utente chi sta usando l'applicazione"

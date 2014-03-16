@@ -12,6 +12,7 @@
 
 #include "asym-cipher.h"
 #include "bitkeeper.h"
+#include "io.h"
 #include "settings.h"
 
 enum
@@ -103,9 +104,10 @@ static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GV
 static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 {
 	gboolean ret_val=TRUE;
-	GError *error=NULL;
-	GDir *friends_dir=g_dir_open(bitkeeper->priv->friends_base_path, 0, &error);
-	if(friends_dir)
+	GDir *friends_dir=otb_open_directory(bitkeeper->priv->friends_base_path);
+	if(friends_dir==NULL)
+		ret_val=FALSE;
+	else
 	{
 		const char *file_name;
 		while(ret_val && (file_name=g_dir_read_name(friends_dir))!=NULL)
@@ -122,11 +124,6 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 			g_free(file_path);
 		}
 		g_dir_close(friends_dir);
-	}
-	else
-	{
-		g_error_free(error);
-		ret_val=FALSE;
 	}
 	return ret_val;
 }

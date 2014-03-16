@@ -39,11 +39,6 @@ FILE *otb_open_text_for_write(const char *file_path)
 	return otb_open_file_with_logging(file_path, "w");
 }
 
-FILE *otb_open_text_for_read(const char *file_path)
-{
-	return otb_open_file_with_logging(file_path, "r");
-}
-
 size_t otb_write(const void *buffer, size_t size, size_t num_items, FILE *file)
 {
 	size_t ret_val=fwrite(buffer, size, num_items, file);
@@ -51,19 +46,6 @@ size_t otb_write(const void *buffer, size_t size, size_t num_items, FILE *file)
 	{
 		int orig_errno=errno;
 		g_warning(_("Failed to write file. Error == %s"), strerror(orig_errno));
-	}
-	return ret_val;
-}
-
-gboolean otb_write_byte(unsigned char byte, FILE *file)
-{
-	gboolean ret_val=TRUE;
-	int put_result=fputc(byte, file);
-	if(put_result==EOF)
-	{
-		int orig_errno=errno;
-		g_warning(_("Failed to write byte to file. Error == %s"), strerror(orig_errno));
-		ret_val=FALSE;
 	}
 	return ret_val;
 }
@@ -76,21 +58,6 @@ size_t otb_read(void *buffer, size_t size, size_t num_items, FILE *file)
 		int orig_errno=errno;
 		g_warning(_("Failed to read file. Error == %s"), strerror(orig_errno));
 	}
-	return ret_val;
-}
-
-gboolean otb_read_byte(unsigned char *byte, FILE *file)
-{
-	gboolean ret_val=TRUE;
-	int get_result=fgetc(file);
-	if(get_result==EOF)
-	{
-		int orig_errno=errno;
-		g_warning(_("Failed read byte from file, or tried to read past the end of the file. Error == %s"), strerror(orig_errno));
-		ret_val=FALSE;
-	}
-	else
-		*byte=get_result;
 	return ret_val;
 }
 
@@ -116,21 +83,6 @@ gboolean otb_unlink_if_exists(const char *file_path)
 		ret_val=FALSE;
 	}
 	return ret_val;
-}
-
-off_t otb_get_file_size(const char *file_path)
-{
-	off_t file_size;
-	struct stat file_stat;
-	if(stat(file_path, &file_stat)==0)
-		file_size=file_stat.st_size;
-	else
-	{
-		int orig_errno=errno;
-		g_warning(_("Failed to read status of file %s. Error == %s"), file_path, strerror(orig_errno));
-		file_size=-1;
-	}
-	return file_size;
 }
 
 gboolean otb_mkdir_with_parents(const char *file_path)

@@ -269,8 +269,7 @@ static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_re
 static gboolean otb_pad_db_load_all_recs(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
-	GError *error=NULL;
-	GDir *pad_db_directory=g_dir_open(pad_db->priv->base_path, 0, &error);
+	GDir *pad_db_directory=otb_open_directory(pad_db->priv->base_path);
 	if(pad_db_directory==NULL)
 		ret_val=FALSE;
 	else
@@ -455,12 +454,11 @@ gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db)
 
 OtbPadIO *otb_pad_db_add_received_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size)
 {
-	OtbPadRec *pad_rec=NULL;
 	OtbPadIO *pad_io=NULL;
 	otb_pad_db_lock_write(pad_db);
 	if(pad_db->priv->open_pad_io==NULL)
 	{
-		pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_RECEIVED, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, NULL);
+		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_RECEIVED, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, NULL);
 		if(!otb_pad_db_add_pad_rec(pad_db, pad_rec))
 			g_object_unref(pad_rec);
 		else if((pad_io=otb_pad_rec_open_pad_for_write(pad_rec))==NULL)

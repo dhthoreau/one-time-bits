@@ -46,7 +46,6 @@ struct _OtbPadIO
 	size_t output_buffer_size;
 	size_t final_output_buffer_size;
 	size_t output_buffer_position;
-	GBytes *pad_iv;
 	OtbSymCipherContext *sym_cipher_context;
 };
 
@@ -287,7 +286,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(OtbPadRec *pad_rec)
 		pad_io->input_buffer=NULL;
 		pad_io->output_buffer=otb_sym_cipher_create_encryption_buffer(local_crypto_sym_cipher, INPUT_BUFFER_SIZE, &pad_io->output_buffer_allocated_size);
 		pad_io->final_output_buffer=NULL;
-		pad_io->pad_iv=NULL;
+		g_bytes_unref(pad_rec->priv->pad_iv);
 		pad_io->sym_cipher_context=otb_sym_cipher_init_encryption(local_crypto_sym_cipher, &pad_rec->priv->pad_iv);
 		g_object_unref(local_crypto_sym_cipher);
 		if(!otb_pad_rec_save(pad_rec))
@@ -318,8 +317,6 @@ OtbPadIO *otb_pad_rec_open_pad_for_read(OtbPadRec *pad_rec, gboolean auto_rewind
 		pad_io->output_buffer_position=0;
 		pad_io->output_buffer_size=0;
 		pad_io->final_output_buffer=NULL;
-		pad_io->pad_iv=pad_rec->priv->pad_iv;
-		g_bytes_ref(pad_io->pad_iv);
 		pad_io->sym_cipher_context=otb_sym_cipher_init_decryption(local_crypto_sym_cipher, pad_rec->priv->pad_iv);
 		g_object_unref(local_crypto_sym_cipher);
 	}
@@ -385,7 +382,7 @@ static void otb_buffer_pad_final_bytes(OtbPadIO *pad_io)
 	}
 	if(pad_io->auto_rewind)
 	{
-		pad_io->sym_cipher_context=otb_sym_cipher_init_decryption(local_crypto_sym_cipher, pad_io->pad_iv);
+		pad_io->sym_cipher_context=otb_sym_cipher_init_decryption(local_crypto_sym_cipher, pad_io->pad_rec->priv->pad_iv);
 		rewind(pad_io->file);
 	}
 	else
@@ -457,12 +454,6 @@ gboolean otb_pad_read_byte(OtbPadIO *pad_io, unsigned char *output_byte)
 	return ret_val;
 }
 
-gboolean otb_pad_finish_read(const OtbPadIO *pad_io, const void **output_buffer, const size_t *output_buffer_size)
-{
-	gboolean ret_val=TRUE;
-	return ret_val;
-}
-
 gboolean otb_pad_has_more_bytes(const OtbPadIO *pad_io)
 {
 	return pad_io->sym_cipher_context!=NULL || pad_io->output_buffer_position<pad_io->output_buffer_size || pad_io->final_output_buffer!=NULL;
@@ -488,7 +479,6 @@ gboolean otb_pad_io_free(OtbPadIO *pad_io)
 	g_free(pad_io->input_buffer);
 	g_free(pad_io->output_buffer);
 	g_free(pad_io->final_output_buffer);
-	g_bytes_unref(pad_io->pad_iv);
 	if(pad_io->sym_cipher_context!=NULL)
 		otb_sym_cipher_context_free(pad_io->sym_cipher_context);
 	g_free(pad_io);

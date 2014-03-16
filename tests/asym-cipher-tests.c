@@ -114,7 +114,7 @@ static void test_asym_cipher_encryption()
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
 	char *actual_message=NULL;
-	size_t actual_message_size=otb_asym_cipher_decrypt(asym_cipher_public, encrypted_message, encrypted_message_size, encrypted_key, iv, (void**)&actual_message);
+	size_t actual_message_size=otb_asym_cipher_decrypt(asym_cipher_private, encrypted_message, encrypted_message_size, encrypted_key, iv, (void**)&actual_message);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
 	g_assert_cmpint(0, !=, actual_message_size);
@@ -130,5 +130,5 @@ void otb_add_asym_cipher_tests()
 {
 	otb_add_test_func("/asym_cipher/test_asym_cipher_properties", test_asym_cipher_properties);
 	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption_in_steps", test_asym_cipher_encryption_in_steps);
-	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption", test_asym_cipher_encryption_in_steps);
+	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption", test_asym_cipher_encryption);
 }
