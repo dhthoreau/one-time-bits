@@ -13,7 +13,6 @@
 
 #define OTB_DUMMY_FRIEND_GROUP	"dummy-group"
 #define OTB_DUMMY_FRIEND_KEY	"dummy-key"
-#define OTB_DUMMY_FRIEND_VALUE	"dummy-value"
 
 #define OTB_TYPE_DUMMY_FRIEND				(otb_dummy_friend_get_type())
 #define OTB_DUMMY_FRIEND(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_DUMMY_FRIEND, OtbDummyFriend))
@@ -28,7 +27,7 @@ typedef struct _OtbDummyFriendClass OtbDummyFriendClass;
 struct _OtbDummyFriend
 {
 	OtbFriend parent_instance;
-	char *imported_dummy_value;
+	char *dummy_value;
 };
 
 struct _OtbDummyFriendClass
@@ -37,6 +36,8 @@ struct _OtbDummyFriendClass
 };
 
 GType otb_dummy_friend_get_type();
+
+gboolean otb_dummy_friend_set_dummy_value(OtbDummyFriend *dummy_friend, const char *dummy_value);
 
 #endif
 

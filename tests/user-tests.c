@@ -212,7 +212,7 @@ static void test_otb_dummy_user_export()
 	otb_do_user_export_test(&user, &export_key_file);
 	char *actual_dummy_value=otb_settings_get_string(export_key_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY);
 	g_key_file_unref(export_key_file);
-	g_assert_cmpstr(OTB_DUMMY_FRIEND_VALUE, ==, actual_dummy_value);
+	g_assert_cmpstr(OTB_DUMMY_USER_EXPORT_VALUE, ==, actual_dummy_value);
 	g_free(actual_dummy_value);
 	g_assert(OTB_IS_USER(user));
 	g_assert(OTB_IS_DUMMY_USER(user));

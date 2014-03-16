@@ -27,5 +27,5 @@ static void otb_dummy_user_init(OtbDummyUser *dummy_user)
 static void otb_dummy_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file)
 {
 	OTB_USER_CLASS(otb_dummy_user_parent_class)->otb_user_export_key_file_private(user, export_key_file);
-	g_key_file_set_string(export_key_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, OTB_DUMMY_FRIEND_VALUE);
+	g_key_file_set_string(export_key_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, OTB_DUMMY_USER_EXPORT_VALUE);
 }

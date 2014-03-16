@@ -11,6 +11,8 @@
 
 #include "../src/user.h"
 
+#define OTB_DUMMY_USER_EXPORT_VALUE	"dummy-export-dumb-dumb"
+
 #define OTB_TYPE_DUMMY_USER				(otb_dummy_user_get_type())
 #define OTB_DUMMY_USER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_DUMMY_USER, OtbDummyUser))
 #define OTB_IS_DUMMY_USER(obj)			(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_TYPE_DUMMY_USER))
