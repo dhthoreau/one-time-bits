@@ -57,16 +57,16 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 	g_free(load_outgoing_pads_path);
 }
 
-static GKeyFile *otb_create_import_file(const char *public_key, const char *onion_base_domain, const char *dummy_value)
+char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *onion_base_domain, const char *dummy_value)
 {
 	GKeyFile *import_file=g_key_file_new();
-	OtbUniqueId *unique_id=otb_unique_id_create();
 	otb_settings_set_bytes(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, unique_id, sizeof(OtbUniqueId));
-	g_free(unique_id);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, onion_base_domain);
 	g_key_file_set_string(import_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, dummy_value);
-	return import_file;
+	char *import_string=g_key_file_to_data(import_file, NULL, NULL);
+	g_key_file_unref(import_file);
+	return import_string;
 }
 
 static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_friend, OtbFriend **load_friend)
@@ -81,15 +81,17 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	
 	otb_test_setup_local_crypto();
 	char *friend_dir_path=otb_generate_unique_test_subdir_path();
-	GKeyFile *import_file=otb_create_import_file(EXPECTED_PUBLIC_KEY1, EXPECTED_ONION_BASE_DOMAIN1, EXPECTED_DUMMY_VALUE1);
-	char *import_string=g_key_file_to_data(import_file, NULL, NULL);
+	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	char *import_string=otb_create_import_string(expected_unique_id, EXPECTED_PUBLIC_KEY1, EXPECTED_ONION_BASE_DOMAIN1, EXPECTED_DUMMY_VALUE1);
 	*create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
 	g_assert(*create_friend!=NULL);
 	g_assert(g_file_test(friend_dir_path, G_FILE_TEST_EXISTS));
 	otb_assert_friend_files_exist(friend_dir_path);
+	OtbUniqueId *actual_unique_id1=NULL;
 	char *actual_public_key1=NULL;
 	char *actual_onion_base_domain1=NULL;
-	g_object_get(*create_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain1, NULL);
+	g_object_get(*create_friend, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id1, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain1, NULL);
+	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id1));
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY1, ==, actual_public_key1);
 	g_assert_cmpstr(EXPECTED_ONION_BASE_DOMAIN1, ==, actual_onion_base_domain1);
 	g_assert(otb_friend_set_public_key(*create_friend, EXPECTED_PUBLIC_KEY2));
@@ -105,10 +107,12 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	*load_friend=otb_friend_load_from_directory(friend_dir_path);
 	g_assert(*load_friend!=NULL);
 	char *actual_base_path=NULL;
+	OtbUniqueId *actual_unique_id2=NULL;
 	char *actual_public_key2=NULL;
 	char *actual_onion_base_domain2=NULL;
-	g_object_get(*load_friend, OTB_FRIEND_PROP_BASE_PATH, &actual_base_path, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain2, NULL);
+	g_object_get(*load_friend, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id2, OTB_FRIEND_PROP_BASE_PATH, &actual_base_path, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain2, NULL);
 	g_assert_cmpstr(friend_dir_path, ==, actual_base_path);
+	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id2));
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY2, ==, actual_public_key2);
 	g_assert_cmpstr(EXPECTED_ONION_BASE_DOMAIN2, ==, actual_onion_base_domain2);
 	if(OTB_IS_DUMMY_FRIEND(*load_friend))
@@ -117,12 +121,14 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	otb_friend_delete(*load_friend);
 	g_assert(!g_file_test(friend_dir_path, G_FILE_TEST_EXISTS));
 	g_free(actual_base_path);
+	g_free(actual_unique_id1);
+	g_free(actual_unique_id2);
 	g_free(actual_public_key1);
 	g_free(actual_public_key2);
 	g_free(actual_onion_base_domain1);
 	g_free(actual_onion_base_domain2);
 	g_free(import_string);
-	g_key_file_unref(import_file);
+	g_free(expected_unique_id);
 	g_free(friend_dir_path);
 }
 

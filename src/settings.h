@@ -13,7 +13,7 @@
 
 gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path);
 GKeyFile *otb_settings_load_key_file_from_file(const char *file_path);
-GKeyFile *otb_settings_load_key_file_from_data(const char *data, size_t data_size);
+GKeyFile *otb_settings_load_key_file_from_string(const char *string);
 void otb_settings_initialize(const char *app_name, const char *otb_sub_dir);
 const char *otb_settings_get_config_directory_path();
 void otb_settings_set_config_directory_path(const char *config_directory_path);

@@ -212,7 +212,7 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 		}
 		case PROP_UNIQUE_ID:
 		{
-			g_value_set_pointer(value, friend->priv->unique_id);
+			g_value_set_boxed(value, friend->priv->unique_id);
 			break;
 		}
 		case PROP_PUBLIC_KEY:
@@ -262,7 +262,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 		size_t encrypted_import_string_size;
 		unsigned char *encrypted_import_string=NULL;
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		encrypted_import_string_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, export_string, strlen(export_string), &import_string_iv, &encrypted_import_string);
+		encrypted_import_string_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, export_string, strlen(export_string)+1, &import_string_iv, &encrypted_import_string);
 		g_free(export_string);
 		g_object_unref(local_crypto_sym_cipher);
 		GKeyFile *save_key_file=g_key_file_new();
@@ -277,7 +277,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 	return ret_val;
 }
 
-#define otb_friend_import_unique_id(import_file)			(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, NULL))
+#define otb_friend_import_unique_id(import_file)			(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL))
 #define otb_friend_import_public_key(import_file)			(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
 #define otb_friend_import_onion_base_domain(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN))
 
@@ -334,7 +334,7 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 {
 	gboolean success=TRUE;
 	OtbFriend *friend=g_object_new(*otb_friend_get_runtime_type(), OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
-	GKeyFile *key_file=otb_settings_load_key_file_from_data(import_string, strlen(import_string));
+	GKeyFile *key_file=otb_settings_load_key_file_from_string(import_string);
 	if(key_file==NULL)
 		success=FALSE;
 	else
@@ -372,7 +372,7 @@ static gboolean otb_friend_load(OtbFriend *friend)
 		g_object_unref(local_crypto_sym_cipher);
 		if(ret_val)
 		{
-			GKeyFile *import_key_file=otb_settings_load_key_file_from_data(import_string, import_string_size);
+			GKeyFile *import_key_file=otb_settings_load_key_file_from_string(import_string);
 			if(import_key_file==NULL)
 				ret_val=FALSE;
 			else

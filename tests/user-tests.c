@@ -173,7 +173,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
 	g_assert(expected_public_key!=NULL);
 	char *export_string=otb_user_export(*user);
-	g_assert((*export_key_file=otb_settings_load_key_file_from_data(export_string, strlen(export_string)))!=NULL);
+	g_assert((*export_key_file=otb_settings_load_key_file_from_string(export_string))!=NULL);
 	g_free(export_string);
 	OtbUniqueId *actual_unique_id=otb_settings_get_bytes(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL);
 	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);

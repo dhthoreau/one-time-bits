@@ -45,13 +45,13 @@ GKeyFile *otb_settings_load_key_file_from_file(const char *file_path)
 	return key_file;
 }
 
-GKeyFile *otb_settings_load_key_file_from_data(const char *data, size_t data_size)
+GKeyFile *otb_settings_load_key_file_from_string(const char *string)
 {
 	GKeyFile *key_file=g_key_file_new();
 	GError *error=NULL;
-	if(!g_key_file_load_from_data(key_file, data, data_size, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
+	if(!g_key_file_load_from_data(key_file, string, strlen(string), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
 	{
-		g_message(_("Failed to load key file from %s. Error == %s"), data, error->message);
+		g_message(_("Failed to load key file from %s. Error == %s"), string, error->message);
 		g_error_free(error);
 		g_key_file_free(key_file);
 		key_file=NULL;
