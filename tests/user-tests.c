@@ -33,7 +33,7 @@ static void test_otb_user_create_with_no_config_file()
 	otb_test_setup_local_crypto();
 	OtbUser *user=otb_user_load_from_settings_config();
 	g_assert(user!=NULL);
-	const OtbUniqueId *actual_unique_id=NULL;
+	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
 	char *actual_onion_base_domain=NULL;
 	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
@@ -46,6 +46,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(actual_public_key!=NULL);
 	g_free(actual_public_key);
 	g_object_unref(actual_asym_cipher);
+	g_free(actual_unique_id);
 	g_assert(actual_onion_base_domain==NULL);
 	g_object_unref(user);
 }
@@ -131,11 +132,12 @@ static void test_otb_user_create_from_existing_config_file()
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
 	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN_1);
-	const OtbUniqueId *actual_unique_id=NULL;
+	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
 	char *actual_onion_base_domain=NULL;
 	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
+	g_free(actual_unique_id);
 	g_free(expected_unique_id);
 	char *expected_public_key=NULL;
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);

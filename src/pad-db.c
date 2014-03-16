@@ -248,7 +248,7 @@ static off_t otb_pad_db_get_curr_size(const OtbPadDb *pad_db)
 static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_rec)
 {
 	gboolean ret_val=TRUE;
-	const OtbUniqueId *unique_id=NULL;
+	OtbUniqueId *unique_id=NULL;
 	off_t pad_size;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
 	if(otb_pad_db_find_pad_rec_by_id(pad_db, unique_id)!=NULL)
@@ -263,6 +263,7 @@ static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_re
 	}
 	else if(otb_pad_rec_save(pad_rec))
 		pad_db->priv->pad_recs=g_slist_prepend(pad_db->priv->pad_recs, pad_rec);
+	g_free(unique_id);
 	return ret_val;
 }
 
@@ -518,9 +519,10 @@ static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, Otb
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 		if(pad_rec_status==prerequisite_status)
 		{
-			const OtbUniqueId *unique_id=NULL;
+			OtbUniqueId *unique_id=NULL;
 			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
 			ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, prerequisite_status, new_status);
+			g_free(unique_id);
 		}
 	}
 	return ret_val;
@@ -535,10 +537,10 @@ gboolean otb_pad_db_mark_pad_as_sent(const OtbPadDb *pad_db, const OtbUniqueId *
 	return ret_val;
 }
 
-static const OtbUniqueId *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb *pad_db, OtbPadRecStatus status)
+static OtbUniqueId *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb *pad_db, OtbPadRecStatus status)
 {
-	const OtbUniqueId *unique_id=NULL;
-	GSList *candidate_pads=NULL;
+	OtbUniqueId *random_unique_id=NULL;
+	GSList *candidate_pad_recs=NULL;
 	unsigned int candidate_count=0;
 	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
 	{
@@ -547,9 +549,7 @@ static const OtbUniqueId *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb 
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 		if(pad_rec_status==status)
 		{
-			OtbUniqueId *unique_id=NULL;
-			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
-			candidate_pads=g_slist_prepend(candidate_pads, unique_id);
+			candidate_pad_recs=g_slist_prepend(candidate_pad_recs, pad_rec);
 			candidate_count++;
 		}
 	}
@@ -559,17 +559,18 @@ static const OtbUniqueId *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb 
 		if(otb_random_bytes(&nth, sizeof nth))
 		{
 			nth=otb_modulo(nth, candidate_count);
-			unique_id=g_slist_nth(candidate_pads, nth)->data;
+			OtbPadRec *random_pad_rec=g_slist_nth(candidate_pad_recs, nth)->data;
+			g_object_get(random_pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &random_unique_id, NULL);
 		}
 	}
-	g_slist_free(candidate_pads);
-	return unique_id;
+	g_slist_free(candidate_pad_recs);
+	return random_unique_id;
 }
 
-const OtbUniqueId *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecStatus status)
+OtbUniqueId *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecStatus status)
 {
 	otb_pad_db_lock_read(pad_db);
-	const OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, status);
+	OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, status);
 	otb_pad_db_unlock_read(pad_db);
 	return unique_id;
 }
@@ -670,7 +671,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 			}
 			OtbPadRec *pad_rec=NULL;
 			off_t pad_size=-1;
-			const OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
+			OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
 			if(unique_id==NULL)
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else if(!otb_pad_db_crypt_bytes(sizeof(OtbUniqueId), unique_id, *encrypted_bytes_out+*encrypted_bytes_size_out, current_pad_io, previous_pad_io))
@@ -695,6 +696,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 					*encrypted_bytes_size_out+=sizeof(OtbUniqueId)+bytes_to_crypt;
 				}
 			}
+			g_free(unique_id);
 			if(previous_pad_io!=NULL && !otb_pad_io_free(previous_pad_io) && encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS)
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			previous_pad_io=current_pad_io;

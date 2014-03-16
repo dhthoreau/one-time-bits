@@ -72,10 +72,10 @@ char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_
 static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_friend, OtbFriend **load_friend)
 {
 	const char *EXPECTED_PUBLIC_KEY1="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
-	const char *EXPECTED_ONION_BASE_DOMAIN1="SoyMilkRoad";
-	const char *EXPECTED_DUMMY_VALUE1="sldkfjklsdjfkslkfjsd";
 	const char *EXPECTED_PUBLIC_KEY2="-----BEGIN PUBLIC KEY-----\noCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
+	const char *EXPECTED_ONION_BASE_DOMAIN1="SoyMilkRoad";
 	const char *EXPECTED_ONION_BASE_DOMAIN2="SoyMilkRoad2";
+	const char *EXPECTED_DUMMY_VALUE1="sldkfjklsdjfkslkfjsd";
 	const char *EXPECTED_DUMMY_VALUE2="uyhrhyfrgyrfgghfg";
 	const char *UNEXPECTED_PATH="garbage";
 	

@@ -137,9 +137,10 @@ static void test_otb_pad_rec_specifying_unique_id()
 	otb_test_setup_local_crypto();
 	OtbUniqueId *expected_unique_id=otb_unique_id_create();
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, expected_unique_id, NULL);
-	const OtbUniqueId *actual_unique_id=NULL;
+	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
+	g_free(actual_unique_id);
 	g_object_unref(pad_rec);
 	g_free(expected_unique_id);
 }
@@ -149,9 +150,10 @@ static void test_otb_pad_rec_without_specifying_unique_id()
 	otb_test_setup_local_crypto();
 	OtbUniqueId *expected_unique_id=otb_unique_id_create();
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, NULL);
-	const OtbUniqueId *actual_unique_id=NULL;
+	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
 	g_assert_cmpint(0, !=, otb_unique_id_compare(expected_unique_id, actual_unique_id));
+	g_free(actual_unique_id);
 	g_free(expected_unique_id);
 	g_object_unref(pad_rec);
 }
@@ -181,9 +183,11 @@ static void test_otb_pad_rec_save_load()
 	OtbPadRec *pad_rec_load=otb_pad_rec_load(otb_get_test_dir_path(), expected_file_name);
 	g_free(expected_file_name);
 	g_assert(pad_rec_load!=NULL);
-	const OtbUniqueId *actual_unique_id=NULL;
+	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec_load, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
+	g_free(actual_unique_id);
+	g_free(expected_unique_id);
 	OtbPadRecStatus pad_rec_status;
 	g_object_get(pad_rec_load, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 	g_assert_cmpint(expected_status, ==, pad_rec_status);
