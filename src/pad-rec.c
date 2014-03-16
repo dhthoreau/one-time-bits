@@ -249,7 +249,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 	pad_rec->priv->unique_id=NULL;
 	g_bytes_unref(pad_rec->priv->pad_iv);
 	pad_rec->priv->pad_iv=NULL;
-	GKeyFile *key_file=otb_settings_load_key_file(pad_rec->priv->pad_rec_file_path);
+	GKeyFile *key_file=otb_settings_load_key_file_from_file(pad_rec->priv->pad_rec_file_path);
 	if(key_file==NULL)
 		load_successful=FALSE;
 	else if((pad_rec->priv->unique_id=otb_settings_get_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, NULL))==NULL)

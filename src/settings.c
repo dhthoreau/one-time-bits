@@ -31,13 +31,27 @@ static GKeyFile *config_key_file=NULL;
 #define otb_settings_lock_config_write()	(g_rw_lock_writer_lock(&config_lock))
 #define otb_settings_unlock_config_write()	(g_rw_lock_writer_unlock(&config_lock))
 
-GKeyFile *otb_settings_load_key_file(const char *file_path)
+GKeyFile *otb_settings_load_key_file_from_file(const char *file_path)
 {
 	GKeyFile *key_file=g_key_file_new();
 	GError *error=NULL;
 	if(g_file_test(file_path, G_FILE_TEST_EXISTS) && !g_key_file_load_from_file(key_file, file_path, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
 	{
-		g_message("%s: Failed to load settings file %s. Error == %s", "otb_settings_load_key_file", file_path, error->message);
+		g_message(_("Failed to load key file from %s. Error == %s"), file_path, error->message);
+		g_error_free(error);
+		g_key_file_free(key_file);
+		key_file=NULL;
+	}
+	return key_file;
+}
+
+GKeyFile *otb_settings_load_key_file_from_data(const char *data, size_t data_size)
+{
+	GKeyFile *key_file=g_key_file_new();
+	GError *error=NULL;
+	if(!g_key_file_load_from_data(key_file, data, data_size, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
+	{
+		g_message(_("Failed to load key file from %s. Error == %s"), data, error->message);
 		g_error_free(error);
 		g_key_file_free(key_file);
 		key_file=NULL;
@@ -50,7 +64,7 @@ static void otb_settings_load_config_file()
 	otb_settings_lock_config_write();
 	GKeyFile *old_config_key_file=config_key_file;
 	char *config_file_path=otb_settings_get_config_file_path();
-	config_key_file=otb_settings_load_key_file(config_file_path);
+	config_key_file=otb_settings_load_key_file_from_file(config_file_path);
 	otb_settings_unlock_config_write();
 	g_free(config_file_path);
 	if(old_config_key_file!=NULL)

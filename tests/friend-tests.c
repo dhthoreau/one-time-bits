@@ -8,8 +8,6 @@
 
 #include "../config.h"
 
-#include <string.h>
-
 #include "dummy-friend.h"
 #include "main.h"
 #include "test-utils.h"

@@ -334,9 +334,8 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 {
 	gboolean success=TRUE;
 	OtbFriend *friend=g_object_new(*otb_friend_get_runtime_type(), OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
-	GKeyFile *key_file=g_key_file_new();
-	GError *error=NULL;
-	if(!g_key_file_load_from_data(key_file, import_string, strlen(import_string), G_KEY_FILE_NONE, &error))
+	GKeyFile *key_file=otb_settings_load_key_file_from_data(import_string, strlen(import_string));
+	if(key_file==NULL)
 		success=FALSE;
 	else
 	{
@@ -346,7 +345,6 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 	}
 	if(!success)
 	{
-		g_error_free(error);
 		g_object_unref(friend);
 		friend=NULL;
 	}
@@ -357,7 +355,7 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 static gboolean otb_friend_load(OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
-	GKeyFile *settings_key_file=otb_settings_load_key_file(friend->priv->file_path);
+	GKeyFile *settings_key_file=otb_settings_load_key_file_from_file(friend->priv->file_path);
 	if(settings_key_file==NULL)
 		ret_val=FALSE;
 	else
@@ -374,16 +372,14 @@ static gboolean otb_friend_load(OtbFriend *friend)
 		g_object_unref(local_crypto_sym_cipher);
 		if(ret_val)
 		{
-			GKeyFile *import_key_file=g_key_file_new();
-			GError *error=NULL;
-			if(g_key_file_load_from_data(import_key_file, import_string, import_string_size, G_KEY_FILE_NONE, &error))
-				OTB_FRIEND_GET_CLASS(friend)->otb_friend_import_key_file_private(friend, import_key_file);
+			GKeyFile *import_key_file=otb_settings_load_key_file_from_data(import_string, import_string_size);
+			if(import_key_file==NULL)
+				ret_val=FALSE;
 			else
 			{
-				g_error_free(error);
-				ret_val=FALSE;
+				OTB_FRIEND_GET_CLASS(friend)->otb_friend_import_key_file_private(friend, import_key_file);
+				g_key_file_unref(import_key_file);
 			}
-			g_key_file_unref(import_key_file);
 		}
 		g_free(import_string);
 		g_free(encrypted_import_string);

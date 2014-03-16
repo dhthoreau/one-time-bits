@@ -93,7 +93,7 @@ static void test_settings_get_set_bytes()
 	char *file_path=g_build_filename(otb_get_test_dir_path(), "keyfile", NULL);
 	g_assert(otb_settings_save_key_file(save_key_file, file_path));
 	g_key_file_unref(save_key_file);
-	GKeyFile *load_key_file=otb_settings_load_key_file(file_path);
+	GKeyFile *load_key_file=otb_settings_load_key_file_from_file(file_path);
 	g_free(file_path);
 	unsigned char *actual_bytes=otb_settings_get_bytes(load_key_file, GROUP_NAME, BYTES_KEY, &actual_bytes_size);
 	g_assert_cmpint(EXPECTED_BYTES_SIZE, ==, actual_bytes_size);
@@ -132,7 +132,7 @@ static void test_settings_get_set_gbytes()
 	char *file_path=g_build_filename(otb_get_test_dir_path(), "keyfile", NULL);
 	g_assert(otb_settings_save_key_file(save_key_file, file_path));
 	g_key_file_unref(save_key_file);
-	GKeyFile *load_key_file=otb_settings_load_key_file(file_path);
+	GKeyFile *load_key_file=otb_settings_load_key_file_from_file(file_path);
 	g_free(file_path);
 	GBytes *actual_gbytes=otb_settings_get_gbytes(load_key_file, GROUP_NAME, GBYTES_KEY);
 	g_assert(g_bytes_equal(expected_gbytes, actual_gbytes));

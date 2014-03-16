@@ -13,8 +13,9 @@
 #include <main.h>
 
 #include "asym-cipher-tests.h"
-#include "local-crypto-tests.h"
+#include "bitkeeper-tests.h"
 #include "friend-tests.h"
+#include "local-crypto-tests.h"
 #include "pad-db-tests.h"
 #include "pad-rec-tests.h"
 #include "settings-tests.h"
@@ -73,6 +74,7 @@ static void otb_add_tests()
 	otb_add_pad_db_tests();
 	otb_add_friend_tests();
 	otb_add_user_tests();
+	otb_add_bitkeeper_tests();
 }
 
 static void otb_run_tests()

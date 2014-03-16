@@ -205,7 +205,7 @@ OtbPadDb *otb_pad_db_create_in_directory(const char *base_path)
 static gboolean otb_pad_db_load(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
-	GKeyFile *key_file=otb_settings_load_key_file(pad_db->priv->file_path);
+	GKeyFile *key_file=otb_settings_load_key_file_from_file(pad_db->priv->file_path);
 	if(key_file==NULL)
 		ret_val=FALSE;
 	else if((pad_db->priv->max_size=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, -1))==-1)

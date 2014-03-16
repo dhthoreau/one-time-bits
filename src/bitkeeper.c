@@ -42,6 +42,7 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 	object_class->finalize=otb_bitkeeper_finalize;
 	object_class->get_property=otb_bitkeeper_get_property;
 	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READABLE));
+	g_type_class_add_private(klass, sizeof(OtbBitkeeperPrivate));
 }
 
 static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
@@ -104,8 +105,10 @@ static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GV
 static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 {
 	gboolean ret_val=TRUE;
-	GDir *friends_dir=otb_open_directory(bitkeeper->priv->friends_base_path);
-	if(friends_dir==NULL)
+	GDir *friends_dir=NULL;
+	if(!otb_mkdir_with_parents(bitkeeper->priv->friends_base_path))
+		ret_val=FALSE;
+	else if((friends_dir=otb_open_directory(bitkeeper->priv->friends_base_path))==NULL)
 		ret_val=FALSE;
 	else
 	{

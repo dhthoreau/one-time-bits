@@ -19,7 +19,6 @@
 #include "../src/io.h"
 #include "../src/local-crypto.h"
 #include "../src/settings.h"
-#include "../src/unique-id.h"
 #include "../src/user.h"
 
 static void test_otb_user_create_with_no_config_file()
@@ -96,8 +95,9 @@ static void otb_write_onion_base_domain(FILE *file, const char *onion_base_domai
 	g_assert(otb_write("\n", 1, 1, file)==1);
 }
 
-static void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *onion_base_domain)
+void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *onion_base_domain)
 {
+	otb_test_setup_local_crypto();
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	FILE *file=otb_open_text_for_write(config_file_path);
 	g_free(config_file_path);
@@ -108,14 +108,13 @@ static void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, c
 	otb_write_asym_cipher(file, asym_cipher);
 	otb_write_onion_base_domain(file, onion_base_domain);
 	g_assert(otb_close(file));
+	otb_settings_initialize("otb-tests", "otb");
+	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 }
 
 static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *onion_base_domain)
 {
-	otb_test_setup_local_crypto();
 	otb_setup_config_file_for_user_tests(unique_id, sym_cipher_name, asym_cipher, onion_base_domain);
-	otb_settings_initialize("otb-tests", "otb");
-	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	OtbUser *user=otb_user_load_from_settings_config();
 	g_assert(user!=NULL);
 	return user;
@@ -174,10 +173,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
 	g_assert(expected_public_key!=NULL);
 	char *export_string=otb_user_export(*user);
-	*export_key_file=g_key_file_new();
-	GError *error=NULL;
-	g_assert(g_key_file_load_from_data(*export_key_file, export_string, strlen(export_string), G_KEY_FILE_NONE, &error));
-	g_assert(error==NULL);
+	g_assert((*export_key_file=otb_settings_load_key_file_from_data(export_string, strlen(export_string)))!=NULL);
 	g_free(export_string);
 	OtbUniqueId *actual_unique_id=otb_settings_get_bytes(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL);
 	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);

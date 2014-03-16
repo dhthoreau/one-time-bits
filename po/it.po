@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-03-15 21:53-0500\n"
-"PO-Revision-Date: 2014-03-15 21:53-0500\n"
-"Last-Translator: the OTB author\n"
+"POT-Creation-Date: 2014-03-16 11:16-0500\n"
+"PO-Revision-Date: 2014-03-16 11:17-0500\n"
+"Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
@@ -119,7 +119,7 @@ msgstr "Chiave pubblica"
 msgid "The public key to use for encryption"
 msgstr "La chiave pubblica che è usata per crittografia"
 
-#: src/friend.c:66 src/pad-db.c:58 src/pad-rec.c:77
+#: src/friend.c:66 src/pad-db.c:58 src/pad-rec.c:76
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -143,7 +143,7 @@ msgstr "Blocchi in partenza"
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:69 src/user.c:58 src/pad-rec.c:75
+#: src/friend.c:69 src/user.c:58 src/pad-rec.c:74
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -250,35 +250,35 @@ msgstr ""
 msgid "The domain of the user's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'utente (senza \".onion\")"
 
-#: src/pad-rec.c:75
+#: src/pad-rec.c:74
 msgid "UUID of the record"
 msgstr "UUID del record"
 
-#: src/pad-rec.c:76
+#: src/pad-rec.c:75
 msgid "Status"
 msgstr "Stato"
 
-#: src/pad-rec.c:76
+#: src/pad-rec.c:75
 msgid "Status of the record"
 msgstr "Stato del record"
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:76
 msgid "Directory where the record will be saved"
 msgstr "La directory dove il record sarà salvato"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:77
 msgid "Base name"
 msgstr "Name di base"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:77
 msgid "Name of file where the record will be saved, excluding file extension"
 msgstr "Il nome del file per salvare il record, senza estensione"
 
-#: src/pad-rec.c:79
+#: src/pad-rec.c:78
 msgid "Size"
 msgstr "Dimensione"
 
-#: src/pad-rec.c:79
+#: src/pad-rec.c:78
 msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 
@@ -286,6 +286,11 @@ msgstr "Dimensione del file di blocco"
 #, c-format
 msgid "Failed to generate random data. Error == %s"
 msgstr "Non è riuscito a generare dati casuali. Errore == %s"
+
+#: src/settings.c:40 src/settings.c:54
+#, c-format
+msgid "Failed to load key file from %s. Error == %s"
+msgstr "Non è riuscito a aprire il file di chiave %s. Errore == %s"
 
 #: src/bitkeeper.c:44
 msgid "User"
