@@ -142,16 +142,6 @@ OtbBitkeeper *otb_bitkeeper_load()
 	return bitkeeper;
 }
 
-OtbUser *otb_bitkeeper_get_user(const OtbBitkeeper *bitkeeper)
-{
-	otb_bitkeeper_lock_read(bitkeeper);
-	OtbUser *user=bitkeeper->priv->user;
-	if(user!=NULL)
-		g_object_ref(user);
-	otb_bitkeeper_unlock_read(bitkeeper);
-	return user;
-}
-
 static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
 {
 	OtbFriend *friend=NULL;
