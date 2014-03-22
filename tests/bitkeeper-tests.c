@@ -60,22 +60,34 @@ static void test_otb_bitkeeper_user()
 	g_free(expected_unique_id);
 }
 
-void test_otb_bitkeeper_import_friends()
+static void otb_assert_bitkeeper_has_friends(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
+{
+	GSList *unique_ids=otb_bitkeeper_get_ids_of_friends(bitkeeper);
+	size_t expected_size=(expected_unique_id1==NULL?0:1)+(expected_unique_id2==NULL?0:1);
+	g_assert_cmpint(expected_size, ==, g_slist_length(unique_ids));
+	if(expected_unique_id1!=NULL)
+		g_assert(otb_unique_id_compare(expected_unique_id1, (OtbUniqueId*)g_slist_nth_data(unique_ids, 0))==0 || otb_unique_id_compare(expected_unique_id1, (OtbUniqueId*)g_slist_nth_data(unique_ids, 1))==0);
+	if(expected_unique_id2!=NULL)
+		g_assert(otb_unique_id_compare(expected_unique_id2, (OtbUniqueId*)g_slist_nth_data(unique_ids, 0))==0 || otb_unique_id_compare(expected_unique_id2, (OtbUniqueId*)g_slist_nth_data(unique_ids, 1))==0);
+	g_slist_free_full(unique_ids, g_free);
+}
+
+static void otb_assert_bitkeeper_has_friends_in_memory_and_persisted(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
+{
+	otb_assert_bitkeeper_has_friends(bitkeeper, expected_unique_id1, expected_unique_id2);
+	OtbBitkeeper *bitkeeper_loaded=otb_bitkeeper_load();
+	g_assert(bitkeeper_loaded!=NULL);
+	otb_assert_bitkeeper_has_friends(bitkeeper_loaded, expected_unique_id1, expected_unique_id2);
+	g_object_unref(bitkeeper_loaded);
+}
+
+static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
 	const char *EXPECTED_PUBLIC_KEY1="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_PUBLIC_KEY2="-----BEGIN PUBLIC KEY-----\noCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_ONION_BASE_DOMAIN1="SoyMilkRoad";
 	const char *EXPECTED_ONION_BASE_DOMAIN2="SoyMilkRoad2";
 	
-	otb_recreate_test_dir();
-	otb_test_setup_local_crypto();
-	otb_settings_initialize("otb-tests", "otb");
-	otb_settings_set_config_directory_path(otb_get_test_dir_path());
-	otb_settings_set_data_directory_path(otb_get_test_dir_path());
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
-	g_assert(bitkeeper!=NULL);
-	OtbUniqueId *expected_unique_id1=otb_unique_id_create();
-	OtbUniqueId *expected_unique_id2=otb_unique_id_create();
 	char *friend1_import_string=otb_create_import_string(expected_unique_id1, EXPECTED_PUBLIC_KEY1, EXPECTED_ONION_BASE_DOMAIN1, "");
 	char *friend2_import_string=otb_create_import_string(expected_unique_id2, EXPECTED_PUBLIC_KEY2, EXPECTED_ONION_BASE_DOMAIN2, "");
 	g_assert(otb_bitkeeper_import_friend(bitkeeper, friend1_import_string));
@@ -98,11 +110,7 @@ void test_otb_bitkeeper_import_friends()
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY2, ==, actual_public_key2);
 	g_assert_cmpstr(EXPECTED_ONION_BASE_DOMAIN1, ==, actual_onion_base_domain1);
 	g_assert_cmpstr(EXPECTED_ONION_BASE_DOMAIN2, ==, actual_onion_base_domain2);
-	GSList *unique_ids=otb_bitkeeper_get_ids_of_friends(bitkeeper);
-	g_assert_cmpint(2, ==, g_slist_length(unique_ids));
-	g_assert(otb_unique_id_compare(expected_unique_id1, (OtbUniqueId*)g_slist_nth_data(unique_ids, 0))==0 || otb_unique_id_compare(expected_unique_id1, (OtbUniqueId*)g_slist_nth_data(unique_ids, 1))==0);
-	g_assert(otb_unique_id_compare(expected_unique_id2, (OtbUniqueId*)g_slist_nth_data(unique_ids, 0))==0 || otb_unique_id_compare(expected_unique_id2, (OtbUniqueId*)g_slist_nth_data(unique_ids, 1))==0);
-	g_slist_free_full(unique_ids, g_free);
+	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, expected_unique_id2);
 	g_free(actual_unique_id1);
 	g_free(actual_unique_id2);
 	g_free(actual_public_key1);
@@ -113,6 +121,29 @@ void test_otb_bitkeeper_import_friends()
 	g_object_unref(friend2);
 	g_free(friend1_import_string);
 	g_free(friend2_import_string);
+}
+
+static void otb_bitkeeper_delete_test(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
+{
+	g_assert(otb_bitkeeper_remove_friend(bitkeeper, expected_unique_id2));
+	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, NULL);
+	g_assert(otb_bitkeeper_remove_friend(bitkeeper, expected_unique_id1));
+	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, NULL, NULL);
+}
+
+static void test_otb_bitkeeper_import_delete_friends()
+{
+	otb_recreate_test_dir();
+	otb_test_setup_local_crypto();
+	otb_settings_initialize("otb-tests", "otb");
+	otb_settings_set_config_directory_path(otb_get_test_dir_path());
+	otb_settings_set_data_directory_path(otb_get_test_dir_path());
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
+	g_assert(bitkeeper!=NULL);
+	OtbUniqueId *expected_unique_id1=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id2=otb_unique_id_create();
+	otb_bitkeeper_import_test(bitkeeper, expected_unique_id1, expected_unique_id2);
+	otb_bitkeeper_delete_test(bitkeeper, expected_unique_id1, expected_unique_id2);
 	g_free(expected_unique_id1);
 	g_free(expected_unique_id2);
 	g_object_unref(bitkeeper);
@@ -121,5 +152,5 @@ void test_otb_bitkeeper_import_friends()
 void otb_add_bitkeeper_tests()
 {
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_user", test_otb_bitkeeper_user);
-	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_import_friends", test_otb_bitkeeper_import_friends);
+	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_import_delete_friends", test_otb_bitkeeper_import_delete_friends);
 }
