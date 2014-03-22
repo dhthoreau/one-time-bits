@@ -8,13 +8,13 @@ config.h
 config.h.in
 *~
 Makefile
+Makefile.in
 .deps
 .libs
 stamp-*
 local
 config.log
 config.status
-po/Makefile.in
 po/POTFILES
 po/missing
 po/one-time-bits.pot
