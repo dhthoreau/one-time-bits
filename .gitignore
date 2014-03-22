@@ -9,6 +9,7 @@
 .deps
 .libs
 autom4te.cache
+auxiliaryconfig
 config.*
 configure
 local
@@ -17,8 +18,9 @@ Makefile
 Makefile.in
 POTFILES
 one-time-bits.pot
+otb-tests
+otb-tests.exe
 stamp-*
-tests/otb-tests
 
 insecure-using-dummy-replacements-of-the-original-openssl-functions.c
 secure-using-real-openssl-functions.c
