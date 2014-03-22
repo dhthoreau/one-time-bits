@@ -9,28 +9,22 @@
 #ifndef OTB_AUTHENTICATION_PROTOCOL_H
 #define OTB_AUTHENTICATION_PROTOCOL_H
 
+#include <stdint.h>
+
 #include "asym-cipher.h"
 
-typedef struct _OtbAuthenticationProtocolClient OtbAuthenticationProtocolClient;
-typedef struct _OtbAuthenticationProtocolServer OtbAuthenticationProtocolServer;
+typedef struct _OtbAuthenticationState OtbAuthenticationState;
 
-struct _OtbAuthenticationProtocolClient
-{
-	int stage;
-	unsigned char *message;
-};
-
-struct _OtbAuthenticationProtocolServer
+struct _OtbAuthenticationState
 {
 	unsigned char *message;
+	gboolean authenticated;
+	gboolean finished;
 };
 
-OtbAuthenticationProtocolClient *otb_authentication_protocol_client_create();	// FARE - Unit test.
-uint32_t otb_authentication_protocol_get_next_request(OtbAuthenticationProtocolClient *client, const OtbAsymCipher *asym_cipher, void **request_out);	// FARE - Unit test.
-void otb_authentication_protocol_client_free(OtbAuthenticationProtocolClient *client);	// FARE - Unit test.
-
-OtbAuthenticationProtocolServer *otb_authentication_protocol_server_create();	// FARE - Unit test.
-uint32_t otb_authentication_protocol_get_response(OtbAuthenticationProtocolServer *state, unsigned char *request, uint32_t request_size, const OtbAsymCipher *asym_cipher, void **response_out);	// FARE - Unit test.
-void otb_authentication_protocol_server_free(OtbAuthenticationProtocolServer *server);	// FARE - Unit test.
+OtbAuthenticationState *otb_authentication_protocol_state_create();	// FARE - Unit test.
+uint32_t otb_authentication_protocol_request(OtbAuthenticationState *state, const OtbAsymCipher *asym_cipher, const void *response, uint32_t response_size, void **request_out);	// FARE - Unit test.
+uint32_t otb_authentication_protocol_respond(OtbAuthenticationState *state, const void *request, uint32_t request_size, const OtbAsymCipher *asym_cipher, void **response_out);	// FARE - Unit test.
+void otb_authentication_protocol_state_free(OtbAuthenticationState *state);	// FARE - Unit test.
 
 #endif
