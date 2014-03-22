@@ -17,14 +17,7 @@
 
 #define AUTH_MESSAGE_SIZE	4096
 
-#define otb_authentication_protocol_copy_data_to_packet(packet_pointer, data, data_size)	memcpy(packet_pointer, data, data_size); packet_pointer+=data_size
-
-#define otb_authentication_protocol_copy_byte_array_to_packet(packet_pointer, bytes, bytes_size)	\
-			uint32_t network_ ## bytes_size=g_htonl(bytes_size); \
-			otb_authentication_protocol_copy_data_to_packet(packet_pointer, &network_ ## bytes_size, sizeof(uint32_t)); \
-			otb_authentication_protocol_copy_data_to_packet(packet_pointer, bytes, bytes_size);
-
-#define otb_authentication_protocol_create_error(response_out)	otb_authentication_protocol_create_basic_packet(PROTOCOL_ERROR, response_out)
+#define otb_authentication_protocol_create_error(packet_out)	otb_authentication_protocol_create_basic_packet(PROTOCOL_ERROR, packet_out)
 
 enum OtbAuthenticationProtocol
 {
@@ -52,9 +45,57 @@ OtbAuthenticationState *otb_authentication_protocol_state_create()
 	return state;
 }
 
-static uint32_t otb_authentication_protocol_request_validate_message(OtbAuthenticationState *state, const OtbAsymCipher *asym_cipher, const void *response, uint32_t response_size, void **request_out)
+#define otb_authentication_protocol_confirm_copy_data_from_packet_is_possible(data_size) \
+	if(response_pointer+data_size>=response_pointer_max) \
+		return otb_authentication_protocol_create_error(request_out);
+#define otb_authentication_protocol_copy_data_from_packet(data, data_size) \
+	memcpy(data, response_pointer, data_size); \
+	response_pointer+=data_size
+#define otb_authentication_protocol_copy_byte_array_from_packet(data) \
+	uint32_t network_ ## data ## _size; \
+	otb_authentication_protocol_confirm_copy_data_from_packet_is_possible(sizeof(uint32_t)); \
+	otb_authentication_protocol_copy_data_from_packet(&network_ ## data ## _size, sizeof(uint32_t)); \
+	data ## _size=g_ntohl(network_ ## data ## _size); \
+	otb_authentication_protocol_confirm_copy_data_from_packet_is_possible(data ## _size); \
+	data=response_pointer; \
+	response_pointer+=data ## _size
+#define otb_authentication_protocol_copy_data_to_packet(packet_pointer, data, data_size)	memcpy(packet_pointer, data, data_size); packet_pointer+=data_size
+#define otb_authentication_protocol_copy_byte_array_to_packet(packet_pointer, bytes) \
+			uint32_t network_ ## bytes ## _size=g_htonl(bytes ## _size); \
+			otb_authentication_protocol_copy_data_to_packet(packet_pointer, &network_ ## bytes ## _size, sizeof(uint32_t)); \
+			otb_authentication_protocol_copy_data_to_packet(packet_pointer, bytes, bytes ## _size);
+
+static uint32_t otb_authentication_protocol_request_validate_message(const OtbAsymCipher *asym_cipher, const void *response, uint32_t response_size, void **request_out)
 {
-	//FARE - .....
+	const void *response_pointer_max=response+response_size;
+	const void *response_pointer=response+sizeof(OtbAuthenticationProtocolCommand);
+	const unsigned char *encrypted_key;
+	const unsigned char *iv;
+	const unsigned char *encrypted_message;
+	uint32_t encrypted_key_size;
+	uint32_t iv_size;
+	uint32_t encrypted_message_size;
+	otb_authentication_protocol_copy_byte_array_from_packet(encrypted_key);
+	otb_authentication_protocol_copy_byte_array_from_packet(iv);
+	otb_authentication_protocol_copy_byte_array_from_packet(encrypted_message);
+	unsigned char *decrypted_message;
+	GBytes *encrypted_key_gbytes=g_bytes_new_static(encrypted_key, encrypted_key_size);
+	GBytes *iv_gbytes=g_bytes_new_static(iv, iv_size);
+	uint32_t decrypted_message_size=otb_asym_cipher_decrypt(asym_cipher, encrypted_message, encrypted_message_size, encrypted_key_gbytes, iv_gbytes, (void**)&decrypted_message);
+	g_bytes_unref(iv_gbytes);
+	g_bytes_unref(encrypted_key_gbytes);
+	uint32_t request_size;
+	if(decrypted_message_size==0)
+		request_size=otb_authentication_protocol_create_error(request_out);
+	else
+	{
+		OtbAuthenticationProtocolCommand command=PROTOCOL_VALIDATE_MESSAGE;
+		*request_out=sizeof(OtbAuthenticationProtocolCommand)+g_malloc(decrypted_message_size);
+		void *request_pointer=*request_out;
+		otb_authentication_protocol_copy_data_to_packet(request_pointer, &command, sizeof(OtbAuthenticationProtocolCommand));
+		otb_authentication_protocol_copy_byte_array_to_packet(request_pointer, decrypted_message);
+	}
+	return request_size;
 }
 
 static uint32_t otb_authentication_protocol_request_complete(OtbAuthenticationState *state, const void *response, uint32_t response_size, void **request_out)
@@ -77,7 +118,7 @@ uint32_t otb_authentication_protocol_request(OtbAuthenticationState *state, cons
 		switch(((OtbAuthenticationProtocolCommand*)response)[0])
 		{
 			case PROTOCOL_ENCRYPTED_MESSAGE:
-				return otb_authentication_protocol_request_validate_message(state, asym_cipher, response, response_size, request_out);
+				return otb_authentication_protocol_request_validate_message(asym_cipher, response, response_size, request_out);
 			case PROTOCOL_VALIDATE_MESSAGE:
 				return otb_authentication_protocol_request_complete(state, response, response_size, request_out);
 			default:
@@ -104,9 +145,9 @@ static uint32_t otb_authentication_protocol_respond_send_encrypted_message(OtbAu
 		*response_out=g_malloc(response_size);
 		void *response_pointer=*response_out;
 		otb_authentication_protocol_copy_data_to_packet(response_pointer, &response_command, sizeof(OtbAuthenticationProtocolCommand));
-		otb_authentication_protocol_copy_byte_array_to_packet(response_pointer, encrypted_key, encrypted_key_size);
-		otb_authentication_protocol_copy_byte_array_to_packet(response_pointer, iv, iv_size);
-		otb_authentication_protocol_copy_byte_array_to_packet(response_pointer, encrypted_message, encrypted_message_size);
+		otb_authentication_protocol_copy_byte_array_to_packet(response_pointer, encrypted_key);
+		otb_authentication_protocol_copy_byte_array_to_packet(response_pointer, iv);
+		otb_authentication_protocol_copy_byte_array_to_packet(response_pointer, encrypted_message);
 	}
 	g_free(encrypted_message);
 	if(iv!=NULL)
