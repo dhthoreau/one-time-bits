@@ -18,7 +18,7 @@ volatile void *smemset(volatile void *buffer, int value, int size)
 }
 
 int smemcmp(const void *buffer1, const void *buffer2, size_t size)
-/// This to ensure that the memcmp executes every byte, no short circuiting.
+/// This to ensure that the memcmp executes every byte, no short circuiting, no optimizations. Slow compares prevent timing attacks on short circuited comparisons, where longer times indicate better matches then shorter times. So far it's only used to compare password hashes, which probably doesn't improve security, but what the heck: it can't hurt!
 {
 	volatile int retVal=0;
 	const unsigned char *buffPtr1;
