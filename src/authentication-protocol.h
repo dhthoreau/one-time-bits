@@ -13,6 +13,12 @@
 
 #include "asym-cipher.h"
 
+typedef enum
+{
+	CLIENT,
+	SERVER
+} OtbAuthenticationStateType;
+
 typedef struct _OtbAuthenticationState OtbAuthenticationState;
 
 struct _OtbAuthenticationState
@@ -22,9 +28,9 @@ struct _OtbAuthenticationState
 	gboolean finished;
 };
 
-OtbAuthenticationState *otb_authentication_protocol_state_create();	// FARE - Unit test.
-uint32_t otb_authentication_protocol_request(OtbAuthenticationState *state, const OtbAsymCipher *asym_cipher, const void *response, uint32_t response_size, void **request_out);	// FARE - Unit test.
-uint32_t otb_authentication_protocol_respond(OtbAuthenticationState *state, const void *request, uint32_t request_size, const OtbAsymCipher *asym_cipher, void **response_out);	// FARE - Unit test.
-void otb_authentication_protocol_state_free(OtbAuthenticationState *state);	// FARE - Unit test.
+OtbAuthenticationState *otb_authentication_protocol_state_create(OtbAuthenticationStateType state_type);
+uint32_t otb_authentication_protocol_request(OtbAuthenticationState *state, const OtbAsymCipher *asym_cipher, const void *response, uint32_t response_size, void **request_out);
+uint32_t otb_authentication_protocol_respond(OtbAuthenticationState *state, const void *request, uint32_t request_size, const OtbAsymCipher *asym_cipher, void **response_out);
+void otb_authentication_protocol_state_free(OtbAuthenticationState *state);
 
 #endif

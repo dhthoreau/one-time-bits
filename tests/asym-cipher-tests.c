@@ -51,19 +51,27 @@ static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCip
 	g_object_unref(private_key_sym_cipher);
 }
 
-static void test_asym_cipher_encryption_in_steps()
+void otb_generate_public_private_keys(OtbAsymCipher **asym_cipher_public_out, OtbAsymCipher **asym_cipher_private_out)
 {
 	const size_t NEW_KEY_LENGTH=512;
-	const size_t EXPECTED_MESSAGE_SIZE=74;
-	const char *EXPECTED_MESSAGE="Timid men prefer the calm of despotism to the tempestuous sea of liberty.";
 	
 	OtbAsymCipher *asym_cipher_original=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original, NEW_KEY_LENGTH));
-	OtbAsymCipher *asym_cipher_public=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	OtbAsymCipher *asym_cipher_private=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	otb_copy_public_key(asym_cipher_original, asym_cipher_public);
-	otb_copy_private_key(asym_cipher_original, asym_cipher_private);
+	*asym_cipher_public_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	*asym_cipher_private_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	otb_copy_public_key(asym_cipher_original, *asym_cipher_public_out);
+	otb_copy_private_key(asym_cipher_original, *asym_cipher_private_out);
 	g_object_unref(asym_cipher_original);
+}
+
+static void test_asym_cipher_encryption_in_steps()
+{
+	const size_t EXPECTED_MESSAGE_SIZE=74;
+	const char *EXPECTED_MESSAGE="Timid men prefer the calm of despotism to the tempestuous sea of liberty.";
+	
+	OtbAsymCipher *asym_cipher_public=NULL;
+	OtbAsymCipher *asym_cipher_private=NULL;
+	otb_generate_public_private_keys(&asym_cipher_public, &asym_cipher_private);
 	unsigned char *encrypted_message=otb_asym_cipher_create_encryption_buffer(asym_cipher_public, EXPECTED_MESSAGE_SIZE, NULL);
 	GBytes *iv=NULL;
 	GBytes *encrypted_key=NULL;
@@ -93,17 +101,12 @@ static void test_asym_cipher_encryption_in_steps()
 
 static void test_asym_cipher_encryption()
 {
-	const size_t NEW_KEY_LENGTH=512;
 	const size_t EXPECTED_MESSAGE_SIZE=307;
 	const char *EXPECTED_MESSAGE="There was not one hireling there. I have no doubt that it was a principle they fought for, as much as our ancestors, and not to avoid a three-penny tax on their tea; and the results of this battle will be as important and memorable to those whom it concerns as those of the battle of Bunker Hill, at least.";
 	
-	OtbAsymCipher *asym_cipher_original=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original, NEW_KEY_LENGTH));
-	OtbAsymCipher *asym_cipher_public=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	OtbAsymCipher *asym_cipher_private=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	otb_copy_public_key(asym_cipher_original, asym_cipher_public);
-	otb_copy_private_key(asym_cipher_original, asym_cipher_private);
-	g_object_unref(asym_cipher_original);
+	OtbAsymCipher *asym_cipher_public=NULL;
+	OtbAsymCipher *asym_cipher_private=NULL;
+	otb_generate_public_private_keys(&asym_cipher_public, &asym_cipher_private);
 	GBytes *iv=NULL;
 	GBytes *encrypted_key=NULL;
 	unsigned char *encrypted_message;

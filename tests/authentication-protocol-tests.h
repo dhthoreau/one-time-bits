@@ -6,12 +6,9 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_ASYM_TESTS
-#define OTB_ASYM_TESTS
+#ifndef OTB_AUTHENTICATION_PROTOCOL_TESTS_H
+#define OTB_AUTHENTICATION_PROTOCOL_TESTS_H
 
-#include "../src/asym-cipher.h"
-
-void otb_generate_public_private_keys(OtbAsymCipher **asym_cipher_public_out, OtbAsymCipher **asym_cipher_private_out);
-void otb_add_asym_cipher_tests();
+void otb_add_authentication_protocol_tests();
 
 #endif
