@@ -110,7 +110,7 @@ static uint32_t otb_authentication_protocol_request_complete(OtbAuthenticationSt
 	return 0;
 }
 
-uint32_t otb_authentication_protocol_request(OtbAuthenticationState *state, const OtbAsymCipher *asym_cipher, const void *response, uint32_t response_size, void **request_out)
+uint32_t otb_authentication_protocol_request(OtbAuthenticationState *state, const void *response, uint32_t response_size, const OtbAsymCipher *asym_cipher, void **request_out)
 {
 	if(response!=NULL && response_size<sizeof(OtbAuthenticationProtocolCommand))
 		return otb_authentication_protocol_create_error(request_out);

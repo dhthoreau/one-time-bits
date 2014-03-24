@@ -24,6 +24,60 @@ static OtbAuthenticationState *otb_authentication_protocol_state_create_with_ass
 	return state;
 }
 
+static uint32_t otb_authentication_protocol_test_encrypted_message_request(OtbAuthenticationState *client_state, OtbAsymCipher *asym_cipher_private, void **request_out)
+{
+	uint32_t request_size=otb_authentication_protocol_request(client_state, NULL, 0, asym_cipher_private, request_out);
+	g_assert_cmpint(1, ==, request_size);
+	g_assert(*request_out!=NULL);
+	g_assert_cmpint(1, ==, ((unsigned char*)*request_out)[0]);
+	g_assert(!client_state->authenticated);
+	g_assert(!client_state->finished);
+	return request_size;
+}
+
+static uint32_t otb_authentication_protocol_test_encrypted_message_response(OtbAuthenticationState *server_state, OtbAsymCipher *asym_cipher_public, void *request, uint32_t request_size, void **response_out)
+{
+	uint32_t response_size=otb_authentication_protocol_respond(server_state, request, request_size, asym_cipher_public, response_out);
+	g_assert_cmpint(1, <, response_size);
+	g_assert(*response_out!=NULL);
+	g_assert_cmpint(1, ==, ((unsigned char*)*response_out)[0]);
+	g_assert(!server_state->authenticated);
+	g_assert(!server_state->finished);
+	return response_size;
+}
+
+static uint32_t otb_authentication_protocol_test_verify_message_request(OtbAuthenticationState *client_state, const OtbAsymCipher *asym_cipher_private, const void *response, uint32_t response_size, void **request_out)
+{
+	uint32_t request_size=otb_authentication_protocol_request(client_state, response, response_size, asym_cipher_private, request_out);
+	g_assert_cmpint(1, <, request_size);
+	g_assert(*request_out!=NULL);
+	g_assert_cmpint(2, ==, ((unsigned char*)*request_out)[0]);
+	g_assert(!client_state->authenticated);
+	g_assert(!client_state->finished);
+	return request_size;
+}
+
+static uint32_t otb_authentication_protocol_test_verify_message_response(OtbAuthenticationState *server_state, const OtbAsymCipher *asym_cipher_public, const void *request, uint32_t request_size, void **response_out)
+{
+	uint32_t response_size=otb_authentication_protocol_respond(server_state, request, request_size, asym_cipher_public, response_out);
+	g_assert_cmpint(2, ==, response_size);
+	g_assert(*response_out!=NULL);
+	g_assert_cmpint(2, ==, ((unsigned char*)*response_out)[0]);
+	g_assert(((unsigned char*)*response_out)[1]);
+	g_assert(server_state->authenticated);
+	g_assert(server_state->finished);
+	return response_size;
+}
+
+static void otb_authentication_protocol_test_finish_request(OtbAuthenticationState *client_state, const OtbAsymCipher *asym_cipher_private, const void *response, uint32_t response_size, void **request_out)
+{
+	uint32_t request_size=otb_authentication_protocol_request(client_state, response, response_size, asym_cipher_private, request_out);
+	g_assert_cmpint(0, ==, request_size);
+	g_assert(*request_out==NULL);
+	g_assert(client_state->authenticated);
+	g_assert(client_state->finished);
+}
+
 static void test_otb_authentication_protocol_full_success()
 {
 	OtbAsymCipher *asym_cipher_public=NULL;
@@ -32,45 +86,18 @@ static void test_otb_authentication_protocol_full_success()
 	OtbAuthenticationState *client_state=otb_authentication_protocol_state_create_with_asserts(CLIENT);
 	OtbAuthenticationState *server_state=otb_authentication_protocol_state_create_with_asserts(SERVER);
 	void *request=NULL;
+	uint32_t request_size=otb_authentication_protocol_test_encrypted_message_request(client_state, asym_cipher_private, &request);
 	void *response=NULL;
-	uint32_t request_size;
-	uint32_t response_size;
-	request_size=otb_authentication_protocol_request(client_state, asym_cipher_private, NULL, 0, &request);
-	g_assert_cmpint(1, ==, request_size);
-	g_assert(request!=NULL);
-	g_assert_cmpint(1, ==, ((unsigned char*)request)[0]);
-	g_assert(!client_state->authenticated);
-	g_assert(!client_state->finished);
-	response_size=otb_authentication_protocol_respond(server_state, request, request_size, asym_cipher_public, &response);
-	g_assert_cmpint(1, <, response_size);
-	g_assert(response!=NULL);
-	g_assert_cmpint(1, ==, ((unsigned char*)response)[0]);
-	g_assert(!server_state->authenticated);
-	g_assert(!server_state->finished);
+	uint32_t response_size=otb_authentication_protocol_test_encrypted_message_response(server_state, asym_cipher_public, request, request_size, &response);
 	g_free(request);
 	request=NULL;
-	request_size=otb_authentication_protocol_request(client_state, asym_cipher_private, response, response_size, &request);
-	g_assert_cmpint(1, <, request_size);
-	g_assert(request!=NULL);
-	g_assert_cmpint(2, ==, ((unsigned char*)request)[0]);
-	g_assert(!client_state->authenticated);
-	g_assert(!client_state->finished);
+	request_size=otb_authentication_protocol_test_verify_message_request(client_state, asym_cipher_private, response, response_size, &request);
 	g_free(response);
 	response=NULL;
-	response_size=otb_authentication_protocol_respond(server_state, request, request_size, asym_cipher_public, &response);
-	g_assert_cmpint(2, ==, response_size);
-	g_assert(response!=NULL);
-	g_assert_cmpint(2, ==, ((unsigned char*)response)[0]);
-	g_assert(((unsigned char*)response)[1]);
-	g_assert(server_state->authenticated);
-	g_assert(server_state->finished);
+	response_size=otb_authentication_protocol_test_verify_message_response(server_state, asym_cipher_public, request, request_size, &response);
 	g_free(request);
 	request=NULL;
-	request_size=otb_authentication_protocol_request(client_state, asym_cipher_private, response, response_size, &request);
-	g_assert_cmpint(0, ==, request_size);
-	g_assert(request==NULL);
-	g_assert(client_state->authenticated);
-	g_assert(client_state->finished);
+	otb_authentication_protocol_test_finish_request(client_state, asym_cipher_private, response, response_size, &request);
 	g_free(response);
 	otb_authentication_protocol_state_free(server_state);
 	otb_authentication_protocol_state_free(client_state);
