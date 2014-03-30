@@ -51,12 +51,13 @@ enum
 enum
 {
 	STATE_INITIAL,
-	STATE_FRIEND_ESTABLISHED,
+	STATE_ESTABLISHING_FRIEND,
 	STATE_SERVER_AUTHENTICATION,
 	STATE_CLIENT_REQUESTING_AUTHENTICATION,
 	STATE_CLIENT_AUTHENTICATION,
-	STATE_CLIENT_REQUESTED_PAD_IDS_FROM_SERVER,
-	STATE_CLIENT_SENT_PAD_IDS_TO_SERVER,
+	STATE_CLIENT_REQUESTING_PAD_IDS_FROM_SERVER,
+	STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER,
+	STATE_CLIENT_SENDING_PADS_TO_SERVER,
 	STATE_FINISHED
 };
 
@@ -113,7 +114,7 @@ typedef struct
 	uint32_t encrypted_data_size;
 } OtbEncryptedPacket;
 
-static uint32_t otb_protocol_create_encrypted_packet(OtbProtocolContext *context, const void *plain_packet, uint32_t plain_packet_size, void **packet_out)
+static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *context, const void *plain_packet, uint32_t plain_packet_size, void **packet_out)
 {
 	GBytes *encrypted_key=NULL;
 	GBytes *iv=NULL;
@@ -157,7 +158,7 @@ typedef struct
 
 static uint32_t otb_protocol_client_state_initial(OtbProtocolContext *context, void **packet_out)
 {
-	context->state=STATE_FRIEND_ESTABLISHED;
+	context->state=STATE_ESTABLISHING_FRIEND;
 	uint32_t packet_size=sizeof(OtbPacketClientId);
 	*packet_out=g_malloc(packet_size);
 	OtbPacketClientId *packet=*packet_out;
@@ -178,7 +179,7 @@ typedef struct
 	uint32_t token_size;
 } OtbPacketAuthenticationMessage;
 
-static uint32_t otb_protocol_create_authentication_packet(OtbProtocolContext *context, void **packet_out)
+static uint32_t otb_protocol_create_authentication_packet(const OtbProtocolContext *context, void **packet_out)
 {
 	uint32_t packet_size=sizeof(OtbPacketAuthenticationMessage)+AUTHENTICATION_TOKEN_SIZE;
 	OtbPacketAuthenticationMessage *packet=g_malloc(packet_size);
@@ -190,7 +191,7 @@ static uint32_t otb_protocol_create_authentication_packet(OtbProtocolContext *co
 	return packet_out_size;
 }
 
-static uint32_t otb_protocol_client_state_friend_established(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
+static uint32_t otb_protocol_client_state_establishing_friend(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
 {
 	OtbProtocolCommand incoming_command=*(OtbProtocolCommand*)input_packet;
 	switch(incoming_command)
@@ -261,7 +262,7 @@ static uint32_t otb_protocol_client_state_client_authentication(OtbProtocolConte
 	switch(incoming_command)
 	{
 		case COMMAND_OK:
-			context->state=STATE_CLIENT_REQUESTED_PAD_IDS_FROM_SERVER;
+			context->state=STATE_CLIENT_REQUESTING_PAD_IDS_FROM_SERVER;
 			if(input_packet_size!=sizeof(OtbPacketClientId))
 				return otb_protocol_create_error_packet(context, packet_out);
 			return otb_protocol_create_basic_command_packet(COMMAND_REQUESTING_PAD_IDS, packet_out);
@@ -279,7 +280,7 @@ typedef struct
 	uint32_t unique_id_count;
 } OtbPacketPadIds;
 
-static gboolean otb_protocol_delete_missing_pad_ids(OtbProtocolContext *context, OtbPacketPadIds *packet, OtbPadRecStatus pad_rec_status)
+static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *context, const OtbPacketPadIds *packet, OtbPadRecStatus pad_rec_status)
 {
 	gboolean ret_val=TRUE;
 	GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, pad_rec_status);
@@ -297,7 +298,7 @@ static gboolean otb_protocol_delete_missing_pad_ids(OtbProtocolContext *context,
 	return ret_val;
 }
 
-static uint32_t otb_protocol_create_pad_ids_packet(OtbProtocolContext *context, OtbPadRecStatus status1, OtbPadRecStatus status2, void **packet_out)
+static uint32_t otb_protocol_create_pad_ids_packet(const OtbProtocolContext *context, OtbPadRecStatus status1, OtbPadRecStatus status2, void **packet_out)
 {
 	GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status1);
 	if(status2!=OTB_PAD_REC_STATUS_OUT_OF_BOUNDS)
@@ -319,7 +320,7 @@ static uint32_t otb_protocol_create_pad_ids_packet(OtbProtocolContext *context, 
 	return packet_out_size;
 }
 
-static uint32_t otb_protocol_client_state_client_request_pad_ids_from_server(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
+static uint32_t otb_protocol_client_state_client_requesting_pad_ids_from_server(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
 {
 	void *decrypted_input_packet=NULL;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
@@ -328,8 +329,8 @@ static uint32_t otb_protocol_client_state_client_request_pad_ids_from_server(Otb
 	switch(incoming_command)
 	{
 		case COMMAND_SENDING_PAD_IDS:
-			context->state=STATE_CLIENT_SENT_PAD_IDS_TO_SERVER;
-			OtbPacketPadIds *packet=(OtbPacketPadIds*)decrypted_input_packet;
+			context->state=STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER;
+			const OtbPacketPadIds *packet=(OtbPacketPadIds*)decrypted_input_packet;
 			if(PAD_IDS_PACKET_IS_VALID(packet, decrypted_input_packet_size) && otb_protocol_delete_missing_pad_ids(context, packet, OTB_PAD_REC_STATUS_SENT) && otb_protocol_delete_missing_pad_ids(context, packet, OTB_PAD_REC_STATUS_CONSUMED))
 				packet_out_size=otb_protocol_create_pad_ids_packet(context, OTB_PAD_REC_STATUS_SENT, OTB_PAD_REC_STATUS_CONSUMED, packet_out);
 			else
@@ -355,16 +356,18 @@ uint32_t otb_protocol_client(OtbProtocolContext *context, const void *input_pack
 	{
 		case STATE_INITIAL:
 			return otb_protocol_client_state_initial(context, packet_out);
-		case STATE_FRIEND_ESTABLISHED:
-			return otb_protocol_client_state_friend_established(context, input_packet, input_packet_size, packet_out);
+		case STATE_ESTABLISHING_FRIEND:
+			return otb_protocol_client_state_establishing_friend(context, input_packet, input_packet_size, packet_out);
 		case STATE_SERVER_AUTHENTICATION:
 			return otb_protocol_client_state_server_authentication(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_REQUESTING_AUTHENTICATION:
 			return otb_protocol_client_state_client_requesting_authentication(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_AUTHENTICATION:
 			return otb_protocol_client_state_client_authentication(context, input_packet, input_packet_size, packet_out);
-		case STATE_CLIENT_REQUESTED_PAD_IDS_FROM_SERVER:
-			return otb_protocol_client_state_client_request_pad_ids_from_server(context, input_packet, input_packet_size, packet_out);
+		case STATE_CLIENT_REQUESTING_PAD_IDS_FROM_SERVER:
+			return otb_protocol_client_state_client_requesting_pad_ids_from_server(context, input_packet, input_packet_size, packet_out);
+		case STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER:
+			// FARE...
 		default:
 			return otb_protocol_create_error_packet(context, packet_out);
 	}
@@ -376,7 +379,7 @@ static uint32_t otb_protocol_server_state_initial(OtbProtocolContext *context, c
 	switch(incoming_command)
 	{
 		case COMMAND_SENDING_FRIEND_ID:
-			context->state=STATE_FRIEND_ESTABLISHED;
+			context->state=STATE_ESTABLISHING_FRIEND;
 			if(input_packet_size!=sizeof(OtbPacketClientId))
 				return otb_protocol_create_error_packet(context, packet_out);
 			const OtbPacketClientId *client_id_packet=input_packet;
@@ -392,7 +395,7 @@ static uint32_t otb_protocol_server_state_initial(OtbProtocolContext *context, c
 	}
 }
 
-static uint32_t otb_protocol_server_state_friend_established(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
+static uint32_t otb_protocol_server_state_establishing_friend(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
 {
 	void *decrypted_input_packet=NULL;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
@@ -451,7 +454,7 @@ static uint32_t otb_protocol_server_state_client_authentication(OtbProtocolConte
 	switch(incoming_command)
 	{
 		case COMMAND_REQUESTING_PAD_IDS:
-			context->state=STATE_CLIENT_REQUESTED_PAD_IDS_FROM_SERVER;
+			context->state=STATE_CLIENT_REQUESTING_PAD_IDS_FROM_SERVER;
 			if(input_packet_size!=sizeof(OtbProtocolCommand))
 				return otb_protocol_create_error_packet(context, packet_out);
 			return otb_protocol_create_pad_ids_packet(context, OTB_PAD_REC_STATUS_RECEIVED, OTB_PAD_REC_STATUS_OUT_OF_BOUNDS, packet_out);
@@ -460,7 +463,7 @@ static uint32_t otb_protocol_server_state_client_authentication(OtbProtocolConte
 	}
 }
 
-static uint32_t otb_protocol_server_state_client_requested_pad_ids_from_server(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
+static uint32_t otb_protocol_server_state_client_requesting_pad_ids_from_server(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
 {
 	void *decrypted_input_packet=NULL;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
@@ -469,8 +472,8 @@ static uint32_t otb_protocol_server_state_client_requested_pad_ids_from_server(O
 	switch(incoming_command)
 	{
 		case COMMAND_SENDING_PAD_IDS:
-			context->state=STATE_CLIENT_SENT_PAD_IDS_TO_SERVER;
-			OtbPacketPadIds *packet=(OtbPacketPadIds*)decrypted_input_packet;
+			context->state=STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER;
+			const OtbPacketPadIds *packet=(OtbPacketPadIds*)decrypted_input_packet;
 			if(otb_protocol_delete_missing_pad_ids(context, packet, OTB_PAD_REC_STATUS_RECEIVED))
 				packet_out_size=otb_protocol_create_ok_packet(packet_out);
 			else
@@ -494,16 +497,18 @@ uint32_t otb_protocol_server(OtbProtocolContext *context, const void *input_pack
 	{
 		case STATE_INITIAL:
 			return otb_protocol_server_state_initial(context, input_packet, input_packet_size, packet_out);
-		case STATE_FRIEND_ESTABLISHED:
-			return otb_protocol_server_state_friend_established(context, input_packet, input_packet_size, packet_out);
+		case STATE_ESTABLISHING_FRIEND:
+			return otb_protocol_server_state_establishing_friend(context, input_packet, input_packet_size, packet_out);
 		case STATE_SERVER_AUTHENTICATION:
 			return otb_protocol_server_state_server_authentication(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_REQUESTING_AUTHENTICATION:
 			return otb_protocol_server_state_client_requesting_authentication(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_AUTHENTICATION:
 			return otb_protocol_server_state_client_authentication(context, input_packet, input_packet_size, packet_out);
-		case STATE_CLIENT_REQUESTED_PAD_IDS_FROM_SERVER:
-			return otb_protocol_server_state_client_requested_pad_ids_from_server(context, input_packet, input_packet_size, packet_out);
+		case STATE_CLIENT_REQUESTING_PAD_IDS_FROM_SERVER:
+			return otb_protocol_server_state_client_requesting_pad_ids_from_server(context, input_packet, input_packet_size, packet_out);
+		case STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER:
+			// FARE...
 		default:
 			return otb_protocol_create_error_packet(context, packet_out);
 	}
