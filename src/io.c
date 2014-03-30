@@ -116,7 +116,7 @@ gboolean otb_delete_dir(const char *dir_path)
 	GDir *test_dir=g_dir_open(dir_path, 0, &error);
 	if(test_dir!=NULL)
 	{
-		const char *file_name=NULL;
+		const char *file_name;
 		while((file_name=g_dir_read_name(test_dir))!=NULL)
 		{
 			char *file_path=g_build_filename(dir_path, file_name, NULL);

@@ -53,7 +53,7 @@ static void test_otb_user_create_with_no_config_file()
 
 static void otb_write_unique_id(FILE *file, const OtbUniqueId *unique_id)
 {
-	char *encoded_unique_id=g_base64_encode((const unsigned char*)unique_id, sizeof(OtbUniqueId));
+	char *encoded_unique_id=g_base64_encode((const unsigned char*)unique_id, sizeof *unique_id);
 	g_assert(otb_write("unique-id=", 1, 10, file)==10);
 	g_assert(otb_write(encoded_unique_id, 1, strlen(encoded_unique_id), file)==strlen(encoded_unique_id));
 	g_assert(otb_write("\n", 1, 1, file)==1);

@@ -33,7 +33,6 @@ struct _OtbProtocolContext
 	OtbPadDb *pad_db;
 };
 
-
 enum
 {
 	COMMAND_ERROR,

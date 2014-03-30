@@ -12,6 +12,6 @@
 #define otb_modulo(x, y)						(((x)%(y)+(y))%(y))
 
 gboolean otb_random_bytes(void *bytes, size_t num_bytes);
-void *otb_create_random_bytes(size_t size);
+unsigned char *otb_create_random_bytes(size_t size);
 
 #endif

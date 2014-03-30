@@ -277,7 +277,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(OtbPadRec *pad_rec)
 	if(file!=NULL)
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		pad_io=g_malloc(sizeof(OtbPadIO));
+		pad_io=g_malloc(sizeof *pad_io);
 		pad_io->pad_rec=pad_rec;
 		g_object_ref(pad_io->pad_rec);
 		otb_pad_rec_lock(pad_io->pad_rec);
@@ -305,7 +305,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_read(OtbPadRec *pad_rec, gboolean auto_rewind
 	if(file!=NULL)
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		pad_io=g_malloc(sizeof(OtbPadIO));
+		pad_io=g_malloc(sizeof *pad_io);
 		pad_io->pad_rec=pad_rec;
 		g_object_ref(pad_io->pad_rec);
 		otb_pad_rec_lock(pad_io->pad_rec);
@@ -466,7 +466,7 @@ gboolean otb_pad_io_free(OtbPadIO *pad_io)
 	{
 		size_t final_encrypted_bytes_size=otb_sym_cipher_finish_encrypt(pad_io->sym_cipher_context, pad_io->output_buffer);
 		pad_io->sym_cipher_context=NULL;
-		if(final_encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof(char), final_encrypted_bytes_size, pad_io->file)==final_encrypted_bytes_size)
+		if(final_encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof *pad_io->output_buffer, final_encrypted_bytes_size, pad_io->file)==final_encrypted_bytes_size)
 			final_encrypt_successful=FALSE;
 	}
 	if(pad_io->output_buffer!=NULL)

@@ -426,11 +426,11 @@ static void test_decryption_fails_due_to_unsupported_file_format()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
-	unsigned char input_bytes[sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId)];
+	unsigned char input_bytes[sizeof FORMAT_VERSION+sizeof(OtbUniqueId)];
 	memcpy(input_bytes, &FORMAT_VERSION, sizeof(FORMAT_VERSION));
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId), &decrypted_bytes, &decrypted_bytes_size));
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof FORMAT_VERSION+sizeof(OtbUniqueId), &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	g_free(pad_db_dir_path);
@@ -445,11 +445,11 @@ static void test_decryption_fails_due_to_missing_pad()
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
 	g_free(pad_db_dir_path);
-	unsigned char input_bytes[sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId)];
-	memcpy(input_bytes, &FORMAT_VERSION, sizeof(FORMAT_VERSION));
+	unsigned char input_bytes[sizeof FORMAT_VERSION+sizeof(OtbUniqueId)];
+	memcpy(input_bytes, &FORMAT_VERSION, sizeof FORMAT_VERSION);
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof(FORMAT_VERSION)+sizeof(OtbUniqueId), &decrypted_bytes, &decrypted_bytes_size));
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof FORMAT_VERSION+sizeof(OtbUniqueId), &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	g_object_unref(pad_db);

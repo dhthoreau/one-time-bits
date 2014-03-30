@@ -145,7 +145,7 @@ static void otb_user_initialize_unique_id(OtbUser *user)
 	g_free(user->priv->unique_id);
 	size_t bytes_length;
 	user->priv->unique_id=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
-	if(user->priv->unique_id==NULL || bytes_length!=sizeof(OtbUniqueId))
+	if(user->priv->unique_id==NULL || bytes_length!=sizeof *user->priv->unique_id)
 	{
 		g_free(user->priv->unique_id);
 		user->priv->unique_id=otb_unique_id_create();
@@ -206,7 +206,7 @@ gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_b
 	return ret_val;
 }
 
-#define otb_user_export_unique_id(user, export_key_file)	(otb_settings_set_bytes((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, (user)->priv->unique_id, sizeof(OtbUniqueId)))
+#define otb_user_export_unique_id(user, export_key_file)	(otb_settings_set_bytes((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, (user)->priv->unique_id, sizeof *(user)->priv->unique_id))
 
 static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key_file)
 {

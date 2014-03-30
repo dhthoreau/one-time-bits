@@ -27,9 +27,9 @@ gboolean otb_random_bytes(void *bytes, size_t num_bytes)
 	return ret_val;
 }
 
-void *otb_create_random_bytes(size_t size)
+unsigned char *otb_create_random_bytes(size_t size)
 {
-	void *byte_array=g_malloc(size);
+	unsigned char *byte_array=g_malloc(size);
 	if(!otb_random_bytes(byte_array, size))
 	{
 		g_free(byte_array);
