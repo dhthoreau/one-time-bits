@@ -15,12 +15,10 @@
 
 #define OTB_TYPE_UNIQUE_ID	(otb_unique_id_get_type())
 
-typedef struct _OtbUniqueId OtbUniqueId;
-
-struct _OtbUniqueId
+typedef struct
 {
 	uuid_t value;
-};
+} OtbUniqueId;
 
 GType otb_unique_id_get_type();
 OtbUniqueId *otb_unique_id_create();

@@ -13,7 +13,12 @@
 #include <openssl/evp.h>
 
 typedef EVP_CIPHER_CTX OtbSymCipherContext;
-typedef unsigned char OtbSymCipherSalt[PKCS5_SALT_LEN];
+
+typedef struct
+{
+	unsigned char value[PKCS5_SALT_LEN];
+} OtbSymCipherSalt;
+
 
 #define otb_sym_cipher_context_free(sym_cipher_context)	EVP_CIPHER_CTX_free(sym_cipher_context)
 
@@ -45,10 +50,10 @@ struct _OtbSymCipherClass
 
 GType otb_sym_cipher_get_type();
 
-GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt salt_out);
-gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt salt);
-gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt salt);
-GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt salt_out);
+GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **salt_out);
+gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt *salt);
+gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt *salt);
+GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **salt_out);
 gboolean otb_sym_cipher_generate_random_key(OtbSymCipher *sym_cipher);
 unsigned char *otb_sym_cipher_create_encryption_buffer(const OtbSymCipher *sym_cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
 void *otb_sym_cipher_create_decryption_buffer(const OtbSymCipher *sym_cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);

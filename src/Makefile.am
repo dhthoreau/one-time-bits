@@ -7,4 +7,4 @@ else
 libotb_la_SOURCES+=insecure-using-dummy-replacements-of-the-original-openssl-functions.c
 endif
 libotb_la_LIBADD=$(libglib_LIBS) $(libgobject_LIBS) $(libuuid_LIBS) $(openssl_LIBS)
-AM_CPPFLAGS=$(libglib_CFLAGS) $(libgobject_CFLAGS) $(libuuid_CFLAGS) $(openssl_CFLAGS) -DLOCALEDIR=\""$(datadir)/locale"\" -Wall -Werror
+AM_CPPFLAGS=$(libglib_CFLAGS) $(libgobject_CFLAGS) $(libuuid_CFLAGS) $(openssl_CFLAGS) -DLOCALEDIR=\""$(datadir)/locale"\"

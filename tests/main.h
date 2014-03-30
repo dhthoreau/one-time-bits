@@ -13,6 +13,6 @@
 
 #define otb_add_test_func(name, func)	g_test_add_func((name), (func)); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
 
-extern GSList *restrict otb_test_funcs;
+extern GSList *otb_test_funcs;
 
 #endif

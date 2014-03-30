@@ -71,24 +71,26 @@ static OtbSymCipher *otb_local_crypto_new_sym_cipher()
 static gboolean otb_local_crypto_set_passphrase(OtbSymCipher *sym_cipher, const char *passphrase)
 {
 	gboolean ret_val=TRUE;
-	OtbSymCipherSalt passphrase_salt;
-	OtbSymCipherSalt wrapped_key_salt;
+	OtbSymCipherSalt *passphrase_salt=NULL;
+	OtbSymCipherSalt *wrapped_key_salt=NULL;
 	GBytes *passphrase_hash=NULL;
 	GBytes *wrapped_key=NULL;
-	if((passphrase_hash=otb_sym_cipher_hash_passphrase(sym_cipher, passphrase, passphrase_salt))==NULL)
+	if((passphrase_hash=otb_sym_cipher_hash_passphrase(sym_cipher, passphrase, &passphrase_salt))==NULL)
 		ret_val=FALSE;
-	else if((wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, passphrase, wrapped_key_salt))==NULL)
+	else if((wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, passphrase, &wrapped_key_salt))==NULL)
 		ret_val=FALSE;
-	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_PASSPHRASE_SALT, passphrase_salt, sizeof passphrase_salt))
+	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_PASSPHRASE_SALT, &passphrase_salt, sizeof passphrase_salt))
 		ret_val=FALSE;
 	else if(!otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH, passphrase_hash))
 		ret_val=FALSE;
-	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_KEY_SALT, wrapped_key_salt, sizeof wrapped_key_salt))
+	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_KEY_SALT, &wrapped_key_salt, sizeof wrapped_key_salt))
 		ret_val=FALSE;
 	else if(!otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_KEY, wrapped_key))
 		ret_val=FALSE;
-	g_bytes_unref(passphrase_hash);
 	g_bytes_unref(wrapped_key);
+	g_bytes_unref(passphrase_hash);
+	g_free(wrapped_key_salt);
+	g_free(passphrase_salt);
 	return ret_val;
 }
 
@@ -126,7 +128,7 @@ static gboolean otb_local_crypto_validate_passphrase(OtbSymCipher *sym_cipher, c
 		validate_successful=FALSE;
 	else if((passphrase_hash=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH))==NULL)
 		validate_successful=FALSE;
-	else if(!otb_sym_cipher_validate_passphrase(sym_cipher, passphrase, passphrase_hash, *passphrase_salt))
+	else if(!otb_sym_cipher_validate_passphrase(sym_cipher, passphrase, passphrase_hash, passphrase_salt))
 		validate_successful=FALSE;
 	g_bytes_unref(passphrase_hash);
 	g_free(passphrase_salt);
@@ -145,7 +147,7 @@ gboolean otb_local_crypto_unlock_sym_cipher(const char *passphrase)
 		unlock_successful=FALSE;
 	else if((wrapped_key=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_KEY))==NULL)
 		unlock_successful=FALSE;
-	else if(!otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, passphrase, *wrapped_key_salt))
+	else if(!otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, passphrase, wrapped_key_salt))
 		unlock_successful=FALSE;
 	g_bytes_unref(wrapped_key);
 	g_free(wrapped_key_salt);

@@ -7,4 +7,4 @@
  **/
 
 void* smemset(void *buffer, int value, int size);
-int smemcmp(const void *restrict buffer1, const void *restrict buffer2, size_t size);
+int smemcmp(const void *buffer1, const void *buffer2, size_t size);

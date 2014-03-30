@@ -60,7 +60,7 @@ enum
 
 OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, OtbFriend *peer_friend)
 {
-	OtbProtocolContext *context=g_malloc(sizeof(OtbProtocolContext));
+	OtbProtocolContext *context=g_malloc(sizeof *context);
 	context->state=STATE_INITIAL;
 	context->authentication_token=otb_create_random_bytes(AUTHENTICATION_TOKEN_SIZE);
 	g_object_ref(bitkeeper);
@@ -84,9 +84,11 @@ OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, 
 
 static uint32_t otb_protocol_create_basic_command_packet(OtbProtocolCommand command, void **packet_out)
 {
-	uint32_t packet_size=sizeof(OtbProtocolCommand);
-	*packet_out=g_malloc(packet_size);
-	*((OtbProtocolCommand*)*packet_out)=command;
+	OtbProtocolCommand *output_packet=NULL;
+	uint32_t packet_size=sizeof *output_packet;
+	output_packet=g_malloc(packet_size);
+	*output_packet=command;
+	*packet_out=output_packet;
 	return packet_size;
 }
 
@@ -98,10 +100,10 @@ static uint32_t otb_protocol_create_error_packet(OtbProtocolContext *context, vo
 	return otb_protocol_create_basic_command_packet(COMMAND_ERROR, packet_out);
 }
 
-#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			((unsigned char*)(packet)+sizeof(OtbEncryptedPacket))
-#define ENCRYPTED_PACKET_IV(packet)						((unsigned char*)(packet)+sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size))
-#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			((unsigned char*)(packet)+sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size))
-#define ENCRYPTED_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size)+g_ntohl((packet)->encrypted_data_size)==(packet_size))
+#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			((unsigned char*)(packet)+sizeof(packet))
+#define ENCRYPTED_PACKET_IV(packet)						((unsigned char*)(packet)+sizeof(packet)+g_ntohl((packet)->encrypted_key_size))
+#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			((unsigned char*)(packet)+sizeof(packet)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size))
+#define ENCRYPTED_PACKET_IS_VALID(packet, packet_size)	(sizeof(packet)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size)+g_ntohl((packet)->encrypted_data_size)==(packet_size))
 
 typedef struct
 {
@@ -119,9 +121,9 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *c
 	uint32_t encrypted_data_size=otb_asym_cipher_encrypt(context->peer_asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data);
 	uint32_t encrypted_key_size=g_bytes_get_size(encrypted_key);
 	uint32_t iv_size=g_bytes_get_size(iv);
-	uint32_t packet_out_size=sizeof(OtbEncryptedPacket)+encrypted_key_size+iv_size+encrypted_data_size;
-	*packet_out=g_malloc(packet_out_size);
-	OtbEncryptedPacket *output_packet=(OtbEncryptedPacket*)*packet_out;
+	OtbEncryptedPacket *output_packet=NULL;
+	uint32_t packet_out_size=sizeof *output_packet+encrypted_key_size+iv_size+encrypted_data_size;
+	output_packet=g_malloc(packet_out_size);
 	output_packet->command=COMMAND_ENCRYPTED;
 	output_packet->encrypted_key_size=g_htonl(encrypted_key_size);
 	output_packet->iv_size=g_htonl(iv_size);
@@ -131,6 +133,7 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *c
 	memcpy(ENCRYPTED_PACKET_ENCRYPTED_DATA(output_packet), encrypted_data, encrypted_data_size);
 	g_bytes_unref(encrypted_key);
 	g_bytes_unref(iv);
+	*packet_out=output_packet;
 	return packet_out_size;
 }
 
@@ -156,19 +159,20 @@ typedef struct
 static uint32_t otb_protocol_client_state_initial(OtbProtocolContext *context, void **packet_out)
 {
 	context->state=STATE_ESTABLISHING_FRIEND;
-	uint32_t packet_size=sizeof(OtbPacketClientId);
-	*packet_out=g_malloc(packet_size);
-	OtbPacketClientId *packet=*packet_out;
+	OtbPacketClientId *packet=NULL;
+	uint32_t packet_size=sizeof *packet;
+	packet=g_malloc(packet_size);
 	packet->command=COMMAND_SENDING_FRIEND_ID;
 	OtbUniqueId *unique_id=NULL;
 	g_object_get(context->local_user, OTB_USER_PROP_UNIQUE_ID, &unique_id, NULL);
-	memcpy(&packet->unique_id, unique_id, sizeof(OtbUniqueId));
+	memcpy(&packet->unique_id, unique_id, sizeof *unique_id);
 	g_free(unique_id);
+	*packet_out=packet;
 	return packet_size;
 }
 
-#define AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet)					((unsigned char*)(packet)+sizeof(OtbPacketAuthenticationMessage))
-#define AUTHENTICATION_MESSAGE_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbPacketAuthenticationMessage)+g_ntohl((packet)->token_size)==(packet_size))
+#define AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet)					((unsigned char*)(packet)+sizeof(packet))
+#define AUTHENTICATION_MESSAGE_PACKET_IS_VALID(packet, packet_size)	(sizeof(packet)+g_ntohl((packet)->token_size)==(packet_size))
 
 typedef struct
 {
@@ -178,8 +182,9 @@ typedef struct
 
 static uint32_t otb_protocol_create_authentication_packet(const OtbProtocolContext *context, void **packet_out)
 {
-	uint32_t packet_size=sizeof(OtbPacketAuthenticationMessage)+AUTHENTICATION_TOKEN_SIZE;
-	OtbPacketAuthenticationMessage *packet=g_malloc(packet_size);
+	OtbPacketAuthenticationMessage *packet=NULL;
+	uint32_t packet_size=sizeof *packet+AUTHENTICATION_TOKEN_SIZE;
+	packet=g_malloc(packet_size);
 	packet->command=COMMAND_SENDING_AUTHENTICATION_TOKEN;
 	packet->token_size=g_htonl(AUTHENTICATION_TOKEN_SIZE);
 	memcpy(AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet), context->authentication_token, AUTHENTICATION_TOKEN_SIZE);
@@ -251,7 +256,7 @@ static uint32_t otb_protocol_client_state_client_authentication(OtbProtocolConte
 }
 
 #define PAD_IDS_PACKET_PAD_ID(packet, index)			((OtbUniqueId*)((OtbPacketPadIds*)(packet)+1)+(index))
-#define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbPacketPadIds)+g_ntohl((packet)->unique_id_count)*sizeof(OtbUniqueId)==(packet_size))
+#define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(packet)+g_ntohl((packet)->unique_id_count)*sizeof(OtbUniqueId)==(packet_size))
 
 typedef struct
 {
@@ -287,8 +292,9 @@ static uint32_t otb_protocol_create_pad_ids_packet(const OtbProtocolContext *con
 		g_slist_free(pad_rec_ids2);
 	}
 	uint32_t total_pad_rec_ids=g_slist_length(pad_rec_ids);
-	uint32_t packet_size=sizeof(OtbPacketPadIds)+sizeof(OtbUniqueId)*total_pad_rec_ids;
-	OtbPacketPadIds *packet=g_malloc(packet_size);
+	OtbPacketPadIds *packet=NULL;
+	uint32_t packet_size=sizeof packet+sizeof(OtbUniqueId)*total_pad_rec_ids;
+	packet=g_malloc(packet_size);
 	packet->command=COMMAND_SENDING_PAD_IDS;
 	packet->unique_id_count=g_htonl(total_pad_rec_ids);
 	for(uint32_t unique_id_iter=0; unique_id_iter<total_pad_rec_ids; unique_id_iter++)

@@ -222,7 +222,7 @@ void *otb_asym_cipher_create_decryption_buffer(const OtbAsymCipher *asym_cipher,
 OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_cipher, GBytes **encrypted_key_out, GBytes **iv_out)
 {
 	OtbAsymCipherContext *asym_cipher_context=NULL;
-	asym_cipher_context=g_malloc(sizeof(OtbAsymCipherContext));
+	asym_cipher_context=g_malloc(sizeof *asym_cipher_context);
 	EVP_CIPHER_CTX_init(asym_cipher_context);
 	otb_asym_cipher_lock_read(asym_cipher);
 	unsigned char *encrypted_key_bytes=g_malloc(EVP_PKEY_size(asym_cipher->priv->key_impl));
@@ -248,7 +248,7 @@ OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_
 
 OtbAsymCipherContext *otb_asym_cipher_init_decryption(const OtbAsymCipher *asym_cipher, GBytes *encrypted_key, GBytes *iv)
 {
-	OtbAsymCipherContext *asym_cipher_context=g_malloc(sizeof(OtbAsymCipherContext));
+	OtbAsymCipherContext *asym_cipher_context=g_malloc(sizeof *asym_cipher_context);
 	EVP_CIPHER_CTX_init(asym_cipher_context);
 	otb_asym_cipher_lock_read(asym_cipher);
 	if(!EVP_OpenInit(asym_cipher_context, asym_cipher->priv->cipher_impl, g_bytes_get_data(encrypted_key, NULL), g_bytes_get_size(encrypted_key), g_bytes_get_data(iv, NULL), asym_cipher->priv->key_impl))

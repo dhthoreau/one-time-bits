@@ -25,7 +25,7 @@
 #include "unique-id-tests.h"
 #include "user-tests.h"
 
-GSList *restrict otb_test_funcs=NULL;
+GSList *otb_test_funcs=NULL;
 
 static gboolean leaky=FALSE;
 

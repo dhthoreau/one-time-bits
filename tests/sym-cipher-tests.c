@@ -41,15 +41,17 @@ static void test_sym_cipher_hash_passphrase()
 	const char *UNEXPECTED_PASSPHRASE="...to one who is striking at the root!";
 	
 	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, 2048, NULL);
-	OtbSymCipherSalt expected_salt;
-	GBytes *passphrase_hash=otb_sym_cipher_hash_passphrase(sym_cipher, EXPECTED_PASSPHRASE, expected_salt);
+	OtbSymCipherSalt *expected_salt=NULL;
+	GBytes *passphrase_hash=otb_sym_cipher_hash_passphrase(sym_cipher, EXPECTED_PASSPHRASE, &expected_salt);
+	g_assert(expected_salt!=NULL);
 	g_assert(!otb_sym_cipher_validate_passphrase(sym_cipher, UNEXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
-	expected_salt[0]++;
+	expected_salt->value[0]++;
 	g_assert(!otb_sym_cipher_validate_passphrase(sym_cipher, EXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
-	expected_salt[0]--;
+	expected_salt->value[0]--;
 	g_assert(otb_sym_cipher_validate_passphrase(sym_cipher, EXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
 	g_bytes_unref(passphrase_hash);
 	g_object_unref(sym_cipher);
+	g_free(expected_salt);
 }
 
 static void test_sym_cipher_encryption_in_steps()
@@ -69,10 +71,10 @@ static void test_sym_cipher_encryption_in_steps()
 	encrypted_message_size+=otb_sym_cipher_finish_encrypt(encryption_context, encrypted_message+encrypted_message_size);
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
-	OtbSymCipherSalt salt;
-	GBytes *wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, PASSPHRASE, salt);
+	OtbSymCipherSalt *salt=NULL;
+	GBytes *wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, PASSPHRASE, &salt);
+	g_assert(salt!=NULL);
 	g_assert(otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, PASSPHRASE, salt));
-	g_bytes_unref(wrapped_key);
 	char *actual_message=otb_sym_cipher_create_decryption_buffer(sym_cipher, encrypted_message_size, NULL);
 	OtbSymCipherContext *decryption_context=otb_sym_cipher_init_decryption(sym_cipher, iv);
 	g_assert(decryption_context!=NULL);
@@ -81,6 +83,8 @@ static void test_sym_cipher_encryption_in_steps()
 	g_assert_cmpint(0, !=, actual_message_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
+	g_free(salt);
+	g_bytes_unref(wrapped_key);
 	g_free(actual_message);
 	g_free(encrypted_message);
 	g_bytes_unref(iv);
@@ -100,15 +104,17 @@ static void test_sym_cipher_encryption()
 	size_t encrypted_message_size=otb_sym_cipher_encrypt(sym_cipher, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, &iv, &encrypted_message);
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
-	OtbSymCipherSalt salt;
-	GBytes *wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, PASSPHRASE, salt);
+	OtbSymCipherSalt *salt=NULL;
+	GBytes *wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, PASSPHRASE, &salt);
+	g_assert(salt!=NULL);
 	g_assert(otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, PASSPHRASE, salt));
-	g_bytes_unref(wrapped_key);
 	void *actual_message=NULL;
 	size_t actual_message_size=otb_sym_cipher_decrypt(sym_cipher, encrypted_message, encrypted_message_size, iv, &actual_message);
 	g_assert_cmpint(0, !=, actual_message_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
+	g_free(salt);
+	g_bytes_unref(wrapped_key);
 	g_free(actual_message);
 	g_free(encrypted_message);
 	g_bytes_unref(iv);
