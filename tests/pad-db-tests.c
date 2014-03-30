@@ -216,7 +216,7 @@ static void test_pads_save_load_delete()
 	unsigned char *expected_unsent_bytes=otb_assert_pad_read(unsent_save_pad_io, NULL, EXPECTED_DEFAULT_NEW_PAD_SIZE);
 	g_assert(otb_pad_db_close_pad(save_pad_db));
 	OtbUniqueId *expected_received_unique_id=otb_unique_id_create();
-	char expected_received_bytes[EXPECTED_DEFAULT_NEW_PAD_SIZE];
+	unsigned char expected_received_bytes[EXPECTED_DEFAULT_NEW_PAD_SIZE];
 	g_assert(otb_random_bytes(expected_received_bytes, EXPECTED_DEFAULT_NEW_PAD_SIZE));
 	OtbPadIO *received_save_pad_io=otb_pad_db_add_received_pad(save_pad_db, expected_received_unique_id, 10);
 	g_assert(received_save_pad_io!=NULL);
@@ -491,7 +491,7 @@ static void otb_send_random_pad(OtbPadDb *sender_pad_db, const OtbPadDb *recipie
 	OtbPadIO *input_pad_io=otb_pad_db_open_pad_for_read(sender_pad_db, unique_id);
 	while(otb_pad_has_more_bytes(input_pad_io))
 	{
-		char byte;
+		unsigned char byte;
 		g_assert(otb_pad_read_byte(input_pad_io, &byte));
 		g_assert(otb_pad_write(output_pad_io, &byte, sizeof byte));
 	}
