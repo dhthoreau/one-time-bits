@@ -330,6 +330,6 @@ size_t otb_asym_cipher_decrypt(const OtbAsymCipher *asym_cipher, const unsigned 
 	*plain_bytes_out=otb_asym_cipher_create_decryption_buffer(asym_cipher, encrypted_bytes_size, NULL);
 	OtbSymCipherContext *asym_cipher_context=otb_asym_cipher_init_decryption(asym_cipher, encrypted_key, iv);
 	size_t ret_val=otb_asym_cipher_decrypt_next(asym_cipher_context, encrypted_bytes, encrypted_bytes_size, *plain_bytes_out);
-	ret_val+=otb_asym_cipher_finish_decrypt(asym_cipher_context, *plain_bytes_out+ret_val);
+	ret_val+=otb_asym_cipher_finish_decrypt(asym_cipher_context, *(unsigned char**)plain_bytes_out+ret_val);
 	return ret_val;
 }

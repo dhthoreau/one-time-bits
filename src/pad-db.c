@@ -687,7 +687,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 				size_t bytes_to_crypt_max_from_pad=pad_size-sizeof(OtbUniqueId);
 				size_t bytes_to_crypt_max_from_plain_bytes=plain_bytes_size-plain_position;
 				size_t bytes_to_crypt=MIN(bytes_to_crypt_max_from_pad, bytes_to_crypt_max_from_plain_bytes);
-				if(!otb_pad_db_crypt_bytes(bytes_to_crypt, plain_bytes+plain_position, *encrypted_bytes_out+*encrypted_bytes_size_out+sizeof(OtbUniqueId), current_pad_io, previous_pad_io))
+				if(!otb_pad_db_crypt_bytes(bytes_to_crypt, (unsigned char*)plain_bytes+plain_position, *encrypted_bytes_out+*encrypted_bytes_size_out+sizeof(OtbUniqueId), current_pad_io, previous_pad_io))
 					encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 				else
 				{
@@ -751,7 +751,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 				decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else if((current_pad_io=otb_pad_rec_open_pad_for_read(pad_rec, TRUE))==NULL)
 				decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			else if(!otb_pad_db_crypt_bytes(pad_size-sizeof(OtbUniqueId), encrypted_bytes+encrypted_position+sizeof(OtbUniqueId), *plain_bytes_out+*plain_bytes_size_out, current_pad_io, previous_pad_io))
+			else if(!otb_pad_db_crypt_bytes(pad_size-sizeof(OtbUniqueId), encrypted_bytes+encrypted_position+sizeof(OtbUniqueId), *(unsigned char**)plain_bytes_out+*plain_bytes_size_out, current_pad_io, previous_pad_io))
 				decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else
 				g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_DEAD, NULL);

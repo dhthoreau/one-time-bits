@@ -178,7 +178,7 @@ static void test_create_unsent_pad_results_in_proper_pad_file()
 	g_object_unref(pad_db);
 }
 
-static void *otb_assert_pad_read(OtbPadIO *pad_io, const void *expected_bytes, size_t expected_bytes_size)
+static void *otb_assert_pad_read(OtbPadIO *pad_io, const unsigned char *expected_bytes, size_t expected_bytes_size)
 {
 	size_t expected_bytes_position=0;
 	void *actual_bytes;

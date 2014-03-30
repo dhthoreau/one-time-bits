@@ -363,7 +363,7 @@ gboolean otb_pad_write(const OtbPadIO *pad_io, const void *input_buffer, size_t 
 	gboolean ret_val=TRUE;
 	for(int buffer_offset=0; buffer_offset<input_buffer_size && ret_val; buffer_offset+=INPUT_BUFFER_SIZE)
 	{
-		size_t encrypted_bytes_size=otb_sym_cipher_encrypt_next(pad_io->sym_cipher_context, input_buffer+buffer_offset, (input_buffer_size-buffer_offset>INPUT_BUFFER_SIZE?INPUT_BUFFER_SIZE:input_buffer_size-buffer_offset), pad_io->output_buffer);
+		size_t encrypted_bytes_size=otb_sym_cipher_encrypt_next(pad_io->sym_cipher_context, (unsigned char*)input_buffer+buffer_offset, (input_buffer_size-buffer_offset>INPUT_BUFFER_SIZE?INPUT_BUFFER_SIZE:input_buffer_size-buffer_offset), pad_io->output_buffer);
 		if(encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof(char), encrypted_bytes_size, pad_io->file)==encrypted_bytes_size)
 			ret_val=FALSE;
 	}

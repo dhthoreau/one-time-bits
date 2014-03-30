@@ -390,6 +390,6 @@ size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const unsigned cha
 	*plain_bytes_out=otb_sym_cipher_create_decryption_buffer(sym_cipher, encrypted_bytes_size, NULL);
 	OtbSymCipherContext *sym_cipher_context=otb_sym_cipher_init_decryption(sym_cipher, iv);
 	size_t ret_val=otb_sym_cipher_decrypt_next(sym_cipher_context, encrypted_bytes, encrypted_bytes_size, *plain_bytes_out);
-	ret_val+=otb_sym_cipher_finish_decrypt(sym_cipher_context, *plain_bytes_out+ret_val);
+	ret_val+=otb_sym_cipher_finish_decrypt(sym_cipher_context, *(unsigned char **)plain_bytes_out+ret_val);
 	return ret_val;
 }
