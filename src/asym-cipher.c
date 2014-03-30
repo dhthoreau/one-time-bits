@@ -226,7 +226,7 @@ OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_
 	EVP_CIPHER_CTX_init(asym_cipher_context);
 	otb_asym_cipher_lock_read(asym_cipher);
 	unsigned char *encrypted_key_bytes=g_malloc(EVP_PKEY_size(asym_cipher->priv->key_impl));
-	size_t encrypted_key_size;
+	int encrypted_key_size;
 	unsigned char *iv_bytes=g_malloc(EVP_CIPHER_iv_length(asym_cipher->priv->cipher_impl));
 	if(EVP_SealInit(asym_cipher_context, asym_cipher->priv->cipher_impl, &encrypted_key_bytes, &encrypted_key_size, iv_bytes, &asym_cipher->priv->key_impl, 1))
 	{

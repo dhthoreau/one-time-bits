@@ -13,7 +13,7 @@
 #include <openssl/evp.h>
 
 typedef EVP_CIPHER_CTX OtbSymCipherContext;
-typedef char OtbSymCipherSalt[PKCS5_SALT_LEN];
+typedef unsigned char OtbSymCipherSalt[PKCS5_SALT_LEN];
 
 #define otb_sym_cipher_context_free(sym_cipher_context)	EVP_CIPHER_CTX_free(sym_cipher_context)
 

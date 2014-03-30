@@ -362,7 +362,7 @@ static gboolean otb_friend_load(OtbFriend *friend)
 	{
 		size_t encrypted_import_string_size;
 		GBytes *import_string_iv=otb_settings_get_gbytes(settings_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING_IV);
-		char *encrypted_import_string=otb_settings_get_bytes(settings_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING, &encrypted_import_string_size);
+		unsigned char *encrypted_import_string=otb_settings_get_bytes(settings_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING, &encrypted_import_string_size);
 		g_key_file_unref(settings_key_file);
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		char *import_string=NULL;

@@ -99,7 +99,7 @@ gboolean otb_mkdir_with_parents(const char *file_path)
 
 GDir *otb_open_directory(const char *directory_path)
 {
-	GError *error=NULL;
+	GError *error;
 	GDir *directory=g_dir_open(directory_path, 0, &error);
 	if(!directory)
 	{
@@ -112,18 +112,18 @@ GDir *otb_open_directory(const char *directory_path)
 gboolean otb_delete_dir(const char *dir_path)
 {
 	gboolean ret_val=TRUE;
-	GError *error=NULL;
+	GError *error;
 	GDir *test_dir=g_dir_open(dir_path, 0, &error);
-	if(test_dir)
+	if(test_dir!=NULL)
 	{
-		const char *file_name;
+		const char *file_name=NULL;
 		while((file_name=g_dir_read_name(test_dir))!=NULL)
 		{
 			char *file_path=g_build_filename(dir_path, file_name, NULL);
 			if(g_file_test(file_path, G_FILE_TEST_IS_DIR))
 				ret_val=(otb_delete_dir(file_path) && ret_val);
 			else
-				ret_val==(g_unlink(file_path)==0 && ret_val);
+				ret_val=(g_unlink(file_path)==0 && ret_val);
 			g_free(file_path);
 		}
 		g_dir_close(test_dir);

@@ -99,9 +99,9 @@ static uint32_t otb_protocol_create_error_packet(OtbProtocolContext *context, vo
 	return otb_protocol_create_basic_command_packet(COMMAND_ERROR, packet_out);
 }
 
-#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			(unsigned char*)(&(packet)+sizeof(OtbEncryptedPacket))
-#define ENCRYPTED_PACKET_IV(packet)						(unsigned char*)(&(packet)+sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size))
-#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			(unsigned char*)(&(packet)+sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size))
+#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			((unsigned char*)(packet)+sizeof(OtbEncryptedPacket))
+#define ENCRYPTED_PACKET_IV(packet)						((unsigned char*)(packet)+sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size))
+#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			((unsigned char*)(packet)+sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size))
 #define ENCRYPTED_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbEncryptedPacket)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size)+g_ntohl((packet)->encrypted_data_size)==(packet_size))
 
 typedef struct
@@ -168,7 +168,7 @@ static uint32_t otb_protocol_client_state_initial(OtbProtocolContext *context, v
 	return packet_size;
 }
 
-#define AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet)					(&(packet)+sizeof(OtbPacketAuthenticationMessage))
+#define AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet)					((unsigned char*)(packet)+sizeof(OtbPacketAuthenticationMessage))
 #define AUTHENTICATION_MESSAGE_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbPacketAuthenticationMessage)+g_ntohl((packet)->token_size)==(packet_size))
 
 typedef struct
@@ -251,7 +251,7 @@ static uint32_t otb_protocol_client_state_client_authentication(OtbProtocolConte
 	return otb_protocol_create_error_packet(context, packet_out);
 }
 
-#define PAD_IDS_PACKET_PAD_ID(packet, index)			(&((OtbUniqueId*)((packet)+sizeof(OtbPacketPadIds)))[(index)])
+#define PAD_IDS_PACKET_PAD_ID(packet, index)			((OtbUniqueId*)((OtbPacketPadIds*)(packet)+1)+(index))
 #define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbPacketPadIds)+g_ntohl((packet)->unique_id_count)*sizeof(OtbUniqueId)==(packet_size))
 
 typedef struct
