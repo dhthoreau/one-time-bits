@@ -57,5 +57,5 @@ char *otb_unique_id_string_create()
 
 OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id)
 {
-	return g_memdup(unique_id, sizeof(OtbUniqueId));
+	return unique_id==NULL?NULL:g_memdup(unique_id, sizeof(OtbUniqueId));
 }

@@ -11,7 +11,7 @@
 
 #include "asym-cipher.h"
 
-#define OTB_USER_PROP_UNIQUE_ID			"base-path"
+#define OTB_USER_PROP_UNIQUE_ID			"unique-id"
 #define OTB_USER_PROP_ASYM_CIPHER		"asym-cipher"
 #define OTB_USER_PROP_ONION_BASE_DOMAIN	"onion-base-domains"
 

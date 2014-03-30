@@ -6,9 +6,9 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_AUTHENTICATION_PROTOCOL_TESTS_H
-#define OTB_AUTHENTICATION_PROTOCOL_TESTS_H
+#ifndef OTB_PROTOCOL_TESTS_H
+#define OTB_PROTOCOL_TESTS_H
 
-void otb_add_authentication_protocol_tests();
+void otb_add_protocol_tests();
 
 #endif

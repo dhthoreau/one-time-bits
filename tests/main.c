@@ -13,7 +13,7 @@
 #include <main.h>
 
 #include "asym-cipher-tests.h"
-#include "authentication-protocol-tests.h"
+#include "protocol-tests.h"
 #include "bitkeeper-tests.h"
 #include "friend-tests.h"
 #include "local-crypto-tests.h"
@@ -76,7 +76,7 @@ static void otb_add_tests()
 	otb_add_friend_tests();
 	otb_add_user_tests();
 	otb_add_bitkeeper_tests();
-	otb_add_authentication_protocol_tests();
+	otb_add_protocol_tests();
 }
 
 static void otb_run_tests()

@@ -222,7 +222,7 @@ static gboolean otb_pad_db_load(const OtbPadDb *pad_db)
 static OtbPadRec *otb_pad_db_find_pad_rec_by_id(const OtbPadDb *pad_db, const OtbUniqueId *unique_id)
 {
 	OtbPadRec *ret_val=NULL;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val==NULL && curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val==NULL && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		if(otb_pad_rec_compare_by_id(pad_rec, unique_id)==0)
@@ -234,7 +234,7 @@ static OtbPadRec *otb_pad_db_find_pad_rec_by_id(const OtbPadDb *pad_db, const Ot
 static off_t otb_pad_db_get_curr_size(const OtbPadDb *pad_db)
 {
 	off_t curr_size=0;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		off_t pad_size;
@@ -409,7 +409,7 @@ static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
 	GSList *pad_recs_to_remove=NULL;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -417,7 +417,7 @@ static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
 		if(pad_rec_status==OTB_PAD_REC_STATUS_DEAD)
 			pad_recs_to_remove=g_slist_prepend(pad_recs_to_remove, pad_rec);
 	}
-	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		if(!otb_pad_db_remove_pad_rec(pad_db, pad_rec))
@@ -474,7 +474,7 @@ OtbPadIO *otb_pad_db_add_received_pad(const OtbPadDb *pad_db, const OtbUniqueId 
 GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status)
 {
 	GSList *selected_pad_rec_ids=NULL;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -512,7 +512,7 @@ static gboolean otb_pad_db_transition_status_of_pad(const OtbPadDb *pad_db, cons
 static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, OtbPadRecStatus prerequisite_status, OtbPadRecStatus new_status)
 {
 	gboolean ret_val=TRUE;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -542,7 +542,7 @@ static OtbUniqueId *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb *pad_d
 	OtbUniqueId *random_unique_id=NULL;
 	GSList *candidate_pad_recs=NULL;
 	unsigned int candidate_count=0;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -613,7 +613,7 @@ static gboolean otb_pad_db_can_encrypt_data(const OtbPadDb *pad_db, size_t data_
 {
 	gboolean ret_val=FALSE;
 	off_t bytes_available_for_encryption=0;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; !ret_val && curr_element!=NULL; curr_element=(const GSList*)g_list_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; !ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		off_t pad_size=-1;

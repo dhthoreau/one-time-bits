@@ -31,6 +31,11 @@ static void test_unique_id_duplicate()
 	g_free(unique_id2);
 }
 
+static void test_unique_id_duplicate_null()
+{
+	g_assert(otb_unique_id_duplicate(NULL)==NULL);
+}
+
 static void test_unique_id_strings()
 {
 	char *expected_unique_id_string=otb_unique_id_string_create();
@@ -46,5 +51,6 @@ void otb_add_unique_id_tests()
 {
 	otb_add_test_func("/unique-id/test_unique_id_create_compare", test_unique_id_create_compare);
 	otb_add_test_func("/unique-id/test_unique_id_duplicate", test_unique_id_duplicate);
+	otb_add_test_func("/unique-id/test_unique_id_duplicate_null", test_unique_id_duplicate_null);
 	otb_add_test_func("/unique-id/test_unique_id_strings", test_unique_id_strings);
 }
