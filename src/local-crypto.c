@@ -79,11 +79,11 @@ static gboolean otb_local_crypto_set_passphrase(OtbSymCipher *sym_cipher, const 
 		ret_val=FALSE;
 	else if((wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, passphrase, &wrapped_key_salt))==NULL)
 		ret_val=FALSE;
-	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_PASSPHRASE_SALT, &passphrase_salt, sizeof passphrase_salt))
+	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_PASSPHRASE_SALT, passphrase_salt, sizeof *passphrase_salt))
 		ret_val=FALSE;
 	else if(!otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH, passphrase_hash))
 		ret_val=FALSE;
-	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_KEY_SALT, &wrapped_key_salt, sizeof wrapped_key_salt))
+	else if(!otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_KEY_SALT, wrapped_key_salt, sizeof *wrapped_key_salt))
 		ret_val=FALSE;
 	else if(!otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_KEY, wrapped_key))
 		ret_val=FALSE;
