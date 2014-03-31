@@ -58,6 +58,16 @@ enum
 	STATE_FINISHED
 };
 
+static void otb_protocol_set_peer_friend_on_context(OtbProtocolContext *context, OtbFriend *peer_friend)
+{
+	g_object_ref(peer_friend);
+	context->peer_friend=peer_friend;
+	char *peer_public_key=NULL;
+	g_object_get(peer_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &peer_public_key, OTB_FRIEND_PROP_OUTGOING_PADS, &context->pad_db, NULL);
+	context->peer_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, peer_public_key, NULL);
+	g_free(peer_public_key);
+}
+
 OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, OtbFriend *peer_friend)
 {
 	OtbProtocolContext *context=g_malloc(sizeof *context);
@@ -68,11 +78,7 @@ OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, 
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &context->local_user, NULL);
 	g_object_get(context->local_user, OTB_USER_PROP_ASYM_CIPHER, &context->local_asym_cipher, NULL);
 	if(peer_friend!=NULL)
-	{
-		g_object_ref(peer_friend);
-		context->peer_friend=peer_friend;
-		g_object_get(peer_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &context->peer_asym_cipher, OTB_FRIEND_PROP_OUTGOING_PADS, &context->pad_db, NULL);
-	}
+		otb_protocol_set_peer_friend_on_context(context, peer_friend);
 	else
 	{
 		context->peer_friend=NULL;
@@ -324,7 +330,7 @@ uint32_t otb_protocol_client(OtbProtocolContext *context, const void *input_pack
 {
 	if(input_packet_size<sizeof(OtbProtocolCommand) && context->state!=STATE_INITIAL)
 		return otb_protocol_create_error_packet(context, packet_out);
-	if(*(OtbProtocolCommand*)input_packet==COMMAND_ERROR)
+	if(input_packet_size>0 && *(OtbProtocolCommand*)input_packet==COMMAND_ERROR)
 	{
 		context->state=STATE_FINISHED;
 		return 0;
@@ -357,12 +363,11 @@ static uint32_t otb_protocol_server_state_initial(OtbProtocolContext *context, c
 	if(incoming_command==COMMAND_SENDING_FRIEND_ID && input_packet_size==sizeof(OtbPacketClientId))
 	{
 		const OtbPacketClientId *client_id_packet=input_packet;
-		OtbFriend *friend=otb_bitkeeper_get_friend(context->bitkeeper, &client_id_packet->unique_id);
-		if(friend==NULL)
+		OtbFriend *peer_friend=otb_bitkeeper_get_friend(context->bitkeeper, &client_id_packet->unique_id);
+		if(peer_friend==NULL)
 			return otb_protocol_create_error_packet(context, packet_out);
-		context->peer_friend=friend;
-		g_object_get(friend, OTB_FRIEND_PROP_PUBLIC_KEY, &context->peer_asym_cipher, NULL);
-		g_object_get(friend, OTB_FRIEND_PROP_INCOMING_PADS, &context->pad_db, NULL);
+		otb_protocol_set_peer_friend_on_context(context, peer_friend);
+		g_object_get(peer_friend, OTB_FRIEND_PROP_INCOMING_PADS, &context->pad_db, NULL);
 		return otb_protocol_create_ok_packet(packet_out);
 	}
 	return otb_protocol_create_error_packet(context, packet_out);
