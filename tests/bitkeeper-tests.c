@@ -44,7 +44,7 @@ static void test_otb_bitkeeper_user()
 	g_assert(expected_public_key!=NULL);
 	char *actual_sym_cipher_name=NULL;
 	char *actual_public_key=NULL;
-	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
+	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN, ==, actual_onion_base_domain);
@@ -131,7 +131,7 @@ static void otb_bitkeeper_delete_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, NULL, NULL);
 }
 
-static void test_otb_bitkeeper_import_delete_friends()
+OtbBitkeeper *otb_create_bitkeeper_for_test()
 {
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
@@ -140,6 +140,12 @@ static void test_otb_bitkeeper_import_delete_friends()
 	otb_settings_set_data_directory_path(otb_get_test_dir_path());
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
 	g_assert(bitkeeper!=NULL);
+	return bitkeeper;
+}
+
+static void test_otb_bitkeeper_import_delete_friends()
+{
+	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
 	OtbUniqueId *expected_unique_id1=otb_unique_id_create();
 	OtbUniqueId *expected_unique_id2=otb_unique_id_create();
 	otb_bitkeeper_import_test(bitkeeper, expected_unique_id1, expected_unique_id2);

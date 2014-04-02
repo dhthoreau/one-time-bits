@@ -20,9 +20,9 @@ static void test_asym_cipher_properties()
 {
 	const char *EXPECTED_CIPHER="RC2-64-CBC";
 	
-	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, EXPECTED_CIPHER, NULL);
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, EXPECTED_CIPHER, NULL);
 	char *actual_cipher=NULL;
-	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_cipher, NULL);
+	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_cipher, NULL);
 	g_assert_cmpstr(EXPECTED_CIPHER, ==, actual_cipher);
 	g_free(actual_cipher);
 	g_object_unref(asym_cipher);

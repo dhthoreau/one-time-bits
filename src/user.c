@@ -157,7 +157,7 @@ static void otb_user_initialize_asym_cipher(OtbUser *user)
 	user->priv->asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	char *sym_cipher_name=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_SYM_CIPHER);
 	if(sym_cipher_name!=NULL)
-		g_object_set(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, sym_cipher_name, NULL);
+		g_object_set(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, sym_cipher_name, NULL);
 	g_free(sym_cipher_name);
 	GBytes *private_key_iv=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV);
 	GBytes *encrypted_private_key=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY);

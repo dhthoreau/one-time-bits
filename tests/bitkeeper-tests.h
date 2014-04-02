@@ -9,6 +9,9 @@
 #ifndef OTB_BITKEEPER_TESTS
 #define OTB_BITKEEPER_TESTS
 
+#include "../src/bitkeeper.h"
+
+OtbBitkeeper *otb_create_bitkeeper_for_test();
 void otb_add_bitkeeper_tests();
 
 #endif

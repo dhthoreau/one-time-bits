@@ -40,7 +40,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(actual_unique_id!=NULL);
 	char *actual_sym_cipher_name=NULL;
 	char *actual_public_key=NULL;
-	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
+	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_DEFAULT_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_free(actual_sym_cipher_name);
 	g_assert(actual_public_key!=NULL);
@@ -144,7 +144,7 @@ static void test_otb_user_create_from_existing_config_file()
 	g_assert(expected_public_key!=NULL);
 	char *actual_sym_cipher_name=NULL;
 	char *actual_public_key=NULL;
-	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
+	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_free(actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);

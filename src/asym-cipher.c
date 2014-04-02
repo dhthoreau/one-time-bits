@@ -30,7 +30,7 @@ struct _OtbAsymCipherPrivate
 enum
 {
 	PROP_0,
-	PROP_SYM_CIPHER,
+	PROP_SYM_CIPHER_NAME,
 	PROP_PUBLIC_KEY
 };
 
@@ -47,7 +47,7 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 	object_class->finalize=otb_asym_cipher_finalize;
 	object_class->set_property=otb_asym_cipher_set_property;
 	object_class->get_property=otb_asym_cipher_get_property;
-	g_object_class_install_property(object_class, PROP_SYM_CIPHER, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, _("Public key"), _("The public key to use for encryption"), NULL, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbAsymCipherPrivate));
 }
@@ -87,7 +87,7 @@ static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, 
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
 	switch(prop_id)
 	{
-		case PROP_SYM_CIPHER:
+		case PROP_SYM_CIPHER_NAME:
 		{
 			otb_asym_cipher_lock_write(asym_cipher);
 			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(g_value_get_string(value));
@@ -118,7 +118,7 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
 	switch(prop_id)
 	{
-		case PROP_SYM_CIPHER:
+		case PROP_SYM_CIPHER_NAME:
 		{
 			otb_asym_cipher_lock_read(asym_cipher);
 			g_value_set_string(value, EVP_CIPHER_name(asym_cipher->priv->cipher_impl));
