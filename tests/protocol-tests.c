@@ -25,6 +25,14 @@
 #define EXPECTED_COMMAND_REQUESTING_PAD_IDS				7
 #define EXPECTED_COMMAND_SENDING_PAD_IDS				8
 
+static unsigned char otb_random_non_error_command(unsigned char except_command)
+{
+	unsigned char random_command=rand()%9;
+	while(random_command==except_command || random_command==EXPECTED_COMMAND_ERROR)
+		random_command=(random_command+1)%9;
+	return random_command;
+}
+
 static void otb_create_peer(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
 {
 	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
@@ -54,7 +62,7 @@ static void otb_do_client_establish_protocol_version(OtbProtocolContext *context
 	g_free(client_packet);
 }
 
-static void otb_do_client_establish_friend(OtbProtocolContext *context, OtbBitkeeper *local_bitkeeper)
+static gboolean otb_do_client_establish_friend(OtbProtocolContext *context, OtbBitkeeper *local_bitkeeper)
 {
 	uint32_t server_response_packet_size=1;
 	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
@@ -64,14 +72,12 @@ static void otb_do_client_establish_friend(OtbProtocolContext *context, OtbBitke
 	g_assert(client_packet!=NULL);
 	g_assert_cmpint(35, ==, client_packet_size);
 	g_assert_cmpint(client_packet[0], ==, EXPECTED_COMMAND_SENDING_FRIEND_ID);
-	
 	OtbUser *local_user=NULL;
 	g_object_get(local_bitkeeper, OTB_BITKEEPER_PROP_USER, &local_user, NULL);
 	g_assert(local_user!=NULL);
 	OtbUniqueId *expected_friend_id=NULL;
 	g_object_get(local_user, OTB_USER_PROP_UNIQUE_ID, &expected_friend_id, NULL);
 	g_assert_cmpint(0, ==, memcmp(expected_friend_id, client_packet+1, sizeof *expected_friend_id));
-	
 	g_free(expected_friend_id);
 	g_object_unref(local_user);
 	g_free(client_packet);

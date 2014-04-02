@@ -85,11 +85,13 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 {
 	const char *EXPECTED_PUBLIC_KEY1="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_PUBLIC_KEY2="-----BEGIN PUBLIC KEY-----\noCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
+	const char *EXPECTED_TRANSPORT_CIPHER_NAME1="AES-256-CBC";
+	const char *EXPECTED_TRANSPORT_CIPHER_NAME2="AES-512-CBC";
 	const char *EXPECTED_ONION_BASE_DOMAIN1="SoyMilkRoad";
 	const char *EXPECTED_ONION_BASE_DOMAIN2="SoyMilkRoad2";
 	
-	char *friend1_import_string=otb_create_import_string(expected_unique_id1, EXPECTED_PUBLIC_KEY1, EXPECTED_ONION_BASE_DOMAIN1, "");
-	char *friend2_import_string=otb_create_import_string(expected_unique_id2, EXPECTED_PUBLIC_KEY2, EXPECTED_ONION_BASE_DOMAIN2, "");
+	char *friend1_import_string=otb_create_import_string(expected_unique_id1, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ONION_BASE_DOMAIN1, "");
+	char *friend2_import_string=otb_create_import_string(expected_unique_id2, EXPECTED_PUBLIC_KEY2, EXPECTED_TRANSPORT_CIPHER_NAME2, EXPECTED_ONION_BASE_DOMAIN2, "");
 	g_assert(otb_bitkeeper_import_friend(bitkeeper, friend1_import_string));
 	g_assert(otb_bitkeeper_import_friend(bitkeeper, friend2_import_string));
 	OtbFriend *friend1=otb_bitkeeper_get_friend(bitkeeper, expected_unique_id1);
@@ -100,14 +102,18 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	OtbUniqueId *actual_unique_id2=NULL;
 	char *actual_public_key1=NULL;
 	char *actual_public_key2=NULL;
+	char *actual_transport_cipher_name1=NULL;
+	char *actual_transport_cipher_name2=NULL;
 	char *actual_onion_base_domain1=NULL;
 	char *actual_onion_base_domain2=NULL;
-	g_object_get(friend1, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id1, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain1, NULL);
-	g_object_get(friend2, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id2, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain2, NULL);
+	g_object_get(friend1, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id1, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name1, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain1, NULL);
+	g_object_get(friend2, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id2, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name2, OTB_FRIEND_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain2, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id1, actual_unique_id1));
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id2, actual_unique_id2));
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY1, ==, actual_public_key1);
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY2, ==, actual_public_key2);
+	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME1, ==, actual_transport_cipher_name1);
+	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME2, ==, actual_transport_cipher_name2);
 	g_assert_cmpstr(EXPECTED_ONION_BASE_DOMAIN1, ==, actual_onion_base_domain1);
 	g_assert_cmpstr(EXPECTED_ONION_BASE_DOMAIN2, ==, actual_onion_base_domain2);
 	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, expected_unique_id2);
@@ -115,6 +121,8 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	g_free(actual_unique_id2);
 	g_free(actual_public_key1);
 	g_free(actual_public_key2);
+	g_free(actual_transport_cipher_name1);
+	g_free(actual_transport_cipher_name2);
 	g_free(actual_onion_base_domain1);
 	g_free(actual_onion_base_domain2);
 	g_object_unref(friend1);

@@ -216,12 +216,21 @@ static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key
 	g_free(public_key);
 }
 
+static void otb_user_export_transport_cipher_name(const OtbUser *user, GKeyFile *export_key_file)
+{
+	char *transport_cipher_name=NULL;
+	g_object_get(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &transport_cipher_name, NULL);
+	g_key_file_set_string(export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME, transport_cipher_name);
+	g_free(transport_cipher_name);
+}
+
 #define otb_user_export_onion_base_domain(user, export_key_file)	(g_key_file_set_string((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, (user)->priv->onion_base_domain))
 
 static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file)
 {
 	otb_user_export_unique_id(user, export_key_file);
 	otb_user_export_public_key(user, export_key_file);
+	otb_user_export_transport_cipher_name(user, export_key_file);
 	otb_user_export_onion_base_domain(user, export_key_file);
 }
 

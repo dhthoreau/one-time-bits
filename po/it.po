@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2014-03-16 11:16-0500\n"
-"PO-Revision-Date: 2014-03-16 11:17-0500\n"
+"POT-Creation-Date: 2014-04-02 13:08-0500\n"
+"PO-Revision-Date: 2014-04-02 13:11-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -73,32 +73,32 @@ msgstr "Iterazioni di hash"
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."
 
-#: src/sym-cipher.c:203 src/asym-cipher.c:242
+#: src/sym-cipher.c:204 src/asym-cipher.c:242
 #, c-format
 msgid "Failed to initialize encryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/sym-cipher.c:217 src/asym-cipher.c:258
+#: src/sym-cipher.c:218 src/asym-cipher.c:258
 #, c-format
 msgid "Failed to initialize decryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/sym-cipher.c:330 src/asym-cipher.c:271
+#: src/sym-cipher.c:332 src/asym-cipher.c:271
 #, c-format
 msgid "Failed to encrypt data. Error == %s"
 msgstr "Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/sym-cipher.c:343 src/asym-cipher.c:284
+#: src/sym-cipher.c:345 src/asym-cipher.c:284
 #, c-format
 msgid "Failed to decrypt data. Error == %s"
 msgstr "Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/sym-cipher.c:356 src/asym-cipher.c:297
+#: src/sym-cipher.c:358 src/asym-cipher.c:297
 #, c-format
 msgid "Failed to encrypt final data. Error == %s"
 msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/sym-cipher.c:370 src/asym-cipher.c:311
+#: src/sym-cipher.c:372 src/asym-cipher.c:311
 #, c-format
 msgid "Failed to decrypt final data. Error == %s"
 msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
@@ -111,7 +111,7 @@ msgstr "Cifra simmetrica"
 msgid "Name of the symmetric cipher to use"
 msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/asym-cipher.c:51 src/friend.c:70
+#: src/asym-cipher.c:51 src/friend.c:72
 msgid "Public key"
 msgstr "Chiave pubblica"
 
@@ -119,51 +119,59 @@ msgstr "Chiave pubblica"
 msgid "The public key to use for encryption"
 msgstr "La chiave pubblica che è usata per crittografia"
 
-#: src/friend.c:66 src/pad-db.c:58 src/pad-rec.c:76
+#: src/friend.c:68 src/pad-db.c:58 src/pad-rec.c:76
 msgid "Base path"
 msgstr "Precorso di base"
 
-#: src/friend.c:66
+#: src/friend.c:68
 msgid "Directory where the friend's data will be saved"
 msgstr "La directory dove i dati del amico saranno salvati"
 
-#: src/friend.c:67
+#: src/friend.c:69
 msgid "Incoming pads"
 msgstr "Blocchi in arrivo"
 
-#: src/friend.c:67
+#: src/friend.c:69
 msgid "Database of incoming pads"
 msgstr "Il database di blocchi in arrivo"
 
-#: src/friend.c:68
+#: src/friend.c:70
 msgid "Outgoing pads"
 msgstr "Blocchi in partenza"
 
-#: src/friend.c:68
+#: src/friend.c:70
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:69 src/user.c:58 src/pad-rec.c:74
+#: src/friend.c:71 src/user.c:58 src/pad-rec.c:74
 msgid "Unique ID"
 msgstr "ID univoco"
 
-#: src/friend.c:69
+#: src/friend.c:71
 msgid "UUID of the friend"
 msgstr "UUID dell'amico"
 
-#: src/friend.c:70
+#: src/friend.c:72
 msgid "Key that is used to identify the friend"
 msgstr "La chiave usata per identificare l'amico"
 
-#: src/friend.c:71 src/user.c:60
+#: src/friend.c:73
+msgid "Transport cipher"
+msgstr "Cifra di trasporto"
+
+#: src/friend.c:73
+msgid "The cipher used for data transport"
+msgstr "La cifra per trasportare i dati"
+
+#: src/friend.c:74 src/user.c:60
 msgid "Onion base domain"
 msgstr "Dominio di base di onion"
 
-#: src/friend.c:71
+#: src/friend.c:74
 msgid "The domain of the friend's Tor hidden service (minus the \".onion\")"
 msgstr "Il domino del servizio nascosto di Tor dell'amico (senza \".onion\")"
 
-#: src/friend.c:150
+#: src/friend.c:155
 msgid "Tried to change unique ID of a friend."
 msgstr "Si è provato a cambiare ID univoco d'un amico."
 
@@ -205,7 +213,7 @@ msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:707
+#: src/pad-db.c:711
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -216,13 +224,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:730
+#: src/pad-db.c:734
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:767
+#: src/pad-db.c:771
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."

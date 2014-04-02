@@ -14,17 +14,19 @@
 #include "pad-db.h"
 #include "unique-id.h"
 
-#define OTB_FRIEND_IMPORT_GROUP				"otb-user"
-#define OTB_FRIEND_IMPORT_UNIQUE_ID			"unique-id"
-#define OTB_FRIEND_IMPORT_PUBLIC_KEY		"public-key"
-#define OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN	"onion-base-domain"
+#define OTB_FRIEND_IMPORT_GROUP					"otb-user"
+#define OTB_FRIEND_IMPORT_UNIQUE_ID				"unique-id"
+#define OTB_FRIEND_IMPORT_PUBLIC_KEY			"public-key"
+#define OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME	"transport-cipher-name"
+#define OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN		"onion-base-domain"
 
-#define OTB_FRIEND_PROP_BASE_PATH			"base-path"
-#define OTB_FRIEND_PROP_INCOMING_PADS		"incoming-pads"
-#define OTB_FRIEND_PROP_OUTGOING_PADS		"outgoing-pads"
-#define OTB_FRIEND_PROP_UNIQUE_ID			"unique-id"
-#define OTB_FRIEND_PROP_PUBLIC_KEY			"public-key"
-#define OTB_FRIEND_PROP_ONION_BASE_DOMAIN	"onion-base-domain"
+#define OTB_FRIEND_PROP_BASE_PATH				"base-path"
+#define OTB_FRIEND_PROP_INCOMING_PADS			"incoming-pads"
+#define OTB_FRIEND_PROP_OUTGOING_PADS			"outgoing-pads"
+#define OTB_FRIEND_PROP_UNIQUE_ID				"unique-id"
+#define OTB_FRIEND_PROP_PUBLIC_KEY				"public-key"
+#define OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME	"transport-cipher-name"
+#define OTB_FRIEND_PROP_ONION_BASE_DOMAIN		"onion-base-domain"
 
 #define OTB_TYPE_FRIEND				(otb_friend_get_type())
 #define OTB_FRIEND(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_FRIEND, OtbFriend))
@@ -58,6 +60,7 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 OtbFriend *otb_friend_load_from_directory(const char *base_path);
 gboolean otb_friend_delete(OtbFriend *friend);
 gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_key);
+gboolean otb_friend_set_transport_cipher_name(const OtbFriend *friend, const char *transport_cipher_name);
 gboolean otb_friend_set_onion_base_domain(const OtbFriend *friend, const char *onion_base_domain);
 
 #endif

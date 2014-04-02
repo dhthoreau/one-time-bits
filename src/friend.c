@@ -27,6 +27,7 @@ enum
 	PROP_OUTGOING_PADS,
 	PROP_UNIQUE_ID,
 	PROP_PUBLIC_KEY,
+	PROP_TRANSPORT_CIPHER_NAME,
 	PROP_ONION_BASE_DOMAIN
 };
 
@@ -50,6 +51,7 @@ struct _OtbFriendPrivate
 	char *outgoing_pads_path;
 	OtbPadDb *outgoing_pads;
 	char *public_key;
+	char *transport_cipher_name;
 	char *onion_base_domain;
 	char *onion_full_domain;
 };
@@ -68,6 +70,7 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	g_object_class_install_property(object_class, PROP_OUTGOING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_OUTGOING_PADS, _("Outgoing pads"), _("Database of outgoing pads"), G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_FRIEND_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the friend"), OTB_TYPE_UNIQUE_ID, G_PARAM_READWRITE));
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), "", G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), "", G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ONION_BASE_DOMAIN, g_param_spec_string(OTB_FRIEND_PROP_ONION_BASE_DOMAIN, _("Onion base domain"), _("The domain of the friend's Tor hidden service (minus the \".onion\")"), NULL, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbFriendPrivate));
 }
@@ -84,6 +87,7 @@ static void otb_friend_init(OtbFriend *friend)
 	friend->priv->outgoing_pads=NULL;
 	friend->priv->outgoing_pads_path=NULL;
 	friend->priv->public_key=NULL;
+	friend->priv->transport_cipher_name=NULL;
 	friend->priv->onion_base_domain=NULL;
 	friend->priv->onion_full_domain=NULL;
 }
@@ -126,6 +130,7 @@ static void otb_friend_finalize(GObject *object)
 	g_free(friend->priv->incoming_pads_path);
 	g_free(friend->priv->outgoing_pads_path);
 	g_free(friend->priv->public_key);
+	g_free(friend->priv->transport_cipher_name);
 	g_free(friend->priv->onion_base_domain);
 	g_free(friend->priv->onion_full_domain);
 	G_OBJECT_CLASS(otb_friend_parent_class)->finalize(object);
@@ -222,6 +227,13 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 			otb_friend_unlock_read(friend);
 			break;
 		}
+		case PROP_TRANSPORT_CIPHER_NAME:
+		{
+			otb_friend_lock_read(friend);
+			g_value_set_string(value, friend->priv->transport_cipher_name);
+			otb_friend_unlock_read(friend);
+			break;
+		}
 		case PROP_ONION_BASE_DOMAIN:
 		{
 			otb_friend_lock_read(friend);
@@ -241,6 +253,7 @@ static void otb_friend_export_key_file(const OtbFriend *friend, GKeyFile *export
 {
 	otb_settings_set_bytes(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, friend->priv->unique_id, sizeof *friend->priv->unique_id);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, friend->priv->public_key);
+	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME, friend->priv->transport_cipher_name);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, friend->priv->onion_base_domain);
 }
 
@@ -277,19 +290,27 @@ gboolean otb_friend_save(const OtbFriend *friend)
 	return ret_val;
 }
 
-#define otb_friend_import_unique_id(import_file)			(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL))
-#define otb_friend_import_public_key(import_file)			(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
-#define otb_friend_import_onion_base_domain(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN))
+#define otb_friend_import_unique_id(import_file)				(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL))
+#define otb_friend_import_public_key(import_file)				(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
+#define otb_friend_import_transport_cipher_name(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME))
+#define otb_friend_import_onion_base_domain(import_file)		(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN))
 
 static void otb_friend_set_unique_id_no_save(OtbFriend *friend, const OtbUniqueId *unique_id)
 {
 	g_free(friend->priv->unique_id);
 	friend->priv->unique_id=otb_unique_id_duplicate(unique_id);
 }
+
 static void otb_friend_set_public_key_no_save(const OtbFriend *friend, const char *public_key)
 {
 	g_free(friend->priv->public_key);
 	friend->priv->public_key=g_strdup(public_key);
+}
+
+static void otb_friend_set_transport_cipher_name_no_save(const OtbFriend *friend, const char *transport_cipher_name)
+{
+	g_free(friend->priv->transport_cipher_name);
+	friend->priv->transport_cipher_name=g_strdup(transport_cipher_name);
 }
 
 static void otb_friend_set_onion_base_domain_no_save(const OtbFriend *friend, const char *onion_base_domain)
@@ -304,12 +325,15 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 {
 	OtbUniqueId *unique_id=otb_friend_import_unique_id(import_file);
 	char *public_key=otb_friend_import_public_key(import_file);
+	char *transport_cipher_name=otb_friend_import_transport_cipher_name(import_file);
 	char *onion_base_domain=otb_friend_import_onion_base_domain(import_file);
 	otb_friend_set_unique_id_no_save(friend, unique_id);
 	otb_friend_set_public_key_no_save(friend, public_key);
+	otb_friend_set_transport_cipher_name_no_save(friend, transport_cipher_name);
 	otb_friend_set_onion_base_domain_no_save(friend, onion_base_domain);
 	g_free(unique_id);
 	g_free(public_key);
+	g_free(transport_cipher_name);
 	g_free(onion_base_domain);
 }
 
@@ -425,6 +449,14 @@ gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_k
 {
 	otb_friend_lock_write(friend);
 	otb_friend_set_public_key_no_save(friend, public_key);
+	otb_friend_unlock_write(friend);
+	return otb_friend_save(friend);
+}
+
+gboolean otb_friend_set_transport_cipher_name(const OtbFriend *friend, const char *transport_cipher_name)
+{
+	otb_friend_lock_write(friend);
+	otb_friend_set_transport_cipher_name_no_save(friend, transport_cipher_name);
 	otb_friend_unlock_write(friend);
 	return otb_friend_save(friend);
 }

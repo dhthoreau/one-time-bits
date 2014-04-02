@@ -179,10 +179,12 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	g_free(export_string);
 	OtbUniqueId *actual_unique_id=otb_settings_get_bytes(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL);
 	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
+	char *actual_sym_cipher_name=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME);
 	char *actual_onion_base_domain=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	g_free(actual_unique_id);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
+	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN, ==, actual_onion_base_domain);
 	g_free(expected_unique_id);
 	g_free(expected_public_key);
