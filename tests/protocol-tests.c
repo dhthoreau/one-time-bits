@@ -43,13 +43,14 @@ static void otb_create_peer(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_ciph
 	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, peer_id_out, OTB_USER_PROP_ASYM_CIPHER, asym_cipher_out, NULL);
 	g_assert(peer_id_out!=NULL);
 	g_assert(asym_cipher_out!=NULL);
+	g_object_set(*asym_cipher_out, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, "RC2-64-CBC", NULL);
 	*export_out=otb_user_export(user);
 	g_assert(export_out!=NULL);
 	g_object_unref(user);
 	g_object_unref(bitkeeper);
 }
 
-static void otb_do_client_establish_protocol_version(OtbProtocolContext *context)
+static void otb_do_client_establish_protocol_version(OtbProtocolContext *context, OtbBitkeeper *local_bitkeeper)
 {
 	const unsigned char EXPECTED_PROTOCOL_VERSION=0;
 	
@@ -62,11 +63,18 @@ static void otb_do_client_establish_protocol_version(OtbProtocolContext *context
 	g_free(client_packet);
 }
 
-static gboolean otb_do_client_establish_friend(OtbProtocolContext *context, OtbBitkeeper *local_bitkeeper)
+static uint32_t otb_create_ok_packet(unsigned char **server_response_packet)
 {
 	uint32_t server_response_packet_size=1;
-	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
-	server_response_packet[0]=EXPECTED_COMMAND_OK;
+	*server_response_packet=g_malloc(server_response_packet_size);
+	*server_response_packet[0]=EXPECTED_COMMAND_OK;
+	return server_response_packet_size;
+}
+
+static gboolean otb_do_client_establish_friend(OtbProtocolContext *context, OtbBitkeeper *local_bitkeeper)
+{
+	unsigned char *server_response_packet=NULL;
+	uint32_t server_response_packet_size=otb_create_ok_packet(&server_response_packet);
 	unsigned char *client_packet=NULL;
 	uint32_t client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, (void**)&client_packet);
 	g_assert(client_packet!=NULL);
@@ -84,6 +92,18 @@ static gboolean otb_do_client_establish_friend(OtbProtocolContext *context, OtbB
 	g_free(server_response_packet);
 }
 
+static gboolean otb_do_client_send_authentication_token(OtbProtocolContext *context, OtbBitkeeper *local_bitkeeper)
+{
+	unsigned char *server_response_packet=NULL;
+	uint32_t server_response_packet_size=otb_create_ok_packet(&server_response_packet);
+	unsigned char *client_packet=NULL;
+	uint32_t client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, (void**)&client_packet);
+	g_assert(client_packet!=NULL);
+	g_assert_cmpint(4168, ==, client_packet_size);
+	g_assert_cmpint(client_packet[0], ==, EXPECTED_COMMAND_ENCRYPTED);
+	// FARE - Decifra il dato è fa pui g_assert().
+}
+
 static void test_otb_protocol_client()
 {
 	OtbUniqueId *peer_id=NULL;
@@ -97,8 +117,9 @@ static void test_otb_protocol_client()
 	g_assert(peer_friend!=NULL);
 	OtbProtocolContext *context=otb_protocol_context_create_client(local_bitkeeper, peer_friend);
 	
-	otb_do_client_establish_protocol_version(context);
+	otb_do_client_establish_protocol_version(context, local_bitkeeper);
 	otb_do_client_establish_friend(context, local_bitkeeper);
+	otb_do_client_send_authentication_token(context, local_bitkeeper);
 	
 	otb_protocol_context_free(context);
 	g_object_unref(peer_friend);
