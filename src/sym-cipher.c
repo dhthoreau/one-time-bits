@@ -197,7 +197,7 @@ static OtbSymCipherContext *otb_sym_cipher_init_encryption_openssl(const EVP_CIP
 {
 	OtbSymCipherContext *sym_cipher_context=g_malloc(sizeof *sym_cipher_context);
 	EVP_CIPHER_CTX_init(sym_cipher_context);
-	if(!EVP_EncryptInit_ex(sym_cipher_context, sym_cipher_impl, NULL, key, iv))
+	if(EVP_EncryptInit_ex(sym_cipher_context, sym_cipher_impl, NULL, key, iv)<=0)
 	{
 		otb_sym_cipher_context_free(sym_cipher_context);
 		char *error=otb_openssl_errors_as_string();
@@ -211,7 +211,7 @@ static OtbSymCipherContext *otb_sym_cipher_init_decryption_openssl(const EVP_CIP
 {
 	OtbSymCipherContext *sym_cipher_context=g_malloc(sizeof *sym_cipher_context);
 	EVP_CIPHER_CTX_init(sym_cipher_context);
-	if(!EVP_DecryptInit_ex(sym_cipher_context, sym_cipher, NULL, key, iv))
+	if(EVP_DecryptInit_ex(sym_cipher_context, sym_cipher, NULL, key, iv)<=0)
 	{
 		otb_sym_cipher_context_free(sym_cipher_context);
 		char *error=otb_openssl_errors_as_string();
@@ -326,7 +326,7 @@ OtbSymCipherContext *otb_sym_cipher_init_decryption(const OtbSymCipher *sym_ciph
 size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
-	if(!EVP_EncryptUpdate(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size))
+	if(EVP_EncryptUpdate(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size, plain_bytes, plain_bytes_size)<=0)
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("Failed to encrypt data. Error == %s"), error);
@@ -339,7 +339,7 @@ size_t otb_sym_cipher_encrypt_next(OtbSymCipherContext *sym_cipher_context, cons
 size_t otb_sym_cipher_decrypt_next(OtbSymCipherContext *sym_cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void *plain_bytes_out)
 {
 	int plain_bytes_size;
-	if(!EVP_DecryptUpdate(sym_cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size))
+	if(EVP_DecryptUpdate(sym_cipher_context, plain_bytes_out, &plain_bytes_size, encrypted_bytes, encrypted_bytes_size)<=0)
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("Failed to decrypt data. Error == %s"), error);
@@ -352,7 +352,7 @@ size_t otb_sym_cipher_decrypt_next(OtbSymCipherContext *sym_cipher_context, cons
 size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, unsigned char *encrypted_bytes_out)
 {
 	int encrypted_bytes_size;
-	if(!EVP_EncryptFinal_ex(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size))
+	if(EVP_EncryptFinal_ex(sym_cipher_context, encrypted_bytes_out, &encrypted_bytes_size)<=0)
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("Failed to encrypt final data. Error == %s"), error);
@@ -366,7 +366,7 @@ size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, un
 size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, void *plain_bytes_out)
 {
 	int plain_bytes_size;
-	if(!EVP_DecryptFinal_ex(sym_cipher_context, plain_bytes_out, &plain_bytes_size))
+	if(EVP_DecryptFinal_ex(sym_cipher_context, plain_bytes_out, &plain_bytes_size)<=0)
 	{
 		char *error=otb_openssl_errors_as_string();
 		g_warning(_("Failed to decrypt final data. Error == %s"), error);
