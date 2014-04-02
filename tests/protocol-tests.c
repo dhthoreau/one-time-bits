@@ -70,7 +70,7 @@ static gboolean otb_do_client_establish_friend(OtbProtocolContext *context, OtbB
 	unsigned char *client_packet=NULL;
 	uint32_t client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, (void**)&client_packet);
 	g_assert(client_packet!=NULL);
-	g_assert_cmpint(35, ==, client_packet_size);
+	g_assert_cmpint(17, ==, client_packet_size);
 	g_assert_cmpint(client_packet[0], ==, EXPECTED_COMMAND_SENDING_FRIEND_ID);
 	OtbUser *local_user=NULL;
 	g_object_get(local_bitkeeper, OTB_BITKEEPER_PROP_USER, &local_user, NULL);
