@@ -65,8 +65,10 @@ static void otb_protocol_set_peer_friend_on_context(OtbProtocolContext *context,
 	g_object_ref(peer_friend);
 	context->peer_friend=peer_friend;
 	char *peer_public_key=NULL;
-	g_object_get(peer_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &peer_public_key, OTB_FRIEND_PROP_OUTGOING_PADS, &context->pad_db, NULL);
-	context->peer_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, peer_public_key, NULL);
+	char *peer_transport_cipher_name=NULL;
+	g_object_get(peer_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &peer_public_key, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &peer_transport_cipher_name, OTB_FRIEND_PROP_OUTGOING_PADS, &context->pad_db, NULL);
+	context->peer_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, peer_public_key, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, peer_transport_cipher_name, NULL);
+	g_free(peer_transport_cipher_name);
 	g_free(peer_public_key);
 }
 
@@ -178,14 +180,10 @@ static uint32_t otb_protocol_client_establish_protocol_version(OtbProtocolContex
 	return packet_size;
 }
 
-#define UNIQUE_ID_PACKET_SYM_CIPHER_NAME(packet)		((unsigned char*)(packet)+sizeof(*packet))
-#define UNIQUE_ID_PACKET_IS_VALID(packet, packet_size)	(sizeof(*packet)+g_ntohl((packet)->sym_cipher_name_size)==(packet_size))
-
 typedef struct
 {
 	OtbProtocolCommand command;
 	OtbUniqueId unique_id;
-	uint32_t sym_cipher_name_size;
 } OtbPacketClientId;
 
 static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolContext *context, const void *input_packet, uint32_t input_packet_size, void **packet_out)
@@ -195,19 +193,13 @@ static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolCon
 	if(incoming_command==COMMAND_OK && input_packet_size==sizeof incoming_command)
 	{
 		OtbPacketClientId *packet=NULL;
-		char *sym_cipher_name=NULL;
-		g_object_get(context->local_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &sym_cipher_name, NULL);
-		uint32_t sym_cipher_name_size=strlen(sym_cipher_name);
-		uint32_t packet_size=sizeof *packet+sym_cipher_name_size;
+		uint32_t packet_size=sizeof *packet;
 		packet=g_malloc(packet_size);
 		packet->command=COMMAND_SENDING_FRIEND_ID;
 		OtbUniqueId *unique_id=NULL;
 		g_object_get(context->local_user, OTB_USER_PROP_UNIQUE_ID, &unique_id, NULL);
 		memcpy(&packet->unique_id, unique_id, sizeof *unique_id);
-		packet->sym_cipher_name_size=g_htonl(sym_cipher_name_size);
-		memcpy(UNIQUE_ID_PACKET_SYM_CIPHER_NAME(packet), sym_cipher_name, sym_cipher_name_size);
 		g_free(unique_id);
-		g_free(sym_cipher_name);
 		*packet_out=packet;
 		return packet_size;
 	}
@@ -406,7 +398,7 @@ static uint32_t otb_protocol_server_establish_friend(OtbProtocolContext *context
 	context->state=STATE_ESTABLISHING_FRIEND;
 	const OtbProtocolCommand incoming_command=*(OtbProtocolCommand*)input_packet;
 	const OtbPacketClientId *client_id_packet=input_packet;
-	if(incoming_command==COMMAND_SENDING_FRIEND_ID && UNIQUE_ID_PACKET_IS_VALID(client_id_packet, input_packet_size))
+	if(incoming_command==COMMAND_SENDING_FRIEND_ID && input_packet_size==sizeof *client_id_packet)
 	{
 		OtbFriend *peer_friend=otb_bitkeeper_get_friend(context->bitkeeper, &client_id_packet->unique_id);
 		if(peer_friend==NULL)

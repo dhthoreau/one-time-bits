@@ -30,8 +30,8 @@ struct _OtbAsymCipherPrivate
 enum
 {
 	PROP_0,
-	PROP_SYM_CIPHER_NAME,
-	PROP_PUBLIC_KEY
+	PROP_PUBLIC_KEY,
+	PROP_SYM_CIPHER_NAME
 };
 
 static void otb_asym_cipher_finalize(GObject *object);
@@ -47,8 +47,8 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 	object_class->finalize=otb_asym_cipher_finalize;
 	object_class->set_property=otb_asym_cipher_set_property;
 	object_class->get_property=otb_asym_cipher_get_property;
-	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, _("Public key"), _("The public key to use for encryption"), NULL, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbAsymCipherPrivate));
 }
 
@@ -87,13 +87,6 @@ static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, 
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
 	switch(prop_id)
 	{
-		case PROP_SYM_CIPHER_NAME:
-		{
-			otb_asym_cipher_lock_write(asym_cipher);
-			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(g_value_get_string(value));
-			otb_asym_cipher_unlock_write(asym_cipher);
-			break;
-		}
 		case PROP_PUBLIC_KEY:
 		{
 			char *string_value=g_value_dup_string(value);
@@ -103,6 +96,13 @@ static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, 
 			otb_asym_cipher_unlock_write(asym_cipher);
 			BIO_free_all(buff_io);
 			g_free(string_value);
+			break;
+		}
+		case PROP_SYM_CIPHER_NAME:
+		{
+			otb_asym_cipher_lock_write(asym_cipher);
+			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(g_value_get_string(value));
+			otb_asym_cipher_unlock_write(asym_cipher);
 			break;
 		}
 		default:
@@ -118,13 +118,6 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
 	switch(prop_id)
 	{
-		case PROP_SYM_CIPHER_NAME:
-		{
-			otb_asym_cipher_lock_read(asym_cipher);
-			g_value_set_string(value, EVP_CIPHER_name(asym_cipher->priv->cipher_impl));
-			otb_asym_cipher_unlock_read(asym_cipher);
-			break;
-		}
 		case PROP_PUBLIC_KEY:
 		{
 			BIO *buff_io=BIO_new(BIO_s_mem());
@@ -140,6 +133,13 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 			}
 			otb_asym_cipher_unlock_read(asym_cipher);
 			BIO_free(buff_io);
+			break;
+		}
+		case PROP_SYM_CIPHER_NAME:
+		{
+			otb_asym_cipher_lock_read(asym_cipher);
+			g_value_set_string(value, EVP_CIPHER_name(asym_cipher->priv->cipher_impl));
+			otb_asym_cipher_unlock_read(asym_cipher);
 			break;
 		}
 		default:

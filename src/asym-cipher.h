@@ -20,8 +20,8 @@ typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 
 #define OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE	4096
 
-#define OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME	"sym-cipher-name"
 #define OTB_ASYM_CIPHER_PROP_PUBLIC_KEY			"public-key"
+#define OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME	"sym-cipher-name"
 
 #define OTB_TYPE_ASYM_CIPHER			(otb_asym_cipher_get_type())
 #define OTB_ASYM_CIPHER(obj)			(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_ASYM_CIPHER, OtbAsymCipher))
