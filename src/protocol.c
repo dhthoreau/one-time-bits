@@ -120,19 +120,21 @@ static uint32_t otb_protocol_create_error_packet(OtbProtocolContext *context, un
 ///  unsigned char* - Encrypted key
 ///  unsigned char* - IV
 ///  unsigned char* - Encrypted data
-#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			((unsigned char*)(packet)+sizeof(*packet))
-#define ENCRYPTED_PACKET_IV(packet)						((unsigned char*)(packet)+sizeof(*packet)+g_ntohl((packet)->encrypted_key_size))
-#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			((unsigned char*)(packet)+sizeof(*packet)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size))
-// FARE - Usa questo:
-#define ENCRYPTED_PACKET_IS_VALID(packet, packet_size)	(sizeof(*packet)+g_ntohl((packet)->encrypted_key_size)+g_ntohl((packet)->iv_size)+g_ntohl((packet)->encrypted_data_size)==(packet_size))
+#define PACKET_UINT32(packet, position)				*((uint32_t*)((packet)+(position)))
+#define SET_PACKET_UINT32(packet, position, value)	(PACKET_UINT32((packet), (position))=g_htonl(value))
+#define GET_PACKET_UINT32(packet, position)			(g_ntohl(PACKET_UINT32((packet), (position))))
 
-typedef struct
-{
-	OtbProtocolCommand command;
-	uint32_t encrypted_key_size;
-	uint32_t iv_size;
-	uint32_t encrypted_data_size;
-} OtbEncryptedPacket;
+#define ENCRYPTED_PACKET_SET_ENCRYPTED_KEY_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (size))
+#define ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
+#define ENCRYPTED_PACKET_SET_IV_SIZE(packet, size)				SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand)+sizeof(uint32_t), (size))
+#define ENCRYPTED_PACKET_GET_IV_SIZE(packet)					GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand)+sizeof(uint32_t))
+#define ENCRYPTED_PACKET_SET_ENCRYPTED_DATA_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t), (size))
+#define ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(packet)		GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t))
+
+#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			&((packet)[sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)])
+#define ENCRYPTED_PACKET_IV(packet)						&((packet)[sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)])
+#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			&((packet)[sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)+ENCRYPTED_PACKET_GET_IV_SIZE(packet)])
+#define ENCRYPTED_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)+ENCRYPTED_PACKET_GET_IV_SIZE(packet)+ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(packet)==packet_size)
 
 static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *context, const unsigned char *plain_packet, uint32_t plain_packet_size, unsigned char **packet_out)
 {
@@ -142,33 +144,32 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *c
 	uint32_t encrypted_data_size=otb_asym_cipher_encrypt(context->peer_asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data);
 	uint32_t encrypted_key_size=g_bytes_get_size(encrypted_key);
 	uint32_t iv_size=g_bytes_get_size(iv);
-	OtbEncryptedPacket *output_packet=NULL;
-	uint32_t packet_out_size=sizeof *output_packet+encrypted_key_size+iv_size+encrypted_data_size;
-	output_packet=g_malloc(packet_out_size);
-	output_packet->command=COMMAND_ENCRYPTED;
-	output_packet->encrypted_key_size=g_htonl(encrypted_key_size);
-	output_packet->iv_size=g_htonl(iv_size);
-	output_packet->encrypted_data_size=g_htonl(encrypted_data_size);
-	memcpy(ENCRYPTED_PACKET_ENCRYPTED_KEY(output_packet), g_bytes_get_data(encrypted_key, NULL), encrypted_key_size);
-	memcpy(ENCRYPTED_PACKET_IV(output_packet), g_bytes_get_data(iv, NULL), iv_size);
-	memcpy(ENCRYPTED_PACKET_ENCRYPTED_DATA(output_packet), encrypted_data, encrypted_data_size);
+	uint32_t packet_out_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+encrypted_key_size+iv_size+encrypted_data_size;
+	*packet_out=g_malloc(packet_out_size);
+	PACKET_COMMAND(*packet_out)=COMMAND_ENCRYPTED;
+	ENCRYPTED_PACKET_SET_ENCRYPTED_KEY_SIZE(*packet_out, encrypted_key_size);
+	ENCRYPTED_PACKET_SET_IV_SIZE(*packet_out, iv_size);
+	ENCRYPTED_PACKET_SET_ENCRYPTED_DATA_SIZE(*packet_out, encrypted_data_size);
+	memcpy(ENCRYPTED_PACKET_ENCRYPTED_KEY(*packet_out), g_bytes_get_data(encrypted_key, NULL), encrypted_key_size);
+	memcpy(ENCRYPTED_PACKET_IV(*packet_out), g_bytes_get_data(iv, NULL), iv_size);
+	memcpy(ENCRYPTED_PACKET_ENCRYPTED_DATA(*packet_out), encrypted_data, encrypted_data_size);
 	g_bytes_unref(encrypted_key);
 	g_bytes_unref(iv);
-	*packet_out=(unsigned char*)output_packet;
 	return packet_out_size;
 }
 
 uint32_t otb_protocol_decrypt_packet(OtbProtocolContext *context, const unsigned char *encrypted_input_packet, uint32_t encrypted_input_packet_size, unsigned char **decrypted_input_packet)
 {
-	const OtbEncryptedPacket *encrypted_packet=(OtbEncryptedPacket*)encrypted_input_packet;
-	if(encrypted_packet->command!=COMMAND_ENCRYPTED)
-		return otb_protocol_create_error_packet(context, decrypted_input_packet);
-	GBytes *encrypted_key_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_ENCRYPTED_KEY(encrypted_packet), g_ntohl(encrypted_packet->encrypted_key_size));
-	GBytes *iv_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_IV(encrypted_packet), g_ntohl(encrypted_packet->iv_size));
-	uint32_t decrypted_input_packet_size=otb_asym_cipher_decrypt(context->local_asym_cipher, ENCRYPTED_PACKET_ENCRYPTED_DATA(encrypted_packet), encrypted_packet->encrypted_data_size, encrypted_key_gbytes, iv_gbytes, (void**)decrypted_input_packet);
-	g_bytes_unref(iv_gbytes);
-	g_bytes_unref(encrypted_key_gbytes);
-	return decrypted_input_packet_size;
+	if(PACKET_COMMAND(encrypted_input_packet)==COMMAND_ENCRYPTED && ENCRYPTED_PACKET_IS_VALID(encrypted_input_packet, encrypted_input_packet_size))
+	{
+		GBytes *encrypted_key_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_ENCRYPTED_KEY(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(encrypted_input_packet));
+		GBytes *iv_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_IV(encrypted_input_packet), ENCRYPTED_PACKET_GET_IV_SIZE(encrypted_input_packet));
+		uint32_t decrypted_input_packet_size=otb_asym_cipher_decrypt(context->local_asym_cipher, ENCRYPTED_PACKET_ENCRYPTED_DATA(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(encrypted_input_packet), encrypted_key_gbytes, iv_gbytes, (void**)decrypted_input_packet);
+		g_bytes_unref(iv_gbytes);
+		g_bytes_unref(encrypted_key_gbytes);
+		return decrypted_input_packet_size;
+	}
+	return otb_protocol_create_error_packet(context, decrypted_input_packet);
 }
 
 ///Protocol packet structure:
@@ -208,10 +209,6 @@ static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolCon
 	}
 	return otb_protocol_create_error_packet(context, packet_out);
 }
-
-#define PACKET_UINT32(packet, position)				*((uint32_t*)((packet)+(position)))
-#define SET_PACKET_UINT32(packet, position, value)	(PACKET_UINT32((packet), (position))=g_htonl(value))
-#define GET_PACKET_UINT32(packet, position)			(g_ntohl(PACKET_UINT32((packet), (position))))
 
 ///Authenication packet structure:
 ///  OtbProtocolCommand - Command
