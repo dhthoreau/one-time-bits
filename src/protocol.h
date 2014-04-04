@@ -16,7 +16,19 @@
 #include "unique-id.h"
 
 typedef unsigned char OtbProtocolState;
-typedef struct _OtbProtocolContext OtbProtocolContext;
+
+typedef struct
+{
+	OtbProtocolState state;
+	unsigned char *authentication_token;
+	OtbBitkeeper *bitkeeper;
+	OtbUser *local_user;
+	OtbAsymCipher *local_asym_cipher;
+	OtbFriend *peer_friend;
+	OtbAsymCipher *peer_asym_cipher;
+	OtbPadDb *pad_db;
+}
+OtbProtocolContext;
 
 /// Using uint32_t here instead of size_t for array lengths because these are values that could be sent across the network, and we must be assured of 32-bit sized uints for cross compatibility. A size_t could be 64-bit on some CPUs, which would not work when talking to a 32-bit peer.
 OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, OtbFriend *peer_friend);

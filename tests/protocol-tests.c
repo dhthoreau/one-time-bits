@@ -122,7 +122,9 @@ static gboolean otb_do_client_send_authentication_token(OtbProtocolContext *cont
 	uint32_t plain_client_packet_size=otb_decrypt_packet(peer_asym_cipher, encrypted_client_packet, encrypted_client_packet_size, &plain_client_packet);
 	g_assert_cmpint(4101, ==, plain_client_packet_size);
 	g_assert(plain_client_packet!=NULL);
-	// FARE - g_assert() i dati in plain_client_packet.
+	g_assert_cmpint(EXPECTED_COMMAND_SENDING_AUTHENTICATION_TOKEN, ==, plain_client_packet[0]);
+	g_assert_cmpint(4096, ==, g_ntohl(*(uint32_t*)(plain_client_packet+1)));
+	g_assert_cmpint(0, ==, memcmp(context->authentication_token, plain_client_packet+5, 4096));
 	g_free(plain_client_packet);
 	g_free(encrypted_client_packet);
 	g_free(server_response_packet);
