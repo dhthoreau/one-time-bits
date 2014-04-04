@@ -282,23 +282,27 @@ static uint32_t otb_protocol_client_request_pad_ids_from_server(OtbProtocolConte
 #define PAD_IDS_PACKET_PAD_ID(packet, index)			&(((OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)))[index])
 #define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)*sizeof(OtbUniqueId)==(packet_size))
 
-static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *context, const unsigned char *input_packet, OtbPadRecStatus pad_rec_status)
-// Fare - Non cè validazione di input_packet con PAD_IDS_PACKET_IS_VALID() e PROTOCOL_COMMAND()??
+static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, OtbPadRecStatus pad_rec_status)
 {
 	gboolean ret_val=TRUE;
-	GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, pad_rec_status);
-	for(const GSList *curr_element=pad_rec_ids; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	if(PACKET_COMMAND(input_packet)==COMMAND_SENDING_PAD_IDS && PAD_IDS_PACKET_IS_VALID(input_packet, input_packet_size))
+		ret_val=FALSE;
+	else
 	{
-		const OtbUniqueId *pad_rec_id=(const OtbUniqueId*)curr_element->data;
-		gboolean pad_rec_id_found_in_packet=FALSE;
-		uint32_t pad_rec_count=PAD_IDS_PACKET_GET_PAD_ID_COUNT(input_packet);
-		for(int packet_pad_rec_id_iter=0; !pad_rec_id_found_in_packet && packet_pad_rec_id_iter<pad_rec_count; packet_pad_rec_id_iter++)
-			if(otb_unique_id_compare(pad_rec_id, PAD_IDS_PACKET_PAD_ID(input_packet, packet_pad_rec_id_iter))==0)
-				pad_rec_id_found_in_packet=TRUE;
-		if(!pad_rec_id_found_in_packet)
-			ret_val=otb_pad_db_remove_pad(context->pad_db, pad_rec_id);
+		GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, pad_rec_status);
+		for(const GSList *curr_element=pad_rec_ids; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+		{
+			const OtbUniqueId *pad_rec_id=(const OtbUniqueId*)curr_element->data;
+			gboolean pad_rec_id_found_in_packet=FALSE;
+			uint32_t pad_rec_count=PAD_IDS_PACKET_GET_PAD_ID_COUNT(input_packet);
+			for(int packet_pad_rec_id_iter=0; !pad_rec_id_found_in_packet && packet_pad_rec_id_iter<pad_rec_count; packet_pad_rec_id_iter++)
+				if(otb_unique_id_compare(pad_rec_id, PAD_IDS_PACKET_PAD_ID(input_packet, packet_pad_rec_id_iter))==0)
+					pad_rec_id_found_in_packet=TRUE;
+			if(!pad_rec_id_found_in_packet)
+				ret_val=otb_pad_db_remove_pad(context->pad_db, pad_rec_id);
+		}
+		g_slist_free_full(pad_rec_ids, g_free);
 	}
-	g_slist_free_full(pad_rec_ids, g_free);
 	return ret_val;
 }
 
@@ -331,7 +335,7 @@ static uint32_t otb_protocol_client_send_pad_ids_to_server(OtbProtocolContext *c
 	unsigned char *decrypted_input_packet=NULL;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
 	uint32_t packet_out_size;
-	if(PACKET_COMMAND(input_packet)==COMMAND_SENDING_PAD_IDS && PAD_IDS_PACKET_IS_VALID(decrypted_input_packet, decrypted_input_packet_size) && otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, OTB_PAD_REC_STATUS_SENT) && otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, OTB_PAD_REC_STATUS_CONSUMED))
+	if(otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, decrypted_input_packet_size, OTB_PAD_REC_STATUS_SENT) && otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, decrypted_input_packet_size, OTB_PAD_REC_STATUS_CONSUMED))
 		packet_out_size=otb_protocol_create_pad_ids_packet(context, OTB_PAD_REC_STATUS_SENT, OTB_PAD_REC_STATUS_CONSUMED, packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
@@ -444,7 +448,7 @@ static uint32_t otb_protocol_server_receive_pad_ids_from_client(OtbProtocolConte
 	unsigned char *decrypted_input_packet=NULL;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
 	uint32_t packet_out_size;
-	if(PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_PAD_IDS && PAD_IDS_PACKET_IS_VALID(decrypted_input_packet, decrypted_input_packet_size) && otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, OTB_PAD_REC_STATUS_RECEIVED))
+	if(otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, decrypted_input_packet_size, OTB_PAD_REC_STATUS_RECEIVED))
 		packet_out_size=otb_protocol_create_ok_packet(packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
