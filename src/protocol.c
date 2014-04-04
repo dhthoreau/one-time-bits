@@ -153,6 +153,9 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *c
 	memcpy(ENCRYPTED_PACKET_ENCRYPTED_KEY(*packet_out), g_bytes_get_data(encrypted_key, NULL), encrypted_key_size);
 	memcpy(ENCRYPTED_PACKET_IV(*packet_out), g_bytes_get_data(iv, NULL), iv_size);
 	memcpy(ENCRYPTED_PACKET_ENCRYPTED_DATA(*packet_out), encrypted_data, encrypted_data_size);
+unsigned char *yo=ENCRYPTED_PACKET_ENCRYPTED_KEY(*packet_out);
+unsigned char *hey=ENCRYPTED_PACKET_IV(*packet_out);
+unsigned char *wussup=ENCRYPTED_PACKET_ENCRYPTED_DATA(*packet_out);
 	g_bytes_unref(encrypted_key);
 	g_bytes_unref(iv);
 	return packet_out_size;
