@@ -112,7 +112,7 @@ GDir *otb_open_directory(const char *directory_path)
 gboolean otb_delete_dir(const char *dir_path)
 {
 	gboolean ret_val=TRUE;
-	GError *error;
+	GError *error=NULL;
 	GDir *test_dir=g_dir_open(dir_path, 0, &error);
 	if(test_dir!=NULL)
 	{
