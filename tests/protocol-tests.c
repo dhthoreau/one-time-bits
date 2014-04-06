@@ -50,9 +50,24 @@ static uint32_t otb_decrypt_packet(const OtbAsymCipher *peer_asym_cipher, const 
 	return decrypted_packet_size;
 }
 
-static void otb_create_peer(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
+static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
 {
 	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
+	OtbUser *user=NULL;
+	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
+	g_assert(user!=NULL);
+	OtbAsymCipher *asym_cipher=NULL;
+	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, NULL);
+	g_assert(asym_cipher!=NULL);
+	g_object_set(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, "RC2-64-CBC", NULL);
+	g_object_unref(asym_cipher);
+	g_object_unref(user);
+	return bitkeeper;
+}
+
+static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
+{
+	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_protocol_test();
 	OtbUser *user=NULL;
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
 	g_assert(user!=NULL);
@@ -60,7 +75,6 @@ static void otb_create_peer(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_ciph
 	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, peer_id_out, OTB_USER_PROP_ASYM_CIPHER, asym_cipher_out, NULL);
 	g_assert(peer_id_out!=NULL);
 	g_assert(asym_cipher_out!=NULL);
-	g_object_set(*asym_cipher_out, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, "RC2-64-CBC", NULL);
 	*export_out=otb_user_export(user);
 	g_assert(export_out!=NULL);
 	g_object_unref(user);
@@ -110,7 +124,7 @@ static gboolean otb_do_client_establish_friend(OtbProtocolContext *context, OtbB
 	g_free(server_response_packet);
 }
 
-static gboolean otb_do_client_send_authentication_token(OtbProtocolContext *context, const OtbBitkeeper *local_bitkeeper, const OtbAsymCipher *peer_asym_cipher)
+static gboolean otb_do_client_send_authentication_token_to_server(OtbProtocolContext *context, const OtbBitkeeper *local_bitkeeper, const OtbAsymCipher *peer_asym_cipher)
 {
 	unsigned char *server_response_packet=NULL;
 	uint32_t server_response_packet_size=otb_create_ok_packet(&server_response_packet);
@@ -130,26 +144,65 @@ static gboolean otb_do_client_send_authentication_token(OtbProtocolContext *cont
 	g_free(server_response_packet);
 }
 
+static uint32_t otb_make_encrypted_packet(const OtbProtocolContext *context, const unsigned char *plain_packet, uint32_t plain_packet_size, unsigned char **encrypted_packet_out)
+{
+	GBytes *encrypted_key=NULL;
+	GBytes *iv=NULL;
+	unsigned char *encrypted_data=NULL;
+	uint32_t encrypted_data_size=otb_asym_cipher_encrypt(context->local_asym_cipher, plain_packet, 4101, &encrypted_key, &iv, &encrypted_data);
+	uint32_t encrypted_packet_size=13+g_bytes_get_size(encrypted_key)+g_bytes_get_size(iv)+encrypted_data_size;
+	*encrypted_packet_out=g_malloc(encrypted_packet_size);
+	*encrypted_packet_out[0]=EXPECTED_COMMAND_ENCRYPTED;
+	*(uint32_t*)(*encrypted_packet_out+1)=g_htonl(g_bytes_get_size(encrypted_key));
+	*(uint32_t*)(*encrypted_packet_out+5)=g_htonl(g_bytes_get_size(iv));
+	*(uint32_t*)(*encrypted_packet_out+9)=g_htonl(encrypted_data_size);
+	memcpy(*encrypted_packet_out+13, g_bytes_get_data(encrypted_key, NULL), g_bytes_get_size(encrypted_key));
+	memcpy(*encrypted_packet_out+13+g_bytes_get_size(encrypted_key), g_bytes_get_data(iv, NULL), g_bytes_get_size(iv));
+	memcpy(*encrypted_packet_out+13+g_bytes_get_size(encrypted_key)+g_bytes_get_size(iv), encrypted_data, encrypted_data_size);
+	g_free(encrypted_data);
+	return encrypted_packet_size;
+}
+
+static gboolean otb_do_client_request_authentication_from_server(OtbProtocolContext *context, const OtbBitkeeper *local_bitkeeper, const OtbAsymCipher *peer_asym_cipher)
+{
+	unsigned char *server_response_plain_packet=g_malloc(4101);
+	server_response_plain_packet[0]=EXPECTED_COMMAND_SENDING_AUTHENTICATION_TOKEN;
+	*(uint32_t*)(server_response_plain_packet+1)=g_htonl(4096);
+	memcpy(server_response_plain_packet+5, context->authentication_token, 4096);
+	unsigned char *server_response_encrypted_packet=NULL;
+	uint32_t server_response_encrypted_packet_size=otb_make_encrypted_packet(context, server_response_plain_packet, 4101, &server_response_encrypted_packet);
+	unsigned char *client_packet=NULL;
+	uint32_t client_packet_size=otb_protocol_client(context, server_response_encrypted_packet, server_response_encrypted_packet_size, &client_packet);
+	g_assert_cmpint(1, ==, client_packet_size);
+	g_assert(client_packet!=NULL);
+	g_assert_cmpint(EXPECTED_COMMAND_REQUESTING_AUTHENTICATION, ==, client_packet[0]);
+	g_free(client_packet);
+	g_free(server_response_encrypted_packet);
+	g_free(server_response_plain_packet);
+}
+
 static void test_otb_protocol_client()
 {
 	OtbUniqueId *peer_id=NULL;
 	OtbAsymCipher *peer_asym_cipher=NULL;
 	char *peer_export=NULL;
-	otb_create_peer(&peer_id, &peer_asym_cipher, &peer_export);
-	OtbBitkeeper *local_bitkeeper=otb_create_bitkeeper_for_test();
+	otb_create_peer_for_protocol_test(&peer_id, &peer_asym_cipher, &peer_export);
+	OtbBitkeeper *local_bitkeeper=otb_create_bitkeeper_for_protocol_test();
 	g_assert(otb_bitkeeper_import_friend(local_bitkeeper, peer_export));
 	g_free(peer_export);
 	OtbFriend *peer_friend=otb_bitkeeper_get_friend(local_bitkeeper, peer_id);
 	g_assert(peer_friend!=NULL);
 	OtbProtocolContext *context=otb_protocol_context_create_client(local_bitkeeper, peer_friend);
 	
-	otb_do_client_establish_protocol_version(context, NULL, NULL);
-	otb_do_client_establish_friend(context, local_bitkeeper, NULL);
-	otb_do_client_send_authentication_token(context, local_bitkeeper, peer_asym_cipher);
+	otb_do_client_establish_protocol_version(context, local_bitkeeper, peer_asym_cipher);
+	otb_do_client_establish_friend(context, local_bitkeeper, peer_asym_cipher);
+	otb_do_client_send_authentication_token_to_server(context, local_bitkeeper, peer_asym_cipher);
+	otb_do_client_request_authentication_from_server(context, local_bitkeeper, peer_asym_cipher);
 	
 	otb_protocol_context_free(context);
 	g_object_unref(peer_friend);
 	g_object_unref(local_bitkeeper);
+	g_object_unref(peer_asym_cipher);
 }
 
 void otb_add_protocol_tests()

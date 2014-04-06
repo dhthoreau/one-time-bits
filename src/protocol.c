@@ -119,9 +119,9 @@ static uint32_t otb_protocol_create_error_packet(OtbProtocolContext *context, un
 #define ENCRYPTED_PACKET_SET_ENCRYPTED_DATA_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t), (size))
 #define ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(packet)		GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t))
 
-#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			&((packet)[sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)])
-#define ENCRYPTED_PACKET_IV(packet)						&((packet)[sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)])
-#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			&((packet)[sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)+ENCRYPTED_PACKET_GET_IV_SIZE(packet)])
+#define ENCRYPTED_PACKET_ENCRYPTED_KEY(packet)			((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t))
+#define ENCRYPTED_PACKET_IV(packet)						((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet))
+#define ENCRYPTED_PACKET_ENCRYPTED_DATA(packet)			((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)+ENCRYPTED_PACKET_GET_IV_SIZE(packet))
 #define ENCRYPTED_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)+ENCRYPTED_PACKET_GET_IV_SIZE(packet)+ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(packet)==packet_size)
 
 static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *context, const unsigned char *plain_packet, uint32_t plain_packet_size, unsigned char **packet_out)
@@ -181,7 +181,7 @@ static uint32_t otb_protocol_client_establish_protocol_version(OtbProtocolContex
 ///  OtbProtocolCommand - Command
 ///  OtbUniqueId - ID of friend
 #define ESTABLISHING_FRIEND_PACKET_SIZE			(sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId))
-#define ESTABLISHING_FRIEND_PACKET_ID(packet)	(OtbUniqueId*)&((packet)[sizeof(OtbProtocolCommand)])
+#define ESTABLISHING_FRIEND_PACKET_ID(packet)	(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand))
 
 static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
 {
@@ -206,7 +206,7 @@ static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolCon
 ///Will be wrapped in an encrypted packet.
 #define AUTHENTICATION_MESSAGE_PACKET_SET_TOKEN_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (size))
 #define AUTHENTICATION_MESSAGE_PACKET_GET_TOKEN_SIZE(packet)		GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
-#define AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet)					&((packet)[sizeof(OtbProtocolCommand)+sizeof(uint32_t)])
+#define AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet)					((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t))
 #define AUTHENTICATION_MESSAGE_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+AUTHENTICATION_MESSAGE_PACKET_GET_TOKEN_SIZE(packet)==(packet_size))
 
 static uint32_t otb_protocol_create_authentication_packet(const OtbProtocolContext *context, unsigned char **packet_out)
@@ -280,7 +280,7 @@ static uint32_t otb_protocol_client_request_pad_ids_from_server(OtbProtocolConte
 ///  OtbUniqueId[] - Array of unique IDs of pad, repeated based on the pad ID count
 #define PAD_IDS_PACKET_SET_PAD_ID_COUNT(packet, count)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (count))
 #define PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
-#define PAD_IDS_PACKET_PAD_ID(packet, index)			&(((OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)))[index])
+#define PAD_IDS_PACKET_PAD_ID(packet, index)			(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+index*sizeof(OtbUniqueId))
 #define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)*sizeof(OtbUniqueId)==(packet_size))
 
 static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, OtbPadRecStatus pad_rec_status)
