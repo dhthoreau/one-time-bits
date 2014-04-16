@@ -12,10 +12,10 @@
 
 #include "io.h"
 #include "local-crypto.h"
+#include "memory.h"
 #include "pad-rec.h"
 #include "random.h"
 #include "settings.h"
-#include "smem.h"
 
 #define INPUT_BUFFER_SIZE	4096
 
@@ -341,7 +341,7 @@ gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec)
 				ret_val=FALSE;
 		}
 		otb_pad_io_free(pad_io);
-		smemset(buffer_bytes, 0, INPUT_BUFFER_SIZE);
+		otb_smemset(buffer_bytes, 0, INPUT_BUFFER_SIZE);
 	}
 	return ret_val;
 }
@@ -470,14 +470,14 @@ gboolean otb_pad_io_free(OtbPadIO *pad_io)
 			final_encrypt_successful=FALSE;
 	}
 	if(pad_io->output_buffer!=NULL)
-		smemset(pad_io->output_buffer, 0, pad_io->output_buffer_allocated_size);
+		otb_smemset(pad_io->output_buffer, 0, pad_io->output_buffer_allocated_size);
 	if(pad_io->final_output_buffer!=NULL)
-		smemset(pad_io->final_output_buffer, 0, pad_io->final_output_buffer_allocated_size);
+		otb_smemset(pad_io->final_output_buffer, 0, pad_io->final_output_buffer_allocated_size);
 	gboolean final_close_successful=otb_close(pad_io->file);
 	otb_pad_rec_unlock(pad_io->pad_rec);
 	g_object_unref(pad_io->pad_rec);
 	g_free(pad_io->input_buffer);
-	g_free(pad_io->output_buffer);
+	otb_sym_cipher_dispose_decryption_buffer(pad_io->output_buffer, pad_io->output_buffer_allocated_size);
 	g_free(pad_io->final_output_buffer);
 	if(pad_io->sym_cipher_context!=NULL)
 		otb_sym_cipher_context_free(pad_io->sym_cipher_context);

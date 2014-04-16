@@ -66,6 +66,7 @@ void otb_generate_public_private_keys(OtbAsymCipher **asym_cipher_public_out, Ot
 
 static void test_asym_cipher_encryption_in_steps()
 {
+	const size_t EXPECTED_MESSAGE_BUFFER_SIZE=96;
 	const size_t EXPECTED_MESSAGE_SIZE=74;
 	const char *EXPECTED_MESSAGE="Timid men prefer the calm of despotism to the tempestuous sea of liberty.";
 	
@@ -83,7 +84,9 @@ static void test_asym_cipher_encryption_in_steps()
 	encrypted_message_size+=otb_asym_cipher_finish_encrypt(encryption_context, encrypted_message+encrypted_message_size);
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
-	char *actual_message=otb_asym_cipher_create_decryption_buffer(asym_cipher_private, encrypted_message_size, NULL);
+	size_t actual_message_buffer_size=0;
+	char *actual_message=otb_asym_cipher_create_decryption_buffer(asym_cipher_private, encrypted_message_size, &actual_message_buffer_size);
+	g_assert_cmpint(EXPECTED_MESSAGE_BUFFER_SIZE, ==, actual_message_buffer_size);
 	OtbAsymCipherContext *decryption_context=otb_asym_cipher_init_decryption(asym_cipher_private, encrypted_key, iv);
 	g_assert(decryption_context!=NULL);
 	size_t actual_message_size=otb_asym_cipher_decrypt_next(decryption_context, encrypted_message, encrypted_message_size, actual_message);
@@ -91,7 +94,7 @@ static void test_asym_cipher_encryption_in_steps()
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
 	g_assert_cmpint(0, !=, actual_message_size);
-	g_free(actual_message);
+	otb_asym_cipher_dispose_decryption_buffer(actual_message, actual_message_buffer_size);
 	g_free(encrypted_message);
 	g_bytes_unref(encrypted_key);
 	g_bytes_unref(iv);
@@ -101,6 +104,7 @@ static void test_asym_cipher_encryption_in_steps()
 
 static void test_asym_cipher_encryption()
 {
+	const size_t EXPECTED_MESSAGE_BUFFER_SIZE=336;
 	const size_t EXPECTED_MESSAGE_SIZE=307;
 	const char *EXPECTED_MESSAGE="There was not one hireling there. I have no doubt that it was a principle they fought for, as much as our ancestors, and not to avoid a three-penny tax on their tea; and the results of this battle will be as important and memorable to those whom it concerns as those of the battle of Bunker Hill, at least.";
 	
@@ -117,7 +121,9 @@ static void test_asym_cipher_encryption()
 	g_assert_cmpint(0, !=, encrypted_message_size);
 	g_assert(EXPECTED_MESSAGE_SIZE!=encrypted_message_size || memcmp(EXPECTED_MESSAGE, encrypted_message, encrypted_message_size)!=0);
 	char *actual_message=NULL;
-	size_t actual_message_size=otb_asym_cipher_decrypt(asym_cipher_private, encrypted_message, encrypted_message_size, encrypted_key, iv, (void**)&actual_message);
+	size_t actual_message_buffer_size=0;
+	size_t actual_message_size=otb_asym_cipher_decrypt(asym_cipher_private, encrypted_message, encrypted_message_size, encrypted_key, iv, (void**)&actual_message, &actual_message_buffer_size);
+	g_assert_cmpint(EXPECTED_MESSAGE_BUFFER_SIZE, ==, actual_message_buffer_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
 	g_assert_cmpint(0, !=, actual_message_size);

@@ -13,10 +13,10 @@
 #include <openssl/rsa.h>
 
 #include "export.h"
+#include "memory.h"
 #include "openssl-util.h"
 #include "random.h"
 #include "asym-cipher.h"
-#include "smem.h"
 
 #define DEFAULT_CIPHER			"AES-256-CBC"
 
@@ -25,6 +25,7 @@ struct _OtbAsymCipherPrivate
 	GRWLock lock;
 	const EVP_CIPHER *cipher_impl;
 	EVP_PKEY *key_impl;
+	gboolean key_impl_mem_is_locked;
 };
 
 enum
@@ -58,6 +59,7 @@ static void otb_asym_cipher_init(OtbAsymCipher *asym_cipher)
 	g_rw_lock_init(&asym_cipher->priv->lock);
 	asym_cipher->priv->cipher_impl=NULL;
 	asym_cipher->priv->key_impl=NULL;
+	asym_cipher->priv->key_impl_mem_is_locked=FALSE;
 }
 
 static void otb_asym_cipher_finalize(GObject *object)
@@ -70,11 +72,16 @@ static void otb_asym_cipher_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_asym_cipher_parent_class)->finalize(object);
 }
 
-static void otb_asym_cipher_set_key_impl(const OtbAsymCipher *asym_cipher, EVP_PKEY *key_impl)
+static void otb_asym_cipher_set_key_impl(const OtbAsymCipher *asym_cipher, EVP_PKEY *key_impl, gboolean lock_key_memory)
 {
+	if(lock_key_memory)
+		otb_munlock(key_impl, sizeof *key_impl);
 	if(asym_cipher->priv->key_impl!=NULL)
 		EVP_PKEY_free(asym_cipher->priv->key_impl);
+	if(asym_cipher->priv->key_impl_mem_is_locked)
+		otb_munlock(asym_cipher->priv->key_impl, sizeof *asym_cipher->priv->key_impl);
 	_otb_set_EVP_PKEY(&asym_cipher->priv->key_impl, key_impl);
+	asym_cipher->priv->key_impl_mem_is_locked=lock_key_memory;
 }
 
 #define otb_asym_cipher_lock_read(asym_cipher)	(g_rw_lock_reader_lock(&asym_cipher->priv->lock))
@@ -92,7 +99,7 @@ static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, 
 			char *string_value=g_value_dup_string(value);
 			BIO *buff_io=BIO_new_mem_buf(string_value, strlen(string_value));
 			otb_asym_cipher_lock_write(asym_cipher);
-			otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PUBKEY(buff_io, NULL, NULL, NULL));
+			otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PUBKEY(buff_io, NULL, NULL, NULL), FALSE);
 			otb_asym_cipher_unlock_write(asym_cipher);
 			BIO_free_all(buff_io);
 			g_free(string_value);
@@ -153,14 +160,14 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 void otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv)
 {
 	void *private_key=NULL;
-	size_t private_key_size=otb_sym_cipher_decrypt(private_key_sym_cipher, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key_iv, &private_key);
+	size_t private_key_buffer_size=0;
+	size_t private_key_size=otb_sym_cipher_decrypt(private_key_sym_cipher, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key_iv, &private_key, &private_key_buffer_size);
 	BIO *buff_io=BIO_new_mem_buf(private_key, private_key_size);
 	otb_asym_cipher_lock_write(asym_cipher);
-	otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PrivateKey(buff_io, NULL, NULL, NULL));
+	otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PrivateKey(buff_io, NULL, NULL, NULL), TRUE);
 	otb_asym_cipher_unlock_write(asym_cipher);
 	BIO_free(buff_io);
-	smemset(private_key, 0, private_key_size);
-	g_free(private_key);
+	otb_sym_cipher_dispose_decryption_buffer(private_key, private_key_buffer_size);
 }
 
 GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_cipher, OtbSymCipher *private_key_sym_cipher, GBytes **private_key_iv_out)
@@ -325,11 +332,16 @@ size_t otb_asym_cipher_encrypt(const OtbAsymCipher *asym_cipher, const void *pla
 	return ret_val;
 }
 
-size_t otb_asym_cipher_decrypt(const OtbAsymCipher *asym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *encrypted_key, GBytes *iv, void **plain_bytes_out)
+size_t otb_asym_cipher_decrypt(const OtbAsymCipher *asym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *encrypted_key, GBytes *iv, void **plain_bytes_out, size_t *decrypted_buffer_size)
 {
-	*plain_bytes_out=otb_asym_cipher_create_decryption_buffer(asym_cipher, encrypted_bytes_size, NULL);
+	*plain_bytes_out=otb_asym_cipher_create_decryption_buffer(asym_cipher, encrypted_bytes_size, decrypted_buffer_size);
 	OtbSymCipherContext *asym_cipher_context=otb_asym_cipher_init_decryption(asym_cipher, encrypted_key, iv);
 	size_t ret_val=otb_asym_cipher_decrypt_next(asym_cipher_context, encrypted_bytes, encrypted_bytes_size, *plain_bytes_out);
 	ret_val+=otb_asym_cipher_finish_decrypt(asym_cipher_context, *(unsigned char**)plain_bytes_out+ret_val);
 	return ret_val;
+}
+
+void otb_asym_cipher_dispose_decryption_buffer(void *decryption_buffer, size_t decryption_buffer_size)
+{
+	otb_openssl_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size);
 }

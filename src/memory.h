@@ -6,5 +6,7 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-void* smemset(void *buffer, int value, int size);
-int smemcmp(const void *buffer1, const void *buffer2, size_t size);
+void* otb_smemset(void *buffer, int value, size_t size);
+int otb_smemcmp(const void *buffer1, const void *buffer2, size_t size);
+void otb_mlock(const void* address, size_t size);
+void otb_munlock(const void* address, size_t size);

@@ -13,6 +13,7 @@
 #include <openssl/evp.h>
 #include <string.h>
 
+#include "memory.h"
 #include "random.h"
 
 char *otb_openssl_errors_as_string()
@@ -48,7 +49,15 @@ unsigned char *otb_openssl_create_encryption_buffer(const EVP_CIPHER *cipher_imp
 void *otb_openssl_create_decryption_buffer(const EVP_CIPHER *cipher_impl, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out)
 {
 	size_t size=encrypted_bytes_buffer_size+EVP_CIPHER_block_size(cipher_impl);
-	if(decryption_buffer_size_out!=NULL)
-		*decryption_buffer_size_out=size;
-	return g_malloc(size);
+	*decryption_buffer_size_out=size;
+	void *decryption_buffer=g_malloc(size);
+	otb_mlock(decryption_buffer, *decryption_buffer_size_out);
+	return decryption_buffer;
+}
+
+void otb_openssl_dispose_decryption_buffer(void *decryption_buffer, size_t decryption_buffer_size)
+{
+	otb_smemset(decryption_buffer, 0, decryption_buffer_size);
+	g_free(decryption_buffer);
+	otb_munlock(decryption_buffer, decryption_buffer_size);
 }

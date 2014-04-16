@@ -56,6 +56,7 @@ static void test_sym_cipher_hash_passphrase()
 
 static void test_sym_cipher_encryption_in_steps()
 {
+	const size_t EXPECTED_MESSAGE_BUFFER_SIZE=544;
 	const size_t EXPECTED_MESSAGE_SIZE=523;
 	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
 	const char *PASSPHRASE="All is for the best in the best of all possible worlds!";
@@ -75,7 +76,9 @@ static void test_sym_cipher_encryption_in_steps()
 	GBytes *wrapped_key=otb_sym_cipher_wrap_key(sym_cipher, PASSPHRASE, &salt);
 	g_assert(salt!=NULL);
 	g_assert(otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, PASSPHRASE, salt));
-	char *actual_message=otb_sym_cipher_create_decryption_buffer(sym_cipher, encrypted_message_size, NULL);
+	size_t actual_message_buffer_size=NULL;
+	char *actual_message=otb_sym_cipher_create_decryption_buffer(sym_cipher, encrypted_message_size, &actual_message_buffer_size);
+	g_assert_cmpint(EXPECTED_MESSAGE_BUFFER_SIZE, ==, actual_message_buffer_size);
 	OtbSymCipherContext *decryption_context=otb_sym_cipher_init_decryption(sym_cipher, iv);
 	g_assert(decryption_context!=NULL);
 	size_t actual_message_size=otb_sym_cipher_decrypt_next(decryption_context, encrypted_message, encrypted_message_size, actual_message);
@@ -85,7 +88,7 @@ static void test_sym_cipher_encryption_in_steps()
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
 	g_free(salt);
 	g_bytes_unref(wrapped_key);
-	g_free(actual_message);
+	otb_sym_cipher_dispose_decryption_buffer(actual_message, actual_message_buffer_size);
 	g_free(encrypted_message);
 	g_bytes_unref(iv);
 	g_object_unref(sym_cipher);
@@ -93,6 +96,7 @@ static void test_sym_cipher_encryption_in_steps()
 
 static void test_sym_cipher_encryption()
 {
+	const size_t EXPECTED_MESSAGE_BUFFER_SIZE=544;
 	const size_t EXPECTED_MESSAGE_SIZE=523;
 	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
 	const char *PASSPHRASE="All is for the best in the best of all possible worlds!";
@@ -109,8 +113,9 @@ static void test_sym_cipher_encryption()
 	g_assert(salt!=NULL);
 	g_assert(otb_sym_cipher_unwrap_key(sym_cipher, wrapped_key, PASSPHRASE, salt));
 	void *actual_message=NULL;
-	size_t actual_message_size=otb_sym_cipher_decrypt(sym_cipher, encrypted_message, encrypted_message_size, iv, &actual_message);
-	g_assert_cmpint(0, !=, actual_message_size);
+	size_t actual_message_buffer_size=NULL;
+	size_t actual_message_size=otb_sym_cipher_decrypt(sym_cipher, encrypted_message, encrypted_message_size, iv, &actual_message, &actual_message_buffer_size);
+	g_assert_cmpint(EXPECTED_MESSAGE_BUFFER_SIZE, ==, actual_message_buffer_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
 	g_free(salt);

@@ -11,11 +11,11 @@
 #include <endian.h>
 #include <string.h>
 
+#include "memory.h"
 #include "pad-db.h"
 #include "pad-rec.h"
 #include "protocol.h"
 #include "random.h"
-#include "smem.h"
 
 #define AUTHENTICATION_TOKEN_SIZE	4096
 
@@ -147,18 +147,18 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *c
 	return packet_out_size;
 }
 
-uint32_t otb_protocol_decrypt_packet(OtbProtocolContext *context, const unsigned char *encrypted_input_packet, uint32_t encrypted_input_packet_size, unsigned char **decrypted_input_packet)
+static uint32_t otb_protocol_decrypt_packet(OtbProtocolContext *context, const unsigned char *encrypted_input_packet, uint32_t encrypted_input_packet_size, unsigned char **decrypted_input_packet_out, size_t *decrypted_input_packet_buffer_size_out)
 {
 	if(PACKET_COMMAND(encrypted_input_packet)==COMMAND_ENCRYPTED && ENCRYPTED_PACKET_IS_VALID(encrypted_input_packet, encrypted_input_packet_size))
 	{
 		GBytes *encrypted_key_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_ENCRYPTED_KEY(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(encrypted_input_packet));
 		GBytes *iv_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_IV(encrypted_input_packet), ENCRYPTED_PACKET_GET_IV_SIZE(encrypted_input_packet));
-		uint32_t decrypted_input_packet_size=otb_asym_cipher_decrypt(context->local_asym_cipher, ENCRYPTED_PACKET_ENCRYPTED_DATA(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(encrypted_input_packet), encrypted_key_gbytes, iv_gbytes, (void**)decrypted_input_packet);
+		uint32_t decrypted_input_packet_size=otb_asym_cipher_decrypt(context->local_asym_cipher, ENCRYPTED_PACKET_ENCRYPTED_DATA(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(encrypted_input_packet), encrypted_key_gbytes, iv_gbytes, (void**)decrypted_input_packet_out, decrypted_input_packet_buffer_size_out);
 		g_bytes_unref(iv_gbytes);
 		g_bytes_unref(encrypted_key_gbytes);
 		return decrypted_input_packet_size;
 	}
-	return otb_protocol_create_error_packet(context, decrypted_input_packet);
+	return otb_protocol_create_error_packet(context, decrypted_input_packet_out);
 }
 
 ///Protocol packet structure:
@@ -229,19 +229,20 @@ static uint32_t otb_protocol_client_send_authentication_token_to_server(OtbProto
 	return otb_protocol_create_error_packet(context, packet_out);
 }
 
-#define AUTHENTICATION_MESSAGE_CHECK(context, packet, packet_size)	(AUTHENTICATION_MESSAGE_PACKET_IS_VALID((packet), (packet_size)) && AUTHENTICATION_MESSAGE_PACKET_GET_TOKEN_SIZE(packet)==AUTHENTICATION_TOKEN_SIZE && smemcmp(context->authentication_token, AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet), AUTHENTICATION_TOKEN_SIZE)==0)
+#define AUTHENTICATION_MESSAGE_CHECK(context, packet, packet_size)	(AUTHENTICATION_MESSAGE_PACKET_IS_VALID((packet), (packet_size)) && AUTHENTICATION_MESSAGE_PACKET_GET_TOKEN_SIZE(packet)==AUTHENTICATION_TOKEN_SIZE && otb_smemcmp(context->authentication_token, AUTHENTICATION_MESSAGE_PACKET_TOKEN(packet), AUTHENTICATION_TOKEN_SIZE)==0)
 
 static uint32_t otb_protocol_client_validate_server_authentication_token(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
 {
 	context->state=STATE_CLIENT_REQUESTING_AUTHENTICATION;
 	unsigned char *decrypted_input_packet=NULL;
-	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
+	size_t decrypted_input_packet_buffer_size=0;
+	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
 	if(AUTHENTICATION_MESSAGE_CHECK(context, decrypted_input_packet, decrypted_input_packet_size) && PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_AUTHENTICATION_TOKEN)
 		packet_out_size=otb_protocol_create_basic_command_packet(COMMAND_REQUESTING_AUTHENTICATION, packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
-	g_free(decrypted_input_packet);
+	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
 	return packet_out_size;
 }
 
@@ -256,13 +257,14 @@ static uint32_t otb_protocol_client_authenticate_self(OtbProtocolContext *contex
 {
 	context->state=STATE_CLIENT_AUTHENTICATION;
 	unsigned char *decrypted_input_packet=NULL;
-	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
+	size_t decrypted_input_packet_buffer_size=0;
+	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
 	if(PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_AUTHENTICATION_TOKEN)
 		packet_out_size=otb_protocol_echo_authentication_packet(context, decrypted_input_packet, decrypted_input_packet_size, packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
-	g_free(decrypted_input_packet);
+	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
 	return packet_out_size;
 }
 
@@ -334,13 +336,14 @@ static uint32_t otb_protocol_client_send_pad_ids_to_server(OtbProtocolContext *c
 {
 	context->state=STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER;
 	unsigned char *decrypted_input_packet=NULL;
-	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
+	size_t decrypted_input_packet_buffer_size=0;
+	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
 	if(otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, decrypted_input_packet_size, OTB_PAD_REC_STATUS_SENT) && otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, decrypted_input_packet_size, OTB_PAD_REC_STATUS_CONSUMED))
 		packet_out_size=otb_protocol_create_pad_ids_packet(context, OTB_PAD_REC_STATUS_SENT, OTB_PAD_REC_STATUS_CONSUMED, packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
-	g_free(decrypted_input_packet);
+	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
 	return packet_out_size;
 }
 
@@ -403,13 +406,14 @@ static uint32_t otb_protocol_server_authenticate_self(OtbProtocolContext *contex
 {
 	context->state=STATE_SERVER_AUTHENTICATION;
 	unsigned char *decrypted_input_packet=NULL;
-	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
+	size_t decrypted_input_packet_buffer_size=0;
+	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
 	if(PACKET_COMMAND(input_packet)==COMMAND_SENDING_AUTHENTICATION_TOKEN)
 		packet_out_size=otb_protocol_echo_authentication_packet(context, decrypted_input_packet, decrypted_input_packet_size, packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
-	g_free(decrypted_input_packet);
+	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
 	return packet_out_size;
 }
 
@@ -425,13 +429,14 @@ static uint32_t otb_protocol_server_state_validate_client_authentication_token(O
 {
 	context->state=STATE_CLIENT_AUTHENTICATION;
 	unsigned char *decrypted_input_packet=NULL;
-	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
+	size_t decrypted_input_packet_buffer_size=0;
+	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
 	if(PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_AUTHENTICATION_TOKEN && AUTHENTICATION_MESSAGE_CHECK(context, decrypted_input_packet, decrypted_input_packet_size))
 		packet_out_size=otb_protocol_create_ok_packet(packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
-	g_free(decrypted_input_packet);
+	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
 	return packet_out_size;
 }
 
@@ -447,13 +452,14 @@ static uint32_t otb_protocol_server_receive_pad_ids_from_client(OtbProtocolConte
 {
 	context->state=STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER;
 	unsigned char *decrypted_input_packet=NULL;
-	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet);
+	size_t decrypted_input_packet_buffer_size=0;
+	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
 	if(otb_protocol_delete_missing_pad_ids(context, decrypted_input_packet, decrypted_input_packet_size, OTB_PAD_REC_STATUS_RECEIVED))
 		packet_out_size=otb_protocol_create_ok_packet(packet_out);
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
-	g_free(decrypted_input_packet);
+	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
 	return packet_out_size;
 }
 
