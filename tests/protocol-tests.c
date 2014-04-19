@@ -14,6 +14,7 @@
 #include "bitkeeper-tests.h"
 #include "main.h"
 #include "../src/protocol.h"
+#include "../src/random.h"
 
 #define EXPECTED_COMMAND_PROTOCOL_VERSION				0
 #define EXPECTED_COMMAND_ERROR							1
@@ -147,7 +148,7 @@ static uint32_t otb_make_encrypted_packet(const OtbAsymCipher *asym_cipher, cons
 	GBytes *encrypted_key=NULL;
 	GBytes *iv=NULL;
 	unsigned char *encrypted_data=NULL;
-	uint32_t encrypted_data_size=otb_asym_cipher_encrypt(asym_cipher, plain_packet, 4101, &encrypted_key, &iv, &encrypted_data);
+	uint32_t encrypted_data_size=otb_asym_cipher_encrypt(asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data);
 	uint32_t encrypted_packet_size=13+g_bytes_get_size(encrypted_key)+g_bytes_get_size(iv)+encrypted_data_size;
 	*encrypted_packet_out=g_malloc(encrypted_packet_size);
 	*encrypted_packet_out[0]=EXPECTED_COMMAND_ENCRYPTED;
@@ -171,12 +172,12 @@ static uint32_t otb_create_sending_authentication_token_packet_plain(const unsig
 	return packet_out_size;
 }
 
-static uint32_t otb_create_sending_authentication_token_packet_encrypted(unsigned char *authentication_token, const OtbAsymCipher *peer_asym_cipher, unsigned char **encrypted_packet_out)
+static uint32_t otb_create_sending_authentication_token_packet_encrypted(unsigned char *authentication_token, const OtbAsymCipher *asym_cipher, unsigned char **encrypted_packet_out)
 {
 	unsigned char *plain_packet=NULL;
 	uint32_t plain_packet_size=otb_create_sending_authentication_token_packet_plain(authentication_token, &plain_packet);
 	unsigned char *server_response_encrypted_packet=NULL;
-	uint32_t encrypted_packet_out_size=otb_make_encrypted_packet(peer_asym_cipher, plain_packet, plain_packet_size, encrypted_packet_out);
+	uint32_t encrypted_packet_out_size=otb_make_encrypted_packet(asym_cipher, plain_packet, plain_packet_size, encrypted_packet_out);
 	g_free(plain_packet);
 	return encrypted_packet_out_size;
 }
@@ -197,21 +198,37 @@ static gboolean otb_do_client_request_authentication_from_server(OtbProtocolCont
 
 static gboolean otb_do_client_send_authentication_token_to_server_for_client_authentication(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
-	unsigned char *expected_authentication_token=g_malloc(EXPECTED_AUTHENTICATION_TOKEN_SIZE);
-	for(size_t token_index=0; token_index<EXPECTED_AUTHENTICATION_TOKEN_SIZE; token_index++)
-		expected_authentication_token[token_index]=token_index%0xff;
+	unsigned char expected_authentication_token[EXPECTED_AUTHENTICATION_TOKEN_SIZE];
+	otb_random_bytes(expected_authentication_token, EXPECTED_AUTHENTICATION_TOKEN_SIZE);
 	unsigned char *server_response_encrypted_packet=NULL;
-	uint32_t server_response_encrypted_packet_size=otb_create_sending_authentication_token_packet_encrypted(expected_authentication_token, peer_asym_cipher, &server_response_encrypted_packet);
-	unsigned char *client_packet=NULL;
-	uint32_t client_packet_size=otb_protocol_client(context, server_response_encrypted_packet, server_response_encrypted_packet_size, &client_packet);
-	
-	g_assert_cmpint(1, ==, client_packet_size);
-	g_assert(client_packet!=NULL);
-	g_assert_cmpint(EXPECTED_COMMAND_ENCRYPTED, ==, client_packet[0]);
-	
-	g_free(client_packet);
-	g_free(expected_authentication_token);
+	uint32_t server_response_encrypted_packet_size=otb_create_sending_authentication_token_packet_encrypted(expected_authentication_token, context->local_asym_cipher, &server_response_encrypted_packet);
+	unsigned char *encrypted_client_packet=NULL;
+	uint32_t encrypted_client_packet_size=otb_protocol_client(context, server_response_encrypted_packet, server_response_encrypted_packet_size, &encrypted_client_packet);
+	g_assert_cmpint(4157, ==, encrypted_client_packet_size);
+	g_assert(encrypted_client_packet!=NULL);
+	g_assert_cmpint(EXPECTED_COMMAND_ENCRYPTED, ==, encrypted_client_packet[0]);
+	unsigned char *plain_client_packet=NULL;
+	size_t plain_client_packet_buffer_size=0;
+	uint32_t plain_client_packet_size=otb_decrypt_packet(peer_asym_cipher, encrypted_client_packet, encrypted_client_packet_size, &plain_client_packet, &plain_client_packet_buffer_size);
+	g_assert_cmpint(4112, ==, plain_client_packet_buffer_size);
+	g_assert_cmpint(5+EXPECTED_AUTHENTICATION_TOKEN_SIZE, ==, plain_client_packet_size);
+	g_assert_cmpint(EXPECTED_COMMAND_SENDING_AUTHENTICATION_TOKEN, ==, plain_client_packet[0]);
+	g_assert_cmpint(EXPECTED_AUTHENTICATION_TOKEN_SIZE, ==, g_ntohl(*(uint32_t*)(plain_client_packet+1)));
+	g_assert_cmpint(0, ==, memcmp(expected_authentication_token, plain_client_packet+5, EXPECTED_AUTHENTICATION_TOKEN_SIZE));
+	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
+	g_free(encrypted_client_packet);
 	return TRUE;
+}
+
+static gboolean otb_do_client_request_pad_ids_from_server(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
+{
+	unsigned char *server_response_packet=NULL;
+	uint32_t server_response_packet_size=otb_create_ok_packet(&server_response_packet);
+	unsigned char *client_packet=NULL;
+	uint32_t client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, &client_packet);
+	g_assert(client_packet!=NULL);
+	g_assert_cmpint(1, ==, client_packet_size);
+	g_assert_cmpint(client_packet[0], ==, EXPECTED_COMMAND_REQUESTING_PAD_IDS);
 }
 
 static void test_otb_protocol_client()
@@ -232,6 +249,7 @@ static void test_otb_protocol_client()
 	otb_do_client_send_authentication_token_to_server_for_server_authentication(context, peer_asym_cipher);
 	otb_do_client_request_authentication_from_server(context, peer_asym_cipher);
 	otb_do_client_send_authentication_token_to_server_for_client_authentication(context, peer_asym_cipher);
+	otb_do_client_request_pad_ids_from_server(context, peer_asym_cipher);
 	
 	otb_protocol_context_free(context);
 	g_object_unref(peer_friend);
