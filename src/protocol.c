@@ -289,8 +289,6 @@ static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *co
 {
 	gboolean ret_val=TRUE;
 	if(PACKET_COMMAND(input_packet)==COMMAND_SENDING_PAD_IDS && PAD_IDS_PACKET_IS_VALID(input_packet, input_packet_size))
-		ret_val=FALSE;
-	else
 	{
 		GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, pad_rec_status);
 		for(const GSList *curr_element=pad_rec_ids; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
@@ -306,6 +304,8 @@ static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *co
 		}
 		g_slist_free_full(pad_rec_ids, g_free);
 	}
+	else
+		ret_val=FALSE;
 	return ret_val;
 }
 
@@ -313,11 +313,7 @@ static uint32_t otb_protocol_create_pad_ids_packet(const OtbProtocolContext *con
 {
 	GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status1);
 	if(status2!=OTB_PAD_REC_STATUS_OUT_OF_BOUNDS)
-	{
-		GSList *pad_rec_ids2=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status2);
-		pad_rec_ids=g_slist_concat(pad_rec_ids, pad_rec_ids2);
-		g_slist_free(pad_rec_ids2);
-	}
+		pad_rec_ids=g_slist_concat(pad_rec_ids, otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status2));
 	uint32_t total_pad_rec_ids=g_slist_length(pad_rec_ids);
 	unsigned char *packet=NULL;
 	uint32_t packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(OtbUniqueId)*total_pad_rec_ids;
