@@ -13,8 +13,6 @@
 #include "sym-cipher.h"
 #include "export.h"
 #include "io.h"
-#include "memory.h"
-#include "openssl-util.h"
 #include "random.h"
 
 #define DEFAULT_CIPHER			"AES-256-CBC"
@@ -72,18 +70,13 @@ static void otb_sym_cipher_init(OtbSymCipher *sym_cipher)
 static void otb_sym_cipher_set_key(OtbSymCipher *sym_cipher, const unsigned char *key, size_t key_size)
 {
 	if(sym_cipher->priv->key!=NULL)
-	{
-		otb_smemset(sym_cipher->priv->key, 0, sym_cipher->priv->key_size);
-		g_free(sym_cipher->priv->key);
-		otb_munlock(sym_cipher->priv->key, sym_cipher->priv->key_size);
-	}
+		otb_free_locked(sym_cipher->priv->key, sym_cipher->priv->key_size);
 	sym_cipher->priv->key_size=key_size;
 	if(key==NULL)
 		sym_cipher->priv->key=NULL;
 	else
 	{
-		sym_cipher->priv->key=g_malloc(key_size);
-		otb_mlock(sym_cipher->priv->key, sym_cipher->priv->key_size);
+		sym_cipher->priv->key=otb_malloc_locked(key_size);
 		memcpy(sym_cipher->priv->key, key, key_size);
 	}
 }
@@ -287,16 +280,14 @@ gboolean otb_sym_cipher_generate_random_key(OtbSymCipher *sym_cipher)
 	gboolean ret_val=TRUE;
 	otb_sym_cipher_lock_write(sym_cipher);
 	size_t key_size=EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl);
-	unsigned char *key=g_malloc(key_size);
-	otb_mlock(key, key_size);
+	unsigned char *key=otb_malloc_locked(key_size);
 	otb_random_bytes(key, key_size);
 	if(key==NULL)
 		ret_val=FALSE;
 	else
 		otb_sym_cipher_set_key(sym_cipher, key, EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl));
 	otb_smemset(key, 0, key_size);
-	g_free(key);
-	otb_munlock(key, key_size);
+	otb_free_locked(key, key_size);
 	otb_sym_cipher_unlock_write(sym_cipher);
 	return ret_val;
 }
@@ -410,9 +401,4 @@ size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const unsigned cha
 	size_t ret_val=otb_sym_cipher_decrypt_next(sym_cipher_context, encrypted_bytes, encrypted_bytes_size, *plain_bytes_out);
 	ret_val+=otb_sym_cipher_finish_decrypt(sym_cipher_context, *(unsigned char **)plain_bytes_out+ret_val);
 	return ret_val;
-}
-
-void otb_sym_cipher_dispose_decryption_buffer(void *decryption_buffer, size_t decryption_buffer_size)
-{
-	otb_openssl_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size);
 }

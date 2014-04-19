@@ -11,14 +11,13 @@
 #include <string.h>
 
 #include "main.h"
+#include "pad-db-tests.h"
 #include "pad-rec-tests.h"
 #include "test-utils.h"
 #include "../src/io.h"
 #include "../src/pad-db.h"
 #include "../src/pad-rec.h"
 #include "../src/random.h"
-
-#define ABSOLUTE_MIN_PAD_SIZE	1024
 
 static char *otb_get_expected_pad_db_file_path(const char *base_path)
 {
@@ -549,7 +548,7 @@ static void test_encryption_decryption_with_two_pads()
 	otb_assert_number_of_pads_in_status(recipient_pad_db, 1, OTB_PAD_REC_STATUS_RECEIVED);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpint(0, ==, memcmp(EXPECTED_MESSAGE, actual_message, EXPECTED_MESSAGE_SIZE));
-	g_free(actual_message);
+	otb_free_locked(actual_message, actual_message_size);
 	g_free(encrypted_message);
 	g_object_unref(recipient_pad_db);
 	g_free(recipient_pad_db_dir_path);

@@ -13,8 +13,6 @@
 #include <openssl/rsa.h>
 
 #include "export.h"
-#include "memory.h"
-#include "openssl-util.h"
 #include "random.h"
 #include "asym-cipher.h"
 
@@ -75,7 +73,7 @@ static void otb_asym_cipher_finalize(GObject *object)
 static void otb_asym_cipher_set_key_impl(const OtbAsymCipher *asym_cipher, EVP_PKEY *key_impl, gboolean lock_key_memory)
 {
 	if(lock_key_memory)
-		otb_munlock(key_impl, sizeof *key_impl);
+		otb_mlock(key_impl, sizeof *key_impl);
 	if(asym_cipher->priv->key_impl!=NULL)
 		EVP_PKEY_free(asym_cipher->priv->key_impl);
 	if(asym_cipher->priv->key_impl_mem_is_locked)
@@ -339,9 +337,4 @@ size_t otb_asym_cipher_decrypt(const OtbAsymCipher *asym_cipher, const unsigned 
 	size_t ret_val=otb_asym_cipher_decrypt_next(asym_cipher_context, encrypted_bytes, encrypted_bytes_size, *plain_bytes_out);
 	ret_val+=otb_asym_cipher_finish_decrypt(asym_cipher_context, *(unsigned char**)plain_bytes_out+ret_val);
 	return ret_val;
-}
-
-void otb_asym_cipher_dispose_decryption_buffer(void *decryption_buffer, size_t decryption_buffer_size)
-{
-	otb_openssl_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size);
 }

@@ -50,14 +50,6 @@ void *otb_openssl_create_decryption_buffer(const EVP_CIPHER *cipher_impl, size_t
 {
 	size_t size=encrypted_bytes_buffer_size+EVP_CIPHER_block_size(cipher_impl);
 	*decryption_buffer_size_out=size;
-	void *decryption_buffer=g_malloc(size);
-	otb_mlock(decryption_buffer, *decryption_buffer_size_out);
+	void *decryption_buffer=otb_malloc_locked(size);
 	return decryption_buffer;
-}
-
-void otb_openssl_dispose_decryption_buffer(void *decryption_buffer, size_t decryption_buffer_size)
-{
-	otb_smemset(decryption_buffer, 0, decryption_buffer_size);
-	g_free(decryption_buffer);
-	otb_munlock(decryption_buffer, decryption_buffer_size);
 }

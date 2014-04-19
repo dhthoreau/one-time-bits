@@ -739,7 +739,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 		OtbPadIO *current_pad_io=NULL;
 		OtbPadIO *previous_pad_io=NULL;
 		OtbUniqueId unique_id;
-		*plain_bytes_out=g_malloc(encrypted_bytes_size-sizeof format_version-sizeof unique_id);
+		*plain_bytes_out=otb_malloc_locked(encrypted_bytes_size-sizeof format_version-sizeof unique_id);
 		*plain_bytes_size_out=0;
 		for(size_t encrypted_position=sizeof format_version; decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && encrypted_position<encrypted_bytes_size; )
 		{

@@ -9,6 +9,8 @@
 #ifndef OTB_PAD_DB_TESTS
 #define OTB_PAD_DB_TESTS
 
+#define ABSOLUTE_MIN_PAD_SIZE	1024
+
 void otb_add_pad_db_tests();
 
 #endif

@@ -12,6 +12,8 @@
 #include <glib-object.h>
 #include <openssl/evp.h>
 
+#include "openssl-util.h"
+
 typedef EVP_CIPHER_CTX OtbSymCipherContext;
 
 typedef struct
@@ -21,6 +23,7 @@ typedef struct
 
 
 #define otb_sym_cipher_context_free(sym_cipher_context)	EVP_CIPHER_CTX_free(sym_cipher_context)
+#define otb_sym_cipher_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size)	otb_openssl_dispose_decryption_buffer((decryption_buffer), (decryption_buffer_size))
 
 #define OTB_SYM_CIPHER_PROP_CIPHER			"cipher"
 #define OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST	"message-digest"
@@ -65,6 +68,5 @@ size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, un
 size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, void *plain_bytes_out);
 size_t otb_sym_cipher_encrypt(const OtbSymCipher *sym_cipher, const void *plain_bytes, size_t plain_bytes_size, GBytes **iv_out, unsigned char **encrypted_bytes_out);
 size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *iv, void **plain_bytes_out, size_t *decrypted_buffer_size);
-void otb_sym_cipher_dispose_decryption_buffer(void *decryption_buffer, size_t decryption_buffer_size);
 
 #endif

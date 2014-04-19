@@ -80,14 +80,14 @@ void otb_mlock_page(void *page)
 #define otb_mlock_hash_table_lock()		g_mutex_lock(&otb_mlock_hash_table_mutex)
 #define otb_mlock_hash_table_unlock()	g_mutex_unlock(&otb_mlock_hash_table_mutex)
 
-void otb_mlock(const void *memory, size_t length)
+void otb_mlock(const void *memory, size_t size)
 {
 #ifdef HAVE_UNISTD_H
 	uintptr_t page_size=sysconf(_SC_PAGESIZE);
 	if(page_size>0)
 	{
 		otb_mlock_initialize_hash_table();
-		const void *page_max=(const unsigned char*)memory+length;
+		const void *page_max=(const unsigned char*)memory+size;
 		void *page=(void*)((uintptr_t)memory-(uintptr_t)memory % page_size);
 		otb_mlock_hash_table_lock();
 		do
@@ -116,14 +116,14 @@ void otb_munlock_page(const void *page)
 	}
 }
 
-void otb_munlock(const void *memory, size_t length)
+void otb_munlock(const void *memory, size_t size)
 {
 #ifdef HAVE_UNISTD_H
 	uintptr_t page_size=sysconf(_SC_PAGESIZE);
 	if(page_size>0)
 	{
 		otb_mlock_initialize_hash_table();
-		void *page_max=(unsigned char*)memory+length;
+		void *page_max=(unsigned char*)memory+size;
 		void *page=(void *)((uintptr_t)memory-(uintptr_t)memory % page_size);
 		otb_mlock_hash_table_lock();
 		do
@@ -135,4 +135,18 @@ void otb_munlock(const void *memory, size_t length)
 		otb_mlock_hash_table_unlock();
 	}
 #endif
+}
+
+void *otb_malloc_locked(size_t size)
+{
+	void *memory=g_malloc(size);
+	otb_mlock(memory, size);
+	return memory;
+}
+
+void otb_free_locked(void *memory, size_t size)
+{
+	otb_smemset(memory, 0, size);
+	g_free(memory);
+	otb_munlock(memory, size);
 }

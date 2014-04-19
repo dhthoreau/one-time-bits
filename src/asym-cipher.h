@@ -12,11 +12,13 @@
 #include <glib-object.h>
 #include <openssl/evp.h>
 
+#include "openssl-util.h"
 #include "sym-cipher.h"
 
 typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 
 #define otb_asym_cipher_context_free(cipher_context)	EVP_CIPHER_CTX_free(cipher_context)
+#define otb_asym_cipher_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size)	otb_openssl_dispose_decryption_buffer((decryption_buffer), (decryption_buffer_size))
 
 #define OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE	4096
 
@@ -60,6 +62,5 @@ size_t otb_asym_cipher_finish_encrypt(OtbAsymCipherContext *asym_cipher_context,
 size_t otb_asym_cipher_finish_decrypt(OtbAsymCipherContext *asym_cipher_context, void *plain_bytes_out);
 size_t otb_asym_cipher_encrypt(const OtbAsymCipher *asym_cipher, const void *plain_bytes, size_t plain_bytes_size, GBytes **encrypted_key_out, GBytes **iv_out, unsigned char **encrypted_bytes_out);
 size_t otb_asym_cipher_decrypt(const OtbAsymCipher *asym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *encrypted_key, GBytes *iv, void **plain_bytes_out, size_t *decrypted_buffer_size);
-void otb_asym_cipher_dispose_decryption_buffer(void *decryption_buffer, size_t decryption_buffer_size);
 
 #endif
