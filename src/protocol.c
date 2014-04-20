@@ -309,23 +309,23 @@ static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *co
 	return ret_val;
 }
 
-static uint32_t otb_protocol_create_pad_ids_packet(const OtbProtocolContext *context, OtbPadRecStatus status1, OtbPadRecStatus status2, unsigned char **packet_out)
+static uint32_t otb_protocol_create_pad_ids_packet(const OtbProtocolContext *context, OtbPadRecStatus status1, OtbPadRecStatus status2, unsigned char **encrypted_packet_out)
 {
 	GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status1);
 	if(status2!=OTB_PAD_REC_STATUS_OUT_OF_BOUNDS)
 		pad_rec_ids=g_slist_concat(pad_rec_ids, otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status2));
 	uint32_t total_pad_rec_ids=g_slist_length(pad_rec_ids);
-	unsigned char *packet=NULL;
-	uint32_t packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(OtbUniqueId)*total_pad_rec_ids;
-	packet=g_malloc(packet_size);
-	PACKET_COMMAND(packet)=COMMAND_SENDING_PAD_IDS;
-	PAD_IDS_PACKET_SET_PAD_ID_COUNT(packet, total_pad_rec_ids);
+	unsigned char *plain_packet=NULL;
+	uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(OtbUniqueId)*total_pad_rec_ids;
+	plain_packet=g_malloc(plain_packet_size);
+	PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_IDS;
+	PAD_IDS_PACKET_SET_PAD_ID_COUNT(plain_packet, total_pad_rec_ids);
 	for(uint32_t unique_id_iter=0; unique_id_iter<total_pad_rec_ids; unique_id_iter++)
-		memcpy(PAD_IDS_PACKET_PAD_ID(packet, unique_id_iter), g_slist_nth(pad_rec_ids, unique_id_iter)->data, sizeof(OtbUniqueId));
+		memcpy(PAD_IDS_PACKET_PAD_ID(plain_packet, unique_id_iter), g_slist_nth(pad_rec_ids, unique_id_iter)->data, sizeof(OtbUniqueId));
 	g_slist_free_full(pad_rec_ids, g_free);
-	uint32_t packet_out_size=otb_protocol_create_encrypted_packet(context, (unsigned char*)packet, packet_size, packet_out);
-	g_free(packet);
-	return packet_out_size;
+	uint32_t encrypted_packet_out_size=otb_protocol_create_encrypted_packet(context, (unsigned char*)plain_packet, plain_packet_size, encrypted_packet_out);
+	g_free(plain_packet);
+	return encrypted_packet_out_size;
 }
 
 static uint32_t otb_protocol_client_send_pad_ids_to_server(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)

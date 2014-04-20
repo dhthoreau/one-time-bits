@@ -258,7 +258,7 @@ static gboolean otb_do_client_request_pad_ids_from_server(OtbProtocolContext *co
 	g_free(client_packet);
 }
 
-static uint32_t otb_create_pad_ids_packet_plain(uint32_t pad_ids_count, OtbUniqueId* pad_ids[], unsigned char **packet_out)
+static uint32_t otb_create_pad_ids_packet_plain(size_t pad_ids_count, OtbUniqueId *pad_ids[], unsigned char **packet_out)
 {
 	uint32_t packet_size=5+16*pad_ids_count;
 	*packet_out=g_malloc(packet_size);
@@ -269,27 +269,40 @@ static uint32_t otb_create_pad_ids_packet_plain(uint32_t pad_ids_count, OtbUniqu
 	return packet_size;
 }
 
-static uint32_t otb_create_pad_ids_packet_encrypted(OtbProtocolContext *context, unsigned char **encrypted_packet_out)
+static uint32_t otb_create_pad_ids_packet_encrypted(const OtbProtocolContext *context, size_t pad_ids_count, OtbUniqueId *pad_ids[], unsigned char **encrypted_packet_out)
 {
-	OtbPadDb *outgoing_pad_db=NULL;
-	g_object_get(context->peer_friend, OTB_FRIEND_PROP_OUTGOING_PADS, &outgoing_pad_db, NULL);
-	g_assert(outgoing_pad_db!=NULL);
-	OtbUniqueId *pad_ids[2];
-	g_assert((pad_ids[0]=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_SENT))!=NULL);
-	g_assert((pad_ids[1]=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_CONSUMED))!=NULL);
 	unsigned char *plain_packet=NULL;
-	uint32_t plain_packet_size=otb_create_pad_ids_packet_plain(2, pad_ids, &plain_packet);
+	uint32_t plain_packet_size=otb_create_pad_ids_packet_plain(pad_ids_count, pad_ids, &plain_packet);
 	uint32_t encrypted_packet_out_size=otb_make_encrypted_packet(context->local_asym_cipher, plain_packet, plain_packet_size, encrypted_packet_out);
 	g_free(plain_packet);
-	g_free(pad_ids[0]);
-	g_free(pad_ids[1]);
 	return encrypted_packet_out_size;
+}
+
+static void otb_assert_pads_appropriate_deleted_by_client_after_server_sends_pad_ids_to_client(const OtbPadDb *outgoing_pad_db, OtbUniqueId *expected_pad_ids[2])
+{
+	GSList *unsent_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT);
+	g_assert_cmpint(1, ==, g_slist_length(unsent_pad_ids));
+	GSList *sent_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_SENT);
+	g_assert_cmpint(1, ==, g_slist_length(sent_pad_ids));
+	GSList *consumed_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_CONSUMED);
+	g_assert_cmpint(1, ==, g_slist_length(consumed_pad_ids));
+	g_assert(memcmp(expected_pad_ids[0], sent_pad_ids->data, sizeof *expected_pad_ids[0])==0 || memcmp(expected_pad_ids[0], consumed_pad_ids->data, sizeof *expected_pad_ids[0])==0);
+	g_assert(memcmp(expected_pad_ids[1], sent_pad_ids->data, sizeof *expected_pad_ids[1])==0 || memcmp(expected_pad_ids[1], consumed_pad_ids->data, sizeof *expected_pad_ids[1])==0);
+	g_slist_free_full(consumed_pad_ids, g_free);
+	g_slist_free_full(sent_pad_ids, g_free);
+	g_slist_free_full(unsent_pad_ids, g_free);
 }
 
 static gboolean otb_do_client_send_pad_ids_from_server(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
+	OtbPadDb *outgoing_pad_db=NULL;
+	g_object_get(context->peer_friend, OTB_FRIEND_PROP_OUTGOING_PADS, &outgoing_pad_db, NULL);
+	g_assert(outgoing_pad_db!=NULL);
+	OtbUniqueId *expected_pad_ids[2];
+	g_assert((expected_pad_ids[0]=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_SENT))!=NULL);
+	g_assert((expected_pad_ids[1]=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_CONSUMED))!=NULL);
 	unsigned char *server_response_packet=NULL;
-	uint32_t server_response_packet_size=otb_create_pad_ids_packet_encrypted(context, &server_response_packet);
+	uint32_t server_response_packet_size=otb_create_pad_ids_packet_encrypted(context, 2, expected_pad_ids, &server_response_packet);
 	unsigned char *encrypted_client_packet=NULL;
 	uint32_t encrypted_client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, &encrypted_client_packet);
 	g_assert(encrypted_client_packet!=NULL);
@@ -303,13 +316,16 @@ static gboolean otb_do_client_send_pad_ids_from_server(OtbProtocolContext *conte
 	g_assert(plain_client_packet!=NULL);
 	g_assert_cmpint(EXPECTED_COMMAND_SENDING_PAD_IDS, ==, plain_client_packet[0]);
 	g_assert_cmpint(2, ==, g_ntohl(*(uint32_t*)(plain_client_packet+1)));
-	OtbUniqueId *pad_rec_id1=(OtbUniqueId*)plain_client_packet+5;
-	OtbUniqueId *pad_rec_id2=(OtbUniqueId*)plain_client_packet+21;
-	
-	// FARE - g_assert che il peer_friend ha cancelato i blocchi giusti.
-	
+	g_assert(outgoing_pad_db!=NULL);
+	OtbUniqueId *actual_packet_pad_rec_id1=(OtbUniqueId*)(plain_client_packet+5);
+	OtbUniqueId *actual_packet_pad_rec_id2=(OtbUniqueId*)(plain_client_packet+21);
+	g_assert(memcmp(expected_pad_ids[0], actual_packet_pad_rec_id1, sizeof *expected_pad_ids[0])==0 || memcmp(expected_pad_ids[1], actual_packet_pad_rec_id1, sizeof *expected_pad_ids[0])==0);
+	g_assert(memcmp(expected_pad_ids[0], actual_packet_pad_rec_id2, sizeof *expected_pad_ids[0])==0 || memcmp(expected_pad_ids[1], actual_packet_pad_rec_id2, sizeof *expected_pad_ids[0])==0);
+	otb_assert_pads_appropriate_deleted_by_client_after_server_sends_pad_ids_to_client(outgoing_pad_db, expected_pad_ids);
 	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
 	g_free(encrypted_client_packet);
+	g_free(expected_pad_ids[0]);
+	g_free(expected_pad_ids[1]);
 }
 
 static void test_otb_protocol_client()
