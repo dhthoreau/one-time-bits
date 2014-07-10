@@ -36,6 +36,7 @@ struct _OtbPadIO
 {
 	OtbPadRec *pad_rec;
 	gboolean is_for_write;
+	gboolean has_written_data;
 	gboolean auto_rewind;
 	FILE *file;
 	unsigned char *input_buffer;
@@ -282,6 +283,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(OtbPadRec *pad_rec)
 		g_object_ref(pad_io->pad_rec);
 		otb_pad_rec_lock(pad_io->pad_rec);
 		pad_io->is_for_write=TRUE;
+		pad_io->has_written_data=FALSE;
 		pad_io->file=file;
 		pad_io->input_buffer=NULL;
 		pad_io->output_buffer=otb_sym_cipher_create_encryption_buffer(local_crypto_sym_cipher, INPUT_BUFFER_SIZE, &pad_io->output_buffer_allocated_size);
@@ -358,7 +360,7 @@ gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec)
 	return ret_val;
 }
 
-gboolean otb_pad_write(const OtbPadIO *pad_io, const void *input_buffer, size_t input_buffer_size)
+gboolean otb_pad_write(OtbPadIO *pad_io, const void *input_buffer, size_t input_buffer_size)
 {
 	gboolean ret_val=TRUE;
 	for(int buffer_offset=0; buffer_offset<input_buffer_size && ret_val; buffer_offset+=INPUT_BUFFER_SIZE)
@@ -366,6 +368,8 @@ gboolean otb_pad_write(const OtbPadIO *pad_io, const void *input_buffer, size_t 
 		size_t encrypted_bytes_size=otb_sym_cipher_encrypt_next(pad_io->sym_cipher_context, (unsigned char*)input_buffer+buffer_offset, (input_buffer_size-buffer_offset>INPUT_BUFFER_SIZE?INPUT_BUFFER_SIZE:input_buffer_size-buffer_offset), pad_io->output_buffer);
 		if(encrypted_bytes_size>0 && !otb_write(pad_io->output_buffer, sizeof(char), encrypted_bytes_size, pad_io->file)==encrypted_bytes_size)
 			ret_val=FALSE;
+		else
+			pad_io->has_written_data=TRUE;
 	}
 	return ret_val;
 }
@@ -462,7 +466,7 @@ gboolean otb_pad_has_more_bytes(const OtbPadIO *pad_io)
 gboolean otb_pad_io_free(OtbPadIO *pad_io)
 {
 	gboolean final_encrypt_successful=TRUE;
-	if(pad_io->is_for_write)
+	if(pad_io->is_for_write && pad_io->has_written_data)
 	{
 		size_t final_encrypted_bytes_size=otb_sym_cipher_finish_encrypt(pad_io->sym_cipher_context, pad_io->output_buffer);
 		pad_io->sym_cipher_context=NULL;

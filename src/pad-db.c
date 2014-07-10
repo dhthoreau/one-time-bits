@@ -453,13 +453,13 @@ gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db)
 	return ret_val;
 }
 
-OtbPadIO *otb_pad_db_add_received_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size)
+OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size)
 {
 	OtbPadIO *pad_io=NULL;
 	otb_pad_db_lock_write(pad_db);
 	if(pad_db->priv->open_pad_io==NULL)
 	{
-		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_RECEIVED, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, NULL);
+		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_INCOMING, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, NULL);
 		if(!otb_pad_db_add_pad_rec(pad_db, pad_rec))
 			g_object_unref(pad_rec);
 		else if((pad_io=otb_pad_rec_open_pad_for_write(pad_rec))==NULL)
@@ -522,6 +522,7 @@ static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, Otb
 			OtbUniqueId *unique_id=NULL;
 			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
 			ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, prerequisite_status, new_status);
+			// FARE - Cancellare data file della blocca se è OTB_PAD_REC_STATUS_CONSUMED
 			g_free(unique_id);
 		}
 	}
@@ -533,6 +534,15 @@ gboolean otb_pad_db_mark_pad_as_sent(const OtbPadDb *pad_db, const OtbUniqueId *
 	gboolean ret_val;
 	otb_pad_db_lock_write(pad_db);
 	ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, OTB_PAD_REC_STATUS_UNSENT, OTB_PAD_REC_STATUS_SENT);
+	otb_pad_db_unlock_write(pad_db);
+	return ret_val;
+}
+
+gboolean otb_pad_db_mark_pad_as_received(const OtbPadDb *pad_db, const OtbUniqueId *unique_id)
+{
+	gboolean ret_val;
+	otb_pad_db_lock_write(pad_db);
+	ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, OTB_PAD_REC_STATUS_INCOMING, OTB_PAD_REC_STATUS_RECEIVED);
 	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
 }

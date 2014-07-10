@@ -27,6 +27,8 @@ typedef struct
 	OtbFriend *peer_friend;
 	OtbAsymCipher *peer_asym_cipher;
 	OtbPadDb *pad_db;
+	OtbUniqueId *new_pad_id;
+	OtbPadIO *new_pad_io;
 }
 OtbProtocolContext;
 

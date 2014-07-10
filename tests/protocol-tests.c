@@ -293,7 +293,7 @@ static void otb_assert_pads_appropriate_deleted_by_client_after_server_sends_pad
 	g_slist_free_full(unsent_pad_ids, g_free);
 }
 
-static gboolean otb_do_client_send_pad_ids_from_server(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
+static gboolean otb_do_client_send_pad_ids_to_server(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
 	OtbPadDb *outgoing_pad_db=NULL;
 	g_object_get(context->peer_friend, OTB_FRIEND_PROP_OUTGOING_PADS, &outgoing_pad_db, NULL);
@@ -348,7 +348,7 @@ static void test_otb_protocol_client()
 	otb_do_client_request_authentication_from_server(context, peer_asym_cipher);
 	otb_do_client_send_authentication_token_to_server_for_client_authentication(context, peer_asym_cipher);
 	otb_do_client_request_pad_ids_from_server(context, peer_asym_cipher);
-	otb_do_client_send_pad_ids_from_server(context, peer_asym_cipher);
+	otb_do_client_send_pad_ids_to_server(context, peer_asym_cipher);
 	
 	otb_protocol_context_free(context);
 	g_object_unref(peer_friend);

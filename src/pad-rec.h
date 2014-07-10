@@ -17,13 +17,14 @@
 
 typedef enum
 {
-	OTB_PAD_REC_STATUS_UNSENT,
-	OTB_PAD_REC_STATUS_SENT,
-	OTB_PAD_REC_STATUS_BEING_CONSUMED,
-	OTB_PAD_REC_STATUS_CONSUMED,
-	OTB_PAD_REC_STATUS_RECEIVED,
-	OTB_PAD_REC_STATUS_DEAD,
-	OTB_PAD_REC_STATUS_OUT_OF_BOUNDS
+	OTB_PAD_REC_STATUS_UNSENT,			/// Outgoing pad that has not been sent.
+	OTB_PAD_REC_STATUS_SENT,			/// Outgoing pad that has been sent.
+	OTB_PAD_REC_STATUS_BEING_CONSUMED,	/// Outgoing pad that is being used to encrypt data.
+	OTB_PAD_REC_STATUS_CONSUMED,		/// Outgoing pad that been used to encrypt data.
+	OTB_PAD_REC_STATUS_INCOMING,		/// Incoming pad that has not been 100% received.
+	OTB_PAD_REC_STATUS_RECEIVED,		/// Incoming pad that has been received.
+	OTB_PAD_REC_STATUS_DEAD,			/// Incoming pad that is being used to decrypt data.
+	OTB_PAD_REC_STATUS_OUT_OF_BOUNDS	/// Invalid status.
 } OtbPadRecStatus;
 
 #define OTB_PAD_REC_PROP_UNIQUE_ID	"unique-id"
@@ -64,7 +65,7 @@ gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec);
 OtbPadIO *otb_pad_rec_open_pad_for_write(OtbPadRec *pad_rec);
 OtbPadIO *otb_pad_rec_open_pad_for_read(OtbPadRec *pad_rec, gboolean auto_rewind);
 gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec);
-gboolean otb_pad_write(const OtbPadIO *pad_io, const void *input_buffer, size_t input_buffer_size);
+gboolean otb_pad_write(OtbPadIO *pad_io, const void *input_buffer, size_t input_buffer_size);
 gboolean otb_pad_read(OtbPadIO *pad_io, void **output_buffer, size_t *output_buffer_size);
 gboolean otb_pad_read_byte(OtbPadIO *pad_io, unsigned char *output_byte);
 gboolean otb_pad_has_more_bytes(const OtbPadIO *pad_io);
