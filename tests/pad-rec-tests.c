@@ -41,6 +41,13 @@ static void otb_assert_pad_rec_file_exists(OtbPadRec *pad_rec)
 	g_free(expected_pad_rec_file_path);
 }
 
+static void otb_assert_pad_rec_file_does_not_exist(OtbPadRec *pad_rec)
+{
+	char *expected_pad_rec_file_path=otb_get_expected_file_path(pad_rec);
+	g_assert(!g_file_test(expected_pad_rec_file_path, G_FILE_TEST_EXISTS));
+	g_free(expected_pad_rec_file_path);
+}
+
 static char *otb_get_expected_file_path_of_pad(OtbPadRec *pad_rec)
 {
 	char *expected_file_path=otb_get_expected_file_path(pad_rec);
@@ -57,7 +64,7 @@ static void otb_assert_pad_file_exists(OtbPadRec *pad_rec)
 
 static void otb_assert_pad_file_does_not_exist(OtbPadRec *pad_rec)
 {
-	char *expected_pad_file_path=otb_get_expected_file_path(pad_rec);
+	char *expected_pad_file_path=otb_get_expected_file_path_of_pad(pad_rec);
 	g_assert(!g_file_test(expected_pad_file_path, G_FILE_TEST_EXISTS));
 	g_free(expected_pad_file_path);
 }
@@ -207,7 +214,7 @@ static void test_otb_pad_rec_generate_pad_file()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_io()
+static void test_otb_pad_rec_io_and_full_deletion()
 {
 	const off_t EXPECTED_PAD_SIZE=1;
 	const unsigned char EXPECTED_PAD_BYTES[10]={0x85, 0x83, 0x3b, 0xee, 0x34, 0x7a, 0x2b, 0x96, 0xec, 0x87};
@@ -218,10 +225,33 @@ static void test_otb_pad_rec_io()
 	g_assert(write_pad_io!=NULL);
 	g_assert(otb_pad_write(write_pad_io, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE));
 	g_assert(otb_pad_io_free(write_pad_io));
+	otb_assert_pad_rec_file_exists(pad_rec);
 	otb_assert_pad_file_exists(pad_rec);
 	otb_assert_pad_file(pad_rec, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE, FALSE);
 	otb_assert_pad_file(pad_rec, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE, TRUE);
 	otb_pad_rec_delete(pad_rec);
+	otb_assert_pad_rec_file_does_not_exist(pad_rec);
+	otb_assert_pad_file_does_not_exist(pad_rec);
+	g_object_unref(pad_rec);
+}
+
+static void test_otb_pad_rec_io_and_pad_deletion()
+{
+	const off_t EXPECTED_PAD_SIZE=1;
+	const unsigned char EXPECTED_PAD_BYTES[10]={0x85, 0x83, 0x3b, 0xee, 0x34, 0x7a, 0x2b, 0x96, 0xec, 0x87};
+	
+	otb_test_setup_local_crypto();
+	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, otb_get_test_dir_path(), OTB_PAD_REC_PROP_SIZE, EXPECTED_PAD_SIZE, NULL);
+	OtbPadIO *write_pad_io=otb_pad_rec_open_pad_for_write(pad_rec);
+	g_assert(write_pad_io!=NULL);
+	g_assert(otb_pad_write(write_pad_io, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE));
+	g_assert(otb_pad_io_free(write_pad_io));
+	otb_assert_pad_rec_file_exists(pad_rec);
+	otb_assert_pad_file_exists(pad_rec);
+	otb_assert_pad_file(pad_rec, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE, FALSE);
+	otb_assert_pad_file(pad_rec, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE, TRUE);
+	otb_pad_rec_delete_pad(pad_rec);
+	otb_assert_pad_rec_file_exists(pad_rec);
 	otb_assert_pad_file_does_not_exist(pad_rec);
 	g_object_unref(pad_rec);
 }
@@ -237,5 +267,6 @@ void otb_add_pad_rec_tests()
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_compare_by_id", test_otb_pad_rec_compare_by_id);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_save_load", test_otb_pad_rec_save_load);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_generate_pad_file", test_otb_pad_rec_generate_pad_file);
-	otb_add_test_func("/pad-rec/test_otb_pad_rec_io", test_otb_pad_rec_io);
+	otb_add_test_func("/pad-rec/test_otb_pad_rec_io_and_full_deletion", test_otb_pad_rec_io_and_full_deletion);
+	otb_add_test_func("/pad-rec/test_otb_pad_rec_io_and_pad_deletion", test_otb_pad_rec_io_and_pad_deletion);
 }

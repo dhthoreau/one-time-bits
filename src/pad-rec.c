@@ -348,10 +348,10 @@ gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec)
 	return ret_val;
 }
 
-gboolean otb_pad_rec_delete_pad(OtbPadRec *pad_rec)
+gboolean otb_pad_rec_delete_pad(const OtbPadRec *pad_rec)
 {
 	gboolean ret_val=TRUE;
-	if(!otb_unlink_if_exists(pad_rec->priv->pad_rec_file_path))
+	if(!otb_unlink_if_exists(pad_rec->priv->pad_file_path))
 		ret_val=FALSE;
 	return ret_val;
 }
@@ -362,7 +362,7 @@ gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec)
 	otb_pad_rec_lock(pad_rec);
 	if(!otb_pad_rec_delete_pad(pad_rec))
 		ret_val=FALSE;
-	else if(!otb_unlink_if_exists(pad_rec->priv->pad_file_path))
+	else if(!otb_unlink_if_exists(pad_rec->priv->pad_rec_file_path))
 		ret_val=FALSE;
 	otb_pad_rec_unlock(pad_rec);
 	return ret_val;

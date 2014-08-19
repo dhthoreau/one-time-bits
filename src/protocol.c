@@ -586,7 +586,7 @@ uint32_t otb_protocol_client(OtbProtocolContext *context, const unsigned char *i
 {
 	if(input_packet_size<sizeof(OtbProtocolCommand) && context->state!=STATE_INITIAL)
 		return otb_protocol_create_error_packet(context, packet_out);
-	if(PACKET_COMMAND(input_packet)==COMMAND_ERROR)
+	if((input_packet_size==0 && context->state!=STATE_INITIAL) || (input_packet_size!=0 && PACKET_COMMAND(input_packet)==COMMAND_ERROR))
 	{
 		context->state=STATE_FINISHED;
 		return 0;
@@ -815,7 +815,7 @@ static uint32_t otb_protocol_server_receive_pad_chunk_from_client(OtbProtocolCon
 
 uint32_t otb_protocol_server(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
 {
-	if(input_packet_size>0 || PACKET_COMMAND(input_packet)==COMMAND_ERROR)
+	if(input_packet_size==0 || PACKET_COMMAND(input_packet)==COMMAND_ERROR)
 	{
 		context->state=STATE_FINISHED;
 		return 0;
