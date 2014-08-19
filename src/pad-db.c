@@ -522,7 +522,6 @@ static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, Otb
 			OtbUniqueId *unique_id=NULL;
 			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
 			ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, prerequisite_status, new_status);
-			// FARE - Cancellare data file della blocca se è OTB_PAD_REC_STATUS_CONSUMED
 			g_free(unique_id);
 		}
 	}

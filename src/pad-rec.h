@@ -64,6 +64,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name);
 gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec);
 OtbPadIO *otb_pad_rec_open_pad_for_write(OtbPadRec *pad_rec);
 OtbPadIO *otb_pad_rec_open_pad_for_read(OtbPadRec *pad_rec, gboolean auto_rewind);
+gboolean otb_pad_rec_delete_pad(OtbPadRec *pad_rec);	// FARE - Unit test.
 gboolean otb_pad_rec_delete(const OtbPadRec *pad_rec);
 gboolean otb_pad_write(OtbPadIO *pad_io, const void *input_buffer, size_t input_buffer_size);
 gboolean otb_pad_read(OtbPadIO *pad_io, void **output_buffer, size_t *output_buffer_size);
