@@ -811,6 +811,8 @@ static uint32_t otb_protocol_server_receive_pad_chunk_from_client(OtbProtocolCon
 		packet_out_size=otb_protocol_create_ok_packet(packet_out);
 		context->state=(PACKET_COMMAND(decrypted_input_packet)==STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER?STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER:STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER);
 	}
+	else
+		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
 	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
 	return packet_out_size;
 }

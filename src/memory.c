@@ -67,7 +67,7 @@ void otb_mlock_page(void *page)
 	if(g_hash_table_contains(otb_locked_pages, page))
 	{
 		lock_count=g_hash_table_lookup(otb_locked_pages, page);
-		*lock_count++;
+		(*lock_count)++;
 	}
 	else if(mlock(page, 1)==0)
 	{
@@ -103,11 +103,10 @@ void otb_mlock(const void *memory, size_t size)
 
 void otb_munlock_page(const void *page)
 {
-	size_t *lock_count=NULL;
 	if(g_hash_table_contains(otb_locked_pages, page))
 	{
-		lock_count=g_hash_table_lookup(otb_locked_pages, page);
-		*lock_count--;
+		size_t *lock_count=g_hash_table_lookup(otb_locked_pages, page);
+		(*lock_count)--;
 		if(*lock_count==0)
 		{
 			g_hash_table_remove(otb_locked_pages, page);
