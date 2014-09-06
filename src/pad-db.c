@@ -20,7 +20,7 @@ struct _OtbPadDbPrivate
 	GRWLock lock;
 	char *base_path;
 	char *file_path;
-	off_t max_size;
+	off_t max_size;	// FARE - Forse 64-bit è troppo grande. 64-bit è meglio?
 	off_t new_pad_min_size;
 	off_t new_pad_max_size;
 	GSList *pad_recs;

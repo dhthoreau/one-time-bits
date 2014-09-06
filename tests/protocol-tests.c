@@ -66,6 +66,7 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend)
 	g_object_get(friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
 	g_assert(outgoing_pad_db!=NULL);
 	g_assert(otb_pad_db_set_new_pad_min_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_assert(otb_pad_db_set_new_pad_max_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
 	for(int counter=0; counter<5; counter++)
 		g_assert(otb_pad_db_create_unsent_pad(outgoing_pad_db));
 	for(int counter=0; counter<4; counter++)
@@ -357,6 +358,7 @@ static gboolean otb_do_client_send_pad_header_to_server(OtbProtocolContext *cont
 	g_assert_cmpint(EXPECTED_COMMAND_SENDING_PAD_HEADER, ==, plain_client_packet[0]);
 	OtbUniqueId *actual_packet_pad_id=(OtbUniqueId*)(plain_client_packet+1);
 	g_assert(memcmp(expected_pad_id, actual_packet_pad_id, sizeof *expected_pad_id)==0);
+	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, be64toh(*(int64_t*)(plain_client_packet+17)));
 	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
 	g_free(encrypted_client_packet);
 	g_free(server_response_packet);

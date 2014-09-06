@@ -195,13 +195,11 @@ static uint32_t otb_protocol_create_error_packet(OtbProtocolContext *context, un
 ///  unsigned char* - Encrypted key
 ///  unsigned char* - IV
 ///  unsigned char* - Encrypted data
-#define PACKET_NUMBER(packet, position, type)				*((type*)((packet)+(position)))
-#define SET_PACKET_NUMBER(packet, position, value, type)	(PACKET_NUMBER((packet), (position), type)=g_htonl(value))
-#define GET_PACKET_NUMBER(packet, position, type)			(g_ntohl(PACKET_NUMBER((packet), (position), type)))
-#define SET_PACKET_UINT32(packet, position, value)			(SET_PACKET_NUMBER((packet), (position), (value), uint32_t))
-#define GET_PACKET_UINT32(packet, position)					(GET_PACKET_NUMBER((packet), (position), uint32_t))
-#define SET_PACKET_INT64(packet, position, value)			(SET_PACKET_NUMBER((packet), (position), (value), int64_t))
-#define GET_PACKET_INT64(packet, position)					(GET_PACKET_NUMBER((packet), (position), int64_t))
+#define PACKET_NUMBER(packet, position, type)				(*((type*)((packet)+(position))))
+#define SET_PACKET_UINT32(packet, position, value)			(PACKET_NUMBER((packet), (position), uint32_t)=g_htonl(value))
+#define GET_PACKET_UINT32(packet, position)					(g_ntohl(PACKET_NUMBER((packet), (position), uint32_t)))
+#define SET_PACKET_INT64(packet, position, value)			(PACKET_NUMBER((packet), (position), int64_t)=htobe64(value))
+#define GET_PACKET_INT64(packet, position)					(be64toh(PACKET_NUMBER((packet), (position), int64_t)))
 
 #define ENCRYPTED_PACKET_SET_ENCRYPTED_KEY_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (size))
 #define ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
