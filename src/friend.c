@@ -23,8 +23,8 @@ enum
 	PROP_0,
 	PROP_IMPORT_STRING,
 	PROP_BASE_PATH,
-	PROP_INCOMING_PADS,
-	PROP_OUTGOING_PADS,
+	PROP_INCOMING_PAD_DB,
+	PROP_OUTGOING_PAD_DB,
 	PROP_UNIQUE_ID,
 	PROP_PUBLIC_KEY,
 	PROP_TRANSPORT_CIPHER_NAME,
@@ -46,10 +46,10 @@ struct _OtbFriendPrivate
 	OtbUniqueId *unique_id;
 	char *base_path;
 	char *file_path;
-	char *incoming_pads_path;
-	OtbPadDb *incoming_pads;
-	char *outgoing_pads_path;
-	OtbPadDb *outgoing_pads;
+	char *incoming_pad_db_path;
+	OtbPadDb *incoming_pad_db;
+	char *outgoing_pad_db_path;
+	OtbPadDb *outgoing_pad_db;
 	char *public_key;
 	char *transport_cipher_name;
 	char *onion_base_domain;
@@ -66,8 +66,8 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	object_class->set_property=otb_friend_set_property;
 	object_class->get_property=otb_friend_get_property;
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_FRIEND_PROP_BASE_PATH, _("Base path"), _("Directory where the friend's data will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_INCOMING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_INCOMING_PADS, _("Incoming pads"), _("Database of incoming pads"), G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_OUTGOING_PADS, g_param_spec_pointer(OTB_FRIEND_PROP_OUTGOING_PADS, _("Outgoing pads"), _("Database of outgoing pads"), G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_INCOMING_PAD_DB, g_param_spec_object(OTB_FRIEND_PROP_INCOMING_PAD_DB, _("Incoming pads"), _("Database of incoming pads"), OTB_TYPE_PAD_DB, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_OUTGOING_PAD_DB, g_param_spec_object(OTB_FRIEND_PROP_OUTGOING_PAD_DB, _("Outgoing pads"), _("Database of outgoing pads"), OTB_TYPE_PAD_DB, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_FRIEND_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the friend"), OTB_TYPE_UNIQUE_ID, G_PARAM_READWRITE));
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), "", G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), "", G_PARAM_READABLE));
@@ -82,30 +82,30 @@ static void otb_friend_init(OtbFriend *friend)
 	friend->priv->unique_id=NULL;
 	friend->priv->base_path=NULL;
 	friend->priv->file_path=NULL;
-	friend->priv->incoming_pads=NULL;
-	friend->priv->incoming_pads_path=NULL;
-	friend->priv->outgoing_pads=NULL;
-	friend->priv->outgoing_pads_path=NULL;
+	friend->priv->incoming_pad_db=NULL;
+	friend->priv->incoming_pad_db_path=NULL;
+	friend->priv->outgoing_pad_db=NULL;
+	friend->priv->outgoing_pad_db_path=NULL;
 	friend->priv->public_key=NULL;
 	friend->priv->transport_cipher_name=NULL;
 	friend->priv->onion_base_domain=NULL;
 	friend->priv->onion_full_domain=NULL;
 }
 
-static const OtbPadDb *otb_friend_set_incoming_pads(const OtbFriend *friend, OtbPadDb *incoming_pads)
+static const OtbPadDb *otb_friend_set_incoming_pad_db(const OtbFriend *friend, OtbPadDb *incoming_pad_db)
 {
-	if(friend->priv->incoming_pads!=NULL)
-		g_object_unref(friend->priv->incoming_pads);
-	friend->priv->incoming_pads=incoming_pads;
-	return incoming_pads;
+	if(friend->priv->incoming_pad_db!=NULL)
+		g_object_unref(friend->priv->incoming_pad_db);
+	friend->priv->incoming_pad_db=incoming_pad_db;
+	return incoming_pad_db;
 }
 
-static const OtbPadDb *otb_friend_set_outgoing_pads(const OtbFriend *friend, OtbPadDb *outgoing_pads)
+static const OtbPadDb *otb_friend_set_outgoing_pad_db(const OtbFriend *friend, OtbPadDb *outgoing_pad_db)
 {
-	if(friend->priv->outgoing_pads!=NULL)
-		g_object_unref(friend->priv->outgoing_pads);
-	friend->priv->outgoing_pads=outgoing_pads;
-	return outgoing_pads;
+	if(friend->priv->outgoing_pad_db!=NULL)
+		g_object_unref(friend->priv->outgoing_pad_db);
+	friend->priv->outgoing_pad_db=outgoing_pad_db;
+	return outgoing_pad_db;
 }
 
 static void otb_friend_dispose(GObject *object)
@@ -113,8 +113,8 @@ static void otb_friend_dispose(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_FRIEND(object));
 	OtbFriend *friend=OTB_FRIEND(object);
-	otb_friend_set_incoming_pads(friend, NULL);
-	otb_friend_set_outgoing_pads(friend, NULL);
+	otb_friend_set_incoming_pad_db(friend, NULL);
+	otb_friend_set_outgoing_pad_db(friend, NULL);
 	G_OBJECT_CLASS(otb_friend_parent_class)->dispose(object);
 }
 
@@ -127,8 +127,8 @@ static void otb_friend_finalize(GObject *object)
 	g_free(friend->priv->unique_id);
 	g_free(friend->priv->base_path);
 	g_free(friend->priv->file_path);
-	g_free(friend->priv->incoming_pads_path);
-	g_free(friend->priv->outgoing_pads_path);
+	g_free(friend->priv->incoming_pad_db_path);
+	g_free(friend->priv->outgoing_pad_db_path);
 	g_free(friend->priv->public_key);
 	g_free(friend->priv->transport_cipher_name);
 	g_free(friend->priv->onion_base_domain);
@@ -142,10 +142,10 @@ static void otb_friend_compute_file_paths(const OtbFriend *friend)
 	{
 		g_free(friend->priv->file_path);
 		friend->priv->file_path=g_build_filename(friend->priv->base_path, "friend.otb", NULL);
-		g_free(friend->priv->incoming_pads_path);
-		friend->priv->incoming_pads_path=g_build_filename(friend->priv->base_path, "incoming", NULL);
-		g_free(friend->priv->outgoing_pads_path);
-		friend->priv->outgoing_pads_path=g_build_filename(friend->priv->base_path, "outgoing", NULL);
+		g_free(friend->priv->incoming_pad_db_path);
+		friend->priv->incoming_pad_db_path=g_build_filename(friend->priv->base_path, "incoming", NULL);
+		g_free(friend->priv->outgoing_pad_db_path);
+		friend->priv->outgoing_pad_db_path=g_build_filename(friend->priv->base_path, "outgoing", NULL);
 	}
 }
 
@@ -184,7 +184,7 @@ static void otb_friend_set_property(GObject *object, unsigned int prop_id, const
 		}
 		case PROP_UNIQUE_ID:
 		{
-			otb_friend_set_unique_id(friend, g_value_get_pointer(value));
+			otb_friend_set_unique_id(friend, g_value_get_boxed(value));
 			break;
 		}
 		default:
@@ -205,14 +205,14 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 			g_value_set_string(value, friend->priv->base_path);
 			break;
 		}
-		case PROP_INCOMING_PADS:
+		case PROP_INCOMING_PAD_DB:
 		{
-			g_value_set_pointer(value, friend->priv->incoming_pads);
+			g_value_set_object(value, friend->priv->incoming_pad_db);
 			break;
 		}
-		case PROP_OUTGOING_PADS:
+		case PROP_OUTGOING_PAD_DB:
 		{
-			g_value_set_pointer(value, friend->priv->outgoing_pads);
+			g_value_set_object(value, friend->priv->outgoing_pad_db);
 			break;
 		}
 		case PROP_UNIQUE_ID:
@@ -364,7 +364,7 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 	else
 	{
 		OTB_FRIEND_GET_CLASS(friend)->otb_friend_import_key_file_private(friend, key_file);
-		if(g_file_test(friend->priv->file_path, G_FILE_TEST_EXISTS) || !otb_friend_save(friend) || otb_friend_set_incoming_pads(friend, otb_pad_db_create_in_directory(friend->priv->incoming_pads_path))==NULL || otb_friend_set_outgoing_pads(friend, otb_pad_db_create_in_directory(friend->priv->outgoing_pads_path))==NULL)
+		if(g_file_test(friend->priv->file_path, G_FILE_TEST_EXISTS) || !otb_friend_save(friend) || otb_friend_set_incoming_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->incoming_pad_db_path))==NULL || otb_friend_set_outgoing_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->outgoing_pad_db_path))==NULL)
 			success=FALSE;
 	}
 	if(!success)
@@ -416,9 +416,9 @@ static gboolean otb_friend_load(OtbFriend *friend)
 static gboolean otb_friend_load_databases(const OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
-	if(otb_friend_set_incoming_pads(friend, otb_pad_db_load_from_directory(friend->priv->incoming_pads_path))==NULL)
+	if(otb_friend_set_incoming_pad_db(friend, otb_pad_db_load_from_directory(friend->priv->incoming_pad_db_path))==NULL)
 		ret_val=FALSE;
-	else if(otb_friend_set_outgoing_pads(friend, otb_pad_db_load_from_directory(friend->priv->outgoing_pads_path))==NULL)
+	else if(otb_friend_set_outgoing_pad_db(friend, otb_pad_db_load_from_directory(friend->priv->outgoing_pad_db_path))==NULL)
 		ret_val=FALSE;
 	return ret_val;
 }
@@ -441,8 +441,8 @@ OtbFriend *otb_friend_load_from_directory(const char *base_path)
 
 gboolean otb_friend_delete(OtbFriend *friend)
 {
-	gboolean ret_val=otb_pad_db_delete(friend->priv->incoming_pads);
-	ret_val=(otb_pad_db_delete(friend->priv->outgoing_pads) && ret_val);
+	gboolean ret_val=otb_pad_db_delete(friend->priv->incoming_pad_db);
+	ret_val=(otb_pad_db_delete(friend->priv->outgoing_pad_db) && ret_val);
 	ret_val=otb_delete_dir(friend->priv->base_path) && ret_val;
 	return ret_val;
 }

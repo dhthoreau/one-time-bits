@@ -21,8 +21,8 @@
 #define OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN		"onion-base-domain"
 
 #define OTB_FRIEND_PROP_BASE_PATH				"base-path"
-#define OTB_FRIEND_PROP_INCOMING_PADS			"incoming-pads"
-#define OTB_FRIEND_PROP_OUTGOING_PADS			"outgoing-pads"
+#define OTB_FRIEND_PROP_INCOMING_PAD_DB			"incoming-pad-db"
+#define OTB_FRIEND_PROP_OUTGOING_PAD_DB			"outgoing-pad-db"
 #define OTB_FRIEND_PROP_UNIQUE_ID				"unique-id"
 #define OTB_FRIEND_PROP_PUBLIC_KEY				"public-key"
 #define OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME	"transport-cipher-name"

@@ -30,31 +30,35 @@ static void otb_assert_friend_files_exist(const char *expected_base_path)
 
 static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend, OtbFriend *load_friend)
 {
-	OtbPadDb *create_incoming_pads=NULL;
-	OtbPadDb *create_outgoing_pads=NULL;
-	g_object_get(create_friend, OTB_FRIEND_PROP_INCOMING_PADS, &create_incoming_pads, OTB_FRIEND_PROP_OUTGOING_PADS, &create_outgoing_pads, NULL);
-	g_assert(create_incoming_pads!=NULL);
-	g_assert(create_outgoing_pads!=NULL);
-	OtbPadDb *load_incoming_pads=NULL;
-	OtbPadDb *load_outgoing_pads=NULL;
-	g_object_get(load_friend, OTB_FRIEND_PROP_INCOMING_PADS, &load_incoming_pads, OTB_FRIEND_PROP_OUTGOING_PADS, &load_outgoing_pads, NULL);
-	g_assert(load_incoming_pads!=NULL);
-	g_assert(load_outgoing_pads!=NULL);
-	char *create_incoming_pads_path=NULL;
-	g_object_get(create_incoming_pads, OTB_PAD_DB_PROP_BASE_PATH, &create_incoming_pads_path, NULL);
-	char *create_outgoing_pads_path=NULL;
-	g_object_get(create_outgoing_pads, OTB_PAD_DB_PROP_BASE_PATH, &create_outgoing_pads_path, NULL);
-	char *load_incoming_pads_path=NULL;
-	g_object_get(load_incoming_pads, OTB_PAD_DB_PROP_BASE_PATH, &load_incoming_pads_path, NULL);
-	char *load_outgoing_pads_path=NULL;
-	g_object_get(load_outgoing_pads, OTB_PAD_DB_PROP_BASE_PATH, &load_outgoing_pads_path, NULL);
-	g_assert_cmpstr(create_incoming_pads_path, ==, load_incoming_pads_path);
-	g_assert_cmpstr(create_outgoing_pads_path, ==, load_outgoing_pads_path);
-	g_assert_cmpstr(create_incoming_pads_path, !=, load_outgoing_pads_path);
-	g_free(create_incoming_pads_path);
-	g_free(create_outgoing_pads_path);
-	g_free(load_incoming_pads_path);
-	g_free(load_outgoing_pads_path);
+	OtbPadDb *create_incoming_pad_db=NULL;
+	OtbPadDb *create_outgoing_pad_db=NULL;
+	g_object_get(create_friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &create_incoming_pad_db, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &create_outgoing_pad_db, NULL);
+	g_assert(create_incoming_pad_db!=NULL);
+	g_assert(create_outgoing_pad_db!=NULL);
+	OtbPadDb *load_incoming_pad_db=NULL;
+	OtbPadDb *load_outgoing_pad_db=NULL;
+	g_object_get(load_friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &load_incoming_pad_db, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &load_outgoing_pad_db, NULL);
+	g_assert(load_incoming_pad_db!=NULL);
+	g_assert(load_outgoing_pad_db!=NULL);
+	char *create_incoming_pad_db_path=NULL;
+	g_object_get(create_incoming_pad_db, OTB_PAD_DB_PROP_BASE_PATH, &create_incoming_pad_db_path, NULL);
+	char *create_outgoing_pad_db_path=NULL;
+	g_object_get(create_outgoing_pad_db, OTB_PAD_DB_PROP_BASE_PATH, &create_outgoing_pad_db_path, NULL);
+	char *load_incoming_pad_db_path=NULL;
+	g_object_get(load_incoming_pad_db, OTB_PAD_DB_PROP_BASE_PATH, &load_incoming_pad_db_path, NULL);
+	char *load_outgoing_pad_db_path=NULL;
+	g_object_get(load_outgoing_pad_db, OTB_PAD_DB_PROP_BASE_PATH, &load_outgoing_pad_db_path, NULL);
+	g_assert_cmpstr(create_incoming_pad_db_path, ==, load_incoming_pad_db_path);
+	g_assert_cmpstr(create_outgoing_pad_db_path, ==, load_outgoing_pad_db_path);
+	g_assert_cmpstr(create_incoming_pad_db_path, !=, load_outgoing_pad_db_path);
+	g_free(create_incoming_pad_db_path);
+	g_free(create_outgoing_pad_db_path);
+	g_free(load_incoming_pad_db_path);
+	g_free(load_outgoing_pad_db_path);
+	g_object_unref(load_incoming_pad_db);
+	g_object_unref(load_outgoing_pad_db);
+	g_object_unref(create_incoming_pad_db);
+	g_object_unref(create_outgoing_pad_db);
 }
 
 char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *transport_cipher_name, const char *onion_base_domain, const char *dummy_value)

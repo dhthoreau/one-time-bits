@@ -473,7 +473,7 @@ OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId 
 
 GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status)
 {
-	GSList *selected_pad_rec_ids=NULL;
+	GSList *selected_pad_ids=NULL;
 	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
@@ -483,10 +483,10 @@ GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecSt
 		{
 			OtbUniqueId *unique_id=NULL;
 			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
-			selected_pad_rec_ids=g_slist_prepend(selected_pad_rec_ids, unique_id);
+			selected_pad_ids=g_slist_prepend(selected_pad_ids, unique_id);
 		}
 	}
-	return selected_pad_rec_ids;
+	return selected_pad_ids;
 }
 
 static gboolean otb_pad_db_transition_status_of_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, OtbPadRecStatus prerequisite_status, OtbPadRecStatus new_status)

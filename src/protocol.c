@@ -139,7 +139,7 @@ static void otb_protocol_set_peer_friend_on_context(OtbProtocolContext *context,
 	context->peer_friend=peer_friend;
 	char *peer_public_key=NULL;
 	char *peer_transport_cipher_name=NULL;
-	g_object_get(peer_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &peer_public_key, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &peer_transport_cipher_name, OTB_FRIEND_PROP_OUTGOING_PADS, &context->pad_db, NULL);
+	g_object_get(peer_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &peer_public_key, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &peer_transport_cipher_name, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &context->pad_db, NULL);
 	context->peer_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, peer_public_key, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, peer_transport_cipher_name, NULL);
 	g_free(peer_transport_cipher_name);
 	g_free(peer_public_key);
@@ -395,19 +395,19 @@ static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *co
 	gboolean ret_val=TRUE;
 	if(PACKET_COMMAND(input_packet)==COMMAND_SENDING_PAD_IDS && PAD_IDS_PACKET_IS_VALID(input_packet, input_packet_size))
 	{
-		GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, pad_rec_status);
-		for(const GSList *curr_element=pad_rec_ids; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+		GSList *pad_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, pad_rec_status);
+		for(const GSList *curr_element=pad_ids; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 		{
-			const OtbUniqueId *pad_rec_id=(const OtbUniqueId*)curr_element->data;
-			gboolean pad_rec_id_found_in_packet=FALSE;
+			const OtbUniqueId *pad_id=(const OtbUniqueId*)curr_element->data;
+			gboolean pad_id_found_in_packet=FALSE;
 			uint32_t pad_rec_count=PAD_IDS_PACKET_GET_PAD_ID_COUNT(input_packet);
-			for(int packet_pad_rec_id_iter=0; !pad_rec_id_found_in_packet && packet_pad_rec_id_iter<pad_rec_count; packet_pad_rec_id_iter++)
-				if(otb_unique_id_compare(pad_rec_id, PAD_IDS_PACKET_PAD_ID(input_packet, packet_pad_rec_id_iter))==0)
-					pad_rec_id_found_in_packet=TRUE;
-			if(!pad_rec_id_found_in_packet)
-				ret_val=otb_pad_db_remove_pad(context->pad_db, pad_rec_id);
+			for(int packet_pad_id_iter=0; !pad_id_found_in_packet && packet_pad_id_iter<pad_rec_count; packet_pad_id_iter++)
+				if(otb_unique_id_compare(pad_id, PAD_IDS_PACKET_PAD_ID(input_packet, packet_pad_id_iter))==0)
+					pad_id_found_in_packet=TRUE;
+			if(!pad_id_found_in_packet)
+				ret_val=otb_pad_db_remove_pad(context->pad_db, pad_id);
 		}
-		g_slist_free_full(pad_rec_ids, g_free);
+		g_slist_free_full(pad_ids, g_free);
 	}
 	else
 		ret_val=FALSE;
@@ -416,18 +416,18 @@ static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *co
 
 static uint32_t otb_protocol_create_pad_ids_packet(const OtbProtocolContext *context, OtbPadRecStatus status1, OtbPadRecStatus status2, unsigned char **encrypted_packet_out)
 {
-	GSList *pad_rec_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status1);
+	GSList *pad_ids=otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status1);
 	if(status2!=OTB_PAD_REC_STATUS_OUT_OF_BOUNDS)
-		pad_rec_ids=g_slist_concat(pad_rec_ids, otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status2));
-	uint32_t total_pad_rec_ids=g_slist_length(pad_rec_ids);
+		pad_ids=g_slist_concat(pad_ids, otb_pad_db_get_ids_of_pads_in_status(context->pad_db, status2));
+	uint32_t total_pad_ids=g_slist_length(pad_ids);
 	unsigned char *plain_packet=NULL;
-	uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(OtbUniqueId)*total_pad_rec_ids;
+	uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(OtbUniqueId)*total_pad_ids;
 	plain_packet=g_malloc(plain_packet_size);
 	PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_IDS;
-	PAD_IDS_PACKET_SET_PAD_ID_COUNT(plain_packet, total_pad_rec_ids);
-	for(uint32_t unique_id_iter=0; unique_id_iter<total_pad_rec_ids; unique_id_iter++)
-		memcpy(PAD_IDS_PACKET_PAD_ID(plain_packet, unique_id_iter), g_slist_nth(pad_rec_ids, unique_id_iter)->data, sizeof(OtbUniqueId));
-	g_slist_free_full(pad_rec_ids, g_free);
+	PAD_IDS_PACKET_SET_PAD_ID_COUNT(plain_packet, total_pad_ids);
+	for(uint32_t unique_id_iter=0; unique_id_iter<total_pad_ids; unique_id_iter++)
+		memcpy(PAD_IDS_PACKET_PAD_ID(plain_packet, unique_id_iter), g_slist_nth(pad_ids, unique_id_iter)->data, sizeof(OtbUniqueId));
+	g_slist_free_full(pad_ids, g_free);
 	uint32_t encrypted_packet_out_size=otb_protocol_create_encrypted_packet(context, (unsigned char*)plain_packet, plain_packet_size, encrypted_packet_out);
 	g_free(plain_packet);
 	return encrypted_packet_out_size;
@@ -475,7 +475,7 @@ static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext
 			{
 				unsigned char *plain_packet=g_malloc(INCOMING_PAD_HEADER_PACKET_SIZE);
 				PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_HEADER;
-				memcpy(INCOMING_PAD_HEADER_PACKET_PAD_ID(*packet_out), context->pad_id, sizeof *context->pad_id);
+				memcpy(INCOMING_PAD_HEADER_PACKET_PAD_ID(plain_packet), context->pad_id, sizeof *context->pad_id);
 				INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(plain_packet, otb_pad_db_get_pad_size(context->pad_db, context->pad_id));
 				packet_out_size=otb_protocol_create_encrypted_packet(context, (unsigned char*)plain_packet, INCOMING_PAD_HEADER_PACKET_SIZE, packet_out);
 				g_free(plain_packet);
@@ -644,7 +644,9 @@ static uint32_t otb_protocol_server_establish_friend(OtbProtocolContext *context
 		else
 		{
 			otb_protocol_set_peer_friend_on_context(context, peer_friend);
-			g_object_get(peer_friend, OTB_FRIEND_PROP_INCOMING_PADS, &context->pad_db, NULL);
+			if(context->pad_db!=NULL)
+				g_object_unref(context->pad_db);
+			g_object_get(peer_friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &context->pad_db, NULL);
 			context->state=STATE_ESTABLISHING_FRIEND;
 			packet_out_size=otb_protocol_create_ok_packet(packet_out);
 		}
@@ -861,5 +863,7 @@ void otb_protocol_context_free(OtbProtocolContext *context)
 	g_free(context->pad_id);
 	if(context->pad_io!=NULL)
 		otb_pad_db_close_pad(context->pad_db);
+	if(context->pad_db!=NULL)
+		g_object_unref(context->pad_db);
 	g_free(context);
 }
