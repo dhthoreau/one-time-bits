@@ -587,6 +587,7 @@ static uint32_t otb_protocol_client_wrap_up_sending_pad(OtbProtocolContext *cont
 	{
 		otb_pad_db_mark_pad_as_sent(context->pad_db, context->pad_id);
 		g_free(context->pad_id);
+		context->pad_id=NULL;
 		return otb_protocol_client_send_pad_header_to_server(context, input_packet, input_packet_size, packet_out);
 	}
 	else
@@ -626,7 +627,7 @@ uint32_t otb_protocol_client(OtbProtocolContext *context, const unsigned char *i
 		case STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER:
 			return otb_protocol_client_send_pad_chunk_to_server(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER:
-			otb_protocol_client_wrap_up_sending_pad(context, input_packet, input_packet_size, packet_out);
+			return otb_protocol_client_wrap_up_sending_pad(context, input_packet, input_packet_size, packet_out);
 		default:
 			return otb_protocol_create_error_packet(context, packet_out);
 	}
