@@ -49,61 +49,32 @@ static uint32_t otb_decrypt_packet(const OtbAsymCipher *peer_asym_cipher, const 
 	return decrypted_packet_size;
 }
 
-static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
+static void otb_do_client_receive_unexpected_command(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
-	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
-	OtbUser *user=NULL;
-	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
-	g_assert(user!=NULL);
-	OtbAsymCipher *asym_cipher=NULL;
-	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, NULL);
-	g_assert(asym_cipher!=NULL);
-	g_object_set(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, "RC2-64-CBC", NULL);
-	g_object_unref(asym_cipher);
-	g_object_unref(user);
-	return bitkeeper;
+	uint32_t server_response_packet_size=1;
+	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
+	server_response_packet[0]=255;
+	unsigned char *client_packet=NULL;
+	uint32_t client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, &client_packet);
+	g_assert(client_packet!=NULL);
+	g_assert_cmpint(1, ==, client_packet_size);
+	g_assert_cmpint(client_packet[0], ==, EXPECTED_COMMAND_ERROR);
+	g_free(client_packet);
+	g_free(server_response_packet);
 }
 
-static void otb_setup_friend_pads_for_test(OtbFriend *friend)
+static void otb_do_client_receive_malformed_packet(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
-	OtbPadDb *outgoing_pad_db=NULL;
-	g_object_get(friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
-	g_assert(outgoing_pad_db!=NULL);
-	g_assert(otb_pad_db_set_new_pad_min_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	for(int counter=0; counter<5; counter++)
-		g_assert(otb_pad_db_create_unsent_pad(outgoing_pad_db));
-	for(int counter=0; counter<4; counter++)
-	{
-		OtbUniqueId *pad_id=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT);
-		g_assert(pad_id!=NULL);
-		g_assert(otb_pad_db_mark_pad_as_sent(outgoing_pad_db, pad_id));
-		g_free(pad_id);
-	}
-	unsigned char *encrypted_bytes=NULL;
-	size_t encrypted_bytes_size=0;
-	for(int counter=0; counter<2; counter++)
-	{
-		g_assert_cmpint(0, ==, otb_pad_db_encrypt(outgoing_pad_db, "", 1, &encrypted_bytes, &encrypted_bytes_size));
-		g_free(encrypted_bytes);
-	}
-	g_object_unref(outgoing_pad_db);
-}
-
-static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
-{
-	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_protocol_test();
-	OtbUser *user=NULL;
-	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
-	g_assert(user!=NULL);
-	g_assert(otb_user_set_onion_base_domain(user, "ajshdjashgdsjdf"));
-	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, peer_id_out, OTB_USER_PROP_ASYM_CIPHER, asym_cipher_out, NULL);
-	g_assert(peer_id_out!=NULL);
-	g_assert(asym_cipher_out!=NULL);
-	*export_out=otb_user_export(user);
-	g_assert(export_out!=NULL);
-	g_object_unref(user);
-	g_object_unref(bitkeeper);
+	uint32_t server_response_packet_size=10000;
+	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
+	server_response_packet[0]=EXPECTED_COMMAND_OK;
+	unsigned char *client_packet=NULL;
+	uint32_t client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, &client_packet);
+	g_assert(client_packet!=NULL);
+	g_assert_cmpint(1, ==, client_packet_size);
+	g_assert_cmpint(client_packet[0], ==, EXPECTED_COMMAND_ERROR);
+	g_free(client_packet);
+	g_free(server_response_packet);
 }
 
 static void otb_do_client_establish_protocol_version(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
@@ -421,18 +392,96 @@ static void otb_do_client_send_finish_to_server(OtbProtocolContext *context, con
 typedef void (*protocol_test_setup)(OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out);
 typedef void (*protocol_test)(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher);
 
-static void otb_run_protocol_tests(protocol_test_setup setup, protocol_test first_test, ...)
+static gboolean otb_run_protocol_error_injected_tests(protocol_test_setup setup, va_list *tests, protocol_test error_injection, int error_injection_point)
 {
 	OtbProtocolContext *context=NULL;
 	OtbAsymCipher *peer_asym_cipher=NULL;
 	setup(&context, &peer_asym_cipher);
-	va_list test_funcs;
-	va_start(test_funcs, first_test);
-	for(protocol_test current_test=va_arg(test_funcs, protocol_test); current_test!=NULL; current_test=va_arg(test_funcs, protocol_test))
+	protocol_test current_test;
+	int test_count;
+	for(current_test=va_arg(*tests, protocol_test), test_count=0;
+	current_test!=NULL && test_count<error_injection_point;
+	current_test=va_arg(*tests, protocol_test), test_count++)
 		current_test(context, peer_asym_cipher);
-	va_end(test_funcs);
+	error_injection(context, peer_asym_cipher);
 	otb_protocol_context_free(context);
 	g_object_unref(peer_asym_cipher);
+	return current_test!=NULL;
+}
+
+static void otb_run_protocol_tests(protocol_test_setup setup, ...)
+{
+	gboolean injecting_errors=TRUE;
+	for(int error_injection_point=1; injecting_errors; error_injection_point++)
+	{
+		va_list tests;
+		va_start(tests, setup);
+		injecting_errors=otb_run_protocol_error_injected_tests(setup, &tests, otb_do_client_receive_unexpected_command, error_injection_point);
+		va_end(tests);
+		if(injecting_errors)
+		{
+			va_start(tests, setup);
+			otb_run_protocol_error_injected_tests(setup, &tests, otb_do_client_receive_malformed_packet, error_injection_point);
+			va_end(tests);
+		}
+	}
+}
+
+static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
+{
+	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
+	OtbUser *user=NULL;
+	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
+	g_assert(user!=NULL);
+	OtbAsymCipher *asym_cipher=NULL;
+	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, NULL);
+	g_assert(asym_cipher!=NULL);
+	g_object_set(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, "RC2-64-CBC", NULL);
+	g_object_unref(asym_cipher);
+	g_object_unref(user);
+	return bitkeeper;
+}
+
+static void otb_setup_friend_pads_for_test(OtbFriend *friend)
+{
+	OtbPadDb *outgoing_pad_db=NULL;
+	g_object_get(friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
+	g_assert(outgoing_pad_db!=NULL);
+	g_assert(otb_pad_db_set_new_pad_min_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_assert(otb_pad_db_set_new_pad_max_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	for(int counter=0; counter<5; counter++)
+		g_assert(otb_pad_db_create_unsent_pad(outgoing_pad_db));
+	for(int counter=0; counter<4; counter++)
+	{
+		OtbUniqueId *pad_id=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT);
+		g_assert(pad_id!=NULL);
+		g_assert(otb_pad_db_mark_pad_as_sent(outgoing_pad_db, pad_id));
+		g_free(pad_id);
+	}
+	unsigned char *encrypted_bytes=NULL;
+	size_t encrypted_bytes_size=0;
+	for(int counter=0; counter<2; counter++)
+	{
+		g_assert_cmpint(0, ==, otb_pad_db_encrypt(outgoing_pad_db, "", 1, &encrypted_bytes, &encrypted_bytes_size));
+		g_free(encrypted_bytes);
+	}
+	g_object_unref(outgoing_pad_db);
+}
+
+static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
+{
+	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_protocol_test();
+	OtbUser *user=NULL;
+	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
+	g_assert(user!=NULL);
+	g_assert(otb_user_set_onion_base_domain(user, "ajshdjashgdsjdf"));
+	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, peer_id_out, OTB_USER_PROP_ASYM_CIPHER, asym_cipher_out, NULL);
+	g_assert(peer_id_out!=NULL);
+	g_assert(asym_cipher_out!=NULL);
+	*export_out=otb_user_export(user);
+	g_assert(export_out!=NULL);
+	g_object_unref(user);
+	g_object_unref(bitkeeper);
 }
 
 static void otb_setup_protocol_client_one_pad_one_chunk_test(OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out)
@@ -453,14 +502,12 @@ static void otb_setup_protocol_client_one_pad_one_chunk_test(OtbProtocolContext 
 	g_free(peer_id);
 }
 
-#define HAPPY_PATH_CLIENT_ONE_PAD_ONE_CHUNK	otb_do_client_establish_protocol_version, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL
-
-static void test_otb_protocol_client()
+static void test_otb_protocol_client_one_pad_one_chunk_test_happy_path()
 {
-	otb_run_protocol_tests(otb_setup_protocol_client_one_pad_one_chunk_test, HAPPY_PATH_CLIENT_ONE_PAD_ONE_CHUNK);
+	otb_run_protocol_tests(otb_setup_protocol_client_one_pad_one_chunk_test, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
 }
 
 void otb_add_protocol_tests()
 {
-	otb_add_test_func("/protocol/test_otb_protocol_client", test_otb_protocol_client);
+	otb_add_test_func("/protocol/test_otb_protocol_client_one_pad_one_chunk_test_happy_path", test_otb_protocol_client_one_pad_one_chunk_test_happy_path);
 }
