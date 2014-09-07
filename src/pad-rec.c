@@ -76,7 +76,7 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	g_object_class_install_property(object_class, PROP_STATUS, g_param_spec_uint(OTB_PAD_REC_PROP_STATUS, _("Status"), _("Status of the record"), 0, OTB_PAD_REC_STATUS_OUT_OF_BOUNDS-1, OTB_PAD_REC_STATUS_UNSENT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int64(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT64, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_type_class_add_private(klass, sizeof(OtbPadRecPrivate));
 }
 
@@ -164,7 +164,7 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 		}
 		case PROP_SIZE:
 		{
-			pad_rec->priv->size=g_value_get_int64(value);
+			pad_rec->priv->size=g_value_get_int(value);
 			break;
 		}
 		default:
@@ -204,7 +204,7 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 		}
 		case PROP_SIZE:
 		{
-			g_value_set_int64(value, pad_rec->priv->size);
+			g_value_set_int(value, pad_rec->priv->size);
 			break;
 		}
 		default:
@@ -232,7 +232,7 @@ gboolean otb_pad_rec_save(const OtbPadRec *pad_rec)
 	otb_pad_rec_lock(pad_rec);
 	otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, pad_rec->priv->unique_id, sizeof *pad_rec->priv->unique_id);
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_STATUS, pad_rec->priv->status);
-	g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_SIZE, pad_rec->priv->size);
+	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_SIZE, pad_rec->priv->size);
 	otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV, pad_rec->priv->pad_iv);
 	gboolean ret_val=otb_settings_save_key_file(key_file, pad_rec->priv->pad_rec_file_path);
 	otb_pad_rec_unlock(pad_rec);
@@ -257,7 +257,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 		load_successful=FALSE;
 	else if((pad_rec->priv->status=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_STATUS, -1))==-1)
 		load_successful=FALSE;
-	else if((pad_rec->priv->size=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_SIZE, -2))==-2)
+	else if((pad_rec->priv->size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_SIZE, -2))==-2)
 		load_successful=FALSE;
 	else if((pad_rec->priv->pad_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV))==NULL)
 		load_successful=FALSE;

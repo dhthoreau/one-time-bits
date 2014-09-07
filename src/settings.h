@@ -24,7 +24,7 @@ int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char 
 int otb_settings_get_config_int(const char *group_name, const char *key, int error_value);
 gboolean otb_settings_set_config_uint(const char *group_name, const char *key, unsigned int value);
 unsigned int otb_settings_get_config_uint(const char *group_name, const char *key, unsigned int error_value);
-long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value);
+unsigned long long otb_settings_get_uint64(GKeyFile *key_file, const char *group_name, const char *key, unsigned long long error_value);
 gboolean otb_settings_set_config_string(const char *group_name, const char *key, const char *value);
 char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const char *key);
 char *otb_settings_get_config_string(const char *group_name, const char *key);

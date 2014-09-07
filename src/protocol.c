@@ -196,10 +196,14 @@ static uint32_t otb_protocol_create_error_packet(OtbProtocolContext *context, un
 ///  unsigned char* - IV
 ///  unsigned char* - Encrypted data
 #define PACKET_NUMBER(packet, position, type)				(*((type*)((packet)+(position))))
-#define SET_PACKET_UINT32(packet, position, value)			(PACKET_NUMBER((packet), (position), uint32_t)=g_htonl(value))
-#define GET_PACKET_UINT32(packet, position)					(g_ntohl(PACKET_NUMBER((packet), (position), uint32_t)))
-#define SET_PACKET_INT64(packet, position, value)			(PACKET_NUMBER((packet), (position), int64_t)=htobe64(value))
-#define GET_PACKET_INT64(packet, position)					(be64toh(PACKET_NUMBER((packet), (position), int64_t)))
+
+#define SET_PACKET_NUMBER32(packet, position, type, value)	(PACKET_NUMBER((packet), (position), type)=g_htonl(value))
+#define GET_PACKET_NUMBER32(packet, position, type)			(g_ntohl(PACKET_NUMBER((packet), (position), type)))
+
+#define SET_PACKET_UINT32(packet, position, value)			(SET_PACKET_NUMBER32((packet), (position), uint32_t, (value)))
+#define GET_PACKET_UINT32(packet, position)					(GET_PACKET_NUMBER32((packet), (position), uint32_t))
+#define SET_PACKET_INT32(packet, position, value)			(SET_PACKET_NUMBER32((packet), (position), int32_t, (value)))
+#define GET_PACKET_INT32(packet, position)					(GET_PACKET_NUMBER32((packet), (position), int32_t))
 
 #define ENCRYPTED_PACKET_SET_ENCRYPTED_KEY_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (size))
 #define ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
@@ -451,12 +455,12 @@ static uint32_t otb_protocol_client_send_pad_ids_to_server(OtbProtocolContext *c
 ///New incoming pad packet structure:
 ///  OtbProtocolCommand - Command
 ///  OtbUniqueId pad_id
-///  int64_t - pad_size
+///  int32_t - pad_size
 ///Will be wrapped in an encrypted packet.
-#define INCOMING_PAD_HEADER_PACKET_SIZE								(sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId)+sizeof(int64_t))
+#define INCOMING_PAD_HEADER_PACKET_SIZE								(sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId)+sizeof(int32_t))
 #define INCOMING_PAD_HEADER_PACKET_PAD_ID(packet)					(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand))
-#define INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(packet, size)		SET_PACKET_INT64((packet), sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId), (size))
-#define INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(packet)				GET_PACKET_INT64((packet), sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId))
+#define INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(packet, size)		SET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId), (size))
+#define INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(packet)				GET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId))
 #define INCOMING_PAD_HEADER_PACKET_IS_VALID(packet, packet_size)	(INCOMING_PAD_HEADER_PACKET_SIZE==(packet_size))
 
 static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)

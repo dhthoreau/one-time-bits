@@ -108,9 +108,9 @@ static void otb_load_db_from_path_with_custom_property_values(const char *pad_db
 
 static void test_otb_pad_db_io()
 {
-	const off_t EXPECTED_MAX_SIZE=1234567890123456;
-	const off_t EXPECTED_NEW_PAD_MIN_SIZE=1234567890;
-	const off_t EXPECTED_NEW_PAD_MAX_SIZE=12345678901;
+	const off_t EXPECTED_MAX_SIZE=1234567890;
+	const off_t EXPECTED_NEW_PAD_MIN_SIZE=12345678;
+	const off_t EXPECTED_NEW_PAD_MAX_SIZE=123456789;
 	
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	otb_create_db_in_path_with_custom_property_values(pad_db_dir_path, EXPECTED_MAX_SIZE, EXPECTED_NEW_PAD_MIN_SIZE, EXPECTED_NEW_PAD_MAX_SIZE);

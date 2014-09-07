@@ -20,14 +20,14 @@ struct _OtbPadDbPrivate
 	GRWLock lock;
 	char *base_path;
 	char *file_path;
-	off_t max_size;	// FARE - Forse 64-bit è troppo grande. 64-bit è meglio?
+	unsigned long long max_size;
 	off_t new_pad_min_size;
 	off_t new_pad_max_size;
 	GSList *pad_recs;
 	OtbPadIO *open_pad_io;
 };
 
-#define DEFAULT_MAX_SIZE			10485760
+#define DEFAULT_MAX_SIZE			10485760LL
 #define DEFAULT_NEW_PAD_MIN_SIZE	10240
 #define DEFAULT_NEW_PAD_MAX_SIZE	20480
 #define MINIMUM_NEW_PAD_SIZE		1024
@@ -56,9 +56,9 @@ static void otb_pad_db_class_init(OtbPadDbClass *klass)
 	object_class->set_property=otb_pad_db_set_property;
 	object_class->get_property=otb_pad_db_get_property;
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_DB_PROP_BASE_PATH, _("Base path"), _("Directory where the database will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_MAX_SIZE, g_param_spec_int64(OTB_PAD_DB_PROP_MAX_SIZE, _("Max size"), _("Maximum size of the database"), 0, G_MAXINT64, DEFAULT_MAX_SIZE, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_NEW_PAD_MIN_SIZE, g_param_spec_int64(OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, _("New pad min size"), _("Minimum size for a newly created pad"), 0, G_MAXINT64, DEFAULT_NEW_PAD_MIN_SIZE, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_NEW_PAD_MAX_SIZE, g_param_spec_int64(OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, _("New pad max size"), _("Maximum size for a newly created pad"), 0, G_MAXINT64, DEFAULT_NEW_PAD_MAX_SIZE, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_MAX_SIZE, g_param_spec_uint64(OTB_PAD_DB_PROP_MAX_SIZE, _("Max size"), _("Maximum size of the database"), 0, G_MAXINT64, DEFAULT_MAX_SIZE, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_NEW_PAD_MIN_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, _("New pad min size"), _("Minimum size for a newly created pad"), 0, G_MAXINT, DEFAULT_NEW_PAD_MIN_SIZE, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_NEW_PAD_MAX_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, _("New pad max size"), _("Maximum size for a newly created pad"), 0, G_MAXINT, DEFAULT_NEW_PAD_MAX_SIZE, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbPadDbPrivate));
 }
 
@@ -149,17 +149,17 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 		}
 		case PROP_MAX_SIZE:
 		{
-			g_value_set_int64(value, pad_db->priv->max_size);
+			g_value_set_uint64(value, pad_db->priv->max_size);
 			break;
 		}
 		case PROP_NEW_PAD_MIN_SIZE:
 		{
-			g_value_set_int64(value, pad_db->priv->new_pad_min_size);
+			g_value_set_int(value, pad_db->priv->new_pad_min_size);
 			break;
 		}
 		case PROP_NEW_PAD_MAX_SIZE:
 		{
-			g_value_set_int64(value, pad_db->priv->new_pad_max_size);
+			g_value_set_int(value, pad_db->priv->new_pad_max_size);
 			break;
 		}
 		default:
@@ -182,9 +182,9 @@ static gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 	if(otb_mkdir_with_parents(pad_db->priv->base_path))
 	{
 		GKeyFile *key_file=g_key_file_new();
-		g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, pad_db->priv->max_size);
-		g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, pad_db->priv->new_pad_min_size);
-		g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, pad_db->priv->new_pad_max_size);
+		g_key_file_set_uint64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, pad_db->priv->max_size);
+		g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, pad_db->priv->new_pad_min_size);
+		g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, pad_db->priv->new_pad_max_size);
 		ret_val=otb_settings_save_key_file(key_file, pad_db->priv->file_path);
 		g_key_file_unref(key_file);
 	}
@@ -208,11 +208,11 @@ static gboolean otb_pad_db_load(const OtbPadDb *pad_db)
 	GKeyFile *key_file=otb_settings_load_key_file_from_file(pad_db->priv->file_path);
 	if(key_file==NULL)
 		ret_val=FALSE;
-	else if((pad_db->priv->max_size=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, -1))==-1)
+	else if((pad_db->priv->max_size=otb_settings_get_uint64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, 0))==0)
 		ret_val=FALSE;
-	else if((pad_db->priv->new_pad_min_size=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, -1))==-1)
+	else if((pad_db->priv->new_pad_min_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, -1))==-1)
 		ret_val=FALSE;
-	else if((pad_db->priv->new_pad_max_size=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, -1))==-1)
+	else if((pad_db->priv->new_pad_max_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, -1))==-1)
 		ret_val=FALSE;
 	if(key_file!=NULL)
 		g_key_file_unref(key_file);

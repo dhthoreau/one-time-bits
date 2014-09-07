@@ -178,10 +178,10 @@ unsigned int otb_settings_get_config_uint(const char *group_name, const char *ke
 	return (unsigned int)otb_settings_get_config_int(group_name, key, (int)error_value);
 }
 
-long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value)
+unsigned long long otb_settings_get_uint64(GKeyFile *key_file, const char *group_name, const char *key, unsigned long long error_value)
 {
 	GError *error=NULL;
-	long long value=g_key_file_get_int64(key_file, group_name, key, &error);
+	unsigned long long value=g_key_file_get_uint64(key_file, group_name, key, &error);
 	if(error!=NULL)
 	{
 		value=error_value;
