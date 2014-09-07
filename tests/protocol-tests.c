@@ -27,6 +27,8 @@
 #define EXPECTED_COMMAND_REQUESTING_PAD_IDS				7
 #define EXPECTED_COMMAND_SENDING_PAD_IDS				8
 #define EXPECTED_COMMAND_SENDING_PAD_HEADER				9
+#define EXPECTED_COMMAND_SENDING_PAD_CHUNK				10	// FARE - Ha bisogno di unit test.
+#define EXPECTED_COMMAND_SENDING_FINAL_PAD_CHUNK		11
 
 static uint32_t otb_decrypt_packet(const OtbAsymCipher *peer_asym_cipher, const unsigned char* encrypted_packet, uint32_t encrypted_packet_size, unsigned char **decrypted_packet_out, size_t *decrypted_packet_buffer_size_out)
 {
@@ -366,6 +368,45 @@ static gboolean otb_do_client_send_pad_header_to_server(OtbProtocolContext *cont
 	g_object_unref(outgoing_pad_db);
 }
 
+static gboolean otb_do_client_send_final_pad_chunk_to_server(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
+{
+	OtbPadDb *outgoing_pad_db=NULL;
+	g_object_get(context->peer_friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
+	g_assert(outgoing_pad_db!=NULL);
+	OtbUniqueId *expected_pad_id;
+	g_assert((expected_pad_id=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT))!=NULL);
+	unsigned char *server_response_packet=NULL;
+	uint32_t server_response_packet_size=otb_create_ok_packet(&server_response_packet);
+	unsigned char *encrypted_client_packet=NULL;
+	uint32_t encrypted_client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, &encrypted_client_packet);
+	g_assert(encrypted_client_packet!=NULL);
+	g_assert_cmpint(1085, ==, encrypted_client_packet_size);
+	g_assert_cmpint(EXPECTED_COMMAND_ENCRYPTED, ==, encrypted_client_packet[0]);
+	unsigned char *plain_client_packet=NULL;
+	size_t plain_client_packet_buffer_size=0;
+	uint32_t plain_client_packet_size=otb_decrypt_packet(peer_asym_cipher, encrypted_client_packet, encrypted_client_packet_size, &plain_client_packet, &plain_client_packet_buffer_size);
+	g_assert_cmpint(1040, ==, plain_client_packet_buffer_size);
+	g_assert_cmpint(1029, ==, plain_client_packet_size);
+	g_assert(plain_client_packet!=NULL);
+	g_assert_cmpint(EXPECTED_COMMAND_SENDING_FINAL_PAD_CHUNK, ==, plain_client_packet[0]);
+	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, g_ntohl(*(int32_t*)(plain_client_packet+1)));
+	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(outgoing_pad_db, expected_pad_id);
+	unsigned char *current_plain_client_packet_byte;
+	for(current_plain_client_packet_byte=plain_client_packet+5; current_plain_client_packet_byte<plain_client_packet+plain_client_packet_size && otb_pad_has_more_bytes(pad_io); current_plain_client_packet_byte++)
+	{
+		unsigned char expected_byte;
+		g_assert(otb_pad_read_byte(pad_io, &expected_byte));
+		g_assert_cmpint(expected_byte, ==, *current_plain_client_packet_byte);
+	}
+	g_assert(otb_pad_db_close_pad(outgoing_pad_db, pad_io));
+	g_assert(plain_client_packet+plain_client_packet_size==current_plain_client_packet_byte);
+	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
+	g_free(encrypted_client_packet);
+	g_free(server_response_packet);
+	g_free(expected_pad_id);
+	g_object_unref(outgoing_pad_db);
+}
+
 static void test_otb_protocol_client()
 {
 	OtbUniqueId *peer_id=NULL;
@@ -387,6 +428,7 @@ static void test_otb_protocol_client()
 	otb_do_client_request_pad_ids_from_server(context, peer_asym_cipher);
 	otb_do_client_send_pad_ids_to_server(context, peer_asym_cipher);
 	otb_do_client_send_pad_header_to_server(context, peer_asym_cipher);
+	otb_do_client_send_final_pad_chunk_to_server(context, peer_asym_cipher);
 	
 	otb_protocol_context_free(context);
 	g_object_unref(peer_friend);

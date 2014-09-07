@@ -609,12 +609,12 @@ OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *uniq
 	return pad_io;
 }
 
-gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db)
+gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_io)
 {
-	if(pad_db->priv->open_pad_io==NULL)
+	if(pad_db->priv->open_pad_io==NULL || pad_db->priv->open_pad_io!=pad_io)
 		return FALSE;
-	otb_pad_io_free(pad_db->priv->open_pad_io);
 	pad_db->priv->open_pad_io=NULL;
+	otb_pad_io_free(pad_io);
 	return TRUE;
 }
 

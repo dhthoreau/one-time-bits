@@ -28,7 +28,7 @@ typedef struct
 	OtbAsymCipher *peer_asym_cipher;
 	OtbPadDb *pad_db;
 	off_t pad_size;
-	off_t pad_bytes_received;
+	off_t pad_bytes_transferred;
 	OtbUniqueId *pad_id;
 	OtbPadIO *pad_io;
 }

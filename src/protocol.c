@@ -82,6 +82,7 @@ STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER -> COMMAND_FINISH -> <null> -> ST
 #include "../config.h"
 
 #include <endian.h>
+#include <glib.h>
 #include <string.h>
 
 #include "memory.h"
@@ -478,9 +479,11 @@ static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext
 				unsigned char *plain_packet=g_malloc(INCOMING_PAD_HEADER_PACKET_SIZE);
 				PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_HEADER;
 				memcpy(INCOMING_PAD_HEADER_PACKET_PAD_ID(plain_packet), context->pad_id, sizeof *context->pad_id);
-				INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(plain_packet, otb_pad_db_get_pad_size(context->pad_db, context->pad_id));
+				context->pad_size=otb_pad_db_get_pad_size(context->pad_db, context->pad_id);
+				INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(plain_packet, context->pad_size);
 				packet_out_size=otb_protocol_create_encrypted_packet(context, (unsigned char*)plain_packet, INCOMING_PAD_HEADER_PACKET_SIZE, packet_out);
 				g_free(plain_packet);
+				context->pad_bytes_transferred=0;
 				context->state=STATE_CLIENT_SENDING_PAD_HEADER_TO_SERVER;
 			}
 			else
@@ -534,7 +537,7 @@ static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext 
 	gboolean error=FALSE;
 	if(input_packet_size==sizeof(OtbProtocolCommand) && PACKET_COMMAND(input_packet)==COMMAND_OK)
 	{
-		size_t buffer_size=otb_protocol_get_chunk_size();
+		size_t buffer_size=MIN(context->pad_size-context->pad_bytes_transferred, otb_protocol_get_chunk_size());
 		uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+buffer_size;
 		unsigned char *plain_packet=g_malloc(plain_packet_size);
 		uint32_t byte_iter;
@@ -556,16 +559,23 @@ static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext 
 				PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_CHUNK;
 				context->state=STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER;
 			}
-			else
+			else if(otb_pad_db_close_pad(context->pad_db, context->pad_io))
 			{
 				PACKET_COMMAND(plain_packet)=COMMAND_SENDING_FINAL_PAD_CHUNK;
 				context->state=STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER;
 			}
-			INCOMING_PAD_PACKET_SET_PAD_CHUNK_SIZE(plain_packet, byte_iter);
-			packet_out_size=otb_protocol_create_encrypted_packet(context, plain_packet, plain_packet_size, packet_out);
+			else
+				error=TRUE;
+			if(!error)
+			{
+				INCOMING_PAD_PACKET_SET_PAD_CHUNK_SIZE(plain_packet, byte_iter);
+				packet_out_size=otb_protocol_create_encrypted_packet(context, plain_packet, plain_packet_size, packet_out);
+			}
 		}
 	}
 	else
+		error=TRUE;
+	if(error)
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
 	return packet_out_size;
 }
@@ -742,7 +752,7 @@ enum
 	ADD_NEW_PAD_ID_ERROR
 };
 
-static int otb_protocol_add_new_pad_id(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size)
+static int otb_protocol_server_add_new_pad_id(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size)
 {
 	int add_new_pad_status;
 	if(!INCOMING_PAD_HEADER_PACKET_IS_VALID(input_packet, input_packet_size))
@@ -751,7 +761,7 @@ static int otb_protocol_add_new_pad_id(OtbProtocolContext *context, const unsign
 	{
 		g_free(context->pad_id);
 		context->pad_id=otb_unique_id_duplicate(INCOMING_PAD_HEADER_PACKET_PAD_ID(input_packet));
-		context->pad_bytes_received=0;
+		context->pad_bytes_transferred=0;
 		context->pad_size=INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(input_packet);
 		context->pad_io=otb_pad_db_add_incoming_pad(context->pad_db, context->pad_id, context->pad_size);
 		if(context->pad_io==NULL)
@@ -768,7 +778,7 @@ static uint32_t otb_protocol_server_receive_pad_header_from_client(OtbProtocolCo
 	size_t decrypted_input_packet_buffer_size=0;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
-	int add_new_pad_id_status=otb_protocol_add_new_pad_id(context, decrypted_input_packet, decrypted_input_packet_size);
+	int add_new_pad_id_status=otb_protocol_server_add_new_pad_id(context, decrypted_input_packet, decrypted_input_packet_size);
 	switch(add_new_pad_id_status)
 	{
 		case ADD_NEW_PAD_ID_SUCCESS:
@@ -866,7 +876,7 @@ void otb_protocol_context_free(OtbProtocolContext *context)
 		g_object_unref(context->peer_asym_cipher);
 	g_free(context->pad_id);
 	if(context->pad_io!=NULL)
-		otb_pad_db_close_pad(context->pad_db);
+		otb_pad_db_close_pad(context->pad_db, context->pad_io);
 	if(context->pad_db!=NULL)
 		g_object_unref(context->pad_db);
 	g_free(context);
