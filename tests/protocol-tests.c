@@ -418,36 +418,46 @@ static void otb_do_client_send_finish_to_server(OtbProtocolContext *context, con
 	g_free(server_response_packet);
 }
 
-static void test_otb_protocol_client()
+typedef void (*protocol_test_setup)(OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out);
+typedef void (*protocol_test)(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher);
+
+static void otb_run_protocol_tests(protocol_test_setup setup, protocol_test first_test, ...)
+{
+	OtbProtocolContext *context=NULL;
+	OtbAsymCipher *peer_asym_cipher=NULL;
+	setup(&context, &peer_asym_cipher);
+	va_list test_funcs;
+	va_start(test_funcs, first_test);
+	for(protocol_test current_test=va_arg(test_funcs, protocol_test); current_test!=NULL; current_test=va_arg(test_funcs, protocol_test))
+		current_test(context, peer_asym_cipher);
+	va_end(test_funcs);
+	otb_protocol_context_free(context);
+	g_object_unref(peer_asym_cipher);
+}
+
+static void otb_setup_protocol_client_one_pad_one_chunk_test(OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out)
 {
 	OtbUniqueId *peer_id=NULL;
-	OtbAsymCipher *peer_asym_cipher=NULL;
 	char *peer_export=NULL;
-	otb_create_peer_for_protocol_test(&peer_id, &peer_asym_cipher, &peer_export);
+	otb_create_peer_for_protocol_test(&peer_id, peer_asym_cipher_out, &peer_export);
 	OtbBitkeeper *local_bitkeeper=otb_create_bitkeeper_for_protocol_test();
 	g_assert(otb_bitkeeper_import_friend(local_bitkeeper, peer_export));
 	OtbFriend *peer_friend=otb_bitkeeper_get_friend(local_bitkeeper, peer_id);
 	g_assert(peer_friend!=NULL);
 	otb_setup_friend_pads_for_test(peer_friend);
-	OtbProtocolContext *context=otb_protocol_context_create_client(local_bitkeeper, peer_friend);
-	
-	otb_do_client_establish_protocol_version(context, peer_asym_cipher);
-	otb_do_client_establish_friend(context, peer_asym_cipher);
-	otb_do_client_send_authentication_token_to_server_for_server_authentication(context, peer_asym_cipher);
-	otb_do_client_request_authentication_from_server(context, peer_asym_cipher);
-	otb_do_client_send_authentication_token_to_server_for_client_authentication(context, peer_asym_cipher);
-	otb_do_client_request_pad_ids_from_server(context, peer_asym_cipher);
-	otb_do_client_send_pad_ids_to_server(context, peer_asym_cipher);
-	otb_do_client_send_pad_header_to_server(context, peer_asym_cipher);
-	otb_do_client_send_final_pad_chunk_to_server(context, peer_asym_cipher);
-	otb_do_client_send_finish_to_server(context, peer_asym_cipher);
-	
-	otb_protocol_context_free(context);
+	*context_out=otb_protocol_context_create_client(local_bitkeeper, peer_friend);
+	g_assert(*context_out!=NULL);
 	g_object_unref(peer_friend);
 	g_object_unref(local_bitkeeper);
 	g_free(peer_export);
-	g_object_unref(peer_asym_cipher);
 	g_free(peer_id);
+}
+
+#define HAPPY_PATH_CLIENT_ONE_PAD_ONE_CHUNK	otb_do_client_establish_protocol_version, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL
+
+static void test_otb_protocol_client()
+{
+	otb_run_protocol_tests(otb_setup_protocol_client_one_pad_one_chunk_test, HAPPY_PATH_CLIENT_ONE_PAD_ONE_CHUNK);
 }
 
 void otb_add_protocol_tests()
