@@ -9,6 +9,7 @@
 #include "../config.h"
 
 #include <glib/gstdio.h>
+#include <time.h>
 
 #include "test-utils.h"
 #include "../src/io.h"
@@ -68,4 +69,13 @@ void otb_test_setup_local_crypto()
 	otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long();
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	otb_local_crypto_create_sym_cipher(PASSPHRASE);
+}
+
+#define SECONDS_TO_WAIT_FOR_DELETION_OPERATION_TO_COMPLETE	1
+
+void otb_assert_file_does_not_exist(const char *file_path)
+{
+	for(clock_t start_clock=clock(), current_clock=clock(); (current_clock-start_clock)/CLOCKS_PER_SEC<SECONDS_TO_WAIT_FOR_DELETION_OPERATION_TO_COMPLETE && g_file_test(file_path, G_FILE_TEST_EXISTS) || current_clock==-1 || start_clock==-1; current_clock=clock())
+		;
+	g_assert(!g_file_test(file_path, G_FILE_TEST_EXISTS));
 }

@@ -241,8 +241,7 @@ static void test_pads_save_load_delete()
 	g_free(expected_incoming_unique_id);
 	g_free(expected_unsent_bytes);
 	g_assert(otb_pad_db_delete(load_pad_db));
-	while(g_file_test(pad_db_dir_path, G_FILE_TEST_EXISTS));
-	g_assert(!g_file_test(pad_db_dir_path, G_FILE_TEST_EXISTS));
+	otb_assert_file_does_not_exist(pad_db_dir_path);
 	g_object_unref(save_pad_db);
 	g_object_unref(load_pad_db);
 }

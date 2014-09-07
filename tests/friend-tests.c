@@ -131,7 +131,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 		g_assert_cmpstr(EXPECTED_DUMMY_VALUE2, ==, OTB_DUMMY_FRIEND(*load_friend)->dummy_value);
 	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
 	otb_friend_delete(*load_friend);
-	g_assert(!g_file_test(friend_dir_path, G_FILE_TEST_EXISTS));
+	otb_assert_file_does_not_exist(friend_dir_path);
 	g_free(actual_base_path);
 	g_free(actual_unique_id1);
 	g_free(actual_unique_id2);

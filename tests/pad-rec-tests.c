@@ -44,7 +44,7 @@ static void otb_assert_pad_rec_file_exists(OtbPadRec *pad_rec)
 static void otb_assert_pad_rec_file_does_not_exist(OtbPadRec *pad_rec)
 {
 	char *expected_pad_rec_file_path=otb_get_expected_file_path(pad_rec);
-	g_assert(!g_file_test(expected_pad_rec_file_path, G_FILE_TEST_EXISTS));
+	otb_assert_file_does_not_exist(expected_pad_rec_file_path);
 	g_free(expected_pad_rec_file_path);
 }
 
@@ -65,7 +65,7 @@ static void otb_assert_pad_file_exists(OtbPadRec *pad_rec)
 static void otb_assert_pad_file_does_not_exist(OtbPadRec *pad_rec)
 {
 	char *expected_pad_file_path=otb_get_expected_file_path_of_pad(pad_rec);
-	g_assert(!g_file_test(expected_pad_file_path, G_FILE_TEST_EXISTS));
+	otb_assert_file_does_not_exist(expected_pad_file_path);
 	g_free(expected_pad_file_path);
 }
 
