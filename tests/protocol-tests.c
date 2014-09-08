@@ -389,44 +389,6 @@ static void otb_do_client_send_finish_to_server(OtbProtocolContext *context, con
 	g_free(server_response_packet);
 }
 
-typedef void (*protocol_test_setup)(OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out);
-typedef void (*protocol_test)(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher);
-
-static gboolean otb_run_protocol_error_injected_tests(protocol_test_setup setup, va_list *tests, protocol_test error_injection, int error_injection_point)
-{
-	OtbProtocolContext *context=NULL;
-	OtbAsymCipher *peer_asym_cipher=NULL;
-	setup(&context, &peer_asym_cipher);
-	protocol_test current_test;
-	int test_count;
-	for(current_test=va_arg(*tests, protocol_test), test_count=0;
-	current_test!=NULL && test_count<error_injection_point;
-	current_test=va_arg(*tests, protocol_test), test_count++)
-		current_test(context, peer_asym_cipher);
-	error_injection(context, peer_asym_cipher);
-	otb_protocol_context_free(context);
-	g_object_unref(peer_asym_cipher);
-	return current_test!=NULL;
-}
-
-static void otb_run_protocol_tests(protocol_test_setup setup, ...)
-{
-	gboolean injecting_errors=TRUE;
-	for(int error_injection_point=1; injecting_errors; error_injection_point++)
-	{
-		va_list tests;
-		va_start(tests, setup);
-		injecting_errors=otb_run_protocol_error_injected_tests(setup, &tests, otb_do_client_receive_unexpected_command, error_injection_point);
-		va_end(tests);
-		if(injecting_errors)
-		{
-			va_start(tests, setup);
-			otb_run_protocol_error_injected_tests(setup, &tests, otb_do_client_receive_malformed_packet, error_injection_point);
-			va_end(tests);
-		}
-	}
-}
-
 static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
 {
 	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
@@ -440,32 +402,6 @@ static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
 	g_object_unref(asym_cipher);
 	g_object_unref(user);
 	return bitkeeper;
-}
-
-static void otb_setup_friend_pads_for_test(OtbFriend *friend)
-{
-	OtbPadDb *outgoing_pad_db=NULL;
-	g_object_get(friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
-	g_assert(outgoing_pad_db!=NULL);
-	g_assert(otb_pad_db_set_new_pad_min_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	for(int counter=0; counter<5; counter++)
-		g_assert(otb_pad_db_create_unsent_pad(outgoing_pad_db));
-	for(int counter=0; counter<4; counter++)
-	{
-		OtbUniqueId *pad_id=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT);
-		g_assert(pad_id!=NULL);
-		g_assert(otb_pad_db_mark_pad_as_sent(outgoing_pad_db, pad_id));
-		g_free(pad_id);
-	}
-	unsigned char *encrypted_bytes=NULL;
-	size_t encrypted_bytes_size=0;
-	for(int counter=0; counter<2; counter++)
-	{
-		g_assert_cmpint(0, ==, otb_pad_db_encrypt(outgoing_pad_db, "", 1, &encrypted_bytes, &encrypted_bytes_size));
-		g_free(encrypted_bytes);
-	}
-	g_object_unref(outgoing_pad_db);
 }
 
 static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
@@ -484,7 +420,35 @@ static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_id_out, OtbAsym
 	g_object_unref(bitkeeper);
 }
 
-static void otb_setup_protocol_client_one_pad_one_chunk_test(OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out)
+static void otb_setup_friend_pads_for_test(OtbFriend *friend, int number_of_unsent_pads, int number_of_sent_pads, int number_of_consumed_pads)
+{
+	OtbPadDb *outgoing_pad_db=NULL;
+	g_object_get(friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
+	g_assert(outgoing_pad_db!=NULL);
+	g_assert(otb_pad_db_set_new_pad_min_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_assert(otb_pad_db_set_new_pad_max_size(outgoing_pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	for(int counter=0; counter<number_of_unsent_pads+number_of_sent_pads+number_of_consumed_pads; counter++)
+		g_assert(otb_pad_db_create_unsent_pad(outgoing_pad_db));
+	for(int counter=0; counter<number_of_sent_pads+number_of_consumed_pads; counter++)
+	{
+		OtbUniqueId *pad_id=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT);
+		g_assert(pad_id!=NULL);
+		g_assert(otb_pad_db_mark_pad_as_sent(outgoing_pad_db, pad_id));
+		g_free(pad_id);
+	}
+	unsigned char *encrypted_bytes=NULL;
+	size_t encrypted_bytes_size=0;
+	for(int counter=0; counter<number_of_consumed_pads; counter++)
+	{
+		g_assert_cmpint(0, ==, otb_pad_db_encrypt(outgoing_pad_db, "", 1, &encrypted_bytes, &encrypted_bytes_size));
+		g_free(encrypted_bytes);
+	}
+	g_object_unref(outgoing_pad_db);
+}
+
+typedef void (*protocol_test)(OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher);
+
+static void otb_setup_protocol_test(int number_of_unsent_pads, int number_of_sent_pads, int number_of_consumed_pads, OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out)
 {
 	OtbUniqueId *peer_id=NULL;
 	char *peer_export=NULL;
@@ -493,7 +457,7 @@ static void otb_setup_protocol_client_one_pad_one_chunk_test(OtbProtocolContext 
 	g_assert(otb_bitkeeper_import_friend(local_bitkeeper, peer_export));
 	OtbFriend *peer_friend=otb_bitkeeper_get_friend(local_bitkeeper, peer_id);
 	g_assert(peer_friend!=NULL);
-	otb_setup_friend_pads_for_test(peer_friend);
+	otb_setup_friend_pads_for_test(peer_friend, number_of_unsent_pads, number_of_sent_pads, number_of_consumed_pads);
 	*context_out=otb_protocol_context_create_client(local_bitkeeper, peer_friend);
 	g_assert(*context_out!=NULL);
 	g_object_unref(peer_friend);
@@ -502,12 +466,53 @@ static void otb_setup_protocol_client_one_pad_one_chunk_test(OtbProtocolContext 
 	g_free(peer_id);
 }
 
-static void test_otb_protocol_client_one_pad_one_chunk_test_happy_path()
+static gboolean otb_run_protocol_error_injected_tests(int number_of_unsent_pads, int number_of_sent_pads, int number_of_consumed_pads, va_list *tests, protocol_test error_injection, int error_injection_point)
 {
-	otb_run_protocol_tests(otb_setup_protocol_client_one_pad_one_chunk_test, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
+	OtbProtocolContext *context=NULL;
+	OtbAsymCipher *peer_asym_cipher=NULL;
+	otb_setup_protocol_test(number_of_unsent_pads, number_of_sent_pads, number_of_consumed_pads, &context, &peer_asym_cipher);
+	protocol_test current_test;
+	int test_count;
+	for(current_test=va_arg(*tests, protocol_test), test_count=0;
+	current_test!=NULL && test_count<error_injection_point;
+	current_test=va_arg(*tests, protocol_test), test_count++)
+		current_test(context, peer_asym_cipher);
+	error_injection(context, peer_asym_cipher);
+	otb_protocol_context_free(context);
+	g_object_unref(peer_asym_cipher);
+	return current_test!=NULL;
+}
+
+static void otb_run_protocol_tests(int number_of_unsent_pads, int number_of_sent_pads, int number_of_consumed_pads, ...)
+{
+	gboolean injecting_errors=TRUE;
+	for(int error_injection_point=1; injecting_errors; error_injection_point++)
+	{
+		va_list tests;
+		va_start(tests, number_of_consumed_pads);
+		injecting_errors=otb_run_protocol_error_injected_tests(number_of_unsent_pads, number_of_sent_pads, number_of_consumed_pads, &tests, otb_do_client_receive_unexpected_command, error_injection_point);
+		va_end(tests);
+		if(injecting_errors)
+		{
+			va_start(tests, number_of_consumed_pads);
+			otb_run_protocol_error_injected_tests(number_of_unsent_pads, number_of_sent_pads, number_of_consumed_pads, &tests, otb_do_client_receive_malformed_packet, error_injection_point);
+			va_end(tests);
+		}
+	}
+}
+
+static void test_otb_protocol_client_no_pads()
+{
+	otb_run_protocol_tests(0, 2, 2, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_finish_to_server, NULL);
+}
+
+static void test_otb_protocol_client_one_pad_one_chunk_test()
+{
+	otb_run_protocol_tests(1, 2, 2, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
 }
 
 void otb_add_protocol_tests()
 {
-	otb_add_test_func("/protocol/test_otb_protocol_client_one_pad_one_chunk_test_happy_path", test_otb_protocol_client_one_pad_one_chunk_test_happy_path);
+	otb_add_test_func("/protocol/test_otb_protocol_client_no_pads", test_otb_protocol_client_one_pad_one_chunk_test);
+	otb_add_test_func("/protocol/test_otb_protocol_client_one_pad_one_chunk_test", test_otb_protocol_client_one_pad_one_chunk_test);
 }
