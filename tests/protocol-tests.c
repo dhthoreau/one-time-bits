@@ -269,9 +269,9 @@ static void otb_assert_pads_appropriate_deleted_by_client_after_server_sends_pad
 	GSList *unsent_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT);
 	g_assert_cmpint(UNSENT_PAD_COUNT(initial_pad_counts), ==, g_slist_length(unsent_pad_ids));
 	GSList *sent_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_SENT);
-	g_assert_cmpint(SENT_PAD_COUNT(initial_pad_counts)-1, ==, g_slist_length(sent_pad_ids));
+	g_assert_cmpint(SENT_PAD_COUNT(initial_pad_counts)?1:0, ==, g_slist_length(sent_pad_ids));
 	GSList *consumed_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_CONSUMED);
-	g_assert_cmpint(CONSUMED_PAD_COUNT(initial_pad_counts)-1, ==, g_slist_length(consumed_pad_ids));
+	g_assert_cmpint(CONSUMED_PAD_COUNT(initial_pad_counts)?1:0, ==, g_slist_length(consumed_pad_ids));
 	for(GSList *expected_pad_id_iter=expected_pad_ids; expected_pad_id_iter!=NULL; expected_pad_id_iter=g_slist_next(expected_pad_id_iter))
 	{
 		GSList **source_of_matched_pad_id=NULL;
@@ -297,8 +297,14 @@ static void otb_do_client_send_pad_ids_to_server(const int initial_pad_counts[3]
 	g_object_get(context->peer_friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
 	g_assert(outgoing_pad_db!=NULL);
 	GSList *expected_pad_ids=NULL;
+	size_t additional_expected_bytes=0;
+	size_t additional_expected_pad_ids=0;
 	if(SENT_PAD_COUNT(initial_pad_counts)>0)
+	{
 		g_assert((expected_pad_ids=g_slist_prepend(expected_pad_ids, otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_SENT)))!=NULL);
+		additional_expected_bytes=16;
+		additional_expected_pad_ids=1;
+	}
 	if(CONSUMED_PAD_COUNT(initial_pad_counts)>0)
 		g_assert((expected_pad_ids=g_slist_prepend(expected_pad_ids, otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_CONSUMED)))!=NULL);
 	unsigned char *server_response_packet=NULL;
@@ -306,17 +312,17 @@ static void otb_do_client_send_pad_ids_to_server(const int initial_pad_counts[3]
 	unsigned char *encrypted_client_packet=NULL;
 	uint32_t encrypted_client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, &encrypted_client_packet);
 	g_assert(encrypted_client_packet!=NULL);
-	g_assert_cmpint(93, ==, encrypted_client_packet_size);
+	g_assert_cmpint(77+additional_expected_bytes, ==, encrypted_client_packet_size);
 	g_assert_cmpint(EXPECTED_COMMAND_ENCRYPTED, ==, encrypted_client_packet[0]);
 	unsigned char *plain_client_packet=NULL;
 	size_t plain_client_packet_buffer_size=0;
 	uint32_t plain_client_packet_size=otb_decrypt_packet(peer_asym_cipher, encrypted_client_packet, encrypted_client_packet_size, &plain_client_packet, &plain_client_packet_buffer_size);
-	g_assert_cmpint(48, ==, plain_client_packet_buffer_size);
-	g_assert_cmpint(37, ==, plain_client_packet_size);
+	g_assert_cmpint(32+additional_expected_bytes, ==, plain_client_packet_buffer_size);
+	g_assert_cmpint(21+additional_expected_bytes, ==, plain_client_packet_size);
 	g_assert(plain_client_packet!=NULL);
 	g_assert_cmpint(EXPECTED_COMMAND_SENDING_PAD_IDS, ==, plain_client_packet[0]);
 	int actual_packet_pad_id_count=g_ntohl(*(uint32_t*)(plain_client_packet+1));
-	g_assert_cmpint(2, ==, actual_packet_pad_id_count);
+	g_assert_cmpint(1+additional_expected_pad_ids, ==, actual_packet_pad_id_count);
 	g_assert(outgoing_pad_db!=NULL);
 	for(int actual_packet_pad_id_iter=0; actual_packet_pad_id_iter<actual_packet_pad_id_count; actual_packet_pad_id_iter++)
 	{
@@ -541,9 +547,21 @@ static void test_otb_protocol_client_1_0_2()
 	otb_run_protocol_tests((int[3]){1, 0, 2}, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
 }
 
+static void test_otb_protocol_client_1_3_2()
+{
+	otb_run_protocol_tests((int[3]){1, 3, 2}, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
+}
+
+static void test_otb_protocol_client_3_3_2()
+{
+	otb_run_protocol_tests((int[3]){3, 3, 2}, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
+}
+
 void otb_add_protocol_tests()
 {
 	otb_add_test_func("/protocol/test_otb_protocol_client_0_2_2", test_otb_protocol_client_0_2_2);
 	otb_add_test_func("/protocol/test_otb_protocol_client_1_2_2", test_otb_protocol_client_1_2_2);
-//	otb_add_test_func("/protocol/test_otb_protocol_client_1_0_2", test_otb_protocol_client_1_0_2);
+	otb_add_test_func("/protocol/test_otb_protocol_client_1_0_2", test_otb_protocol_client_1_0_2);
+	otb_add_test_func("/protocol/test_otb_protocol_client_1_3_2", test_otb_protocol_client_1_3_2);
+//	otb_add_test_func("/protocol/test_otb_protocol_client_3_3_2", test_otb_protocol_client_3_3_2);
 }
