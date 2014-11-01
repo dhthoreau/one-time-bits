@@ -540,9 +540,9 @@ static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext 
 		size_t buffer_size=MIN(context->pad_size-context->pad_bytes_transferred, otb_protocol_get_chunk_size());
 		uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+buffer_size;
 		unsigned char *plain_packet=g_malloc(plain_packet_size);
-		uint32_t byte_iter;
+		uint32_t byte_count;
 		char *curr_byte;
-		for(byte_iter=0, curr_byte=plain_packet+sizeof(OtbProtocolCommand)+sizeof(uint32_t); otb_pad_has_more_bytes(context->pad_io) && byte_iter<buffer_size && !error; byte_iter++, curr_byte++)
+		for(byte_count=0, curr_byte=plain_packet+sizeof(OtbProtocolCommand)+sizeof(uint32_t); otb_pad_has_more_bytes(context->pad_io) && byte_count<buffer_size && !error; byte_count++, curr_byte++)
 		{
 			if(!otb_pad_read_byte(context->pad_io, curr_byte))
 			{
@@ -554,10 +554,11 @@ static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext 
 		}
 		if(!error)
 		{
+			context->pad_bytes_transferred+=byte_count;
 			if(otb_pad_has_more_bytes(context->pad_io))
 			{
 				PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_CHUNK;
-				context->state=STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER;
+				context->state=STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER;
 			}
 			else if(otb_pad_db_close_pad(context->pad_db, context->pad_io))
 			{
@@ -568,7 +569,7 @@ static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext 
 				error=TRUE;
 			if(!error)
 			{
-				INCOMING_PAD_PACKET_SET_PAD_CHUNK_SIZE(plain_packet, byte_iter);
+				INCOMING_PAD_PACKET_SET_PAD_CHUNK_SIZE(plain_packet, byte_count);
 				packet_out_size=otb_protocol_create_encrypted_packet(context, plain_packet, plain_packet_size, packet_out);
 			}
 		}
@@ -822,7 +823,7 @@ static uint32_t otb_protocol_server_receive_pad_chunk_from_client(OtbProtocolCon
 	if(INCOMING_PAD_PACKET_IS_VALID(decrypted_input_packet, decrypted_input_packet_size) && PACKET_COMMAND(decrypted_input_packet)==STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER || PACKET_COMMAND(decrypted_input_packet)==STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER)
 	{
 		packet_out_size=otb_protocol_create_ok_packet(packet_out);
-		context->state=(PACKET_COMMAND(decrypted_input_packet)==STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER?STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER:STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER);
+		context->state=(PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_FINAL_PAD_CHUNK?STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER:STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER);
 	}
 	else
 		packet_out_size=otb_protocol_create_error_packet(context, packet_out);

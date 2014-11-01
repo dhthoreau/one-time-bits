@@ -601,7 +601,7 @@ OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *uniq
 	OtbPadIO *pad_io=NULL;
 	otb_pad_db_lock_read(pad_db);
 	if(pad_db->priv->open_pad_io==NULL)
-		if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))!=NULL);
+		if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))!=NULL)
 			pad_io=otb_pad_rec_open_pad_for_read(pad_rec, FALSE);
 	if(pad_io!=NULL)
 		pad_db->priv->open_pad_io=pad_io;
