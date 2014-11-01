@@ -27,12 +27,12 @@
 #define EXPECTED_COMMAND_REQUESTING_PAD_IDS				7
 #define EXPECTED_COMMAND_SENDING_PAD_IDS				8
 #define EXPECTED_COMMAND_SENDING_PAD_HEADER				9
-#define EXPECTED_COMMAND_SENDING_PAD_CHUNK				10	// FARE - Ha bisogno di unit test.
+#define EXPECTED_COMMAND_SENDING_PAD_CHUNK				10
 #define EXPECTED_COMMAND_SENDING_FINAL_PAD_CHUNK		11
 #define EXPECTED_COMMAND_UNABLE							12	// FARE - Ha bisogno di unit test.
 #define EXPECTED_COMMAND_FINISH							13
 
-#define EXPECTED_DEFAULT_CHUNK_SIZE	524288
+#define EXPECTED_DEFAULT_CHUNK_SIZE	10240
 
 typedef unsigned char protocol_client_params[4];
 
@@ -562,9 +562,7 @@ static gboolean otb_run_protocol_error_injected_tests(const protocol_client_para
 	otb_setup_protocol_test(client_params, &context, &peer_asym_cipher);
 	protocol_test current_test;
 	int test_count;
-	for(current_test=va_arg(*tests, protocol_test), test_count=0;
-	current_test!=NULL && test_count<error_injection_point;
-	current_test=va_arg(*tests, protocol_test), test_count++)
+	for(current_test=va_arg(*tests, protocol_test), test_count=0; current_test!=NULL && test_count<error_injection_point; current_test=va_arg(*tests, protocol_test), test_count++)
 		current_test(client_params, context, peer_asym_cipher);
 	error_injection(client_params, context, peer_asym_cipher);
 	otb_protocol_context_free(context);
@@ -625,6 +623,11 @@ static void test_otb_protocol_client_1_2_2_2()
 	otb_run_protocol_tests((protocol_client_params){1, 2, 2, 2}, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
 }
 
+static void test_otb_protocol_client_3_3_3_4()
+{
+	otb_run_protocol_tests((protocol_client_params){3, 3, 3, 4}, otb_do_client_establish_protocol_version, otb_do_client_establish_friend, otb_do_client_send_authentication_token_to_server_for_server_authentication, otb_do_client_request_authentication_from_server, otb_do_client_send_authentication_token_to_server_for_client_authentication, otb_do_client_request_pad_ids_from_server, otb_do_client_send_pad_ids_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_pad_header_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_pad_chunk_to_server, otb_do_client_send_final_pad_chunk_to_server, otb_do_client_send_finish_to_server, NULL);
+}
+
 void otb_add_protocol_tests()
 {
 	otb_add_test_func("/protocol/test_otb_protocol_client_0_2_2_1", test_otb_protocol_client_0_2_2_1);
@@ -634,4 +637,5 @@ void otb_add_protocol_tests()
 	otb_add_test_func("/protocol/test_otb_protocol_client_2_3_2_1", test_otb_protocol_client_2_3_2_1);
 	otb_add_test_func("/protocol/test_otb_protocol_client_3_3_3_1", test_otb_protocol_client_3_3_3_1);
 	otb_add_test_func("/protocol/test_otb_protocol_client_1_2_2_2", test_otb_protocol_client_1_2_2_2);
+	otb_add_test_func("/protocol/test_otb_protocol_client_3_3_3_4", test_otb_protocol_client_3_3_3_4);
 }
