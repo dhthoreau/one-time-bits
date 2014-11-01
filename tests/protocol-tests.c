@@ -408,8 +408,6 @@ static void otb_do_client_receive_unable_command(const protocol_client_params cl
 	OtbPadDb *outgoing_pad_db=NULL;
 	g_object_get(TEST_PROTOCOL_CONTEXT(context)->peer_friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
 	g_assert(outgoing_pad_db!=NULL);
-	GSList *potential_expected_pad_ids=NULL;
-	g_assert((potential_expected_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT))!=NULL);
 	uint32_t server_response_packet_size=1;
 	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
 	server_response_packet[0]=EXPECTED_COMMAND_UNABLE;
@@ -417,6 +415,7 @@ static void otb_do_client_receive_unable_command(const protocol_client_params cl
 	uint32_t client_packet_size=otb_protocol_client(context, server_response_packet, server_response_packet_size, &client_packet);
 	g_assert_cmpint(0, ==, client_packet_size);
 	g_assert(client_packet==NULL);
+	g_object_unref(outgoing_pad_db);
 }
 
 static void otb_receive_pad_bytes_from_packet(unsigned char *plain_client_packet, uint32_t plain_client_packet_size)
@@ -431,8 +430,6 @@ static void otb_do_client_send_pad_chunk_to_server(const protocol_client_params 
 	OtbPadDb *outgoing_pad_db=NULL;
 	g_object_get(TEST_PROTOCOL_CONTEXT(context)->peer_friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
 	g_assert(outgoing_pad_db!=NULL);
-	GSList *potential_expected_pad_ids=NULL;
-	g_assert((potential_expected_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT))!=NULL);
 	unsigned char *server_response_packet=NULL;
 	uint32_t server_response_packet_size=otb_create_ok_packet(&server_response_packet);
 	unsigned char *encrypted_client_packet=NULL;
@@ -460,8 +457,6 @@ static void otb_do_client_send_final_pad_chunk_to_server(const protocol_client_p
 	OtbPadDb *outgoing_pad_db=NULL;
 	g_object_get(TEST_PROTOCOL_CONTEXT(context)->peer_friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
 	g_assert(outgoing_pad_db!=NULL);
-	GSList *potential_expected_pad_ids=NULL;
-	g_assert((potential_expected_pad_ids=otb_pad_db_get_ids_of_pads_in_status(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT))!=NULL);
 	unsigned char *server_response_packet=NULL;
 	uint32_t server_response_packet_size=otb_create_ok_packet(&server_response_packet);
 	unsigned char *encrypted_client_packet=NULL;

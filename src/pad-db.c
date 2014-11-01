@@ -597,12 +597,14 @@ off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_
 
 OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *unique_id)
 {
-	OtbPadRec *pad_rec=NULL;
 	OtbPadIO *pad_io=NULL;
 	otb_pad_db_lock_read(pad_db);
 	if(pad_db->priv->open_pad_io==NULL)
+	{
+		OtbPadRec *pad_rec;
 		if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))!=NULL)
 			pad_io=otb_pad_rec_open_pad_for_read(pad_rec, FALSE);
+	}
 	if(pad_io!=NULL)
 		pad_db->priv->open_pad_io=pad_io;
 	otb_pad_db_unlock_read(pad_db);

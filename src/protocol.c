@@ -589,6 +589,7 @@ static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext 
 				packet_out_size=otb_protocol_create_encrypted_packet(context, plain_packet, plain_packet_size, packet_out);
 			}
 		}
+		g_free(plain_packet);
 	}
 	else
 		error=TRUE;
