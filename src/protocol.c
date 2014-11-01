@@ -98,6 +98,22 @@ STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER -> COMMAND_FINISH -> <null> -> ST
 
 #define AUTHENTICATION_TOKEN_SIZE	4096
 
+struct _OtbProtocolContext
+{
+	OtbProtocolState state;
+	unsigned char *authentication_token;
+	OtbBitkeeper *bitkeeper;
+	OtbUser *local_user;
+	OtbAsymCipher *local_asym_cipher;
+	OtbFriend *peer_friend;
+	OtbAsymCipher *peer_asym_cipher;
+	OtbPadDb *pad_db;
+	off_t pad_size;
+	off_t pad_bytes_transferred;
+	OtbUniqueId *pad_id;
+	OtbPadIO *pad_io;
+};
+
 typedef unsigned char OtbProtocolCommand;
 
 enum
