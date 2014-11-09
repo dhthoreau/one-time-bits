@@ -693,7 +693,7 @@ static uint32_t otb_protocol_server_authenticate_self(OtbProtocolContext *contex
 	size_t decrypted_input_packet_buffer_size=0;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
 	uint32_t packet_out_size;
-	if(PACKET_COMMAND(input_packet)==COMMAND_SENDING_AUTHENTICATION_TOKEN)
+	if(AUTHENTICATION_MESSAGE_PACKET_IS_VALID(decrypted_input_packet, decrypted_input_packet_size) && PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_AUTHENTICATION_TOKEN)
 	{
 		packet_out_size=otb_protocol_echo_authentication_packet(context, decrypted_input_packet, decrypted_input_packet_size, packet_out);
 		context->state=STATE_SERVER_AUTHENTICATION;
