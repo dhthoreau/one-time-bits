@@ -591,6 +591,17 @@ static void otb_do_server_receive_authentication_request_from_client(const proto
 	g_free(client_request_packet);
 }
 
+static void otb_do_server_receive_authentication_token_from_client_for_client_authentication(const protocol_params params, OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
+{
+	unsigned char *client_request_packet=NULL;
+	uint32_t client_request_packet_size=otb_create_sending_authentication_token_packet_encrypted(params, TEST_PROTOCOL_CONTEXT(context)->authentication_token, TEST_PROTOCOL_CONTEXT(context)->local_asym_cipher, &client_request_packet);
+	unsigned char *server_packet=NULL;
+	uint32_t server_packet_size=otb_protocol_server(context, client_request_packet, client_request_packet_size, &server_packet);
+	otb_assert_ok(server_packet, server_packet_size);
+	g_free(server_packet);
+	g_free(client_request_packet);
+}
+
 static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
 {
 	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
@@ -758,7 +769,7 @@ static void test_otb_protocol_server_unknown_friend()
 
 static void test_otb_protocol_server()
 {
-	otb_run_protocol_tests((protocol_params){1, 1, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_client_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, NULL);
+	otb_run_protocol_tests((protocol_params){1, 1, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_client_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, otb_do_server_receive_authentication_token_from_client_for_client_authentication, NULL);
 }
 
 void otb_add_protocol_tests()
