@@ -46,7 +46,7 @@ STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER -> COMMAND_OK -> {COMMAND_SENDING
 
 +++ Summary of Server State Transitions +++
 
-Format: Current client state -> Incoming command from server -> Outgoing command to server -> Next state of client
+Format: Current server state -> Incoming command from client -> Outgoing command to server -> Next state of server
 Encrypted commands are in {brackets}.
 
 STATE_INITIAL -> COMMAND_PROTOCOL_VERSION -> COMMAND_OK -> STATE_ESTABLISHING_PROTOCOL_VERSION
