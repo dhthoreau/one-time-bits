@@ -33,14 +33,14 @@ OtbUniqueId *otb_unique_id_create()
 	return unique_id;
 }
 
-char *otb_unique_id_to_string(OtbUniqueId *unique_id)
+char *otb_unique_id_to_string(const OtbUniqueId *unique_id)
 {
 	char *unique_id_string=g_malloc(UNIQUE_ID_STRING_SIZE);
 	uuid_unparse_lower(unique_id->value, unique_id_string);
 	return unique_id_string;
 }
 
-OtbUniqueId *otb_unique_id_from_string(char *unique_id_string)
+OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string)
 {
 	OtbUniqueId *unique_id=g_malloc(sizeof *unique_id);
 	uuid_parse(unique_id_string, unique_id->value);

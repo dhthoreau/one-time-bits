@@ -22,8 +22,8 @@ typedef struct
 
 GType otb_unique_id_get_type();
 OtbUniqueId *otb_unique_id_create();
-char *otb_unique_id_to_string(OtbUniqueId *unique_id);
-OtbUniqueId *otb_unique_id_from_string(char *unique_id_string);
+char *otb_unique_id_to_string(const OtbUniqueId *unique_id);
+OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string);
 char *otb_unique_id_string_create();
 OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id);
 

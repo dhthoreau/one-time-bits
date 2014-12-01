@@ -333,7 +333,7 @@ gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec)
 		ret_val=FALSE;
 	else
 	{
-		char buffer_bytes[INPUT_BUFFER_SIZE];
+		unsigned char buffer_bytes[INPUT_BUFFER_SIZE];
 		for(off_t bytes_remaining=pad_rec->priv->size; bytes_remaining>0 && ret_val; bytes_remaining-=INPUT_BUFFER_SIZE)
 		{
 			size_t bytes_to_write=(bytes_remaining<=INPUT_BUFFER_SIZE?bytes_remaining:INPUT_BUFFER_SIZE);

@@ -406,7 +406,7 @@ static uint32_t otb_protocol_client_request_pad_ids_from_server(OtbProtocolConte
 ///  OtbUniqueId[] - Array of unique IDs of pad, repeated based on the pad ID count
 #define PAD_IDS_PACKET_SET_PAD_ID_COUNT(packet, count)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (count))
 #define PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
-#define PAD_IDS_PACKET_PAD_ID(packet, index)			(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+index*sizeof(OtbUniqueId))
+#define PAD_IDS_PACKET_PAD_ID(packet, index)			(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+(index)*sizeof(OtbUniqueId))
 #define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)*sizeof(OtbUniqueId)==(packet_size))
 
 static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, OtbPadRecStatus pad_rec_status)
@@ -557,7 +557,7 @@ static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext 
 		uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+buffer_size;
 		unsigned char *plain_packet=g_malloc(plain_packet_size);
 		uint32_t byte_count;
-		char *curr_byte;
+		unsigned char *curr_byte;
 		for(byte_count=0, curr_byte=plain_packet+sizeof(OtbProtocolCommand)+sizeof(uint32_t); otb_pad_has_more_bytes(context->pad_io) && byte_count<buffer_size && !error; byte_count++, curr_byte++)
 		{
 			if(!otb_pad_read_byte(context->pad_io, curr_byte))
@@ -680,6 +680,7 @@ static uint32_t otb_protocol_server_establish_friend(OtbProtocolContext *context
 			g_object_get(peer_friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &context->pad_db, NULL);
 			context->state=STATE_ESTABLISHING_FRIEND;
 			packet_out_size=otb_protocol_create_ok_packet(packet_out);
+			g_object_unref(peer_friend);
 		}
 	}
 	else
