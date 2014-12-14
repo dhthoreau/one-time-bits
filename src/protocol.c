@@ -792,12 +792,25 @@ static int otb_protocol_server_add_new_pad_id(OtbProtocolContext *context, const
 	return add_new_pad_status;
 }
 
+static uint32_t otb_protocol_server_receive_finish_from_client(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
+{
+	uint32_t packet_out_size;
+	if(input_packet_size==sizeof(OtbProtocolCommand))
+	{
+		packet_out_size=0;
+		*packet_out=NULL;
+	}
+	else
+		packet_out_size=otb_protocol_create_error_packet(context, packet_out);
+	return packet_out_size;
+}
+
 static uint32_t otb_protocol_server_receive_pad_header_from_client(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
 {
+	uint32_t packet_out_size;
 	unsigned char *decrypted_input_packet=NULL;
 	size_t decrypted_input_packet_buffer_size=0;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
-	uint32_t packet_out_size;
 	int add_new_pad_id_status=otb_protocol_server_add_new_pad_id(context, decrypted_input_packet, decrypted_input_packet_size);
 	switch(add_new_pad_id_status)
 	{
@@ -813,6 +826,17 @@ static uint32_t otb_protocol_server_receive_pad_header_from_client(OtbProtocolCo
 			packet_out_size=otb_protocol_create_error_packet(context, packet_out);
 	}
 	otb_asym_cipher_dispose_decryption_buffer(decrypted_input_packet, decrypted_input_packet_buffer_size);
+	return packet_out_size;
+}
+
+static uint32_t otb_protocol_server_receive_pad_header_or_finish_from_client(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
+{
+	uint32_t packet_out_size;
+	if(PACKET_COMMAND(input_packet)==COMMAND_FINISH)
+		packet_out_size=otb_protocol_server_receive_finish_from_client(context, input_packet, input_packet_size, packet_out);
+	else
+	{
+	}
 	return packet_out_size;
 }
 
@@ -874,7 +898,7 @@ uint32_t otb_protocol_server(OtbProtocolContext *context, const unsigned char *i
 			return otb_protocol_server_receive_pad_ids_from_client(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_SENDING_PAD_IDS_TO_SERVER:
 		case STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER:
-			return otb_protocol_server_receive_pad_header_from_client(context, input_packet, input_packet_size, packet_out);
+			return otb_protocol_server_receive_pad_header_or_finish_from_client(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_SENDING_PAD_HEADER_TO_SERVER:
 			return otb_protocol_server_receive_first_pad_chunk_from_client(context, input_packet, input_packet_size, packet_out);
 		case STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER:

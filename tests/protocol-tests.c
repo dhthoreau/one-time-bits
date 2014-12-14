@@ -665,6 +665,17 @@ static void otb_do_server_receive_pad_ids_from_client(const protocol_params para
 	g_object_unref(incoming_pad_db);
 }
 
+static void otb_do_server_receive_finish_from_client(const protocol_params params, OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
+{
+	unsigned char *client_request_packet=g_malloc(1);
+	client_request_packet[0]=EXPECTED_COMMAND_FINISH;
+	unsigned char *server_packet=NULL;
+	uint32_t server_packet_size=otb_protocol_server(context, client_request_packet, 1, &server_packet);
+	g_assert_cmpint(0, ==, server_packet_size);
+	g_assert(server_packet==NULL);
+	g_free(client_request_packet);
+}
+
 static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
 {
 	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
@@ -851,7 +862,7 @@ static void test_otb_protocol_server_unknown_friend()
 
 static void test_otb_protocol_server_0_0_0_1_1()
 {
-	otb_run_protocol_tests((protocol_params){SERVER_TEST, 0, 0, 0, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_server_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, otb_do_server_receive_authentication_token_from_client_for_client_authentication, otb_do_server_receive_pad_ids_request_from_client, otb_do_server_receive_pad_ids_from_client, NULL);
+	otb_run_protocol_tests((protocol_params){SERVER_TEST, 0, 0, 0, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_server_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, otb_do_server_receive_authentication_token_from_client_for_client_authentication, otb_do_server_receive_pad_ids_request_from_client, otb_do_server_receive_pad_ids_from_client, otb_do_server_receive_finish_from_client, NULL);
 }
 
 void otb_add_protocol_tests()
