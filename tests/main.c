@@ -11,6 +11,8 @@
 #include <glib/gi18n.h>
 #include <locale.h>
 #include <main.h>
+#include <time.h>
+#include <stdlib.h>
 
 #include "asym-cipher-tests.h"
 #include "protocol-tests.h"
@@ -96,6 +98,7 @@ static void otb_null_log_handler(const char *log_domain, GLogLevelFlags log_leve
 
 int main(int argc, char *argv[])
 {
+	srand(time(NULL));
 	g_log_set_handler(NULL, G_LOG_LEVEL_MESSAGE, otb_null_log_handler, NULL);
 	setlocale(LC_ALL, "");
 	textdomain(GETTEXT_PACKAGE);
