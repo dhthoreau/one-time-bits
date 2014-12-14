@@ -644,6 +644,7 @@ static void otb_do_server_receive_pad_ids_request_from_client(const protocol_par
 	GSList *expected_pad_ids=otb_pad_db_get_ids_of_pads_in_status(TEST_PROTOCOL_CONTEXT(context)->pad_db, OTB_PAD_REC_STATUS_RECEIVED);
 	otb_assert_pad_ids_in_packet(expected_pad_ids, plain_server_packet+5, actual_packet_pad_id_count);
 	g_slist_free_full(expected_pad_ids, g_free);
+	g_free(plain_server_packet);
 	g_free(encrypted_server_packet);
 	g_free(client_request_packet);
 }
