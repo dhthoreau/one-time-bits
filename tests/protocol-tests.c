@@ -674,7 +674,6 @@ static void otb_do_server_receive_finish_from_client(const protocol_params param
 }
 
 static OtbUniqueId *sent_pad_id=NULL;
-static GByteArray *sent_pad_byte_array=NULL;
 
 static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocolContext *context, off_t pad_size, unsigned char **packet_out)
 {
@@ -683,7 +682,7 @@ static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocol
 	*packet_out=g_malloc(packet_out_size);
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_PAD_HEADER;
 	memcpy(*packet_out+1, sent_pad_id, 16);
-	*(uint32_t*)(*packet_out+17)=g_htonl(G_MAXINT32);
+	*(uint32_t*)(*packet_out+17)=g_htonl(pad_size);
 	return packet_out_size;
 }
 
@@ -699,7 +698,7 @@ static uint32_t otb_create_sending_pad_header_packet_encrypted(const OtbTestProt
 static void otb_do_server_receive_pad_header_too_large_from_client(const protocol_params params, OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
 	unsigned char *client_request_packet=NULL;
-	uint32_t client_request_packet_size=otb_create_sending_pad_header_packet_encrypted(TEST_PROTOCOL_CONTEXT(context), PAD_SIZE(params), &client_request_packet);
+	uint32_t client_request_packet_size=otb_create_sending_pad_header_packet_encrypted(TEST_PROTOCOL_CONTEXT(context), 2147483647, &client_request_packet);
 	unsigned char *server_packet=NULL;
 	uint32_t server_packet_size=otb_protocol_server(context, client_request_packet, client_request_packet_size, &server_packet);
 	g_assert(server_packet!=NULL);
@@ -716,9 +715,43 @@ static void otb_do_server_receive_pad_header_from_client(const protocol_params p
 	uint32_t client_request_packet_size=otb_create_sending_pad_header_packet_encrypted(TEST_PROTOCOL_CONTEXT(context), PAD_SIZE(params), &client_request_packet);
 	unsigned char *server_packet=NULL;
 	uint32_t server_packet_size=otb_protocol_server(context, client_request_packet, client_request_packet_size, &server_packet);
-	g_assert(server_packet!=NULL);
-	g_assert_cmpint(1, ==, server_packet_size);
-	g_assert(server_packet[0]==EXPECTED_COMMAND_UNABLE);
+	otb_assert_ok(server_packet, server_packet_size);
+	g_free(server_packet);
+	g_free(client_request_packet);
+}
+
+static GByteArray *sent_pad_byte_array=NULL;
+
+static uint32_t otb_create_sending_final_pad_chunk_packet_plain(const OtbTestProtocolContext *context, unsigned char **packet_out)
+{
+	uint32_t final_chunk_size=EXPECTED_DEFAULT_CHUNK_SIZE/2;
+	uint32_t packet_out_size=5+final_chunk_size;
+	*packet_out=g_malloc(packet_out_size);
+	*packet_out[0]=EXPECTED_COMMAND_SENDING_FINAL_PAD_CHUNK;
+	*(uint32_t*)(*packet_out+1)=g_htonl(final_chunk_size);
+	otb_random_bytes(*packet_out+5, final_chunk_size);
+	if(sent_pad_byte_array==NULL)
+		sent_pad_byte_array=g_byte_array_new();
+	g_byte_array_append(sent_pad_byte_array, *packet_out+5, final_chunk_size);
+	return packet_out_size;
+}
+
+static uint32_t otb_create_sending_final_pad_chunk_packet_encrypted(const OtbTestProtocolContext *context, unsigned char **encrypted_packet_out)
+{
+	unsigned char *plain_packet=NULL;
+	uint32_t plain_packet_size=otb_create_sending_final_pad_chunk_packet_plain(context, &plain_packet);
+	uint32_t encrypted_packet_out_size=otb_make_encrypted_packet(context->local_asym_cipher, plain_packet, plain_packet_size, encrypted_packet_out);
+	g_free(plain_packet);
+	return encrypted_packet_out_size;
+}
+
+static void otb_do_server_receive_final_pad_chunk_from_client(const protocol_params params, OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
+{
+	unsigned char *client_request_packet=NULL;
+	uint32_t client_request_packet_size=otb_create_sending_final_pad_chunk_packet_encrypted(TEST_PROTOCOL_CONTEXT(context), &client_request_packet);
+	unsigned char *server_packet=NULL;
+	uint32_t server_packet_size=otb_protocol_server(context, client_request_packet, client_request_packet_size, &server_packet);
+	otb_assert_ok(server_packet, server_packet_size);
 	g_free(server_packet);
 	g_free(client_request_packet);
 }
@@ -907,14 +940,19 @@ static void test_otb_protocol_server_unknown_friend()
 	otb_run_protocol_tests((protocol_params){SERVER_TEST, 0, 0, 0, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_unknown_friend, NULL);
 }
 
-static void test_otb_protocol_server_0_0_0_1_1()
+static void test_otb_protocol_server_0_0_0_1_1_no_incoming()
 {
 	otb_run_protocol_tests((protocol_params){SERVER_TEST, 0, 0, 0, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_server_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, otb_do_server_receive_authentication_token_from_client_for_client_authentication, otb_do_server_receive_pad_ids_request_from_client, otb_do_server_receive_pad_ids_from_client, otb_do_server_receive_finish_from_client, NULL);
 }
 
-static void test_otb_protocol_server_0_0_0_1_255()
+static void test_otb_protocol_server_0_0_0_1_1_too_large()
 {
-	otb_run_protocol_tests((protocol_params){SERVER_TEST, 0, 0, 0, 1, 255}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_server_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, otb_do_server_receive_authentication_token_from_client_for_client_authentication, otb_do_server_receive_pad_ids_request_from_client, otb_do_server_receive_pad_ids_from_client, otb_do_server_receive_pad_header_too_large_from_client, NULL);
+	otb_run_protocol_tests((protocol_params){SERVER_TEST, 0, 0, 0, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_server_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, otb_do_server_receive_authentication_token_from_client_for_client_authentication, otb_do_server_receive_pad_ids_request_from_client, otb_do_server_receive_pad_ids_from_client, otb_do_server_receive_pad_header_too_large_from_client, NULL);
+}
+
+static void test_otb_protocol_server_0_0_0_1_1_one_incoming()
+{
+	otb_run_protocol_tests((protocol_params){SERVER_TEST, 0, 0, 0, 1, 1}, otb_do_server_establish_protocol_version, otb_do_server_establish_friend, otb_do_server_receive_authentication_token_from_client_for_server_authentication, otb_do_server_receive_authentication_request_from_client, otb_do_server_receive_authentication_token_from_client_for_client_authentication, otb_do_server_receive_pad_ids_request_from_client, otb_do_server_receive_pad_ids_from_client, otb_do_server_receive_pad_header_from_client, otb_do_server_receive_final_pad_chunk_from_client, otb_do_server_receive_finish_from_client, NULL);
 }
 
 void otb_add_protocol_tests()
@@ -930,6 +968,7 @@ void otb_add_protocol_tests()
 	otb_add_test_func("/protocol/test_otb_protocol_client_1_1_1_0_1_unable", test_otb_protocol_client_1_1_1_0_1_unable);
 	otb_add_test_func("/protocol/test_otb_protocol_server_wrong_version", test_otb_protocol_server_wrong_version);
 	otb_add_test_func("/protocol/test_otb_protocol_server_unknown_friend", test_otb_protocol_server_unknown_friend);
-	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_1_1", test_otb_protocol_server_0_0_0_1_1);
-	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_1_255", test_otb_protocol_server_0_0_0_1_255);
+	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_1_1_no_incoming", test_otb_protocol_server_0_0_0_1_1_no_incoming);
+	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_1_1_too_large", test_otb_protocol_server_0_0_0_1_1_too_large);
+	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_1_1_one_incoming", test_otb_protocol_server_0_0_0_1_1_one_incoming);
 }
