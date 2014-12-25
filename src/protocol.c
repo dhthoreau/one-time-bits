@@ -835,8 +835,7 @@ static uint32_t otb_protocol_server_receive_pad_header_or_finish_from_client(Otb
 	if(PACKET_COMMAND(input_packet)==COMMAND_FINISH)
 		packet_out_size=otb_protocol_server_receive_finish_from_client(context, input_packet, input_packet_size, packet_out);
 	else
-	{
-	}
+		packet_out_size=otb_protocol_server_receive_pad_header_from_client(context, input_packet, input_packet_size, packet_out);
 	return packet_out_size;
 }
 
