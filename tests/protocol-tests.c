@@ -369,14 +369,14 @@ static void otb_do_client_send_pad_ids_to_server(const protocol_params params, O
 	g_object_unref(outgoing_pad_db);
 }
 
-static GByteArray *received_pad_byte_array=NULL;
+static GByteArray *transmitted_pad_byte_array=NULL;
 
 static void otb_do_client_send_pad_header_to_server(const protocol_params params, OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
-	if(received_pad_byte_array!=NULL)
+	if(transmitted_pad_byte_array!=NULL)
 	{
-		g_byte_array_free(received_pad_byte_array, TRUE);
-		received_pad_byte_array=NULL;
+		g_byte_array_free(transmitted_pad_byte_array, TRUE);
+		transmitted_pad_byte_array=NULL;
 	}
 	OtbPadDb *outgoing_pad_db=NULL;
 	g_object_get(TEST_PROTOCOL_CONTEXT(context)->peer_friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
@@ -427,9 +427,9 @@ static void otb_do_client_receive_unable_command(const protocol_params params, O
 
 static void otb_receive_pad_bytes_from_packet(unsigned char *plain_client_packet, uint32_t plain_client_packet_size)
 {
-	if(received_pad_byte_array==NULL)
-		received_pad_byte_array=g_byte_array_new();
-	g_byte_array_append(received_pad_byte_array, plain_client_packet+5, plain_client_packet_size-5);
+	if(transmitted_pad_byte_array==NULL)
+		transmitted_pad_byte_array=g_byte_array_new();
+	g_byte_array_append(transmitted_pad_byte_array, plain_client_packet+5, plain_client_packet_size-5);
 }
 
 static void otb_do_client_send_pad_chunk_to_server(const protocol_params params, OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
@@ -458,6 +458,25 @@ static void otb_do_client_send_pad_chunk_to_server(const protocol_params params,
 	g_object_unref(outgoing_pad_db);
 }
 
+static void otb_assert_transmitted_pad(OtbTestProtocolContext *context, OtbPadDb *pad_db)
+{
+	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(pad_db, context->pad_id);
+	GBytes *received_pad_bytes=g_byte_array_free_to_bytes(transmitted_pad_byte_array);
+	transmitted_pad_byte_array=NULL;
+	size_t received_pad_size;
+	const unsigned char *received_pad=g_bytes_get_data(received_pad_bytes, &received_pad_size);
+	const unsigned char *current_plain_client_packet_byte;
+	for(current_plain_client_packet_byte=received_pad; current_plain_client_packet_byte<received_pad+received_pad_size && otb_pad_has_more_bytes(pad_io); current_plain_client_packet_byte++)
+	{
+		unsigned char expected_byte;
+		g_assert(otb_pad_read_byte(pad_io, &expected_byte));
+		g_assert_cmpint(expected_byte, ==, *current_plain_client_packet_byte);
+	}
+	g_assert(received_pad+received_pad_size==current_plain_client_packet_byte);
+	g_assert(otb_pad_db_close_pad(pad_db, pad_io));
+	g_bytes_unref(received_pad_bytes);
+}
+
 static void otb_do_client_send_final_pad_chunk_to_server(const protocol_params params, OtbProtocolContext *context, const OtbAsymCipher *peer_asym_cipher)
 {
 	OtbPadDb *outgoing_pad_db=NULL;
@@ -478,22 +497,8 @@ static void otb_do_client_send_final_pad_chunk_to_server(const protocol_params p
 	g_assert_cmpint(EXPECTED_COMMAND_SENDING_FINAL_PAD_CHUNK, ==, plain_client_packet[0]);
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, g_ntohl(*(int32_t*)(plain_client_packet+1)));
 	otb_receive_pad_bytes_from_packet(plain_client_packet, plain_client_packet_size);
+	otb_assert_transmitted_pad(TEST_PROTOCOL_CONTEXT(context), outgoing_pad_db);
 	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
-	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(outgoing_pad_db, TEST_PROTOCOL_CONTEXT(context)->pad_id);
-	GBytes *received_pad_bytes=g_byte_array_free_to_bytes(received_pad_byte_array);
-	received_pad_byte_array=NULL;
-	size_t received_pad_size;
-	const unsigned char *received_pad=g_bytes_get_data(received_pad_bytes, &received_pad_size);
-	const unsigned char *current_plain_client_packet_byte;
-	for(current_plain_client_packet_byte=received_pad; current_plain_client_packet_byte<received_pad+received_pad_size && otb_pad_has_more_bytes(pad_io); current_plain_client_packet_byte++)
-	{
-		unsigned char expected_byte;
-		g_assert(otb_pad_read_byte(pad_io, &expected_byte));
-		g_assert_cmpint(expected_byte, ==, *current_plain_client_packet_byte);
-	}
-	g_assert(received_pad+received_pad_size==current_plain_client_packet_byte);
-	g_assert(otb_pad_db_close_pad(outgoing_pad_db, pad_io));
-	g_bytes_unref(received_pad_bytes);
 	g_free(encrypted_client_packet);
 	g_free(server_response_packet);
 	g_object_unref(outgoing_pad_db);
@@ -673,16 +678,15 @@ static void otb_do_server_receive_finish_from_client(const protocol_params param
 	g_free(client_request_packet);
 }
 
-static OtbUniqueId *sent_pad_id=NULL;
-
 static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocolContext *context, off_t pad_size, unsigned char **packet_out)
 {
-	sent_pad_id=otb_unique_id_create();
+	OtbUniqueId *pad_id=otb_unique_id_create();
 	uint32_t packet_out_size=21;
 	*packet_out=g_malloc(packet_out_size);
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_PAD_HEADER;
-	memcpy(*packet_out+1, sent_pad_id, 16);
+	memcpy(*packet_out+1, pad_id, 16);
 	*(uint32_t*)(*packet_out+17)=g_htonl(pad_size);
+	g_free(pad_id);
 	return packet_out_size;
 }
 
@@ -704,7 +708,6 @@ static void otb_do_server_receive_pad_header_too_large_from_client(const protoco
 	g_assert(server_packet!=NULL);
 	g_assert_cmpint(1, ==, server_packet_size);
 	g_assert(server_packet[0]==EXPECTED_COMMAND_UNABLE);
-	g_free(sent_pad_id);
 	g_free(server_packet);
 	g_free(client_request_packet);
 }
@@ -720,8 +723,6 @@ static void otb_do_server_receive_pad_header_from_client(const protocol_params p
 	g_free(client_request_packet);
 }
 
-static GByteArray *sent_pad_byte_array=NULL;
-
 static uint32_t otb_create_sending_final_pad_chunk_packet_plain(const OtbTestProtocolContext *context, unsigned char **packet_out)
 {
 	uint32_t final_chunk_size=EXPECTED_DEFAULT_CHUNK_SIZE/2;
@@ -730,9 +731,9 @@ static uint32_t otb_create_sending_final_pad_chunk_packet_plain(const OtbTestPro
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_FINAL_PAD_CHUNK;
 	*(uint32_t*)(*packet_out+1)=g_htonl(final_chunk_size);
 	otb_random_bytes(*packet_out+5, final_chunk_size);
-	if(sent_pad_byte_array==NULL)
-		sent_pad_byte_array=g_byte_array_new();
-	g_byte_array_append(sent_pad_byte_array, *packet_out+5, final_chunk_size);
+	if(transmitted_pad_byte_array==NULL)
+		transmitted_pad_byte_array=g_byte_array_new();
+	g_byte_array_append(transmitted_pad_byte_array, *packet_out+5, final_chunk_size);
 	return packet_out_size;
 }
 
@@ -752,6 +753,7 @@ static void otb_do_server_receive_final_pad_chunk_from_client(const protocol_par
 	unsigned char *server_packet=NULL;
 	uint32_t server_packet_size=otb_protocol_server(context, client_request_packet, client_request_packet_size, &server_packet);
 	otb_assert_ok(server_packet, server_packet_size);
+	otb_assert_transmitted_pad(TEST_PROTOCOL_CONTEXT(context), TEST_PROTOCOL_CONTEXT(context)->pad_db);
 	g_free(server_packet);
 	g_free(client_request_packet);
 }
