@@ -24,7 +24,7 @@ OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, 
 #define otb_protocol_context_create_server(bitkeeper)	(otb_protocol_context_create_client((bitkeeper), NULL))
 uint32_t otb_protocol_client(OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **output_out);
 uint32_t otb_protocol_server(OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **output_out);
-void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc protocol_func, GIOStream *io_stream, gboolean initiate_communication);
+void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc protocol_func, GIOStream *io_stream, gboolean initiate_communication);	// FARE - Unit test.
 void otb_protocol_context_free(OtbProtocolContext *protocol_context);
 
 #endif
