@@ -523,7 +523,7 @@ static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext
 #define INCOMING_PAD_PACKET_SET_PAD_CHUNK_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (size))
 #define INCOMING_PAD_PACKET_GET_PAD_CHUNK_SIZE(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
 #define INCOMING_PAD_PACKET_PAD_CHUNK(packet)					((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t))
-#define INCOMING_PAD_PACKET_IS_VALID(packet, packet_size)		(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+INCOMING_PAD_PACKET_GET_PAD_CHUNK_SIZE(packet)==(packet_size))
+#define INCOMING_PAD_PACKET_IS_VALID(packet, packet_size)		(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+INCOMING_PAD_PACKET_GET_PAD_CHUNK_SIZE(packet)==(packet_size))
 
 static uint32_t otb_protocol_client_send_pad_chunk_to_server(OtbProtocolContext *context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out);
 
@@ -866,7 +866,7 @@ static uint32_t otb_protocol_server_receive_pad_chunk_from_client(OtbProtocolCon
 	unsigned char *decrypted_input_packet=NULL;
 	size_t decrypted_input_packet_buffer_size=0;
 	uint32_t decrypted_input_packet_size=otb_protocol_decrypt_packet(context, input_packet, input_packet_size, &decrypted_input_packet, &decrypted_input_packet_buffer_size);
-	if(INCOMING_PAD_PACKET_IS_VALID(decrypted_input_packet, decrypted_input_packet_size) && PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_PAD_CHUNK || PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_FINAL_PAD_CHUNK)
+	if(INCOMING_PAD_PACKET_IS_VALID(decrypted_input_packet, decrypted_input_packet_size) && (PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_PAD_CHUNK || PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_FINAL_PAD_CHUNK))
 	{
 		packet_out_size=otb_protocol_create_ok_packet(packet_out);
 		context->state=(PACKET_COMMAND(decrypted_input_packet)==COMMAND_SENDING_FINAL_PAD_CHUNK?STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER:STATE_CLIENT_SENDING_PAD_CHUNK_TO_SERVER);
