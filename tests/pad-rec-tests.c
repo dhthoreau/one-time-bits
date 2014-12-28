@@ -8,7 +8,6 @@
 
 #include "../config.h"
 
-#include <glib-object.h>
 #include <string.h>
 
 #include "main.h"

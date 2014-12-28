@@ -9,6 +9,7 @@
 #ifndef OTB_UNIQUE_ID_H
 #define OTB_UNIQUE_ID_H
 
+#include <glib-object.h>
 #include <uuid/uuid.h>
 
 #define otb_unique_id_compare(unique_id1, unique_id2)	(uuid_compare((unique_id1)->value, (unique_id2)->value))

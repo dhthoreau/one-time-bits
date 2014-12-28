@@ -18,6 +18,7 @@
 #include "protocol-tests.h"
 #include "bitkeeper-tests.h"
 #include "friend-tests.h"
+#include "leak-tests.h"
 #include "local-crypto-tests.h"
 #include "pad-db-tests.h"
 #include "pad-rec-tests.h"
@@ -28,43 +29,6 @@
 #include "user-tests.h"
 
 GSList *otb_test_funcs=NULL;
-
-static gboolean leaky=FALSE;
-
-static GOptionEntry entries[]=
-{
-	{"leaky", 0, 0, G_OPTION_ARG_NONE, &leaky, "", NULL},
-	{ NULL }
-};
-
-static gboolean otb_parse_input(int *p_argc, char **p_argv[])
-{
-	gboolean ret_val=TRUE;
-	GError *error=NULL;
-	GOptionContext *context=g_option_context_new("");
-	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
-	if (!g_option_context_parse(context, p_argc, p_argv, &error))
-	{
-		g_print("%s\n", error->message);
-		g_error_free(error);
-		ret_val=FALSE;
-	}
-	g_option_context_free(context);
-	return ret_val;
-}
-
-static void otb_call_test(const gpointer test, const gpointer user_data)
-{
-	GTestFunc test_func=(GTestFunc)test;
-	test_func();
-}
-
-static void otb_run_tests_to_find_memory_leaks()
-{
-	otb_recreate_test_dir();
-	g_slist_foreach(otb_test_funcs, otb_call_test, NULL);
-	otb_delete_test_dir();
-}
 
 static void otb_add_tests()
 {
@@ -79,6 +43,7 @@ static void otb_add_tests()
 	otb_add_user_tests();
 	otb_add_bitkeeper_tests();
 	otb_add_protocol_tests();
+	otb_add_leak_tests();
 }
 
 static void otb_run_tests()
@@ -87,8 +52,6 @@ static void otb_run_tests()
 	otb_add_tests();
 	g_test_run();
 	otb_delete_test_dir();
-	while(leaky)
-		otb_run_tests_to_find_memory_leaks();
 	g_slist_free(otb_test_funcs);
 }
 
@@ -103,8 +66,6 @@ int main(int argc, char *argv[])
 	setlocale(LC_ALL, "");
 	textdomain(GETTEXT_PACKAGE);
 	g_test_init(&argc, &argv, NULL);
-	if(!otb_parse_input(&argc, &argv))
-		return 1;
 	otb_run_tests(&argc, &argv);
 	return 0;
 }

@@ -6,13 +6,9 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_MAIN_H
-#define OTB_MAIN_H
+#ifndef OTB_LEAK_TESTS
+#define OTB_LEAK_TESTS
 
-#include <glib-object.h>
-
-#define otb_add_test_func(name, func)	if(!g_test_perf()) g_test_add_func((name), (func)); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
-
-extern GSList *otb_test_funcs;
+void otb_add_leak_tests();
 
 #endif
