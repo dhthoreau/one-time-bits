@@ -22,6 +22,7 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Define to the Gettext p
 AC_TYPE_OFF_T
 AC_PROG_CC_STDC
 PKG_PROG_PKG_CONFIG(0.26)
+PKG_CHECK_MODULES([libgio], [gio-2.0 >= 2.28])
 PKG_CHECK_MODULES([libglib], [glib-2.0 >= 2.28])
 PKG_CHECK_MODULES([libgobject], [gobject-2.0 >= 2.28])
 PKG_CHECK_MODULES([libuuid], [uuid])
