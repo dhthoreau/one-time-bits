@@ -855,6 +855,7 @@ static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolCont
 	g_free(peer_id);
 }
 
+#define EXPECTED_STATE_INITIAL	0
 #define EXPECTED_STATE_FINISHED	11
 
 static gboolean otb_run_protocol_error_injected_tests(const ProtocolParams params, va_list *tests, ProtocolTestFunc error_injection_func, int error_injection_point)
@@ -864,13 +865,14 @@ static gboolean otb_run_protocol_error_injected_tests(const ProtocolParams param
 	otb_setup_protocol_test(params, &protocol_context, &peer_asym_cipher);
 	ProtocolTestFunc current_test_func;
 	int test_count;
+	g_assert_cmpint(EXPECTED_STATE_INITIAL, ==, TEST_PROTOCOL_CONTEXT(protocol_context)->state);
 	for(current_test_func=va_arg(*tests, ProtocolTestFunc), test_count=0; current_test_func!=NULL && test_count<error_injection_point; current_test_func=va_arg(*tests, ProtocolTestFunc), test_count++)
 	{
-		TEST_PROTOCOL_CONTEXT(protocol_context)->state!=7;
+		g_assert_cmpint(EXPECTED_STATE_FINISHED, !=, TEST_PROTOCOL_CONTEXT(protocol_context)->state);
 		current_test_func(params, protocol_context, peer_asym_cipher);
 	}
 	error_injection_func(params, protocol_context, peer_asym_cipher);
-	TEST_PROTOCOL_CONTEXT(protocol_context)->state==7;
+	g_assert_cmpint(EXPECTED_STATE_FINISHED, ==, TEST_PROTOCOL_CONTEXT(protocol_context)->state);
 	if(transmitted_pad_byte_array!=NULL)
 	{
 		g_byte_array_unref(transmitted_pad_byte_array);
@@ -1051,20 +1053,29 @@ static void otb_let_server_continue(gboolean wait)
 		g_cond_wait(&otb_protocol_cond, &otb_protocol_mutex);
 }
 
-static void otb_dummy_protocol_assert_incoming_packet(GBytes *expected_data_bytes, const unsigned char *input_packet, uint32_t input_packet_size)
+static void otb_truncate_output_memory_stream(const GMemoryOutputStream *memory_output_stream)
 {
-	const unsigned char *expected_data=g_bytes_get_data(expected_data_bytes, NULL);
-	uint32_t expected_packet_size=g_htonl(*((uint32_t*)expected_data));
-	g_assert_cmpint(expected_packet_size, ==, input_packet_size);
-	g_assert_cmpint(0, ==, memcmp(expected_data+sizeof expected_packet_size, input_packet, input_packet_size));
+	g_assert(g_seekable_seek(G_SEEKABLE(memory_output_stream), 0, G_SEEK_SET, NULL, NULL));
+	g_assert(g_seekable_truncate(G_SEEKABLE(memory_output_stream), 0, NULL, NULL));
 }
 
-static GBytes *otb_do_dummy_client_protocol(const unsigned char *input_packet, uint32_t input_packet_size, int iteration)
+static void otb_dummy_protocol_assert_incoming_packet(GBytes *expected_peer_data_bytes, const unsigned char *input_packet, uint32_t input_packet_size)
 {
-	if(iteration>0)
-		otb_dummy_protocol_assert_incoming_packet(g_ptr_array_index(otb_server_data_array, iteration-1), input_packet, input_packet_size);
-	return iteration<otb_client_data_array->len?g_ptr_array_index(otb_client_data_array, iteration):NULL;
+	const unsigned char *expected_peer_data=g_bytes_get_data(expected_peer_data_bytes, NULL);
+	uint32_t expected_packet_size=g_htonl(*((uint32_t*)expected_peer_data));
+	g_assert_cmpint(expected_packet_size, ==, input_packet_size);
+	g_assert_cmpint(0, ==, memcmp(expected_peer_data+sizeof expected_packet_size, input_packet, input_packet_size));
 }
+
+static void otb_do_dummy_protocol(const unsigned char *input_packet, uint32_t input_packet_size, GBytes *expected_peer_data_bytes)
+{
+	if(expected_peer_data_bytes!=NULL)
+		otb_dummy_protocol_assert_incoming_packet(expected_peer_data_bytes, input_packet, input_packet_size);
+}
+
+#define FIRST_DUMMY_MIDDLE_STATE	1
+#define SECOND_DUMMY_MIDDLE_STATE	5
+#define THIRD_DUMMY_MIDDLE_STATE	7
 
 static uint32_t otb_dummy_client_protocol(OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **output_out)
 {
@@ -1072,28 +1083,32 @@ static uint32_t otb_dummy_client_protocol(OtbProtocolContext *protocol_context, 
 	GBytes *output_bytes=NULL;
 	switch(TEST_PROTOCOL_CONTEXT(protocol_context)->state)
 	{
-		case 0:
+		case EXPECTED_STATE_INITIAL:
 		{
-			output_bytes=otb_do_dummy_client_protocol(input_packet, input_packet_size, 0);
-			TEST_PROTOCOL_CONTEXT(protocol_context)->state=1;
+			otb_do_dummy_protocol(input_packet, input_packet_size, NULL);
+			output_bytes=g_ptr_array_index(otb_client_data_array, 0);
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=FIRST_DUMMY_MIDDLE_STATE;
 			break;
 		}
-		case 1:
+		case FIRST_DUMMY_MIDDLE_STATE:
 		{
-			output_bytes=otb_do_dummy_client_protocol(input_packet, input_packet_size, 1);
-			TEST_PROTOCOL_CONTEXT(protocol_context)->state=5;
+			otb_do_dummy_protocol(input_packet, input_packet_size, g_ptr_array_index(otb_server_data_array, 0));
+			output_bytes=g_ptr_array_index(otb_client_data_array, 1);
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=SECOND_DUMMY_MIDDLE_STATE;
 			break;
 		}
-		case 5:
+		case SECOND_DUMMY_MIDDLE_STATE:
 		{
-			output_bytes=otb_do_dummy_client_protocol(input_packet, input_packet_size, 2);
-			TEST_PROTOCOL_CONTEXT(protocol_context)->state=7;
+			otb_do_dummy_protocol(input_packet, input_packet_size, g_ptr_array_index(otb_server_data_array, 1));
+			output_bytes=g_ptr_array_index(otb_client_data_array, 2);
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=THIRD_DUMMY_MIDDLE_STATE;
 			break;
 		}
-		case 7:
+		case THIRD_DUMMY_MIDDLE_STATE:
 		{
-			output_bytes=otb_do_dummy_client_protocol(input_packet, input_packet_size, 3);
-			TEST_PROTOCOL_CONTEXT(protocol_context)->state=11;
+			otb_do_dummy_protocol(input_packet, input_packet_size, g_ptr_array_index(otb_server_data_array, 2));
+			output_bytes=g_ptr_array_index(otb_client_data_array, 3);
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=EXPECTED_STATE_FINISHED;
 			break;
 		}
 		default:
@@ -1107,75 +1122,140 @@ static uint32_t otb_dummy_client_protocol(OtbProtocolContext *protocol_context, 
 	return output_size;
 }
 
-static void otb_dummy_server_io_thread_fill_server_response_buffer(const GPtrArray *memory_io_streams, unsigned int iteration)
+static uint32_t otb_dummy_server_protocol(OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **output_out)
 {
-	if(iteration<otb_server_data_array->len)
-	{
-		GMemoryInputStream *memory_input_stream=G_MEMORY_INPUT_STREAM(g_ptr_array_index(memory_io_streams, 0));
-		g_memory_input_stream_add_bytes(memory_input_stream, g_ptr_array_index(otb_server_data_array, iteration));
-	}
-}
-
-static void otb_dummy_server_io_thread_truncate_client_request_buffer(const GPtrArray *memory_io_streams, unsigned int iteration)
-{
-	GMemoryOutputStream *memory_output_stream=G_MEMORY_OUTPUT_STREAM(g_ptr_array_index(memory_io_streams, 1));
-	g_assert(g_seekable_seek(G_SEEKABLE(memory_output_stream), 0, G_SEEK_SET, NULL, NULL));
-	g_assert(g_seekable_truncate(G_SEEKABLE(memory_output_stream), 0, NULL, NULL));
-}
-
-static void otb_dummy_server_io_thread_prep_iteration(const GPtrArray *memory_io_streams, unsigned int iteration)
-{
-	otb_dummy_server_io_thread_fill_server_response_buffer(memory_io_streams, iteration);
-	otb_dummy_server_io_thread_truncate_client_request_buffer(memory_io_streams, iteration);
-}
-
-static void otb_dummy_server_io_thread_process_client_response(const GPtrArray *memory_io_streams, unsigned int iteration)
-{
-	GMemoryInputStream *memory_input_stream=G_MEMORY_INPUT_STREAM(g_ptr_array_index(memory_io_streams, 0));
-	GMemoryOutputStream *memory_output_stream=G_MEMORY_OUTPUT_STREAM(g_ptr_array_index(memory_io_streams, 1));
-	GBytes *client_bytes=g_ptr_array_index(otb_client_data_array, iteration);
-	unsigned int data_size=g_bytes_get_size(client_bytes)-sizeof(uint32_t);
-	g_assert_cmpint(g_memory_output_stream_get_data_size(memory_output_stream)-sizeof(uint32_t), ==, data_size);
-	g_assert_cmpint(0, ==, memcmp(g_bytes_get_data(g_ptr_array_index(otb_client_data_array, iteration), NULL)+sizeof(uint32_t), g_memory_output_stream_get_data(memory_output_stream), data_size));
-}
-
-static void otb_dummy_server_io_thread_iteration(const GPtrArray *memory_io_streams, unsigned int iteration)
-{
-	otb_dummy_server_io_thread_prep_iteration(memory_io_streams, iteration);
 	otb_let_client_continue();
-	otb_dummy_server_io_thread_process_client_response(memory_io_streams, iteration);
+	GBytes *output_bytes=NULL;
+	switch(TEST_PROTOCOL_CONTEXT(protocol_context)->state)
+	{
+		case EXPECTED_STATE_INITIAL:
+		{
+			otb_do_dummy_protocol(input_packet, input_packet_size, g_ptr_array_index(otb_client_data_array, 0));
+			output_bytes=g_ptr_array_index(otb_server_data_array, 0);
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=FIRST_DUMMY_MIDDLE_STATE;
+			break;
+		}
+		case FIRST_DUMMY_MIDDLE_STATE:
+		{
+			otb_do_dummy_protocol(input_packet, input_packet_size, g_ptr_array_index(otb_client_data_array, 1));
+			output_bytes=g_ptr_array_index(otb_server_data_array, 1);
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=SECOND_DUMMY_MIDDLE_STATE;
+			break;
+		}
+		case SECOND_DUMMY_MIDDLE_STATE:
+		{
+			otb_do_dummy_protocol(input_packet, input_packet_size, g_ptr_array_index(otb_client_data_array, 2));
+			output_bytes=g_ptr_array_index(otb_server_data_array, 2);
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=THIRD_DUMMY_MIDDLE_STATE;
+			break;
+		}
+		case THIRD_DUMMY_MIDDLE_STATE:
+		{
+			otb_do_dummy_protocol(input_packet, input_packet_size, g_ptr_array_index(otb_client_data_array, 3));
+			TEST_PROTOCOL_CONTEXT(protocol_context)->state=EXPECTED_STATE_FINISHED;
+			break;
+		}
+		default:
+		{
+			g_assert_not_reached();
+		}
+	}
+	uint32_t output_size=(output_bytes==NULL?0:g_bytes_get_size(output_bytes)-sizeof(uint32_t));
+	*output_out=(output_size==0?NULL:g_malloc(output_size));
+	if(output_size>0)
+		memcpy(*output_out, g_bytes_get_data(output_bytes, NULL)+sizeof output_size, output_size);
+	return output_size;
+}
+
+static void otb_dummy_io_thread_fill_response_buffer(GMemoryInputStream *memory_input_stream, const GPtrArray *local_data_array, off_t iteration)
+{
+	if(iteration<local_data_array->len)
+		g_memory_input_stream_add_bytes(memory_input_stream, g_ptr_array_index(local_data_array, iteration));
+}
+
+static void otb_dummy_io_thread_prep_iteration(const GPtrArray *memory_io_streams, const GPtrArray *local_data_array, off_t iteration)
+{
+	otb_dummy_io_thread_fill_response_buffer(G_MEMORY_INPUT_STREAM(g_ptr_array_index(memory_io_streams, 0)), local_data_array, iteration);
+	otb_truncate_output_memory_stream(G_MEMORY_OUTPUT_STREAM(g_ptr_array_index(memory_io_streams, 1)));
+}
+
+static void otb_dummy_io_thread_process_peer_incoming_data(GMemoryOutputStream *memory_output_stream, GBytes *peer_bytes)
+{
+	if(peer_bytes!=NULL)
+	{
+		unsigned int data_size=g_bytes_get_size(peer_bytes);
+		g_assert_cmpint(g_memory_output_stream_get_data_size(memory_output_stream), ==, data_size);
+		g_assert_cmpint(0, ==, memcmp(g_bytes_get_data(peer_bytes, NULL), g_memory_output_stream_get_data(memory_output_stream), data_size));
+	}
 }
 
 static void *otb_dummy_server_io_thread(const GPtrArray *memory_io_streams)
 {
 	g_mutex_lock(&otb_protocol_mutex);
 	for(off_t iteration=0; iteration<otb_client_data_array->len; iteration++)
-		otb_dummy_server_io_thread_iteration(memory_io_streams, iteration);
+	{
+		otb_dummy_io_thread_prep_iteration(memory_io_streams, otb_server_data_array, iteration);
+		otb_let_client_continue();
+		otb_dummy_io_thread_process_peer_incoming_data(G_MEMORY_OUTPUT_STREAM(g_ptr_array_index(memory_io_streams, 1)), iteration<otb_client_data_array->len?g_ptr_array_index(otb_client_data_array, iteration):NULL);
+	}
 	g_mutex_unlock(&otb_protocol_mutex);
 	return NULL;
 }
 
-static void test_otb_protocol_client_execution()
+static void *otb_dummy_client_io_thread(const GPtrArray *memory_io_streams)
 {
-	otb_create_client_server_data_arrays();
-	OtbProtocolContext *protocol_context=NULL;
-	OtbAsymCipher *peer_asym_cipher=NULL;
-	otb_setup_protocol_test((ProtocolParams){CLIENT, 0, 0, 0, 0, 1}, &protocol_context, &peer_asym_cipher);
+	g_mutex_lock(&otb_protocol_mutex);
+	for(off_t iteration=0; iteration<otb_client_data_array->len; iteration++)
+	{
+		otb_dummy_io_thread_prep_iteration(memory_io_streams, otb_client_data_array, iteration);
+		otb_let_server_continue(TRUE);
+		otb_dummy_io_thread_process_peer_incoming_data(G_MEMORY_OUTPUT_STREAM(g_ptr_array_index(memory_io_streams, 1)), iteration>0?g_ptr_array_index(otb_server_data_array, iteration-1):NULL);
+	}
+	otb_let_server_continue(FALSE);
+	g_mutex_unlock(&otb_protocol_mutex);
+	return NULL;
+}
+
+static GPtrArray *otb_create_memory_io_streams()
+{
 	GPtrArray *memory_io_streams=g_ptr_array_new_full(2, g_object_unref);
 	g_ptr_array_add(memory_io_streams, g_memory_input_stream_new());
 	g_ptr_array_add(memory_io_streams, g_memory_output_stream_new_resizable());
+	return memory_io_streams;
+}
+
+static void otb_protocol_execution_test(unsigned char client_server, GThreadFunc dummy_io_func, ProtocolFunc protocol_func)
+{
+	otb_create_client_server_data_arrays();
 	otb_protocol_client_server=CLIENT;
+	OtbProtocolContext *protocol_context=NULL;
+	OtbAsymCipher *peer_asym_cipher=NULL;
+	otb_setup_protocol_test((ProtocolParams){client_server, 0, 0, 0, 0, 1}, &protocol_context, &peer_asym_cipher);
+	GPtrArray *memory_io_streams=otb_create_memory_io_streams();
 	g_mutex_lock(&otb_protocol_mutex);
-	GThread *input_thread=g_thread_new("DummyServer", (GThreadFunc)otb_dummy_server_io_thread, memory_io_streams);
-	otb_protocol_execute(protocol_context, otb_dummy_client_protocol, g_ptr_array_index(memory_io_streams, 0), g_ptr_array_index(memory_io_streams, 1), TRUE);
-	otb_let_server_continue(FALSE);
+	GThread *dummy_io_thread=g_thread_new("DummyPeerIO", dummy_io_func, memory_io_streams);
+	if(client_server==SERVER)
+		otb_let_client_continue();
+	otb_protocol_execute(protocol_context, protocol_func, g_ptr_array_index(memory_io_streams, 0), g_ptr_array_index(memory_io_streams, 1), client_server==CLIENT);
+	if(client_server==CLIENT)
+		otb_let_server_continue(FALSE);
 	g_mutex_unlock(&otb_protocol_mutex);
-	g_thread_join(input_thread);
-	g_thread_unref(input_thread);
+	g_thread_join(dummy_io_thread);
+	g_thread_unref(dummy_io_thread);
 	g_ptr_array_unref(memory_io_streams);
 	otb_protocol_context_free(protocol_context);
 	g_object_unref(peer_asym_cipher);
 	otb_free_client_server_data_arrays();
+}
+
+static void test_otb_protocol_client_execution()
+{
+	otb_protocol_execution_test(CLIENT, (GThreadFunc)otb_dummy_server_io_thread, otb_dummy_client_protocol);
+}
+
+static void test_otb_protocol_server_execution()
+{
+	otb_protocol_execution_test(SERVER, (GThreadFunc)otb_dummy_client_io_thread, otb_dummy_server_protocol);
 }
 
 void otb_add_protocol_tests()
@@ -1199,4 +1279,5 @@ void otb_add_protocol_tests()
 	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_2_4_four_incoming", test_otb_protocol_server_0_0_0_2_4_four_incoming);
 	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_2_4_four_incoming_one_too_large", test_otb_protocol_server_0_0_0_2_4_four_incoming_one_too_large);
 	otb_add_test_func("/protocol/test_otb_protocol_client_execution", test_otb_protocol_client_execution);
+	otb_add_test_func("/protocol/test_otb_protocol_server_execution", test_otb_protocol_server_execution);
 }

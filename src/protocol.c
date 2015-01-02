@@ -933,12 +933,12 @@ static gboolean otb_protocol_process_request_packet(OtbProtocolContext *protocol
 	uint32_t response_packet_size=protocol_func(protocol_context, request_packet_byte_array==NULL?NULL:request_packet_byte_array->data+sizeof(uint32_t), packet_size, &response_packet);
 	if(request_packet_byte_array!=NULL)
 		g_byte_array_remove_range(request_packet_byte_array, 0, request_packet_byte_array->len);
-	unsigned char *response_meta_packet=g_malloc(response_packet_size+sizeof response_packet_size);
+	unsigned int expected_bytes_written=sizeof response_packet_size+response_packet_size;
+	unsigned char *response_meta_packet=g_malloc(expected_bytes_written);
 	PROTOCOL_META_PACKET_SET_PACKET_SIZE(response_meta_packet, response_packet_size);
 	memcpy(PROTOCOL_META_PACKET_PACKET(response_meta_packet), response_packet, response_packet_size);
-	unsigned int expected_bytes_written=sizeof response_packet_size+response_packet_size;
 	unsigned int actual_bytes_written=-1;
-	gboolean ret_val=g_output_stream_write_all(output_stream, response_packet, sizeof response_packet_size+response_packet_size, &actual_bytes_written, NULL, NULL);
+	gboolean ret_val=g_output_stream_write_all(output_stream, response_meta_packet, expected_bytes_written, &actual_bytes_written, NULL, NULL);
 	ret_val=(ret_val && expected_bytes_written==actual_bytes_written);
 	g_free(response_meta_packet);
 	g_free(response_packet);
@@ -954,7 +954,7 @@ void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc pro
 	while(protocol_context->state!=STATE_FINISHED && !g_input_stream_is_closed(input_stream) && !g_output_stream_is_closed(output_stream) && !error)
 	{
 		unsigned char input_buffer[PROTOCOL_BUFFER_SIZE];
-		gssize input_buffer_bytes_received=g_input_stream_read(input_stream, input_buffer, PROTOCOL_BUFFER_SIZE, NULL, NULL);
+		signed long input_buffer_bytes_received=g_input_stream_read(input_stream, input_buffer, PROTOCOL_BUFFER_SIZE, NULL, NULL);
 		if(input_buffer_bytes_received==G_IO_ERROR_CANCELLED)
 			error=TRUE;
 		else
