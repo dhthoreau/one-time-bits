@@ -32,7 +32,7 @@ GSList *otb_test_funcs=NULL;
 
 static void otb_add_tests()
 {
-	otb_add_unique_id_tests();
+/*	otb_add_unique_id_tests();
 	otb_add_settings_tests();
 	otb_add_sym_cipher_tests();
 	otb_add_asym_cipher_tests();
@@ -41,7 +41,7 @@ static void otb_add_tests()
 	otb_add_pad_db_tests();
 	otb_add_friend_tests();
 	otb_add_user_tests();
-	otb_add_bitkeeper_tests();
+	otb_add_bitkeeper_tests();*/
 	otb_add_protocol_tests();
 	otb_add_leak_tests();
 }

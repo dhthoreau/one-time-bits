@@ -936,29 +936,32 @@ static gboolean otb_protocol_process_request_packet(OtbProtocolContext *protocol
 	unsigned char *response_meta_packet=g_malloc(response_packet_size+sizeof response_packet_size);
 	PROTOCOL_META_PACKET_SET_PACKET_SIZE(response_meta_packet, response_packet_size);
 	memcpy(PROTOCOL_META_PACKET_PACKET(response_meta_packet), response_packet, response_packet_size);
-	gsize bytes_written;
-	return g_output_stream_write_all(output_stream, response_packet, sizeof response_packet_size+response_packet_size, &bytes_written, NULL, NULL);
+	unsigned int expected_bytes_written=sizeof response_packet_size+response_packet_size;
+	unsigned int actual_bytes_written=-1;
+	gboolean ret_val=g_output_stream_write_all(output_stream, response_packet, sizeof response_packet_size+response_packet_size, &actual_bytes_written, NULL, NULL);
+	ret_val=(ret_val && expected_bytes_written==actual_bytes_written);
+	g_free(response_meta_packet);
+	g_free(response_packet);
+	return ret_val;
 }
 
-void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc protocol_func, GIOStream *io_stream, gboolean initiate_communication)
+void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc protocol_func, GInputStream *input_stream, GOutputStream *output_stream, gboolean initiate_communication)
 {
-	GInputStream *input_stream=g_io_stream_get_input_stream(io_stream);
-	GOutputStream *output_stream=g_io_stream_get_output_stream(io_stream);
 	GByteArray *request_packet_byte_array=g_byte_array_new();
 	gboolean error=FALSE;
 	if(initiate_communication)
-		error=otb_protocol_process_request_packet(protocol_context, protocol_func, NULL, output_stream);
+		error=!otb_protocol_process_request_packet(protocol_context, protocol_func, NULL, output_stream);
 	while(protocol_context->state!=STATE_FINISHED && !g_input_stream_is_closed(input_stream) && !g_output_stream_is_closed(output_stream) && !error)
 	{
 		unsigned char input_buffer[PROTOCOL_BUFFER_SIZE];
 		gssize input_buffer_bytes_received=g_input_stream_read(input_stream, input_buffer, PROTOCOL_BUFFER_SIZE, NULL, NULL);
-		if(error==G_IO_ERROR_CANCELLED)
+		if(input_buffer_bytes_received==G_IO_ERROR_CANCELLED)
 			error=TRUE;
 		else
 		{
 			g_byte_array_append(request_packet_byte_array, input_buffer, input_buffer_bytes_received);
 			if(PROTOCOL_META_PACKET_IS_RECEIVED(request_packet_byte_array->data, request_packet_byte_array->len))
-				error=otb_protocol_process_request_packet(protocol_context, protocol_func, request_packet_byte_array, output_stream);
+				error=!otb_protocol_process_request_packet(protocol_context, protocol_func, request_packet_byte_array, output_stream);
 		}
 	}
 	g_byte_array_unref(request_packet_byte_array);
@@ -973,6 +976,7 @@ void otb_protocol_context_free(OtbProtocolContext *protocol_context)
 	if(protocol_context->peer_friend!=NULL)
 		g_object_unref(protocol_context->peer_friend);
 	if(protocol_context->peer_asym_cipher!=NULL)
+		g_object_unref(protocol_context->peer_asym_cipher);
 	g_free(protocol_context->pad_id);
 	if(protocol_context->pad_io!=NULL)
 		otb_pad_db_close_pad(protocol_context->pad_db, protocol_context->pad_io);
