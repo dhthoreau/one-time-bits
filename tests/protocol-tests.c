@@ -1180,7 +1180,7 @@ static void test_otb_protocol_client_execution()
 
 void otb_add_protocol_tests()
 {
-/*	otb_add_test_func("/protocol/test_otb_protocol_client_0_2_2_0_1", test_otb_protocol_client_0_2_2_0_1);
+	otb_add_test_func("/protocol/test_otb_protocol_client_0_2_2_0_1", test_otb_protocol_client_0_2_2_0_1);
 	otb_add_test_func("/protocol/test_otb_protocol_client_1_2_2_0_1", test_otb_protocol_client_1_2_2_0_1);
 	otb_add_test_func("/protocol/test_otb_protocol_client_1_0_2_0_1", test_otb_protocol_client_1_0_2_0_1);
 	otb_add_test_func("/protocol/test_otb_protocol_client_1_3_2_0_1", test_otb_protocol_client_1_3_2_0_1);
@@ -1197,6 +1197,6 @@ void otb_add_protocol_tests()
 	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_1_1_four_incoming", test_otb_protocol_server_0_0_0_1_1_four_incoming);
 	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_1_2_one_incoming", test_otb_protocol_server_0_0_0_1_2_one_incoming);
 	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_2_4_four_incoming", test_otb_protocol_server_0_0_0_2_4_four_incoming);
-	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_2_4_four_incoming_one_too_large", test_otb_protocol_server_0_0_0_2_4_four_incoming_one_too_large);*/
+	otb_add_test_func("/protocol/test_otb_protocol_server_0_0_0_2_4_four_incoming_one_too_large", test_otb_protocol_server_0_0_0_2_4_four_incoming_one_too_large);
 	otb_add_test_func("/protocol/test_otb_protocol_client_execution", test_otb_protocol_client_execution);
 }
