@@ -18,30 +18,39 @@
 enum
 {
 	PROP_0,
-	PROP_USER
+	PROP_USER,
+	PROP_TOR_PORT
 };
 
 G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
 
 static void otb_bitkeeper_dispose(GObject *object);
 static void otb_bitkeeper_finalize(GObject *object);
+static void otb_bitkeeper_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);;
 static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
 
 struct _OtbBitkeeperPrivate
 {
 	GRWLock lock;
 	OtbUser *user;
+	unsigned short tor_port;
 	GSList *friends;
 	char *friends_base_path;
 };
+
+#define MIN_TCP_PORT		1
+#define MAX_TCP_PORT		65535
+#define DEFAULT_TOR_PORT	9050
 
 static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 {
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_bitkeeper_dispose;
 	object_class->finalize=otb_bitkeeper_finalize;
+	object_class->set_property=otb_bitkeeper_set_property;
 	object_class->get_property=otb_bitkeeper_get_property;
 	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_TOR_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_TOR_PORT, _("Tor port"), _("The port for the local TOR proxy"), MIN_TCP_PORT, MAX_TCP_PORT, DEFAULT_TOR_PORT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbBitkeeperPrivate));
 }
 
@@ -50,6 +59,7 @@ static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
 	bitkeeper->priv=G_TYPE_INSTANCE_GET_PRIVATE(bitkeeper, OTB_TYPE_BITKEEPER, OtbBitkeeperPrivate);
 	g_rw_lock_init(&bitkeeper->priv->lock);
 	bitkeeper->priv->user=NULL;
+	bitkeeper->priv->tor_port=0;
 	bitkeeper->priv->friends=NULL;
 	bitkeeper->priv->friends_base_path=g_build_filename(otb_settings_get_data_directory_path(), "friends", NULL);
 }
@@ -79,10 +89,23 @@ static void otb_bitkeeper_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_bitkeeper_parent_class)->finalize(object);
 }
 
-#define otb_bitkeeper_lock_read(bitkeeper)		(g_rw_lock_reader_lock(&bitkeeper->priv->lock))
-#define otb_bitkeeper_unlock_read(bitkeeper)	(g_rw_lock_reader_unlock(&bitkeeper->priv->lock))
-#define otb_bitkeeper_lock_write(bitkeeper)		(g_rw_lock_writer_lock(&bitkeeper->priv->lock))
-#define otb_bitkeeper_unlock_write(bitkeeper)	(g_rw_lock_writer_unlock(&bitkeeper->priv->lock))
+static void otb_bitkeeper_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
+{
+	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
+	switch(prop_id)
+	{
+		case PROP_TOR_PORT:
+		{
+			bitkeeper->priv->tor_port=(unsigned short)g_value_get_uint(value);
+			break;
+		}
+		default:
+		{
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+			break;
+		}
+	}
+}
 
 static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -92,6 +115,11 @@ static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GV
 		case PROP_USER:
 		{
 			g_value_set_object(value, bitkeeper->priv->user);
+			break;
+		}
+		case PROP_TOR_PORT:
+		{
+			g_value_set_uint(value, bitkeeper->priv->tor_port);
 			break;
 		}
 		default:
@@ -156,6 +184,11 @@ static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bi
 	}
 	return friend;
 }
+
+#define otb_bitkeeper_lock_read(bitkeeper)		(g_rw_lock_reader_lock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_unlock_read(bitkeeper)	(g_rw_lock_reader_unlock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_lock_write(bitkeeper)		(g_rw_lock_writer_lock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_unlock_write(bitkeeper)	(g_rw_lock_writer_unlock(&bitkeeper->priv->lock))
 
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
 {
