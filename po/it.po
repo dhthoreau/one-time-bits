@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-01-04 16:44-0500\n"
-"PO-Revision-Date: 2015-01-04 16:46-0500\n"
+"POT-Creation-Date: 2015-01-04 19:27-0500\n"
+"PO-Revision-Date: 2015-01-04 19:28-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: src\n"
 
-#: src/user.c:58 src/friend.c:71 src/pad-rec.c:75
+#: src/user.c:58 src/friend.c:70 src/pad-rec.c:75
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -33,68 +33,68 @@ msgid ""
 msgstr ""
 "Cifra asimmetrica usata per identificare l'utente e comunicare con amici."
 
-#: src/user.c:60 src/friend.c:74
-msgid "Onion base domain"
-msgstr "Dominio di base di onion"
+#: src/user.c:60 src/friend.c:73
+msgid "Address"
+msgstr "Indirizzo"
 
 #: src/user.c:60
-msgid "The domain of the user's Tor hidden service (minus the \".onion\")"
-msgstr "Il domino del servizio nascosto di Tor dell'utente (senza \".onion\")"
+msgid "The address of the user"
+msgstr "L'indirizzo dell'utente"
 
 #: src/settings.c:40 src/settings.c:54
 #, c-format
 msgid "Failed to load key file from %s. Error == %s"
 msgstr "Non è riuscito a aprire il file di chiave %s. Errore == %s"
 
-#: src/friend.c:68 src/pad-rec.c:77 src/pad-db.c:58
+#: src/friend.c:67 src/pad-rec.c:77 src/pad-db.c:58
 msgid "Base path"
 msgstr "Precorso di base"
 
-#: src/friend.c:68
+#: src/friend.c:67
 msgid "Directory where the friend's data will be saved"
 msgstr "La directory dove i dati del amico saranno salvati"
 
-#: src/friend.c:69
+#: src/friend.c:68
 msgid "Incoming pads"
 msgstr "Blocchi in arrivo"
 
-#: src/friend.c:69
+#: src/friend.c:68
 msgid "Database of incoming pads"
 msgstr "Il database di blocchi in arrivo"
 
-#: src/friend.c:70
+#: src/friend.c:69
 msgid "Outgoing pads"
 msgstr "Blocchi in partenza"
 
-#: src/friend.c:70
+#: src/friend.c:69
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:71
+#: src/friend.c:70
 msgid "UUID of the friend"
 msgstr "UUID dell'amico"
 
-#: src/friend.c:72 src/asym-cipher.c:49
+#: src/friend.c:71 src/asym-cipher.c:49
 msgid "Public key"
 msgstr "Chiave pubblica"
 
-#: src/friend.c:72
+#: src/friend.c:71
 msgid "Key that is used to identify the friend"
 msgstr "La chiave usata per identificare l'amico"
 
-#: src/friend.c:73
+#: src/friend.c:72
 msgid "Transport cipher"
 msgstr "Cifra di trasporto"
 
-#: src/friend.c:73
+#: src/friend.c:72
 msgid "The cipher used for data transport"
 msgstr "La cifra per trasportare i dati"
 
-#: src/friend.c:74
-msgid "The domain of the friend's Tor hidden service (minus the \".onion\")"
-msgstr "Il domino del servizio nascosto di Tor dell'amico (senza \".onion\")"
+#: src/friend.c:73
+msgid "The address of the friend"
+msgstr "L'indirizzo dell'amico"
 
-#: src/friend.c:155
+#: src/friend.c:152
 msgid "Tried to change unique ID of a friend."
 msgstr "Si è provato a cambiare ID univoco d'un amico."
 

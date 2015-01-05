@@ -35,8 +35,8 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(user!=NULL);
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
-	char *actual_onion_base_domain=NULL;
-	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
+	char *actual_address=NULL;
+	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, NULL);
 	g_assert(actual_unique_id!=NULL);
 	char *actual_sym_cipher_name=NULL;
 	char *actual_public_key=NULL;
@@ -47,7 +47,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_free(actual_public_key);
 	g_object_unref(actual_asym_cipher);
 	g_free(actual_unique_id);
-	g_assert(actual_onion_base_domain==NULL);
+	g_assert(actual_address==NULL);
 	g_object_unref(user);
 }
 
@@ -89,14 +89,14 @@ static void otb_write_asym_cipher(FILE *file, const OtbAsymCipher *asym_cipher)
 	g_free(encoded_encrypted_private_key);
 }
 
-static void otb_write_onion_base_domain(FILE *file, const char *onion_base_domain)
+static void otb_write_address(FILE *file, const char *address)
 {
-	g_assert(otb_write("onion-base-domain=", 1, 18, file)==18);
-	g_assert(otb_write(onion_base_domain, 1, strlen(onion_base_domain), file)==strlen(onion_base_domain));
+	g_assert(otb_write("address=", 1, 8, file)==8);
+	g_assert(otb_write(address, 1, strlen(address), file)==strlen(address));
 	g_assert(otb_write("\n", 1, 1, file)==1);
 }
 
-void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *onion_base_domain)
+void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *address)
 {
 	otb_test_setup_local_crypto();
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
@@ -107,15 +107,15 @@ void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const ch
 	otb_write_unique_id(file, unique_id);
 	otb_write_sym_cipher_name(file, sym_cipher_name);
 	otb_write_asym_cipher(file, asym_cipher);
-	otb_write_onion_base_domain(file, onion_base_domain);
+	otb_write_address(file, address);
 	g_assert(otb_close(file));
 	otb_settings_initialize("otb-tests", "otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 }
 
-static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *onion_base_domain)
+static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *address)
 {
-	otb_setup_config_file_for_user_tests(unique_id, sym_cipher_name, asym_cipher, onion_base_domain);
+	otb_setup_config_file_for_user_tests(unique_id, sym_cipher_name, asym_cipher, address);
 	OtbUser *user=otb_user_load_from_settings_config();
 	g_assert(user!=NULL);
 	return user;
@@ -125,17 +125,17 @@ static void test_otb_user_create_from_existing_config_file()
 {
 	const size_t NEW_KEY_LENGTH=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
-	const char *EXPECTED_BASE_ONION_DOMAIN_1="akjsdhkljashgd";
-	const char *EXPECTED_BASE_ONION_DOMAIN_2="kjshdfjkhgssdj";
+	const char *EXPECTED_ADDRESS1="akjsdhkljashgd.onion";
+	const char *EXPECTED_ADDRESS2="kjshdfjkhgssdj.onion";
 	
 	OtbUniqueId *expected_unique_id=otb_unique_id_create();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
-	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN_1);
+	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS1);
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
-	char *actual_onion_base_domain=NULL;
-	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
+	char *actual_address=NULL;
+	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	g_free(actual_unique_id);
 	g_free(expected_unique_id);
@@ -151,12 +151,12 @@ static void test_otb_user_create_from_existing_config_file()
 	g_free(expected_public_key);
 	g_free(actual_public_key);
 	g_object_unref(actual_asym_cipher);
-	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN_1, ==, actual_onion_base_domain);
-	g_free(actual_onion_base_domain);
-	g_assert(otb_user_set_onion_base_domain(user, EXPECTED_BASE_ONION_DOMAIN_2));
-	g_object_get(user, OTB_USER_PROP_ONION_BASE_DOMAIN, &actual_onion_base_domain, NULL);
-	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN_2, ==, actual_onion_base_domain);
-	g_free(actual_onion_base_domain);
+	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address);
+	g_free(actual_address);
+	g_assert(otb_user_set_address(user, EXPECTED_ADDRESS2));
+	g_object_get(user, OTB_USER_PROP_ADDRESS, &actual_address, NULL);
+	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address);
+	g_free(actual_address);
 	g_object_unref(user);
 	g_object_unref(expected_asym_cipher);
 }
@@ -165,12 +165,12 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 {
 	const size_t NEW_KEY_LENGTH=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
-	const char *EXPECTED_BASE_ONION_DOMAIN="kdjhgkfgjhfhj";
+	const char *EXPECTED_ADDRESS="kdjhgkfgjhfhj.onion";
 	
 	OtbUniqueId *expected_unique_id=otb_unique_id_create();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
-	*user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_BASE_ONION_DOMAIN);
+	*user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS);
 	char *expected_public_key=NULL;
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
 	g_assert(expected_public_key!=NULL);
@@ -180,16 +180,16 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	OtbUniqueId *actual_unique_id=otb_settings_get_bytes(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL);
 	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
 	char *actual_sym_cipher_name=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME);
-	char *actual_onion_base_domain=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN);
+	char *actual_address=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	g_free(actual_unique_id);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
-	g_assert_cmpstr(EXPECTED_BASE_ONION_DOMAIN, ==, actual_onion_base_domain);
+	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
 	g_free(expected_unique_id);
 	g_free(expected_public_key);
 	g_free(actual_public_key);
-	g_free(actual_onion_base_domain);
+	g_free(actual_address);
 	g_object_unref(expected_asym_cipher);
 }
 

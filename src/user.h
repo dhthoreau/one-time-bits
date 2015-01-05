@@ -11,9 +11,10 @@
 
 #include "asym-cipher.h"
 
-#define OTB_USER_PROP_UNIQUE_ID			"unique-id"
-#define OTB_USER_PROP_ASYM_CIPHER		"asym-cipher"
-#define OTB_USER_PROP_ONION_BASE_DOMAIN	"onion-base-domains"
+#define OTB_USER_PROP_UNIQUE_ID		"unique-id"
+#define OTB_USER_PROP_ASYM_CIPHER	"asym-cipher"
+#define OTB_USER_PROP_ADDRESS		"address"
+// FARA - Abbiamo bisogno di una porta.
 
 #define OTB_TYPE_USER				(otb_user_get_type())
 #define OTB_USER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_USER, OtbUser))
@@ -42,7 +43,7 @@ GType otb_user_get_type();
 
 void otb_user_set_runtime_type(GType user_runtime_type);
 OtbUser *otb_user_load_from_settings_config();
-gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain);
+gboolean otb_user_set_address(const OtbUser *user, const char *address);
 char *otb_user_export(const OtbUser *user);
 
 #endif

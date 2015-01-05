@@ -21,7 +21,7 @@
 #define CONFIG_ASYM_CIPHER_NEW_KEY_SIZE		"asym-cipher-new-key-size"
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV	"asym-cipher-private-key-iv"
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY		"asym-cipher-private-key"
-#define CONFIG_ONION_BASE_DOMAIN			"onion-base-domain"
+#define CONFIG_ADDRESS						"address"
 
 static GType otb_user_runtime_type;
 
@@ -30,7 +30,7 @@ enum
 	PROP_0,
 	PROP_UNIQUE_ID,
 	PROP_ASYM_CIPHER,
-	PROP_ONION_BASE_DOMAIN
+	PROP_ADDRESS
 };
 
 static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
@@ -45,7 +45,7 @@ struct _OtbUserPrivate
 	GRWLock lock;
 	OtbUniqueId *unique_id;
 	OtbAsymCipher *asym_cipher;
-	char *onion_base_domain;
+	char *address;
 };
 
 static void otb_user_class_init(OtbUserClass *klass)
@@ -57,7 +57,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 	object_class->get_property=otb_user_get_property;
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), OTB_TYPE_UNIQUE_ID, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_object(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), OTB_TYPE_ASYM_CIPHER, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_ONION_BASE_DOMAIN, g_param_spec_string(OTB_USER_PROP_ONION_BASE_DOMAIN, _("Onion base domain"), _("The domain of the user's Tor hidden service (minus the \".onion\")"), NULL, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_USER_PROP_ADDRESS, _("Address"), _("The address of the user"), NULL, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
@@ -78,7 +78,7 @@ static void otb_user_init(OtbUser *user)
 	g_rw_lock_init(&user->priv->lock);
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
-	user->priv->onion_base_domain=NULL;
+	user->priv->address=NULL;
 }
 
 static void otb_user_dispose(GObject *object)
@@ -101,7 +101,7 @@ static void otb_user_finalize(GObject *object)
 	OtbUser *user=OTB_USER(object);
 	g_rw_lock_clear(&user->priv->lock);
 	g_free(user->priv->unique_id);
-	g_free(user->priv->onion_base_domain);
+	g_free(user->priv->address);
 	G_OBJECT_CLASS(otb_user_parent_class)->finalize(object);
 }
 
@@ -125,10 +125,10 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 			g_value_set_object(value, user->priv->asym_cipher);
 			break;
 		}
-		case PROP_ONION_BASE_DOMAIN:
+		case PROP_ADDRESS:
 		{
 			otb_user_lock_read(user);
-			g_value_set_string(value, user->priv->onion_base_domain);
+			g_value_set_string(value, user->priv->address);
 			otb_user_unlock_read(user);
 			break;
 		}
@@ -176,9 +176,9 @@ static void otb_user_initialize_asym_cipher(OtbUser *user)
 	g_bytes_unref(encrypted_private_key);
 }
 
-static void otb_user_initialize_onion_base_domain(OtbUser *user)
+static void otb_user_initialize_address(OtbUser *user)
 {
-	user->priv->onion_base_domain=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN);
+	user->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS);
 }
 
 void otb_user_set_runtime_type(GType user_runtime_type)
@@ -192,16 +192,16 @@ OtbUser *otb_user_load_from_settings_config()
 	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
 	otb_user_initialize_unique_id(user);
 	otb_user_initialize_asym_cipher(user);
-	otb_user_initialize_onion_base_domain(user);
+	otb_user_initialize_address(user);
 	return user;
 }
 
-gboolean otb_user_set_onion_base_domain(const OtbUser *user, const char *onion_base_domain)
+gboolean otb_user_set_address(const OtbUser *user, const char *address)
 {
 	otb_user_lock_write(user);
-	g_free(user->priv->onion_base_domain);
-	user->priv->onion_base_domain=g_strdup(onion_base_domain);
-	gboolean ret_val=otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ONION_BASE_DOMAIN, user->priv->onion_base_domain);
+	g_free(user->priv->address);
+	user->priv->address=g_strdup(address);
+	gboolean ret_val=otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ADDRESS, user->priv->address);
 	otb_user_unlock_write(user);
 	return ret_val;
 }
@@ -224,14 +224,14 @@ static void otb_user_export_transport_cipher_name(const OtbUser *user, GKeyFile 
 	g_free(transport_cipher_name);
 }
 
-#define otb_user_export_onion_base_domain(user, export_key_file)	(g_key_file_set_string((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ONION_BASE_DOMAIN, (user)->priv->onion_base_domain))
+#define otb_user_export_address(user, export_key_file)	(g_key_file_set_string((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS, (user)->priv->address))
 
 static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file)
 {
 	otb_user_export_unique_id(user, export_key_file);
 	otb_user_export_public_key(user, export_key_file);
 	otb_user_export_transport_cipher_name(user, export_key_file);
-	otb_user_export_onion_base_domain(user, export_key_file);
+	otb_user_export_address(user, export_key_file);
 }
 
 char *otb_user_export(const OtbUser *user)
