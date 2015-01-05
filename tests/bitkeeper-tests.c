@@ -60,18 +60,18 @@ static void test_otb_bitkeeper_user()
 	g_free(expected_unique_id);
 }
 
-static void test_otb_bitkeeper_tor_port()
+static void test_otb_bitkeeper_proxy_port()
 {
 	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_load();
-	unsigned int tor_port=0;
-	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_TOR_PORT, &tor_port, NULL);
-	g_assert_cmpint(9050, ==, tor_port);
-	g_object_set(original_bitkeeper, OTB_BITKEEPER_PROP_TOR_PORT, 12345, NULL);
-	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_TOR_PORT, &tor_port, NULL);
-	g_assert_cmpint(12345, ==, tor_port);
+	unsigned int proxy_port=0;
+	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
+	g_assert_cmpint(9050, ==, proxy_port);
+	g_object_set(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, 12345, NULL);
+	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
+	g_assert_cmpint(12345, ==, proxy_port);
 	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();
-	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_TOR_PORT, &tor_port, NULL);
-	g_assert_cmpint(12345, ==, tor_port);
+	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
+	g_assert_cmpint(12345, ==, proxy_port);
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
 }
@@ -182,6 +182,6 @@ static void test_otb_bitkeeper_import_delete_friends()
 void otb_add_bitkeeper_tests()
 {
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_user", test_otb_bitkeeper_user);
-	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_tor_port", test_otb_bitkeeper_tor_port);
+	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_proxy_port", test_otb_bitkeeper_proxy_port);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_import_delete_friends", test_otb_bitkeeper_import_delete_friends);
 }

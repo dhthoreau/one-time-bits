@@ -14,8 +14,8 @@
 #include "friend.h"
 #include "user.h"
 
-#define OTB_BITKEEPER_PROP_USER		"user"
-#define OTB_BITKEEPER_PROP_TOR_PORT	"tor-port"
+#define OTB_BITKEEPER_PROP_USER			"user"
+#define OTB_BITKEEPER_PROP_PROXY_PORT	"proxy-port"
 
 #define OTB_TYPE_BITKEEPER				(otb_bitkeeper_get_type())
 #define OTB_BITKEEPER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_BITKEEPER, OtbBitkeeper))

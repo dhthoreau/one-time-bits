@@ -19,7 +19,7 @@ enum
 {
 	PROP_0,
 	PROP_USER,
-	PROP_TOR_PORT
+	PROP_PROXY_PORT
 };
 
 G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
@@ -33,14 +33,14 @@ struct _OtbBitkeeperPrivate
 {
 	GRWLock lock;
 	OtbUser *user;
-	unsigned short tor_port;
+	unsigned short proxy_port;
 	GSList *friends;
 	char *friends_base_path;
 };
 
 #define MIN_TCP_PORT		1
 #define MAX_TCP_PORT		65535
-#define DEFAULT_TOR_PORT	9050
+#define DEFAULT_PROXY_PORT	9050
 
 static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 {
@@ -50,7 +50,7 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 	object_class->set_property=otb_bitkeeper_set_property;
 	object_class->get_property=otb_bitkeeper_get_property;
 	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_TOR_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_TOR_PORT, _("Tor port"), _("The port for the local TOR proxy"), MIN_TCP_PORT, MAX_TCP_PORT, DEFAULT_TOR_PORT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_PROXY_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_PROXY_PORT, _("Proxy port"), _("The port for the local proxy, preferably TOR"), MIN_TCP_PORT, MAX_TCP_PORT, DEFAULT_PROXY_PORT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbBitkeeperPrivate));
 }
 
@@ -59,7 +59,7 @@ static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
 	bitkeeper->priv=G_TYPE_INSTANCE_GET_PRIVATE(bitkeeper, OTB_TYPE_BITKEEPER, OtbBitkeeperPrivate);
 	g_rw_lock_init(&bitkeeper->priv->lock);
 	bitkeeper->priv->user=NULL;
-	bitkeeper->priv->tor_port=0;
+	bitkeeper->priv->proxy_port=0;
 	bitkeeper->priv->friends=NULL;
 	bitkeeper->priv->friends_base_path=g_build_filename(otb_settings_get_data_directory_path(), "friends", NULL);
 }
@@ -94,9 +94,9 @@ static void otb_bitkeeper_set_property(GObject *object, unsigned int prop_id, co
 	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
 	switch(prop_id)
 	{
-		case PROP_TOR_PORT:
+		case PROP_PROXY_PORT:
 		{
-			bitkeeper->priv->tor_port=(unsigned short)g_value_get_uint(value);
+			bitkeeper->priv->proxy_port=(unsigned short)g_value_get_uint(value);
 			break;
 		}
 		default:
@@ -117,9 +117,9 @@ static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GV
 			g_value_set_object(value, bitkeeper->priv->user);
 			break;
 		}
-		case PROP_TOR_PORT:
+		case PROP_PROXY_PORT:
 		{
-			g_value_set_uint(value, bitkeeper->priv->tor_port);
+			g_value_set_uint(value, bitkeeper->priv->proxy_port);
 			break;
 		}
 		default:
