@@ -138,6 +138,29 @@ static void test_otb_pad_rec_initializing_base_name()
 	g_object_unref(pad_rec);
 }
 
+static void test_otb_pad_rec_default_expiration()
+{
+	otb_test_setup_local_crypto();
+	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, NULL);
+	GDateTime *actual_expiration=NULL;
+	g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &actual_expiration, NULL);
+	g_assert(actual_expiration==NULL);
+	g_object_unref(pad_rec);
+}
+
+static void test_otb_pad_rec_initializing_expiration()
+{
+	otb_test_setup_local_crypto();
+	GDateTime *expected_expiration=g_date_time_new_now_utc ();
+	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_EXPIRATION, expected_expiration, NULL);
+	GDateTime *actual_expiration=NULL;
+	g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &actual_expiration, NULL);
+	g_assert_cmpint(0, ==, g_date_time_compare(expected_expiration, actual_expiration));
+	g_date_time_unref(actual_expiration);
+	g_date_time_unref(expected_expiration);
+	g_object_unref(pad_rec);
+}
+
 static void test_otb_pad_rec_specifying_unique_id()
 {
 	otb_test_setup_local_crypto();
