@@ -60,6 +60,11 @@ OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id)
 	return unique_id==NULL?NULL:g_memdup(unique_id, sizeof *unique_id); //FARE - g_slice_dup(OtbUniqueId, unique_id);
 }
 
+int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *unique_id2)
+{
+	return uuid_compare(unique_id1->value, unique_id2->value);
+}
+
 void otb_unique_id_free(OtbUniqueId *unique_id)
 {
 	g_free(unique_id);	//FARE - g_slice_free(OtbUniqueId, unique_id);

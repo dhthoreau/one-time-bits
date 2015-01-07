@@ -15,7 +15,7 @@
 #include "user.h"
 
 #define OTB_BITKEEPER_PROP_USER			"user"
-#define OTB_BITKEEPER_PROP_PROXY_PORT	"proxy-port"	// FARE - Salvare a config.
+#define OTB_BITKEEPER_PROP_PROXY_PORT	"proxy-port"
 
 #define OTB_TYPE_BITKEEPER				(otb_bitkeeper_get_type())
 #define OTB_BITKEEPER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_BITKEEPER, OtbBitkeeper))
@@ -42,7 +42,7 @@ struct _OtbBitkeeperClass
 GType otb_bitkeeper_get_type();
 
 OtbBitkeeper *otb_bitkeeper_load();
-gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned short proxy_port);	// FARE - Ha hisogno di unit test.
+gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned short proxy_port);
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);
 gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string);
 gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);

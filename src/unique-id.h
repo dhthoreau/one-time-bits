@@ -12,8 +12,6 @@
 #include <glib-object.h>
 #include <uuid/uuid.h>
 
-#define otb_unique_id_compare(unique_id1, unique_id2)	(uuid_compare((unique_id1)->value, (unique_id2)->value))
-
 #define OTB_TYPE_UNIQUE_ID	(otb_unique_id_get_type())
 
 typedef struct
@@ -27,6 +25,7 @@ char *otb_unique_id_to_string(const OtbUniqueId *unique_id);
 OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string);
 char *otb_unique_id_string_create();
 OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id);
+int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *unique_id2);
 void otb_unique_id_free(OtbUniqueId *unique_id);
 
 #endif

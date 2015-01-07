@@ -304,6 +304,28 @@ static void test_get_random_rec_id()
 	g_object_unref(pad_db);
 }
 
+static void test_otb_pad_db_get_ids_of_pads_in_status()
+{
+	otb_test_setup_local_crypto();
+	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
+	OtbUniqueId *expected_unique_id_1=otb_unique_id_create();
+	OtbPadIO *pad_io1=otb_pad_db_add_incoming_pad(pad_db, expected_unique_id_1, 10);
+	g_assert(pad_io1!=NULL);
+	g_assert(otb_pad_db_close_pad(pad_db, pad_io1));
+	OtbUniqueId *expected_unique_id_2=otb_unique_id_create();
+	OtbPadIO *pad_io2=otb_pad_db_add_incoming_pad(pad_db, expected_unique_id_2, 10);
+	g_assert(pad_io2!=NULL);
+	g_assert(otb_pad_db_close_pad(pad_db, pad_io2));
+	GSList *actual_unique_ids=otb_pad_db_get_ids_of_pads_in_status(pad_db, OTB_PAD_REC_STATUS_INCOMING);
+	g_assert_cmpint(2, ==, g_slist_length(actual_unique_ids));
+	g_assert(g_slist_find_custom(actual_unique_ids, expected_unique_id_1, (GCompareFunc)otb_unique_id_compare)!=NULL);
+	g_assert(g_slist_find_custom(actual_unique_ids, expected_unique_id_2, (GCompareFunc)otb_unique_id_compare)!=NULL);
+	g_slist_free_full(actual_unique_ids, (GDestroyNotify)otb_unique_id_free);
+	otb_unique_id_free(expected_unique_id_2);
+	otb_unique_id_free(expected_unique_id_1);
+	g_object_unref(pad_db);
+}
+
 static void test_close_pad_fails_when_nothing_is_opened()
 {
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
@@ -609,6 +631,7 @@ void otb_add_pad_db_tests()
 	otb_add_test_func("/pad-db/test_pads_save_load_delete", test_pads_save_load_delete);
 	otb_add_test_func("/pad-db/test_add_incoming_pad", test_add_incoming_pad);
 	otb_add_test_func("/pad-db/test_get_random_rec_id", test_get_random_rec_id);
+	otb_add_test_func("/pad-db/test_otb_pad_db_get_ids_of_pads_in_status", test_otb_pad_db_get_ids_of_pads_in_status);
 	otb_add_test_func("/pad-db/test_close_pad_fails_when_nothing_is_opened", test_close_pad_fails_when_nothing_is_opened);
 	otb_add_test_func("/pad-db/test_remove_rec", test_remove_rec);
 	otb_add_test_func("/pad-db/test_remove_rec_that_does_not_exist", test_remove_rec_that_does_not_exist);
