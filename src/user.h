@@ -42,7 +42,7 @@ struct _OtbUserClass
 GType otb_user_get_type();
 
 void otb_user_set_runtime_type(GType user_runtime_type);
-OtbUser *otb_user_load_from_settings_config();
+OtbUser *otb_user_load();
 gboolean otb_user_set_address(const OtbUser *user, const char *address);
 char *otb_user_export(const OtbUser *user);
 

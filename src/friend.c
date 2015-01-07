@@ -122,7 +122,7 @@ static void otb_friend_finalize(GObject *object)
 	g_return_if_fail(OTB_IS_FRIEND(object));
 	OtbFriend *friend=OTB_FRIEND(object);
 	g_rw_lock_clear(&friend->priv->lock);
-	g_free(friend->priv->unique_id);
+	otb_unique_id_free(friend->priv->unique_id);
 	g_free(friend->priv->base_path);
 	g_free(friend->priv->file_path);
 	g_free(friend->priv->incoming_pad_db_path);
@@ -146,13 +146,11 @@ static void otb_friend_compute_file_paths(const OtbFriend *friend)
 	}
 }
 
-static void otb_friend_set_unique_id(const OtbFriend *friend, const OtbUniqueId *unique_id)
+static void otb_friend_set_unique_id(const OtbFriend *friend, OtbUniqueId *unique_id)
 {
 	if(friend->priv->unique_id!=NULL)
 		g_error(_("Tried to change unique ID of a friend."));
-	if(unique_id==NULL)
-		friend->priv->unique_id=NULL;
-	else
+	if(unique_id!=NULL)
 		friend->priv->unique_id=otb_unique_id_duplicate(unique_id);
 	otb_friend_compute_file_paths(friend);
 }
@@ -264,7 +262,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 	if(otb_mkdir_with_parents(friend->priv->base_path))
 	{
 		GKeyFile *export_key_file=g_key_file_new();
-		otb_friend_lock_read(friend);
+		otb_friend_lock_write(friend);
 		OTB_FRIEND_GET_CLASS(friend)->otb_friend_export_key_file_private(friend, export_key_file);
 		char *export_string=g_key_file_to_data(export_key_file, NULL, NULL);
 		g_key_file_unref(export_key_file);
@@ -279,7 +277,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 		otb_settings_set_gbytes(save_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING_IV, import_string_iv);
 		otb_settings_set_bytes(save_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING, encrypted_import_string, encrypted_import_string_size);
 		ret_val=otb_settings_save_key_file(save_key_file, friend->priv->file_path);
-		otb_friend_unlock_read(friend);
+		otb_friend_unlock_write(friend);
 		g_key_file_unref(save_key_file);
 		g_bytes_unref(import_string_iv);
 		g_free(encrypted_import_string);
@@ -294,7 +292,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 
 static void otb_friend_set_unique_id_no_save(OtbFriend *friend, const OtbUniqueId *unique_id)
 {
-	g_free(friend->priv->unique_id);
+	otb_unique_id_free(friend->priv->unique_id);
 	friend->priv->unique_id=otb_unique_id_duplicate(unique_id);
 }
 
@@ -326,7 +324,7 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 	otb_friend_set_public_key_no_save(friend, public_key);
 	otb_friend_set_transport_cipher_name_no_save(friend, transport_cipher_name);
 	otb_friend_set_address_no_save(friend, address);
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 	g_free(public_key);
 	g_free(transport_cipher_name);
 	g_free(address);

@@ -49,7 +49,7 @@ typedef struct
 	OtbPadDb *pad_db;
 	off_t pad_size;
 	off_t pad_bytes_transferred;
-	OtbUniqueId *pad_id;
+	OtbUniqueId *pad_unique_id;
 	OtbPadIO *pad_io;
 } OtbTestProtocolContext;
 
@@ -290,7 +290,7 @@ static GSList *otb_pad_db_get_ids_of_pads_in_status_missing_one(OtbPadDb *pad_db
 	{
 		GSList *node_to_remove=g_slist_nth(pad_ids, ((size_t)rand())%g_slist_length(pad_ids));
 		pad_ids=g_slist_remove_link(pad_ids, node_to_remove);
-		g_slist_free_full(node_to_remove, g_free);
+		g_slist_free_full(node_to_remove, (GDestroyNotify)otb_unique_id_free);
 	}
 	return pad_ids;
 }
@@ -317,15 +317,15 @@ static void otb_assert_appropriate_pads_deleted_after_receiving_pad_ids_from_pee
 			source_of_matched_pad_id=&received_pad_ids;
 		g_assert(source_of_matched_pad_id!=NULL);
 		*source_of_matched_pad_id=g_slist_remove_link(*source_of_matched_pad_id, matched_pad_id_link);
-		g_slist_free_full(matched_pad_id_link, g_free);
+		g_slist_free_full(matched_pad_id_link, (GDestroyNotify)otb_unique_id_free);
 	}
 	g_assert_cmpint(0, ==, g_slist_length(sent_pad_ids));
 	g_assert_cmpint(0, ==, g_slist_length(consumed_pad_ids));
 	g_assert_cmpint(0, ==, g_slist_length(received_pad_ids));
-	g_slist_free_full(consumed_pad_ids, g_free);
-	g_slist_free_full(sent_pad_ids, g_free);
-	g_slist_free_full(unsent_pad_ids, g_free);
-	g_slist_free_full(received_pad_ids, g_free);
+	g_slist_free_full(consumed_pad_ids, (GDestroyNotify)otb_unique_id_free);
+	g_slist_free_full(sent_pad_ids, (GDestroyNotify)otb_unique_id_free);
+	g_slist_free_full(unsent_pad_ids, (GDestroyNotify)otb_unique_id_free);
+	g_slist_free_full(received_pad_ids, (GDestroyNotify)otb_unique_id_free);
 }
 
 static void otb_assert_pad_ids_in_packet(GSList *expected_pad_ids, const unsigned char *plain_client_packet_pad_id_start, unsigned int actual_packet_pad_id_count)
@@ -365,7 +365,7 @@ static void otb_do_client_send_pad_ids_to_server(const ProtocolParams params, Ot
 	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
 	g_free(encrypted_client_packet);
 	g_free(server_response_packet);
-	g_slist_free_full(expected_pad_ids, g_free);
+	g_slist_free_full(expected_pad_ids, (GDestroyNotify)otb_unique_id_free);
 	g_object_unref(outgoing_pad_db);
 }
 
@@ -399,7 +399,7 @@ static void otb_do_client_send_pad_header_to_server(const ProtocolParams params,
 	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
 	g_free(encrypted_client_packet);
 	g_free(server_response_packet);
-	g_slist_free_full(potential_expected_pad_ids, g_free);
+	g_slist_free_full(potential_expected_pad_ids, (GDestroyNotify)otb_unique_id_free);
 	g_object_unref(outgoing_pad_db);
 }
 
@@ -455,7 +455,7 @@ static void otb_do_client_send_pad_chunk_to_server(const ProtocolParams params, 
 
 static void otb_assert_transmitted_pad(OtbTestProtocolContext *context, OtbPadDb *pad_db)
 {
-	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(pad_db, context->pad_id);
+	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(pad_db, context->pad_unique_id);
 	const unsigned char *current_transmitted_byte;
 	const unsigned char *final_transmitted_byte=transmitted_pad_byte_array->data+transmitted_pad_byte_array->len;
 	for(current_transmitted_byte=transmitted_pad_byte_array->data; current_transmitted_byte<final_transmitted_byte && otb_pad_has_more_bytes(pad_io); current_transmitted_byte++)
@@ -577,7 +577,7 @@ static void otb_do_server_establish_friend(const ProtocolParams params, OtbProto
 	uint32_t server_packet_size=otb_protocol_server(protocol_context, client_request_packet, client_request_packet_size, &server_packet);
 	otb_assert_ok(server_packet, server_packet_size);
 	g_free(server_packet);
-	g_slist_free_full(friend_ids, g_free);
+	g_slist_free_full(friend_ids, (GDestroyNotify)otb_unique_id_free);
 	g_free(client_request_packet);
 }
 
@@ -637,7 +637,7 @@ static void otb_do_server_receive_pad_ids_request_from_client(const ProtocolPara
 	g_assert_cmpint(RECEIVED_PAD_COUNT(params), ==, actual_packet_pad_id_count);
 	GSList *expected_pad_ids=otb_pad_db_get_ids_of_pads_in_status(TEST_PROTOCOL_CONTEXT(protocol_context)->pad_db, OTB_PAD_REC_STATUS_RECEIVED);
 	otb_assert_pad_ids_in_packet(expected_pad_ids, plain_server_packet+5, actual_packet_pad_id_count);
-	g_slist_free_full(expected_pad_ids, g_free);
+	g_slist_free_full(expected_pad_ids, (GDestroyNotify)otb_unique_id_free);
 	g_free(plain_server_packet);
 	g_free(encrypted_server_packet);
 	g_free(client_request_packet);

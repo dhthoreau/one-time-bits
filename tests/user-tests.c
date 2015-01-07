@@ -31,7 +31,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_unlink(config_file_path);
 	g_free(config_file_path);
 	otb_test_setup_local_crypto();
-	OtbUser *user=otb_user_load_from_settings_config();
+	OtbUser *user=otb_user_load();
 	g_assert(user!=NULL);
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
@@ -46,7 +46,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(actual_public_key!=NULL);
 	g_free(actual_public_key);
 	g_object_unref(actual_asym_cipher);
-	g_free(actual_unique_id);
+	otb_unique_id_free(actual_unique_id);
 	g_assert(actual_address==NULL);
 	g_object_unref(user);
 }
@@ -116,7 +116,7 @@ void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const ch
 static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *address)
 {
 	otb_setup_config_file_for_user_tests(unique_id, sym_cipher_name, asym_cipher, address);
-	OtbUser *user=otb_user_load_from_settings_config();
+	OtbUser *user=otb_user_load();
 	g_assert(user!=NULL);
 	return user;
 }
@@ -134,11 +134,9 @@ static void test_otb_user_create_from_existing_config_file()
 	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS1);
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
-	char *actual_address=NULL;
-	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, NULL);
+	char *actual_address1=NULL;
+	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address1, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	g_free(actual_unique_id);
-	g_free(expected_unique_id);
 	char *expected_public_key=NULL;
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
 	g_assert(expected_public_key!=NULL);
@@ -146,17 +144,20 @@ static void test_otb_user_create_from_existing_config_file()
 	char *actual_public_key=NULL;
 	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
-	g_free(actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
+	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
+	g_assert(otb_user_set_address(user, EXPECTED_ADDRESS2));
+	char *actual_address2=NULL;
+	g_object_get(user, OTB_USER_PROP_ADDRESS, &actual_address2, NULL);
+	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
+	otb_unique_id_free(actual_unique_id);
+	otb_unique_id_free(expected_unique_id);
+	g_free(actual_sym_cipher_name);
 	g_free(expected_public_key);
 	g_free(actual_public_key);
 	g_object_unref(actual_asym_cipher);
-	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address);
-	g_free(actual_address);
-	g_assert(otb_user_set_address(user, EXPECTED_ADDRESS2));
-	g_object_get(user, OTB_USER_PROP_ADDRESS, &actual_address, NULL);
-	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address);
-	g_free(actual_address);
+	g_free(actual_address1);
+	g_free(actual_address2);
 	g_object_unref(user);
 	g_object_unref(expected_asym_cipher);
 }
@@ -176,17 +177,17 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	g_assert(expected_public_key!=NULL);
 	char *export_string=otb_user_export(*user);
 	g_assert((*export_key_file=otb_settings_load_key_file_from_string(export_string))!=NULL);
-	g_free(export_string);
 	OtbUniqueId *actual_unique_id=otb_settings_get_bytes(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL);
 	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
 	char *actual_sym_cipher_name=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME);
 	char *actual_address=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	g_free(actual_unique_id);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
-	g_free(expected_unique_id);
+	g_free(export_string);
+	otb_unique_id_free(actual_unique_id);
+	otb_unique_id_free(expected_unique_id);
 	g_free(expected_public_key);
 	g_free(actual_public_key);
 	g_free(actual_address);
@@ -213,9 +214,9 @@ static void test_otb_dummy_user_export()
 	char *actual_dummy_value=otb_settings_get_string(export_key_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY);
 	g_key_file_unref(export_key_file);
 	g_assert_cmpstr(OTB_DUMMY_USER_EXPORT_VALUE, ==, actual_dummy_value);
-	g_free(actual_dummy_value);
 	g_assert(OTB_IS_USER(user));
 	g_assert(OTB_IS_DUMMY_USER(user));
+	g_free(actual_dummy_value);
 	g_object_unref(user);
 	otb_user_set_runtime_type(OTB_TYPE_USER);
 }

@@ -42,7 +42,7 @@ G_DEFINE_TYPE(OtbUser, otb_user, G_TYPE_OBJECT);
 
 struct _OtbUserPrivate
 {
-	GRWLock lock;
+	GRWLock lock;	// FARE - L'uso di questo non mi sembra logicale. :(
 	OtbUniqueId *unique_id;
 	OtbAsymCipher *asym_cipher;
 	char *address;
@@ -100,7 +100,7 @@ static void otb_user_finalize(GObject *object)
 	g_return_if_fail(OTB_IS_USER(object));
 	OtbUser *user=OTB_USER(object);
 	g_rw_lock_clear(&user->priv->lock);
-	g_free(user->priv->unique_id);
+	otb_unique_id_free(user->priv->unique_id);
 	g_free(user->priv->address);
 	G_OBJECT_CLASS(otb_user_parent_class)->finalize(object);
 }
@@ -142,12 +142,12 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 
 static void otb_user_initialize_unique_id(OtbUser *user)
 {
-	g_free(user->priv->unique_id);
+	otb_unique_id_free(user->priv->unique_id);
 	size_t bytes_length;
 	user->priv->unique_id=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
 	if(user->priv->unique_id==NULL || bytes_length!=sizeof *user->priv->unique_id)
 	{
-		g_free(user->priv->unique_id);
+		otb_unique_id_free(user->priv->unique_id);
 		user->priv->unique_id=otb_unique_id_create();
 	}
 }
@@ -187,7 +187,7 @@ void otb_user_set_runtime_type(GType user_runtime_type)
 	*otb_user_get_runtime_type()=user_runtime_type;
 }
 
-OtbUser *otb_user_load_from_settings_config()
+OtbUser *otb_user_load()
 {
 	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
 	otb_user_initialize_unique_id(user);

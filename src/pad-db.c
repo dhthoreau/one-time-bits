@@ -263,7 +263,7 @@ static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_re
 	}
 	else if(otb_pad_rec_save(pad_rec))
 		pad_db->priv->pad_recs=g_slist_prepend(pad_db->priv->pad_recs, pad_rec);
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 	return ret_val;
 }
 
@@ -522,7 +522,7 @@ static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, Otb
 			OtbUniqueId *unique_id=NULL;
 			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
 			ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, prerequisite_status, new_status);
-			g_free(unique_id);
+			otb_unique_id_free(unique_id);
 		}
 	}
 	return ret_val;
@@ -709,7 +709,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 					*encrypted_bytes_size_out+=sizeof *unique_id+bytes_to_crypt;
 				}
 			}
-			g_free(unique_id);
+			otb_unique_id_free(unique_id);
 			if(previous_pad_io!=NULL && !otb_pad_io_free(previous_pad_io) && encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS)
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			previous_pad_io=current_pad_io;

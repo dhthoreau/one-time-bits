@@ -15,6 +15,9 @@
 #include "io.h"
 #include "settings.h"
 
+#define CONFIG_GROUP		"bitkeeper"
+#define CONFIG_PROXY_PORT	"proxy-port"
+
 enum
 {
 	PROP_0,
@@ -26,7 +29,6 @@ G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
 
 static void otb_bitkeeper_dispose(GObject *object);
 static void otb_bitkeeper_finalize(GObject *object);
-static void otb_bitkeeper_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);;
 static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
 
 struct _OtbBitkeeperPrivate
@@ -47,17 +49,16 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_bitkeeper_dispose;
 	object_class->finalize=otb_bitkeeper_finalize;
-	object_class->set_property=otb_bitkeeper_set_property;
 	object_class->get_property=otb_bitkeeper_get_property;
 	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PROXY_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_PROXY_PORT, _("Proxy port"), _("The port for the local proxy, preferably TOR"), MIN_TCP_PORT, MAX_TCP_PORT, DEFAULT_PROXY_PORT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_PROXY_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_PROXY_PORT, _("Proxy port"), _("The port for the local proxy, preferably TOR"), MIN_TCP_PORT, MAX_TCP_PORT, DEFAULT_PROXY_PORT, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbBitkeeperPrivate));
 }
 
 static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
 {
 	bitkeeper->priv=G_TYPE_INSTANCE_GET_PRIVATE(bitkeeper, OTB_TYPE_BITKEEPER, OtbBitkeeperPrivate);
-	g_rw_lock_init(&bitkeeper->priv->lock);
+	g_rw_lock_init(&bitkeeper->priv->lock);	// FARE - L'uso di questo non mi sembra logicale. :(
 	bitkeeper->priv->user=NULL;
 	bitkeeper->priv->proxy_port=0;
 	bitkeeper->priv->friends=NULL;
@@ -89,23 +90,10 @@ static void otb_bitkeeper_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_bitkeeper_parent_class)->finalize(object);
 }
 
-static void otb_bitkeeper_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
-{
-	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
-	switch(prop_id)
-	{
-		case PROP_PROXY_PORT:
-		{
-			bitkeeper->priv->proxy_port=(unsigned short)g_value_get_uint(value);
-			break;
-		}
-		default:
-		{
-			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-			break;
-		}
-	}
-}
+#define otb_bitkeeper_lock_read(bitkeeper)		(g_rw_lock_reader_lock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_unlock_read(bitkeeper)	(g_rw_lock_reader_unlock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_lock_write(bitkeeper)		(g_rw_lock_writer_lock(&bitkeeper->priv->lock))
+#define otb_bitkeeper_unlock_write(bitkeeper)	(g_rw_lock_writer_unlock(&bitkeeper->priv->lock))
 
 static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -119,7 +107,9 @@ static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GV
 		}
 		case PROP_PROXY_PORT:
 		{
-			g_value_set_uint(value, bitkeeper->priv->proxy_port);
+			otb_bitkeeper_lock_read(bitkeeper);
+			g_value_set_uint(value, (unsigned int)bitkeeper->priv->proxy_port);
+			otb_bitkeeper_unlock_read(bitkeeper);
 			break;
 		}
 		default:
@@ -162,12 +152,23 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 OtbBitkeeper *otb_bitkeeper_load()
 {
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
-	if((bitkeeper->priv->user=otb_user_load_from_settings_config())==NULL || !otb_bitkeeper_load_friends(bitkeeper))
+	if((bitkeeper->priv->user=otb_user_load())==NULL || !otb_bitkeeper_load_friends(bitkeeper))
 	{
 		g_object_unref(bitkeeper);
 		bitkeeper=NULL;
 	}
+	else
+		bitkeeper->priv->proxy_port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, DEFAULT_PROXY_PORT);
 	return bitkeeper;
+}
+
+gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned short proxy_port)
+{
+	otb_bitkeeper_lock_write(bitkeeper);
+	bitkeeper->priv->proxy_port=proxy_port;
+	gboolean ret_val=otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, bitkeeper->priv->proxy_port);
+	otb_bitkeeper_unlock_write(bitkeeper);
+	return ret_val;
 }
 
 static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
@@ -180,15 +181,10 @@ static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bi
 		g_object_get(current_friend, OTB_FRIEND_PROP_UNIQUE_ID, &current_unique_id, NULL);
 		if(otb_unique_id_compare(unique_id, current_unique_id)==0)
 			friend=current_friend;
-		g_free(current_unique_id);
+		otb_unique_id_free(current_unique_id);
 	}
 	return friend;
 }
-
-#define otb_bitkeeper_lock_read(bitkeeper)		(g_rw_lock_reader_lock(&bitkeeper->priv->lock))
-#define otb_bitkeeper_unlock_read(bitkeeper)	(g_rw_lock_reader_unlock(&bitkeeper->priv->lock))
-#define otb_bitkeeper_lock_write(bitkeeper)		(g_rw_lock_writer_lock(&bitkeeper->priv->lock))
-#define otb_bitkeeper_unlock_write(bitkeeper)	(g_rw_lock_writer_unlock(&bitkeeper->priv->lock))
 
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
 {
@@ -218,7 +214,7 @@ gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import
 	OtbUniqueId *import_unique_id;
 	g_object_get(import_friend, OTB_FRIEND_PROP_UNIQUE_ID, &import_unique_id, NULL);
 	OtbFriend *duplicate_friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, import_unique_id);
-	g_free(import_unique_id);
+	otb_unique_id_free(import_unique_id);
 	if(duplicate_friend==NULL)
 		bitkeeper->priv->friends=g_slist_prepend(bitkeeper->priv->friends, import_friend);
 	else

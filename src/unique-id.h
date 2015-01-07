@@ -27,5 +27,6 @@ char *otb_unique_id_to_string(const OtbUniqueId *unique_id);
 OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string);
 char *otb_unique_id_string_create();
 OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id);
+void otb_unique_id_free(OtbUniqueId *unique_id);
 
 #endif

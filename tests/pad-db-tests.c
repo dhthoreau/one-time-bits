@@ -122,7 +122,7 @@ static void otb_assert_number_of_pads_in_status(const OtbPadDb *pad_db, size_t e
 {
 	GSList *pad_ids=otb_pad_db_get_ids_of_pads_in_status(pad_db, pad_rec_status);
 	g_assert_cmpint(expected_number, ==, g_slist_length(pad_ids));
-	g_slist_free_full(pad_ids, g_free);
+	g_slist_free_full(pad_ids, (GDestroyNotify)otb_unique_id_free);
 }
 
 static void test_otb_pad_db_rejects_pads_too_large()
@@ -153,7 +153,7 @@ static void test_otb_pad_db_rejects_pads_duplicate_id()
 	g_assert(pad_io!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io));
 	g_assert(otb_pad_db_add_incoming_pad(pad_db, unique_id, ARBITRARY_SIZE)==NULL);
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 	g_object_unref(pad_db);
 }
 
@@ -236,10 +236,10 @@ static void test_pads_save_load_delete()
 	OtbPadIO *incoming_load_pad_io=otb_pad_db_open_pad_for_read(load_pad_db, actual_incoming_unique_id);
 	otb_assert_pad_read(incoming_load_pad_io, expected_incoming_bytes, EXPECTED_DEFAULT_NEW_PAD_SIZE);
 	g_assert(otb_pad_db_close_pad(load_pad_db, incoming_load_pad_io));
-	g_free(actual_incoming_unique_id);
-	g_free(actual_unsent_unique_id);
-	g_free(expected_unsent_unique_id);
-	g_free(expected_incoming_unique_id);
+	otb_unique_id_free(actual_incoming_unique_id);
+	otb_unique_id_free(actual_unsent_unique_id);
+	otb_unique_id_free(expected_unsent_unique_id);
+	otb_unique_id_free(expected_incoming_unique_id);
 	g_free(expected_unsent_bytes);
 	g_assert(otb_pad_db_delete(load_pad_db));
 	otb_assert_file_does_not_exist(pad_db_dir_path);
@@ -270,7 +270,7 @@ static void test_add_incoming_pad()
 	g_assert_cmpint(EXPECTED_PAD_SIZE, ==, otb_pad_db_get_pad_size(pad_db, unique_id));
 	g_free(pad_db_dir_path);
 	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(pad_db, unique_id);
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 	g_assert(pad_io!=NULL);
 	otb_assert_pad_read(pad_io, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io));
@@ -297,10 +297,10 @@ static void test_get_random_rec_id()
 	OtbUniqueId *actual_unique_id2=otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_INCOMING);
 	g_assert_cmpint(0, ==, (otb_unique_id_compare(expected_unique_id_1, actual_unique_id2) && otb_unique_id_compare(expected_unique_id_2, actual_unique_id2)));
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_SENT)==NULL);
-	g_free(actual_unique_id2);
-	g_free(expected_unique_id_2);
-	g_free(actual_unique_id1);
-	g_free(expected_unique_id_1);
+	otb_unique_id_free(actual_unique_id2);
+	otb_unique_id_free(expected_unique_id_2);
+	otb_unique_id_free(actual_unique_id1);
+	otb_unique_id_free(expected_unique_id_1);
 	g_object_unref(pad_db);
 }
 
@@ -329,8 +329,8 @@ static void test_remove_rec()
 	g_assert(pad_io_keep!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io_keep));
 	g_assert(otb_pad_db_remove_pad(pad_db, unique_id_to_remove));
-	g_free(unique_id_to_keep);
-	g_free(unique_id_to_remove);
+	otb_unique_id_free(unique_id_to_keep);
+	otb_unique_id_free(unique_id_to_remove);
 	g_free(pad_db_dir_path);
 	g_object_unref(pad_db);
 }
@@ -340,7 +340,7 @@ static void test_remove_rec_that_does_not_exist()
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
 	OtbUniqueId *unique_id=otb_unique_id_create();
 	g_assert(otb_pad_db_remove_pad(pad_db, unique_id));
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 	g_object_unref(pad_db);
 }
 
@@ -362,8 +362,8 @@ static void test_pad_rec_mark_as_sent()
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_UNSENT)==NULL);
 	OtbUniqueId *actual_unique_id=otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_SENT);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	g_free(expected_unique_id);
-	g_free(actual_unique_id);
+	otb_unique_id_free(expected_unique_id);
+	otb_unique_id_free(actual_unique_id);
 	g_object_unref(pad_db);
 }
 
@@ -387,9 +387,9 @@ static void test_pad_rec_mark_as_received()
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_INCOMING)==NULL);
 	OtbUniqueId *actual_unique_id=otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_RECEIVED);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	g_free(actual_unique_id);
-	g_free(expected_unique_id);
-	g_free(unique_id);
+	otb_unique_id_free(actual_unique_id);
+	otb_unique_id_free(expected_unique_id);
+	otb_unique_id_free(unique_id);
 	g_object_unref(pad_db);
 }
 
@@ -451,8 +451,8 @@ static void test_encryption_with_one_pad()
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_SENT)==NULL);
 	OtbUniqueId *actual_unique_id=otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_CONSUMED);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	g_free(expected_unique_id);
-	g_free(actual_unique_id);
+	otb_unique_id_free(expected_unique_id);
+	otb_unique_id_free(actual_unique_id);
 	g_free(pad_db_dir_path);
 	g_object_unref(pad_db);
 }
@@ -505,7 +505,7 @@ static void test_pad_db_get_pad_size()
 	OtbUniqueId *unique_id=otb_mark_random_pad_as_sent(pad_db);
 	g_assert(unique_id!=NULL);
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, otb_pad_db_get_pad_size(pad_db, unique_id));
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 	g_object_unref(pad_db);
 }
 
@@ -520,7 +520,7 @@ static void test_pad_db_get_pad_size_range()
 	g_assert(unique_id!=NULL);
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, <=, otb_pad_db_get_pad_size(pad_db, unique_id));
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE*2, >=, otb_pad_db_get_pad_size(pad_db, unique_id));
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 	g_object_unref(pad_db);
 }
 
@@ -539,7 +539,7 @@ static void otb_send_random_pad(OtbPadDb *sender_pad_db, const OtbPadDb *recipie
 	g_assert(!otb_pad_db_close_pad(recipient_pad_db, input_pad_io));
 	g_assert(otb_pad_db_close_pad(sender_pad_db, input_pad_io));
 	g_assert(otb_pad_db_close_pad(recipient_pad_db, output_pad_io));
-	g_free(unique_id);
+	otb_unique_id_free(unique_id);
 }
 
 static void otb_send_random_pads(OtbPadDb *sender_pad_db, const OtbPadDb *recipient_pad_db, size_t number_of_pads)

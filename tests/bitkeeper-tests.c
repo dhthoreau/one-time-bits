@@ -53,11 +53,11 @@ static void test_otb_bitkeeper_user()
 	g_free(expected_public_key);
 	g_free(actual_address);
 	g_object_unref(actual_asym_cipher);
-	g_free(actual_unique_id);
+	otb_unique_id_free(actual_unique_id);
 	g_object_unref(user);
 	g_object_unref(bitkeeper);
 	g_object_unref(expected_asym_cipher);
-	g_free(expected_unique_id);
+	otb_unique_id_free(expected_unique_id);
 }
 
 static void test_otb_bitkeeper_proxy_port()
@@ -66,7 +66,7 @@ static void test_otb_bitkeeper_proxy_port()
 	unsigned int proxy_port=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(9050, ==, proxy_port);
-	g_object_set(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, 12345, NULL);
+	g_assert(otb_bitkeeper_set_proxy_port(original_bitkeeper, 12345));
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(12345, ==, proxy_port);
 	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();
@@ -85,7 +85,7 @@ static void otb_assert_bitkeeper_has_friends(OtbBitkeeper *bitkeeper, const OtbU
 		g_assert(otb_unique_id_compare(expected_unique_id1, (OtbUniqueId*)g_slist_nth_data(unique_ids, 0))==0 || otb_unique_id_compare(expected_unique_id1, (OtbUniqueId*)g_slist_nth_data(unique_ids, 1))==0);
 	if(expected_unique_id2!=NULL)
 		g_assert(otb_unique_id_compare(expected_unique_id2, (OtbUniqueId*)g_slist_nth_data(unique_ids, 0))==0 || otb_unique_id_compare(expected_unique_id2, (OtbUniqueId*)g_slist_nth_data(unique_ids, 1))==0);
-	g_slist_free_full(unique_ids, g_free);
+	g_slist_free_full(unique_ids, (GDestroyNotify)otb_unique_id_free);
 }
 
 static void otb_assert_bitkeeper_has_friends_in_memory_and_persisted(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
@@ -133,8 +133,8 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
 	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, expected_unique_id2);
-	g_free(actual_unique_id1);
-	g_free(actual_unique_id2);
+	otb_unique_id_free(actual_unique_id1);
+	otb_unique_id_free(actual_unique_id2);
 	g_free(actual_public_key1);
 	g_free(actual_public_key2);
 	g_free(actual_transport_cipher_name1);
@@ -174,8 +174,8 @@ static void test_otb_bitkeeper_import_delete_friends()
 	OtbUniqueId *expected_unique_id2=otb_unique_id_create();
 	otb_bitkeeper_import_test(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_bitkeeper_delete_test(bitkeeper, expected_unique_id1, expected_unique_id2);
-	g_free(expected_unique_id1);
-	g_free(expected_unique_id2);
+	otb_unique_id_free(expected_unique_id1);
+	otb_unique_id_free(expected_unique_id2);
 	g_object_unref(bitkeeper);
 }
 

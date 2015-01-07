@@ -66,7 +66,7 @@ gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, off_t new_pad_m
 gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_max_size);
 gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db);
 OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size);
-GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status);
+GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status);	// FARE - Unit test.
 gboolean otb_pad_db_mark_pad_as_sent(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_mark_pad_as_received(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 OtbUniqueId *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecStatus status);
@@ -74,7 +74,7 @@ off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_
 OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_id);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
-OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);
+OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);	// FARE - Una versione che usa GIOStream.
 OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
 
 #endif

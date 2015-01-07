@@ -29,6 +29,7 @@ struct _OtbPadRecPrivate
 	char *pad_rec_file_path;
 	char *pad_file_path;
 	off_t size;
+	GDateTime *expiration;
 	GBytes *pad_iv;
 };
 
@@ -57,9 +58,11 @@ enum
 	PROP_STATUS,
 	PROP_BASE_PATH,
 	PROP_BASE_NAME,
-	PROP_SIZE
+	PROP_SIZE,
+	PROP_EXPIRATION
 };
 
+static void otb_pad_rec_dispose(GObject *object);
 static void otb_pad_rec_finalize(GObject *object);
 static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);
 static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
@@ -69,6 +72,7 @@ G_DEFINE_TYPE(OtbPadRec, otb_pad_rec, G_TYPE_OBJECT);
 static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 {
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
+	object_class->dispose=otb_pad_rec_dispose;
 	object_class->finalize=otb_pad_rec_finalize;
 	object_class->set_property=otb_pad_rec_set_property;
 	object_class->get_property=otb_pad_rec_get_property;
@@ -77,6 +81,7 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_EXPIRATION, g_param_spec_boxed(OTB_PAD_REC_PROP_EXPIRATION, _("Expiration date"), _("The date and time when the pad expires"), G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbPadRecPrivate));
 }
 
@@ -89,7 +94,21 @@ static void otb_pad_rec_init(OtbPadRec *pad_rec)
 	pad_rec->priv->pad_rec_file_path=NULL;
 	pad_rec->priv->pad_file_path=NULL;
 	pad_rec->priv->size=-1;
+	pad_rec->priv->expiration=NULL;
 	pad_rec->priv->pad_iv=g_bytes_new_static("", 0);
+}
+
+static void otb_pad_rec_dispose(GObject *object)
+{
+	g_return_if_fail(object!=NULL);
+	g_return_if_fail(OTB_IS_PAD_REC(object));
+	OtbPadRec *pad_rec=OTB_PAD_REC(object);
+	if(pad_rec->priv->expiration!=NULL)
+	{
+		g_date_time_unref(pad_rec->priv->expiration);
+		pad_rec->priv->expiration=NULL;
+	}
+	G_OBJECT_CLASS(otb_pad_rec_parent_class)->dispose(object);
 }
 
 static void otb_pad_rec_finalize(GObject *object)
@@ -98,7 +117,7 @@ static void otb_pad_rec_finalize(GObject *object)
 	g_return_if_fail(OTB_IS_PAD_REC(object));
 	OtbPadRec *pad_rec=OTB_PAD_REC(object);
 	g_rec_mutex_clear(&pad_rec->priv->recursive_mutex);
-	g_free(pad_rec->priv->unique_id);
+	otb_unique_id_free(pad_rec->priv->unique_id);
 	g_free(pad_rec->priv->base_path);
 	g_free(pad_rec->priv->base_name);
 	g_free(pad_rec->priv->pad_rec_file_path);
@@ -133,7 +152,7 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 			OtbUniqueId *unique_id=g_value_dup_boxed(value);
 			if(unique_id!=NULL)
 			{
-				g_free(pad_rec->priv->unique_id);
+				otb_unique_id_free(pad_rec->priv->unique_id);
 				pad_rec->priv->unique_id=unique_id;
 			}
 			break;
@@ -165,6 +184,13 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 		case PROP_SIZE:
 		{
 			pad_rec->priv->size=g_value_get_int(value);
+			break;
+		}
+		case PROP_EXPIRATION:
+		{
+			if(pad_rec->priv->expiration!=NULL)
+				g_date_time_unref(pad_rec->priv->expiration);
+			pad_rec->priv->expiration=g_value_dup_boxed(value);
 			break;
 		}
 		default:
@@ -207,6 +233,11 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 			g_value_set_int(value, pad_rec->priv->size);
 			break;
 		}
+		case PROP_EXPIRATION:
+		{
+			g_value_set_boxed(value, pad_rec->priv->expiration);
+			break;
+		}
 		default:
 		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -246,7 +277,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 	char *base_name=g_strndup(file_name, strlen(file_name)-4);
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, base_path, OTB_PAD_REC_PROP_BASE_NAME, base_name, NULL);
 	g_free(base_name);
-	g_free(pad_rec->priv->unique_id);
+	otb_unique_id_free(pad_rec->priv->unique_id);
 	pad_rec->priv->unique_id=NULL;
 	g_bytes_unref(pad_rec->priv->pad_iv);
 	pad_rec->priv->pad_iv=NULL;

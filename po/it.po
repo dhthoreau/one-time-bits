@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-01-04 19:44-0500\n"
-"PO-Revision-Date: 2015-01-04 19:45-0500\n"
+"POT-Creation-Date: 2015-01-06 20:28-0500\n"
+"PO-Revision-Date: 2015-01-06 20:28-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: src\n"
 
-#: src/user.c:58 src/friend.c:70 src/pad-rec.c:75
+#: src/user.c:58 src/friend.c:70 src/pad-rec.c:77
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -46,7 +46,7 @@ msgstr "L'indirizzo dell'utente"
 msgid "Failed to load key file from %s. Error == %s"
 msgstr "Non è riuscito a aprire il file di chiave %s. Errore == %s"
 
-#: src/friend.c:67 src/pad-rec.c:77 src/pad-db.c:58
+#: src/friend.c:67 src/pad-rec.c:79 src/pad-db.c:58
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -103,51 +103,59 @@ msgstr "Si è provato a cambiare ID univoco d'un amico."
 msgid "Failed to generate random data. Error == %s"
 msgstr "Non è riuscito a generare dati casuali. Errore == %s"
 
-#: src/pad-rec.c:75
+#: src/pad-rec.c:77
 msgid "UUID of the record"
 msgstr "UUID del record"
 
-#: src/pad-rec.c:76
+#: src/pad-rec.c:78
 msgid "Status"
 msgstr "Stato"
 
-#: src/pad-rec.c:76
+#: src/pad-rec.c:78
 msgid "Status of the record"
 msgstr "Stato del record"
 
-#: src/pad-rec.c:77
+#: src/pad-rec.c:79
 msgid "Directory where the record will be saved"
 msgstr "La directory dove il record sarà salvato"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:80
 msgid "Base name"
 msgstr "Name di base"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:80
 msgid "Name of file where the record will be saved, excluding file extension"
 msgstr "Il nome del file per salvare il record, senza estensione"
 
-#: src/pad-rec.c:79
+#: src/pad-rec.c:81
 msgid "Size"
 msgstr "Dimensione"
 
-#: src/pad-rec.c:79
+#: src/pad-rec.c:81
 msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 
-#: src/bitkeeper.c:52
+#: src/pad-rec.c:82
+msgid "Expiration date"
+msgstr "Data di scadenza"
+
+#: src/pad-rec.c:82
+msgid "The date and time when the pad expires"
+msgstr "La data e l'ora in cui il blocco scade"
+
+#: src/bitkeeper.c:53
 msgid "User"
 msgstr "Utente"
 
-#: src/bitkeeper.c:52
+#: src/bitkeeper.c:53
 msgid "The user who is using the application"
 msgstr "L'utente chi sta usando l'applicazione"
 
-#: src/bitkeeper.c:53
+#: src/bitkeeper.c:54
 msgid "Proxy port"
 msgstr "Porta della delega"
 
-#: src/bitkeeper.c:53
+#: src/bitkeeper.c:54
 msgid "The port for the local proxy, preferably TOR"
 msgstr "Porta della delega locale, preferibilmente TOR"
 
