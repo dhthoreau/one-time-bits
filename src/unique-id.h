@@ -16,11 +16,13 @@
 
 typedef struct
 {
-	uuid_t value;
+	uuid_t uuid;
 } OtbUniqueId;
 
 GType otb_unique_id_get_type();
 OtbUniqueId *otb_unique_id_create();
+void otb_unique_id_to_uuid_t(const OtbUniqueId *unique_id, uuid_t uuid_out);
+OtbUniqueId *otb_unique_id_from_uuid_t(const uuid_t uuid);
 char *otb_unique_id_to_string(const OtbUniqueId *unique_id);
 OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string);
 char *otb_unique_id_string_create();

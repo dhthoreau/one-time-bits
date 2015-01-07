@@ -9,6 +9,7 @@
 #include "../config.h"
 
 #include <glib-object.h>
+#include <string.h>
 
 #include "unique-id.h"
 
@@ -29,21 +30,33 @@ GType otb_unique_id_get_type()
 OtbUniqueId *otb_unique_id_create()
 {
 	OtbUniqueId *unique_id=g_malloc(sizeof *unique_id);	//FARE - g_slice_new(OtbUniqueId);
-	uuid_generate(unique_id->value);
+	uuid_generate(unique_id->uuid);
+	return unique_id;
+}
+
+void otb_unique_id_to_uuid_t(const OtbUniqueId *unique_id, uuid_t uuid_out)
+{
+	memcpy(uuid_out, unique_id->uuid, sizeof unique_id->uuid);
+}
+
+OtbUniqueId *otb_unique_id_from_uuid_t(const uuid_t uuid)
+{
+	OtbUniqueId *unique_id=g_malloc(sizeof *unique_id);	//FARE - g_slice_new(OtbUniqueId);
+	memcpy(unique_id->uuid, uuid, sizeof unique_id->uuid);
 	return unique_id;
 }
 
 char *otb_unique_id_to_string(const OtbUniqueId *unique_id)
 {
 	char *unique_id_string=g_malloc(UNIQUE_ID_STRING_SIZE);
-	uuid_unparse_lower(unique_id->value, unique_id_string);
+	uuid_unparse_lower(unique_id->uuid, unique_id_string);
 	return unique_id_string;
 }
 
 OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string)
 {
 	OtbUniqueId *unique_id=g_malloc(sizeof *unique_id);	//FARE - g_slice_new(OtbUniqueId);
-	uuid_parse(unique_id_string, unique_id->value);
+	uuid_parse(unique_id_string, unique_id->uuid);
 	return unique_id;
 }
 
@@ -62,7 +75,7 @@ OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id)
 
 int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *unique_id2)
 {
-	return uuid_compare(unique_id1->value, unique_id2->value);
+	return uuid_compare(unique_id1->uuid, unique_id2->uuid);
 }
 
 void otb_unique_id_free(OtbUniqueId *unique_id)

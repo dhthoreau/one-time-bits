@@ -32,7 +32,7 @@ typedef enum
 #define OTB_PAD_REC_PROP_BASE_PATH	"base-path"
 #define OTB_PAD_REC_PROP_BASE_NAME	"base-name"
 #define OTB_PAD_REC_PROP_SIZE		"size"
-#define OTB_PAD_REC_PROP_EXPIRATION	"expiration"	// FARE - Unit test.
+#define OTB_PAD_REC_PROP_EXPIRATION	"expiration"	// FARE - Non è utilizzato da OtbPadDb.
 
 #define OTB_TYPE_PAD_REC				(otb_pad_rec_get_type())
 #define OTB_PAD_REC(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_PAD_REC, OtbPadRec))
