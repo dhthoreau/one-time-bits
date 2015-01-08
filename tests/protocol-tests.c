@@ -674,7 +674,7 @@ static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocol
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_PAD_HEADER;
 	memcpy(*packet_out+1, pad_id, 16);
 	*(uint32_t*)(*packet_out+17)=g_htonl(pad_size);
-	g_free(pad_id);
+	otb_unique_id_free(pad_id);
 	return packet_out_size;
 }
 

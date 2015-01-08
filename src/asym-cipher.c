@@ -131,7 +131,7 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 			{
 				char *public_key_in_buff=NULL;
 				long public_key_size=BIO_get_mem_data(buff_io, &public_key_in_buff);
-				char *public_key=g_malloc(public_key_size);
+				char *public_key=g_malloc(public_key_size+1);
 				memcpy(public_key, public_key_in_buff, public_key_size);
 				public_key[public_key_size]='\0';	/// Data in a BIO isn't always null terminated, though sometimes it is by random dumb luck. It's a PEM, not a string. This unusual code is meant to work around that, turn the PEM into a real C string.
 				g_value_take_string(value, public_key);
