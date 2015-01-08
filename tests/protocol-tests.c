@@ -143,7 +143,7 @@ static void otb_do_client_establish_friend(const ProtocolParams params, OtbProto
 	OtbUniqueId *expected_friend_id=NULL;
 	g_object_get(TEST_PROTOCOL_CONTEXT(protocol_context)->local_user, OTB_USER_PROP_UNIQUE_ID, &expected_friend_id, NULL);
 	g_assert_cmpint(0, ==, memcmp(expected_friend_id, client_packet+1, 16));
-	g_free(expected_friend_id);
+	otb_unique_id_free(expected_friend_id);
 	g_free(client_packet);
 	g_free(server_response_packet);
 }
@@ -277,11 +277,6 @@ static uint32_t otb_create_pad_ids_packet_encrypted(const OtbTestProtocolContext
 	return encrypted_packet_out_size;
 }
 
-static int otb_compare_unique_id(const void *unique_id1, const void *unique_id2)
-{
-	return memcmp(unique_id1, unique_id2, sizeof(OtbUniqueId));
-}
-
 static GSList *otb_pad_db_get_ids_of_pads_in_status_missing_one(OtbPadDb *pad_db, OtbPadRecStatus status)
 {
 	GSList *pad_ids=otb_pad_db_get_ids_of_pads_in_status(pad_db, status);
@@ -308,12 +303,12 @@ static void otb_assert_appropriate_pads_deleted_after_receiving_pad_ids_from_pee
 	for(GSList *expected_pad_id_iter=expected_pad_ids; expected_pad_id_iter!=NULL; expected_pad_id_iter=g_slist_next(expected_pad_id_iter))
 	{
 		GSList **source_of_matched_pad_id=NULL;
-		GSList *matched_pad_id_link=g_slist_find_custom(sent_pad_ids, expected_pad_id_iter->data, otb_compare_unique_id);
+		GSList *matched_pad_id_link=g_slist_find_custom(sent_pad_ids, expected_pad_id_iter->data, (GCompareFunc)otb_unique_id_compare);
 		if(matched_pad_id_link!=NULL)
 			source_of_matched_pad_id=&sent_pad_ids;
-		else if((matched_pad_id_link=g_slist_find_custom(consumed_pad_ids, expected_pad_id_iter->data, otb_compare_unique_id))!=NULL)
+		else if((matched_pad_id_link=g_slist_find_custom(consumed_pad_ids, expected_pad_id_iter->data, (GCompareFunc)otb_unique_id_compare))!=NULL)
 			source_of_matched_pad_id=&consumed_pad_ids;
-		else if((matched_pad_id_link=g_slist_find_custom(received_pad_ids, expected_pad_id_iter->data, otb_compare_unique_id))!=NULL)
+		else if((matched_pad_id_link=g_slist_find_custom(received_pad_ids, expected_pad_id_iter->data, (GCompareFunc)otb_unique_id_compare))!=NULL)
 			source_of_matched_pad_id=&received_pad_ids;
 		g_assert(source_of_matched_pad_id!=NULL);
 		*source_of_matched_pad_id=g_slist_remove_link(*source_of_matched_pad_id, matched_pad_id_link);
@@ -333,7 +328,7 @@ static void otb_assert_pad_ids_in_packet(GSList *expected_pad_ids, const unsigne
 	for(unsigned int actual_packet_pad_id_iter=0; actual_packet_pad_id_iter<actual_packet_pad_id_count; actual_packet_pad_id_iter++)
 	{
 		OtbUniqueId *actual_packet_pad_id=(OtbUniqueId*)(plain_client_packet_pad_id_start+actual_packet_pad_id_iter*16);
-		g_assert(g_slist_find_custom(expected_pad_ids, actual_packet_pad_id, otb_compare_unique_id)!=NULL);
+		g_assert(g_slist_find_custom(expected_pad_ids, actual_packet_pad_id, (GCompareFunc)otb_unique_id_compare)!=NULL);
 	}
 }
 
@@ -392,7 +387,7 @@ static void otb_do_client_send_pad_header_to_server(const ProtocolParams params,
 	OtbUniqueId *actual_packet_pad_id=(OtbUniqueId*)(plain_client_packet+1);
 	GSList *potential_expected_pad_id_iter=NULL;
 	for(potential_expected_pad_id_iter=potential_expected_pad_ids; potential_expected_pad_id_iter!=NULL; potential_expected_pad_id_iter=g_slist_next(potential_expected_pad_id_iter))
-		if(memcmp(potential_expected_pad_id_iter->data, actual_packet_pad_id, sizeof *actual_packet_pad_id)==0)
+		if(memcmp(potential_expected_pad_id_iter->data, otb_unique_id_get_bytes(actual_packet_pad_id), OTB_UNIQUE_ID_BYTES_LENGTH)==0)
 			break;
 	g_assert(potential_expected_pad_id_iter!=NULL);
 	g_assert_cmpint(PAD_SIZE(params), ==, g_ntohl(*(int32_t*)(plain_client_packet+17)));
@@ -804,7 +799,7 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 		OtbUniqueId *pad_id=otb_pad_db_fetch_random_rec_id(outgoing_pad_db, OTB_PAD_REC_STATUS_UNSENT);
 		g_assert(pad_id!=NULL);
 		g_assert(otb_pad_db_mark_pad_as_sent(outgoing_pad_db, pad_id));
-		g_free(pad_id);
+		otb_unique_id_free(pad_id);
 	}
 	unsigned char *encrypted_bytes=NULL;
 	size_t encrypted_bytes_size=0;
@@ -826,7 +821,7 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 		otb_pad_db_close_pad(incoming_pad_db, received_pad_io);
 		otb_pad_db_mark_pad_as_received(incoming_pad_db, received_pad_id);
 		g_free(pad_bytes);
-		g_free(received_pad_id);
+		otb_unique_id_free(received_pad_id);
 	}
 	g_object_unref(incoming_pad_db);
 	g_object_unref(outgoing_pad_db);
@@ -852,7 +847,7 @@ static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolCont
 	g_object_unref(peer_friend);
 	g_object_unref(local_bitkeeper);
 	g_free(peer_export);
-	g_free(peer_id);
+	otb_unique_id_free(peer_id);
 }
 
 #define EXPECTED_STATE_INITIAL	0

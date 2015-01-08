@@ -290,7 +290,7 @@ static uint32_t otb_protocol_client_establish_protocol_version(OtbProtocolContex
 ///Establishing friend packet structure:
 ///  OtbProtocolCommand - Command
 ///  OtbUniqueId - ID of friend
-#define ESTABLISHING_FRIEND_PACKET_SIZE			(sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId))
+#define ESTABLISHING_FRIEND_PACKET_SIZE			(sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH)
 #define ESTABLISHING_FRIEND_PACKET_ID(packet)	(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand))
 
 static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
@@ -301,7 +301,7 @@ static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolCon
 		PACKET_COMMAND(*packet_out)=COMMAND_SENDING_FRIEND_ID;
 		OtbUniqueId *unique_id=NULL;
 		g_object_get(protocol_context->local_user, OTB_USER_PROP_UNIQUE_ID, &unique_id, NULL);
-		memcpy(ESTABLISHING_FRIEND_PACKET_ID(*packet_out), unique_id, sizeof *unique_id);
+		memcpy(ESTABLISHING_FRIEND_PACKET_ID(*packet_out), otb_unique_id_get_bytes(unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
 		otb_unique_id_free(unique_id);
 		protocol_context->state=STATE_ESTABLISHING_FRIEND;
 		return ESTABLISHING_FRIEND_PACKET_SIZE;
@@ -406,8 +406,8 @@ static uint32_t otb_protocol_client_request_pad_ids_from_server(OtbProtocolConte
 ///  OtbUniqueId[] - Array of unique IDs of pad, repeated based on the pad ID count
 #define PAD_IDS_PACKET_SET_PAD_ID_COUNT(packet, count)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (count))
 #define PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
-#define PAD_IDS_PACKET_PAD_ID(packet, index)			(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+(index)*sizeof(OtbUniqueId))
-#define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)*sizeof(OtbUniqueId)==(packet_size))
+#define PAD_IDS_PACKET_PAD_ID(packet, index)			(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand)+sizeof(uint32_t)+(index)*OTB_UNIQUE_ID_BYTES_LENGTH)
+#define PAD_IDS_PACKET_IS_VALID(packet, packet_size)	(sizeof(OtbProtocolCommand)+sizeof(uint32_t)<=(packet_size) && sizeof(OtbProtocolCommand)+sizeof(uint32_t)+PAD_IDS_PACKET_GET_PAD_ID_COUNT(packet)*OTB_UNIQUE_ID_BYTES_LENGTH==(packet_size))
 
 static gboolean otb_protocol_delete_missing_pad_ids(const OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, OtbPadRecStatus pad_rec_status)
 {
@@ -440,12 +440,12 @@ static uint32_t otb_protocol_create_pad_ids_packet(const OtbProtocolContext *pro
 		pad_ids=g_slist_concat(pad_ids, otb_pad_db_get_ids_of_pads_in_status(protocol_context->pad_db, status2));
 	uint32_t total_pad_ids=g_slist_length(pad_ids);
 	unsigned char *plain_packet=NULL;
-	uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(OtbUniqueId)*total_pad_ids;
+	uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+OTB_UNIQUE_ID_BYTES_LENGTH*total_pad_ids;
 	plain_packet=g_malloc(plain_packet_size);
 	PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_IDS;
 	PAD_IDS_PACKET_SET_PAD_ID_COUNT(plain_packet, total_pad_ids);
 	for(uint32_t unique_id_iter=0; unique_id_iter<total_pad_ids; unique_id_iter++)
-		memcpy(PAD_IDS_PACKET_PAD_ID(plain_packet, unique_id_iter), g_slist_nth(pad_ids, unique_id_iter)->data, sizeof(OtbUniqueId));
+		memcpy(PAD_IDS_PACKET_PAD_ID(plain_packet, unique_id_iter), otb_unique_id_get_bytes(g_slist_nth(pad_ids, unique_id_iter)->data), OTB_UNIQUE_ID_BYTES_LENGTH);
 	g_slist_free_full(pad_ids, (GDestroyNotify)otb_unique_id_free);
 	uint32_t encrypted_packet_out_size=otb_protocol_create_encrypted_packet(protocol_context, (unsigned char*)plain_packet, plain_packet_size, encrypted_packet_out);
 	g_free(plain_packet);
@@ -474,10 +474,10 @@ static uint32_t otb_protocol_client_send_pad_ids_to_server(OtbProtocolContext *p
 ///  OtbUniqueId pad_id
 ///  int32_t - pad_size
 ///Will be wrapped in an encrypted packet.
-#define INCOMING_PAD_HEADER_PACKET_SIZE								(sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId)+sizeof(int32_t))
+#define INCOMING_PAD_HEADER_PACKET_SIZE								(sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH+sizeof(int32_t))
 #define INCOMING_PAD_HEADER_PACKET_PAD_ID(packet)					(OtbUniqueId*)((packet)+sizeof(OtbProtocolCommand))
-#define INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(packet, size)		SET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId), (size))
-#define INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(packet)				GET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+sizeof(OtbUniqueId))
+#define INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(packet, size)		SET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH, (size))
+#define INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(packet)				GET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH)
 #define INCOMING_PAD_HEADER_PACKET_IS_VALID(packet, packet_size)	(INCOMING_PAD_HEADER_PACKET_SIZE==(packet_size))
 
 static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
@@ -494,7 +494,7 @@ static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext
 			{
 				unsigned char *plain_packet=g_malloc(INCOMING_PAD_HEADER_PACKET_SIZE);
 				PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_HEADER;
-				memcpy(INCOMING_PAD_HEADER_PACKET_PAD_ID(plain_packet), protocol_context->pad_unique_id, sizeof *protocol_context->pad_unique_id);
+				memcpy(INCOMING_PAD_HEADER_PACKET_PAD_ID(plain_packet), otb_unique_id_get_bytes(protocol_context->pad_unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
 				protocol_context->pad_size=otb_pad_db_get_pad_size(protocol_context->pad_db, protocol_context->pad_unique_id);
 				INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(plain_packet, protocol_context->pad_size);
 				packet_out_size=otb_protocol_create_encrypted_packet(protocol_context, (unsigned char*)plain_packet, INCOMING_PAD_HEADER_PACKET_SIZE, packet_out);

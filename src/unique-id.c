@@ -15,13 +15,18 @@
 
 #define UNIQUE_ID_STRING_SIZE	37
 
+struct _OtbUniqueId
+{
+	uuid_t uuid;
+};
+
 GType otb_unique_id_get_type()
 {
 	static GType unique_id_type;
 	static gboolean otb_unique_id_type_initialized=FALSE;
 	if(g_once_init_enter(&otb_unique_id_type_initialized))
 	{
-		unique_id_type=g_boxed_type_register_static("OtbUniqueId", (GBoxedCopyFunc)otb_unique_id_duplicate, g_free);
+		unique_id_type=g_boxed_type_register_static("OtbUniqueId", (GBoxedCopyFunc)otb_unique_id_duplicate, (GDestroyNotify)otb_unique_id_free);
 		g_once_init_leave(&otb_unique_id_type_initialized, TRUE);
 	}
 	return unique_id_type;
@@ -29,20 +34,20 @@ GType otb_unique_id_get_type()
 
 OtbUniqueId *otb_unique_id_create()
 {
-	OtbUniqueId *unique_id=g_malloc(sizeof *unique_id);	//FARE - g_slice_new(OtbUniqueId);
+	OtbUniqueId *unique_id=g_slice_new(OtbUniqueId);
 	uuid_generate(unique_id->uuid);
 	return unique_id;
 }
 
-void otb_unique_id_to_uuid_t(const OtbUniqueId *unique_id, uuid_t uuid_out)
+const unsigned char *otb_unique_id_get_bytes(const OtbUniqueId *unique_id)
 {
-	memcpy(uuid_out, unique_id->uuid, sizeof unique_id->uuid);
+	return unique_id->uuid;
 }
 
-OtbUniqueId *otb_unique_id_from_uuid_t(const uuid_t uuid)
+OtbUniqueId *otb_unique_id_from_bytes(const unsigned char *unique_id_bytes)
 {
-	OtbUniqueId *unique_id=g_malloc(sizeof *unique_id);	//FARE - g_slice_new(OtbUniqueId);
-	memcpy(unique_id->uuid, uuid, sizeof unique_id->uuid);
+	OtbUniqueId *unique_id=g_slice_new(OtbUniqueId);
+	memcpy(unique_id->uuid, unique_id_bytes, sizeof unique_id->uuid);
 	return unique_id;
 }
 
@@ -55,7 +60,7 @@ char *otb_unique_id_to_string(const OtbUniqueId *unique_id)
 
 OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string)
 {
-	OtbUniqueId *unique_id=g_malloc(sizeof *unique_id);	//FARE - g_slice_new(OtbUniqueId);
+	OtbUniqueId *unique_id=g_slice_new(OtbUniqueId);
 	uuid_parse(unique_id_string, unique_id->uuid);
 	return unique_id;
 }
@@ -64,13 +69,13 @@ char *otb_unique_id_string_create()
 {
 	OtbUniqueId *unique_id=otb_unique_id_create();
 	char *unique_id_string=otb_unique_id_to_string(unique_id);
-	g_free(unique_id);	//FARE - g_slice_free(OtbUniqueId, unique_id);
+	g_slice_free(OtbUniqueId, unique_id);
 	return unique_id_string;
 }
 
 OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id)
 {
-	return unique_id==NULL?NULL:g_memdup(unique_id, sizeof *unique_id); //FARE - g_slice_dup(OtbUniqueId, unique_id);
+	return unique_id==NULL?NULL:g_slice_dup(OtbUniqueId, unique_id);
 }
 
 int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *unique_id2)
@@ -80,5 +85,5 @@ int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *uniq
 
 void otb_unique_id_free(OtbUniqueId *unique_id)
 {
-	g_free(unique_id);	//FARE - g_slice_free(OtbUniqueId, unique_id);
+	g_slice_free(OtbUniqueId, unique_id);
 }
