@@ -44,13 +44,13 @@ static void test_sym_cipher_hash_passphrase()
 	GBytes *passphrase_hash=otb_sym_cipher_hash_passphrase(sym_cipher, EXPECTED_PASSPHRASE, &expected_salt);
 	g_assert(expected_salt!=NULL);
 	g_assert(!otb_sym_cipher_validate_passphrase(sym_cipher, UNEXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
-	expected_salt->value[0]++;
+	((unsigned char*)expected_salt)[0]++;
 	g_assert(!otb_sym_cipher_validate_passphrase(sym_cipher, EXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
-	expected_salt->value[0]--;
+	((unsigned char*)expected_salt)[0]--;
 	g_assert(otb_sym_cipher_validate_passphrase(sym_cipher, EXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
 	g_bytes_unref(passphrase_hash);
 	g_object_unref(sym_cipher);
-	g_free(expected_salt);
+	otb_sym_cipher_salt_free(expected_salt);
 }
 
 static void test_sym_cipher_encryption_in_steps()
@@ -85,7 +85,7 @@ static void test_sym_cipher_encryption_in_steps()
 	g_assert_cmpint(0, !=, actual_message_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
-	g_free(salt);
+	otb_sym_cipher_salt_free(salt);
 	g_bytes_unref(wrapped_key);
 	otb_sym_cipher_dispose_decryption_buffer(actual_message, actual_message_buffer_size);
 	g_free(encrypted_message);
@@ -117,7 +117,7 @@ static void test_sym_cipher_encryption()
 	g_assert_cmpint(EXPECTED_MESSAGE_BUFFER_SIZE, ==, actual_message_buffer_size);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpstr(EXPECTED_MESSAGE, ==, actual_message);
-	g_free(salt);
+	otb_sym_cipher_salt_free(salt);
 	g_bytes_unref(wrapped_key);
 	g_free(actual_message);
 	g_free(encrypted_message);

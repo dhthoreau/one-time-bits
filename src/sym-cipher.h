@@ -14,13 +14,10 @@
 
 #include "openssl-util.h"
 
+#define OTB_SYM_CIPHER_SALT_BYTES_LENGTH	PKCS5_SALT_LEN
+
 typedef EVP_CIPHER_CTX OtbSymCipherContext;
-
-typedef struct
-{
-	unsigned char value[PKCS5_SALT_LEN];
-} OtbSymCipherSalt;
-
+typedef struct _OtbSymCipherSalt OtbSymCipherSalt;
 
 #define otb_sym_cipher_context_free(sym_cipher_context)	EVP_CIPHER_CTX_free(sym_cipher_context)
 #define otb_sym_cipher_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size)	otb_openssl_dispose_decryption_buffer((decryption_buffer), (decryption_buffer_size))
@@ -53,10 +50,10 @@ struct _OtbSymCipherClass
 
 GType otb_sym_cipher_get_type();
 
-GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **salt_out);
-gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt *salt);
-gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt *salt);
-GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **salt_out);
+GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **sym_cipher_salt_out);
+gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt *sym_cipher_salt);
+gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt *sym_cipher_salt);
+GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **sym_cipher_salt_out);
 gboolean otb_sym_cipher_generate_random_key(OtbSymCipher *sym_cipher);
 unsigned char *otb_sym_cipher_create_encryption_buffer(const OtbSymCipher *sym_cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
 void *otb_sym_cipher_create_decryption_buffer(const OtbSymCipher *sym_cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
@@ -68,5 +65,8 @@ size_t otb_sym_cipher_finish_encrypt(OtbSymCipherContext *sym_cipher_context, un
 size_t otb_sym_cipher_finish_decrypt(OtbSymCipherContext *sym_cipher_context, void *plain_bytes_out);
 size_t otb_sym_cipher_encrypt(const OtbSymCipher *sym_cipher, const void *plain_bytes, size_t plain_bytes_size, GBytes **iv_out, unsigned char **encrypted_bytes_out);
 size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *iv, void **plain_bytes_out, size_t *decrypted_buffer_size);
+const unsigned char *otb_sym_cipher_salt_get_bytes(const OtbSymCipherSalt *sym_cipher_salt);
+OtbSymCipherSalt *otb_sym_cipher_salt_from_bytes(const unsigned char *sym_cipher_salt_bytes);
+void otb_sym_cipher_salt_free(OtbSymCipherSalt *sym_cipher_salt);
 
 #endif

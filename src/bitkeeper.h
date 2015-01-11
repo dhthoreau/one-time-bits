@@ -46,6 +46,6 @@ gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned sh
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);
 gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string);
 gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);
-GSList *otb_bitkeeper_get_ids_of_friends(const OtbBitkeeper *bitkeeper);
+GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);
 
 #endif

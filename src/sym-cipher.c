@@ -19,6 +19,11 @@
 #define DEFAULT_MESSAGE_DIGEST	"SHA512"
 #define DEFAULT_HASH_ITERATIONS	20480
 
+struct _OtbSymCipherSalt
+{
+	unsigned char salt[PKCS5_SALT_LEN];
+};
+
 struct _OtbSymCipherPrivate
 {
 	GRWLock lock;
@@ -167,14 +172,14 @@ static void otb_sym_cipher_get_property(GObject *object, unsigned int prop_id, G
 	}
 }
 
-GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **salt_out)
+GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **sym_cipher_salt_out)
 {
 	GBytes *hash=NULL;
 	otb_sym_cipher_lock_read(sym_cipher);
 	size_t hash_size=EVP_MD_size(sym_cipher->priv->message_digest_impl);
-	*salt_out=g_malloc(sizeof *salt_out);
+	*sym_cipher_salt_out=g_slice_new(OtbSymCipherSalt);
 	unsigned char *hash_bytes=g_malloc(hash_size);
-	if(otb_random_bytes(*salt_out, sizeof **salt_out) && PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), (*salt_out)->value, sizeof **salt_out, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes))
+	if(otb_random_bytes(*sym_cipher_salt_out, sizeof **sym_cipher_salt_out) && PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), (*sym_cipher_salt_out)->salt, sizeof **sym_cipher_salt_out, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes))
 		hash=g_bytes_new_take(hash_bytes, hash_size);
 	else
 		g_free(hash_bytes);
@@ -182,14 +187,14 @@ GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const cha
 	return hash;
 }
 
-gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt *salt)
+gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt *sym_cipher_salt)
 {
 	gboolean ret_val=FALSE;
 	size_t hash_size;
 	const unsigned char *passphrase_hash_bytes=g_bytes_get_data(passphrase_hash, &hash_size);
 	unsigned char *hash_bytes=g_malloc(hash_size);
 	otb_sym_cipher_lock_read(sym_cipher);
-	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt->value, sizeof *salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes) && otb_smemcmp(passphrase_hash_bytes, hash_bytes, hash_size)==0)
+	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), sym_cipher_salt->salt, sizeof *sym_cipher_salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes) && otb_smemcmp(passphrase_hash_bytes, hash_bytes, hash_size)==0)
 		ret_val=TRUE;
 	otb_sym_cipher_unlock_read(sym_cipher);
 	g_free(hash_bytes);
@@ -226,12 +231,12 @@ static OtbSymCipherContext *otb_sym_cipher_init_decryption_openssl(const EVP_CIP
 
 #define key_and_iv_size(sym_cipher)	(EVP_CIPHER_key_length((sym_cipher)->priv->sym_cipher_impl)+EVP_CIPHER_iv_length((sym_cipher)->priv->sym_cipher_impl))
 
-gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt *salt)
+gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key, const char *passphrase, const OtbSymCipherSalt *sym_cipher_salt)
 {
 	gboolean ret_val=FALSE;
 	otb_sym_cipher_lock_write(sym_cipher);
 	unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
-	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), salt->value, sizeof *salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
+	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), sym_cipher_salt->salt, sizeof *sym_cipher_salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 	{
 		size_t key_bytes_size;
 		unsigned char *key_bytes=otb_sym_cipher_create_decryption_buffer(sym_cipher, g_bytes_get_size(wrapped_key), &key_bytes_size);
@@ -250,15 +255,15 @@ gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key
 	return ret_val;
 }
 
-GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **salt_out)
+GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **sym_cipher_salt_out)
 {
 	GBytes *wrapped_key=NULL;
-	*salt_out=g_malloc(sizeof *salt_out);
-	if(otb_random_bytes(*salt_out, sizeof **salt_out))
+	*sym_cipher_salt_out=g_slice_new(OtbSymCipherSalt);
+	if(otb_random_bytes(*sym_cipher_salt_out, sizeof **sym_cipher_salt_out))
 	{
 		otb_sym_cipher_lock_read(sym_cipher);
 		unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
-		if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), (*salt_out)->value, sizeof **salt_out, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
+		if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), (*sym_cipher_salt_out)->salt, sizeof **sym_cipher_salt_out, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 		{
 			unsigned char *wrapped_key_bytes=otb_sym_cipher_create_encryption_buffer(sym_cipher, sym_cipher->priv->key_size, NULL);
 			OtbSymCipherContext *sym_cipher_context=otb_sym_cipher_init_encryption_openssl(sym_cipher->priv->sym_cipher_impl, wrapping_key_and_iv, wrapping_key_and_iv+EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl));
@@ -401,4 +406,21 @@ size_t otb_sym_cipher_decrypt(const OtbSymCipher *sym_cipher, const unsigned cha
 	size_t ret_val=otb_sym_cipher_decrypt_next(sym_cipher_context, encrypted_bytes, encrypted_bytes_size, *plain_bytes_out);
 	ret_val+=otb_sym_cipher_finish_decrypt(sym_cipher_context, *(unsigned char **)plain_bytes_out+ret_val);
 	return ret_val;
+}
+
+const unsigned char *otb_sym_cipher_salt_get_bytes(const OtbSymCipherSalt *sym_cipher_salt)
+{
+	return sym_cipher_salt->salt;
+}
+
+OtbSymCipherSalt *otb_sym_cipher_salt_from_bytes(const unsigned char *sym_cipher_salt_bytes)
+{
+	OtbSymCipherSalt *sym_cipher_salt=g_slice_new(OtbSymCipherSalt);
+	memcpy(sym_cipher_salt->salt, sym_cipher_salt_bytes, sizeof sym_cipher_salt->salt);
+	return sym_cipher_salt;
+}
+
+void otb_sym_cipher_salt_free(OtbSymCipherSalt *sym_cipher_salt)
+{
+	g_slice_free(OtbSymCipherSalt, sym_cipher_salt);
 }

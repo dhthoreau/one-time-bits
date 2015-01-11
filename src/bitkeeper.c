@@ -245,17 +245,17 @@ gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId 
 	return ret_val;
 }
 
-GSList *otb_bitkeeper_get_ids_of_friends(const OtbBitkeeper *bitkeeper)
+GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper)
 {
-	GSList *selected_friend_ids=NULL;
+	GSList *selected_friend_unique_ids=NULL;
 	otb_bitkeeper_lock_read(bitkeeper);
 	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbFriend *friend=OTB_FRIEND(curr_element->data);
 		OtbUniqueId *unique_id=NULL;
 		g_object_get(friend, OTB_FRIEND_PROP_UNIQUE_ID, &unique_id, NULL);
-		selected_friend_ids=g_slist_prepend(selected_friend_ids, unique_id);
+		selected_friend_unique_ids=g_slist_prepend(selected_friend_unique_ids, unique_id);
 	}
 	otb_bitkeeper_unlock_read(bitkeeper);
-	return selected_friend_ids;
+	return selected_friend_unique_ids;
 }

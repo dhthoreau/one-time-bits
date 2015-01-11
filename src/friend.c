@@ -285,7 +285,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 	return ret_val;
 }
 
-#define otb_friend_import_unique_id(import_file)				(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL))
+#define otb_friend_import_unique_id_bytes(import_file)				(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL))
 #define otb_friend_import_public_key(import_file)				(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
 #define otb_friend_import_transport_cipher_name(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME))
 #define otb_friend_import_address(import_file)					(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS))
@@ -316,7 +316,8 @@ static void otb_friend_set_address_no_save(const OtbFriend *friend, const char *
 
 static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 {
-	OtbUniqueId *unique_id=otb_friend_import_unique_id(import_file);
+	unsigned char *unique_id_bytes=otb_friend_import_unique_id_bytes(import_file);
+	OtbUniqueId *unique_id=otb_unique_id_from_bytes(unique_id_bytes);
 	char *public_key=otb_friend_import_public_key(import_file);
 	char *transport_cipher_name=otb_friend_import_transport_cipher_name(import_file);
 	char *address=otb_friend_import_address(import_file);
@@ -324,10 +325,11 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 	otb_friend_set_public_key_no_save(friend, public_key);
 	otb_friend_set_transport_cipher_name_no_save(friend, transport_cipher_name);
 	otb_friend_set_address_no_save(friend, address);
-	otb_unique_id_free(unique_id);
-	g_free(public_key);
-	g_free(transport_cipher_name);
 	g_free(address);
+	g_free(transport_cipher_name);
+	g_free(public_key);
+	g_free(unique_id_bytes);
+	otb_unique_id_free(unique_id);
 }
 
 static GType *otb_friend_get_runtime_type()

@@ -78,7 +78,7 @@ static void test_otb_bitkeeper_proxy_port()
 
 static void otb_assert_bitkeeper_has_friends(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
-	GSList *unique_ids=otb_bitkeeper_get_ids_of_friends(bitkeeper);
+	GSList *unique_ids=otb_bitkeeper_get_unique_ids_of_friends(bitkeeper);
 	size_t expected_size=(expected_unique_id1==NULL?0:1)+(expected_unique_id2==NULL?0:1);
 	g_assert_cmpint(expected_size, ==, g_slist_length(unique_ids));
 	if(expected_unique_id1!=NULL)
