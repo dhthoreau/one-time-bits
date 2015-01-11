@@ -44,9 +44,9 @@ static void test_sym_cipher_hash_passphrase()
 	GBytes *passphrase_hash=otb_sym_cipher_hash_passphrase(sym_cipher, EXPECTED_PASSPHRASE, &expected_salt);
 	g_assert(expected_salt!=NULL);
 	g_assert(!otb_sym_cipher_validate_passphrase(sym_cipher, UNEXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
-	((unsigned char*)expected_salt)[0]++;
+	((unsigned char*)expected_salt)[1]++;
 	g_assert(!otb_sym_cipher_validate_passphrase(sym_cipher, EXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
-	((unsigned char*)expected_salt)[0]--;
+	((unsigned char*)expected_salt)[1]--;
 	g_assert(otb_sym_cipher_validate_passphrase(sym_cipher, EXPECTED_PASSPHRASE, passphrase_hash, expected_salt));
 	g_bytes_unref(passphrase_hash);
 	g_object_unref(sym_cipher);
