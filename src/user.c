@@ -42,7 +42,7 @@ G_DEFINE_TYPE(OtbUser, otb_user, G_TYPE_OBJECT);
 
 struct _OtbUserPrivate
 {
-	GRWLock lock;	// FARE - L'uso di questo non mi sembra logicale. :(
+	GRWLock lock;
 	OtbUniqueId *unique_id;
 	OtbAsymCipher *asym_cipher;
 	char *address;

@@ -58,7 +58,7 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
 {
 	bitkeeper->priv=G_TYPE_INSTANCE_GET_PRIVATE(bitkeeper, OTB_TYPE_BITKEEPER, OtbBitkeeperPrivate);
-	g_rw_lock_init(&bitkeeper->priv->lock);	// FARE - L'uso di questo non mi sembra logicale. :(
+	g_rw_lock_init(&bitkeeper->priv->lock);
 	bitkeeper->priv->user=NULL;
 	bitkeeper->priv->proxy_port=0;
 	bitkeeper->priv->friends=NULL;

@@ -62,7 +62,6 @@ enum
 	PROP_EXPIRATION
 };
 
-static void otb_pad_rec_dispose(GObject *object);
 static void otb_pad_rec_finalize(GObject *object);
 static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);
 static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
@@ -72,7 +71,6 @@ G_DEFINE_TYPE(OtbPadRec, otb_pad_rec, G_TYPE_OBJECT);
 static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 {
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
-	object_class->dispose=otb_pad_rec_dispose;
 	object_class->finalize=otb_pad_rec_finalize;
 	object_class->set_property=otb_pad_rec_set_property;
 	object_class->get_property=otb_pad_rec_get_property;
@@ -98,19 +96,6 @@ static void otb_pad_rec_init(OtbPadRec *pad_rec)
 	pad_rec->priv->pad_iv=g_bytes_new_static("", 0);
 }
 
-static void otb_pad_rec_dispose(GObject *object)
-{
-	g_return_if_fail(object!=NULL);
-	g_return_if_fail(OTB_IS_PAD_REC(object));
-	OtbPadRec *pad_rec=OTB_PAD_REC(object);
-	if(pad_rec->priv->expiration!=NULL)
-	{
-		g_date_time_unref(pad_rec->priv->expiration);
-		pad_rec->priv->expiration=NULL;
-	}
-	G_OBJECT_CLASS(otb_pad_rec_parent_class)->dispose(object);
-}
-
 static void otb_pad_rec_finalize(GObject *object)
 {
 	g_return_if_fail(object!=NULL);
@@ -122,6 +107,8 @@ static void otb_pad_rec_finalize(GObject *object)
 	g_free(pad_rec->priv->base_name);
 	g_free(pad_rec->priv->pad_rec_file_path);
 	g_free(pad_rec->priv->pad_file_path);
+	if(pad_rec->priv->expiration!=NULL)
+		g_date_time_unref(pad_rec->priv->expiration);
 	g_bytes_unref(pad_rec->priv->pad_iv);
 	G_OBJECT_CLASS(otb_pad_rec_parent_class)->finalize(object);
 }

@@ -331,9 +331,9 @@ static void test_close_pad_fails_when_nothing_is_opened()
 {
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
 	g_assert(!otb_pad_db_close_pad(pad_db, NULL));
-	char *dummy_pad_io=g_malloc(sizeof(*dummy_pad_io));
-	g_assert(!otb_pad_db_close_pad(pad_db, (OtbPadIO*)dummy_pad_io));
-	g_free(dummy_pad_io);
+	void *dummy_pad_io=g_slice_new(char);
+	g_assert(!otb_pad_db_close_pad(pad_db, dummy_pad_io));
+	g_slice_free(char, dummy_pad_io);
 	g_object_unref(pad_db);
 }
 
