@@ -284,6 +284,8 @@ void otb_add_pad_rec_tests()
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_initializing_status", test_otb_pad_rec_initializing_status);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_initializing_base_path", test_otb_pad_rec_initializing_base_path);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_initializing_base_name", test_otb_pad_rec_initializing_base_name);
+	otb_add_test_func("/pad-rec/test_otb_pad_rec_default_expiration", test_otb_pad_rec_default_expiration);
+	otb_add_test_func("/pad-rec/test_otb_pad_rec_initializing_expiration", test_otb_pad_rec_initializing_expiration);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_specifying_unique_id", test_otb_pad_rec_specifying_unique_id);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_without_specifying_unique_id", test_otb_pad_rec_without_specifying_unique_id);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_compare_by_id", test_otb_pad_rec_compare_by_id);

@@ -415,7 +415,7 @@ static gboolean otb_protocol_delete_missing_pad_unique_ids(const OtbProtocolCont
 	if(PACKET_COMMAND(input_packet)==COMMAND_SENDING_PAD_UNIQUE_IDS && PAD_UNIQUE_IDS_PACKET_IS_VALID(input_packet, input_packet_size))
 	{
 		GSList *pad_unique_ids=otb_pad_db_get_ids_of_pads_in_status(protocol_context->pad_db, pad_rec_status);
-		for(const GSList *curr_element=pad_unique_ids; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+		for(const GSList *curr_element=pad_unique_ids; ret_val && curr_element!=NULL; curr_element=g_slist_next(curr_element))
 		{
 			const OtbUniqueId *pad_unique_id=(const OtbUniqueId*)curr_element->data;
 			gboolean pad_id_found_in_packet=FALSE;

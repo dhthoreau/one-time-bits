@@ -219,10 +219,10 @@ static gboolean otb_pad_db_load(const OtbPadDb *pad_db)
 	return ret_val;
 }
 
-static OtbPadRec *otb_pad_db_find_pad_rec_by_id(const OtbPadDb *pad_db, const OtbUniqueId *unique_id)
+static OtbPadRec *otb_pad_db_find_pad_rec_by_id_no_ref(const OtbPadDb *pad_db, const OtbUniqueId *unique_id)
 {
 	OtbPadRec *ret_val=NULL;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val==NULL && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val==NULL && curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		if(otb_pad_rec_compare_by_id(pad_rec, unique_id)==0)
@@ -234,7 +234,7 @@ static OtbPadRec *otb_pad_db_find_pad_rec_by_id(const OtbPadDb *pad_db, const Ot
 static off_t otb_pad_db_get_curr_size(const OtbPadDb *pad_db)
 {
 	off_t curr_size=0;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		off_t pad_size;
@@ -251,7 +251,7 @@ static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_re
 	OtbUniqueId *unique_id=NULL;
 	off_t pad_size;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
-	if(otb_pad_db_find_pad_rec_by_id(pad_db, unique_id)!=NULL)
+	if(otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id)!=NULL)
 	{
 		g_message(_("Failed to add record due to non-unique ID."));
 		ret_val=FALSE;
@@ -398,7 +398,7 @@ gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique
 {
 	gboolean ret_val=TRUE;
 	otb_pad_db_lock_write(pad_db);
-	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id);
+	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
 	if(pad_rec!=NULL && !otb_pad_db_remove_pad_rec(pad_db, pad_rec))
 		ret_val=FALSE;
 	otb_pad_db_unlock_write(pad_db);
@@ -409,7 +409,7 @@ static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
 	GSList *pad_recs_to_remove=NULL;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -417,7 +417,7 @@ static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
 		if(pad_rec_status==OTB_PAD_REC_STATUS_DEAD)
 			pad_recs_to_remove=g_slist_prepend(pad_recs_to_remove, pad_rec);
 	}
-	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		if(!otb_pad_db_remove_pad_rec(pad_db, pad_rec))
@@ -474,7 +474,7 @@ OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId 
 GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status)
 {
 	GSList *selected_pad_ids=NULL;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -492,7 +492,7 @@ GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecSt
 static gboolean otb_pad_db_transition_status_of_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, OtbPadRecStatus prerequisite_status, OtbPadRecStatus new_status)
 {
 	gboolean ret_val=TRUE;
-	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id);
+	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
 	OtbPadRecStatus pad_rec_status;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 	if(pad_rec_status!=prerequisite_status)
@@ -512,7 +512,7 @@ static gboolean otb_pad_db_transition_status_of_pad(const OtbPadDb *pad_db, cons
 static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, OtbPadRecStatus prerequisite_status, OtbPadRecStatus new_status)
 {
 	gboolean ret_val=TRUE;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val && curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -551,7 +551,7 @@ static OtbUniqueId *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb *pad_d
 	OtbUniqueId *random_unique_id=NULL;
 	GSList *candidate_pad_recs=NULL;
 	unsigned int candidate_count=0;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		OtbPadRecStatus pad_rec_status;
@@ -587,7 +587,7 @@ OtbUniqueId *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecSta
 off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_id)
 {
 	otb_pad_db_lock_read(pad_db);
-	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id);
+	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
 	off_t pad_size=-1;
 	if(pad_rec!=NULL)
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
@@ -602,7 +602,7 @@ OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *uniq
 	if(pad_db->priv->open_pad_io==NULL)
 	{
 		OtbPadRec *pad_rec;
-		if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))!=NULL)
+		if((pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id))!=NULL)
 			pad_io=otb_pad_rec_open_pad_for_read(pad_rec, FALSE);
 	}
 	if(pad_io!=NULL)
@@ -624,7 +624,7 @@ static gboolean otb_pad_db_can_encrypt_data(const OtbPadDb *pad_db, size_t data_
 {
 	gboolean ret_val=FALSE;
 	off_t bytes_available_for_encryption=0;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; !ret_val && curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=pad_db->priv->pad_recs; !ret_val && curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		off_t pad_size=-1;
@@ -673,7 +673,6 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 		OtbPadIO *previous_pad_io=NULL;
 		*encrypted_bytes_out=NULL;
 		*encrypted_bytes_size_out=0;
-		OtbUniqueId *unique_id;
 		for(size_t plain_position=0, encrypted_bytes_buffer_size=plain_bytes_size+sizeof format_version+OTB_UNIQUE_ID_BYTES_LENGTH; encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && plain_position<plain_bytes_size; encrypted_bytes_buffer_size+=OTB_UNIQUE_ID_BYTES_LENGTH)
 		{
 			*encrypted_bytes_out=g_realloc(*encrypted_bytes_out, encrypted_bytes_buffer_size);
@@ -684,12 +683,12 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 			}
 			OtbPadRec *pad_rec=NULL;
 			off_t pad_size=-1;
-			unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
+			OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
 			if(unique_id==NULL)
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else if(!otb_pad_db_crypt_bytes(OTB_UNIQUE_ID_BYTES_LENGTH, otb_unique_id_get_bytes(unique_id), *encrypted_bytes_out+*encrypted_bytes_size_out, current_pad_io, previous_pad_io))
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			else if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))==NULL)
+			else if((pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id))==NULL)
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else if(g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL), pad_size<0)
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
@@ -754,14 +753,14 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 		*plain_bytes_size_out=0;
 		for(size_t encrypted_position=sizeof format_version; decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && encrypted_position<encrypted_bytes_size; )
 		{
-			OtbPadRec *pad_rec=NULL;
 			off_t pad_size=-1;
 			if(!otb_pad_db_crypt_bytes(OTB_UNIQUE_ID_BYTES_LENGTH, encrypted_bytes+encrypted_position, unique_id_bytes, current_pad_io, previous_pad_io))
 				decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else
 			{
+				OtbPadRec *pad_rec=NULL;
 				OtbUniqueId *unique_id=otb_unique_id_from_bytes(unique_id_bytes);
-				if((pad_rec=otb_pad_db_find_pad_rec_by_id(pad_db, unique_id))==NULL)
+				if((pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id))==NULL)
 					decryption_result=OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD;
 				else if(g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL), pad_size<0)
 					decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;

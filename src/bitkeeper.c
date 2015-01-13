@@ -174,7 +174,7 @@ gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned sh
 static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
 {
 	OtbFriend *friend=NULL;
-	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL && friend==NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL && friend==NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbFriend *current_friend=OTB_FRIEND(curr_element->data);
 		OtbUniqueId *current_unique_id=NULL;
