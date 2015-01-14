@@ -17,6 +17,7 @@
 
 struct _OtbUniqueId
 {
+	int ref_count;
 	uuid_t uuid;
 };
 
@@ -32,9 +33,16 @@ GType otb_unique_id_get_type()
 	return unique_id_type;
 }
 
-OtbUniqueId *otb_unique_id_create()
+static OtbUniqueId *otb_unique_id_instantiate()
 {
 	OtbUniqueId *unique_id=g_slice_new(OtbUniqueId);
+	unique_id->ref_count=1;
+	return unique_id;
+}
+
+OtbUniqueId *otb_unique_id_create()
+{
+	OtbUniqueId *unique_id=otb_unique_id_instantiate();
 	uuid_generate(unique_id->uuid);
 	return unique_id;
 }
@@ -46,7 +54,7 @@ const unsigned char *otb_unique_id_get_bytes(const OtbUniqueId *unique_id)
 
 OtbUniqueId *otb_unique_id_from_bytes(const unsigned char *unique_id_bytes)
 {
-	OtbUniqueId *unique_id=g_slice_new(OtbUniqueId);
+	OtbUniqueId *unique_id=otb_unique_id_instantiate();
 	memcpy(unique_id->uuid, unique_id_bytes, sizeof unique_id->uuid);
 	return unique_id;
 }
@@ -60,7 +68,7 @@ char *otb_unique_id_to_string(const OtbUniqueId *unique_id)
 
 OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string)
 {
-	OtbUniqueId *unique_id=g_slice_new(OtbUniqueId);
+	OtbUniqueId *unique_id=otb_unique_id_instantiate();
 	uuid_parse(unique_id_string, unique_id->uuid);
 	return unique_id;
 }
@@ -85,5 +93,6 @@ int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *uniq
 
 void otb_unique_id_free(OtbUniqueId *unique_id)
 {
-	g_slice_free(OtbUniqueId, unique_id);
+	if(unique_id!=NULL && G_UNLIKELY(g_atomic_int_dec_and_test(&unique_id->ref_count)))
+		g_slice_free(OtbUniqueId, unique_id);
 }

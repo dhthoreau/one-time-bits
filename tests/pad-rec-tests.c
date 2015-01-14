@@ -140,12 +140,20 @@ static void test_otb_pad_rec_initializing_base_name()
 
 static void test_otb_pad_rec_default_expiration()
 {
+	const GTimeSpan SECONDS_PER_YEAR=31536000;
+	const GTimeSpan MICROSECONDS_PER_SECOND=1000000;
+	
 	otb_test_setup_local_crypto();
+	GDateTime *date_now=g_date_time_new_now_utc();
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, NULL);
 	GDateTime *actual_expiration=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &actual_expiration, NULL);
-	g_assert(actual_expiration==NULL);
+	g_assert(actual_expiration!=NULL);
+	GTimeSpan expiration_time_span=g_date_time_difference(actual_expiration, date_now);
+	g_assert_cmpint(SECONDS_PER_YEAR, ==, expiration_time_span/MICROSECONDS_PER_SECOND);
+	g_date_time_unref(actual_expiration);
 	g_object_unref(pad_rec);
+	g_date_time_unref(date_now);
 }
 
 static void test_otb_pad_rec_initializing_expiration()

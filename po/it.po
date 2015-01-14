@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-01-06 20:28-0500\n"
-"PO-Revision-Date: 2015-01-06 20:28-0500\n"
+"POT-Creation-Date: 2015-01-13 20:28-0500\n"
+"PO-Revision-Date: 2015-01-13 20:28-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -136,8 +136,8 @@ msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 
 #: src/pad-rec.c:82
-msgid "Expiration date"
-msgstr "Data di scadenza"
+msgid "Expiration"
+msgstr "Scadenza"
 
 #: src/pad-rec.c:82
 msgid "The date and time when the pad expires"
@@ -206,32 +206,32 @@ msgstr "Cifra simmetrica"
 msgid "Name of the symmetric cipher to use"
 msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/asym-cipher.c:247 src/sym-cipher.c:207
+#: src/asym-cipher.c:247 src/sym-cipher.c:212
 #, c-format
 msgid "Failed to initialize encryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/asym-cipher.c:263 src/sym-cipher.c:221
+#: src/asym-cipher.c:263 src/sym-cipher.c:226
 #, c-format
 msgid "Failed to initialize decryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/asym-cipher.c:276 src/sym-cipher.c:339
+#: src/asym-cipher.c:276 src/sym-cipher.c:344
 #, c-format
 msgid "Failed to encrypt data. Error == %s"
 msgstr "Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:289 src/sym-cipher.c:352
+#: src/asym-cipher.c:289 src/sym-cipher.c:357
 #, c-format
 msgid "Failed to decrypt data. Error == %s"
 msgstr "Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:302 src/sym-cipher.c:365
+#: src/asym-cipher.c:302 src/sym-cipher.c:370
 #, c-format
 msgid "Failed to encrypt final data. Error == %s"
 msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/asym-cipher.c:316 src/sym-cipher.c:379
+#: src/asym-cipher.c:316 src/sym-cipher.c:384
 #, c-format
 msgid "Failed to decrypt final data. Error == %s"
 msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
@@ -274,7 +274,7 @@ msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:722
+#: src/pad-db.c:721
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -285,13 +285,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:745
+#: src/pad-db.c:744
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:782
+#: src/pad-db.c:786
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."
@@ -300,26 +300,26 @@ msgstr ""
 "sebbene il file era decifrato completamente. La raccomandazione è azzerare "
 "il database di blocchi."
 
-#: src/sym-cipher.c:53
+#: src/sym-cipher.c:58
 msgid "Cipher"
 msgstr "Cifra"
 
-#: src/sym-cipher.c:53
+#: src/sym-cipher.c:58
 msgid "Name of the cipher to use"
 msgstr "Nome della cifra per utilizzare"
 
-#: src/sym-cipher.c:54
+#: src/sym-cipher.c:59
 msgid "Message digest"
 msgstr "Message digest"
 
-#: src/sym-cipher.c:54
+#: src/sym-cipher.c:59
 msgid "Message digest to use for hashes"
 msgstr "Il message digest da utilizzare per hash"
 
-#: src/sym-cipher.c:55
+#: src/sym-cipher.c:60
 msgid "Hash iterations"
 msgstr "Iterazioni di hash"
 
-#: src/sym-cipher.c:55
+#: src/sym-cipher.c:60
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."

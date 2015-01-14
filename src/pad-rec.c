@@ -79,7 +79,7 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_EXPIRATION, g_param_spec_boxed(OTB_PAD_REC_PROP_EXPIRATION, _("Expiration date"), _("The date and time when the pad expires"), G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_EXPIRATION, g_param_spec_boxed(OTB_PAD_REC_PROP_EXPIRATION, _("Expiration"), _("The date and time when the pad expires"), G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_type_class_add_private(klass, sizeof(OtbPadRecPrivate));
 }
 
@@ -178,6 +178,12 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 			if(pad_rec->priv->expiration!=NULL)
 				g_date_time_unref(pad_rec->priv->expiration);
 			pad_rec->priv->expiration=g_value_dup_boxed(value);
+			if(pad_rec->priv->expiration==NULL)
+			{
+				GDateTime *now=g_date_time_new_now_utc();
+				pad_rec->priv->expiration=g_date_time_add_years(now, 1);
+				g_date_time_unref(now);
+			}
 			break;
 		}
 		default:
