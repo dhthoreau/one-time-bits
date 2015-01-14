@@ -100,7 +100,7 @@ static void otb_user_finalize(GObject *object)
 	g_return_if_fail(OTB_IS_USER(object));
 	OtbUser *user=OTB_USER(object);
 	g_rw_lock_clear(&user->priv->lock);
-	otb_unique_id_free(user->priv->unique_id);
+	otb_unique_id_unref(user->priv->unique_id);
 	g_free(user->priv->address);
 	G_OBJECT_CLASS(otb_user_parent_class)->finalize(object);
 }
@@ -142,12 +142,12 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 
 static void otb_user_initialize_unique_id(OtbUser *user)
 {
-	otb_unique_id_free(user->priv->unique_id);
+	otb_unique_id_unref(user->priv->unique_id);
 	size_t bytes_length;
 	unsigned char *unique_id_bytes=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
 	if(unique_id_bytes==NULL || bytes_length!=OTB_UNIQUE_ID_BYTES_LENGTH)
 	{
-		otb_unique_id_free(user->priv->unique_id);
+		otb_unique_id_unref(user->priv->unique_id);
 		user->priv->unique_id=otb_unique_id_create();
 	}
 	else

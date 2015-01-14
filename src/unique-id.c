@@ -27,7 +27,7 @@ GType otb_unique_id_get_type()
 	static gboolean otb_unique_id_type_initialized=FALSE;
 	if(g_once_init_enter(&otb_unique_id_type_initialized))
 	{
-		unique_id_type=g_boxed_type_register_static("OtbUniqueId", (GBoxedCopyFunc)otb_unique_id_duplicate, (GDestroyNotify)otb_unique_id_free);
+		unique_id_type=g_boxed_type_register_static("OtbUniqueId", (GBoxedCopyFunc)otb_unique_id_ref, (GDestroyNotify)otb_unique_id_unref);
 		g_once_init_leave(&otb_unique_id_type_initialized, TRUE);
 	}
 	return unique_id_type;
@@ -81,9 +81,11 @@ char *otb_unique_id_string_create()
 	return unique_id_string;
 }
 
-OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id)
+OtbUniqueId *otb_unique_id_ref(OtbUniqueId *unique_id)
 {
-	return unique_id==NULL?NULL:g_slice_dup(OtbUniqueId, unique_id);
+	g_return_val_if_fail(unique_id!= NULL, NULL);
+	g_atomic_int_inc(&unique_id->ref_count);
+	return unique_id;
 }
 
 int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *unique_id2)
@@ -91,7 +93,7 @@ int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *uniq
 	return uuid_compare(unique_id1->uuid, unique_id2->uuid);
 }
 
-void otb_unique_id_free(OtbUniqueId *unique_id)
+void otb_unique_id_unref(OtbUniqueId *unique_id)
 {
 	if(unique_id!=NULL && G_UNLIKELY(g_atomic_int_dec_and_test(&unique_id->ref_count)))
 		g_slice_free(OtbUniqueId, unique_id);

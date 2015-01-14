@@ -133,8 +133,8 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	otb_friend_delete(*load_friend);
 	otb_assert_file_does_not_exist(friend_dir_path);
 	g_free(actual_base_path);
-	otb_unique_id_free(actual_unique_id1);
-	otb_unique_id_free(actual_unique_id2);
+	otb_unique_id_unref(actual_unique_id1);
+	otb_unique_id_unref(actual_unique_id2);
 	g_free(actual_public_key1);
 	g_free(actual_public_key2);
 	g_free(actual_transport_cipher_name1);
@@ -142,7 +142,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	g_free(actual_address1);
 	g_free(actual_address2);
 	g_free(import_string);
-	otb_unique_id_free(expected_unique_id);
+	otb_unique_id_unref(expected_unique_id);
 	g_free(friend_dir_path);
 }
 

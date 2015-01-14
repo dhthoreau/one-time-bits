@@ -25,8 +25,8 @@ OtbUniqueId *otb_unique_id_from_bytes(const unsigned char *unique_id_bytes);
 char *otb_unique_id_to_string(const OtbUniqueId *unique_id);
 OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string);
 char *otb_unique_id_string_create();
-OtbUniqueId *otb_unique_id_duplicate(const OtbUniqueId *unique_id);
+OtbUniqueId *otb_unique_id_ref(OtbUniqueId *unique_id);
 int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *unique_id2);
-void otb_unique_id_free(OtbUniqueId *unique_id);
+void otb_unique_id_unref(OtbUniqueId *unique_id);
 
 #endif

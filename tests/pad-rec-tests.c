@@ -177,9 +177,9 @@ static void test_otb_pad_rec_specifying_unique_id()
 	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	otb_unique_id_free(actual_unique_id);
+	otb_unique_id_unref(actual_unique_id);
 	g_object_unref(pad_rec);
-	otb_unique_id_free(expected_unique_id);
+	otb_unique_id_unref(expected_unique_id);
 }
 
 static void test_otb_pad_rec_without_specifying_unique_id()
@@ -190,8 +190,8 @@ static void test_otb_pad_rec_without_specifying_unique_id()
 	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
 	g_assert_cmpint(0, !=, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	otb_unique_id_free(actual_unique_id);
-	otb_unique_id_free(expected_unique_id);
+	otb_unique_id_unref(actual_unique_id);
+	otb_unique_id_unref(expected_unique_id);
 	g_object_unref(pad_rec);
 }
 
@@ -203,8 +203,8 @@ static void test_otb_pad_rec_compare_by_id()
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, expected_unique_id, NULL);
 	g_assert_cmpint(0, ==, otb_pad_rec_compare_by_id(pad_rec, expected_unique_id));
 	g_assert_cmpint(0, !=, otb_pad_rec_compare_by_id(pad_rec, unexpected_unique_id));
-	otb_unique_id_free(expected_unique_id);
-	otb_unique_id_free(unexpected_unique_id);
+	otb_unique_id_unref(expected_unique_id);
+	otb_unique_id_unref(unexpected_unique_id);
 	g_object_unref(pad_rec);
 }
 
@@ -223,8 +223,8 @@ static void test_otb_pad_rec_save_load()
 	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec_load, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	otb_unique_id_free(actual_unique_id);
-	otb_unique_id_free(expected_unique_id);
+	otb_unique_id_unref(actual_unique_id);
+	otb_unique_id_unref(expected_unique_id);
 	OtbPadRecStatus pad_rec_status;
 	g_object_get(pad_rec_load, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 	g_assert_cmpint(expected_status, ==, pad_rec_status);

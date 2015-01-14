@@ -102,7 +102,7 @@ static void otb_pad_rec_finalize(GObject *object)
 	g_return_if_fail(OTB_IS_PAD_REC(object));
 	OtbPadRec *pad_rec=OTB_PAD_REC(object);
 	g_rec_mutex_clear(&pad_rec->priv->recursive_mutex);
-	otb_unique_id_free(pad_rec->priv->unique_id);
+	otb_unique_id_unref(pad_rec->priv->unique_id);
 	g_free(pad_rec->priv->base_path);
 	g_free(pad_rec->priv->base_name);
 	g_free(pad_rec->priv->pad_rec_file_path);
@@ -139,7 +139,7 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 			OtbUniqueId *unique_id=g_value_dup_boxed(value);
 			if(unique_id!=NULL)
 			{
-				otb_unique_id_free(pad_rec->priv->unique_id);
+				otb_unique_id_unref(pad_rec->priv->unique_id);
 				pad_rec->priv->unique_id=unique_id;
 			}
 			break;
@@ -270,7 +270,7 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 	char *base_name=g_strndup(file_name, strlen(file_name)-4);
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, base_path, OTB_PAD_REC_PROP_BASE_NAME, base_name, NULL);
 	g_free(base_name);
-	otb_unique_id_free(pad_rec->priv->unique_id);
+	otb_unique_id_unref(pad_rec->priv->unique_id);
 	pad_rec->priv->unique_id=NULL;
 	g_bytes_unref(pad_rec->priv->pad_iv);
 	pad_rec->priv->pad_iv=NULL;

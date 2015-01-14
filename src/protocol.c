@@ -302,7 +302,7 @@ static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolCon
 		OtbUniqueId *unique_id=NULL;
 		g_object_get(protocol_context->local_user, OTB_USER_PROP_UNIQUE_ID, &unique_id, NULL);
 		memcpy(ESTABLISHING_FRIEND_PACKET_UNIQUE_ID_BYTES(*packet_out), otb_unique_id_get_bytes(unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
-		otb_unique_id_free(unique_id);
+		otb_unique_id_unref(unique_id);
 		protocol_context->state=STATE_ESTABLISHING_FRIEND;
 		return ESTABLISHING_FRIEND_PACKET_SIZE;
 	}
@@ -426,7 +426,7 @@ static gboolean otb_protocol_delete_missing_pad_unique_ids(const OtbProtocolCont
 			if(!pad_id_found_in_packet)
 				ret_val=otb_pad_db_remove_pad(protocol_context->pad_db, pad_unique_id);
 		}
-		g_slist_free_full(pad_unique_ids, (GDestroyNotify)otb_unique_id_free);
+		g_slist_free_full(pad_unique_ids, (GDestroyNotify)otb_unique_id_unref);
 	}
 	else
 		ret_val=FALSE;
@@ -446,7 +446,7 @@ static uint32_t otb_protocol_create_pad_unique_ids_packet(const OtbProtocolConte
 	PAD_UNIQUE_IDS_PACKET_SET_PAD_UNIQUE_ID_COUNT(plain_packet, total_pad_unique_ids);
 	for(uint32_t unique_id_iter=0; unique_id_iter<total_pad_unique_ids; unique_id_iter++)
 		memcpy(PAD_UNIQUE_IDS_PACKET_PAD_UNIQUE_ID_BYTES(plain_packet, unique_id_iter), otb_unique_id_get_bytes(g_slist_nth(pad_unique_ids, unique_id_iter)->data), OTB_UNIQUE_ID_BYTES_LENGTH);
-	g_slist_free_full(pad_unique_ids, (GDestroyNotify)otb_unique_id_free);
+	g_slist_free_full(pad_unique_ids, (GDestroyNotify)otb_unique_id_unref);
 	uint32_t encrypted_packet_out_size=otb_protocol_create_encrypted_packet(protocol_context, (unsigned char*)plain_packet, plain_packet_size, encrypted_packet_out);
 	g_free(plain_packet);
 	return encrypted_packet_out_size;
@@ -485,7 +485,7 @@ static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext
 	uint32_t packet_out_size;
 	if(input_packet_size==sizeof(OtbProtocolCommand) && PACKET_COMMAND(input_packet)==COMMAND_OK)
 	{
-		otb_unique_id_free(protocol_context->pad_unique_id);
+		otb_unique_id_unref(protocol_context->pad_unique_id);
 		protocol_context->pad_unique_id=otb_pad_db_fetch_random_rec_id(protocol_context->pad_db, OTB_PAD_REC_STATUS_UNSENT);
 		if(protocol_context->pad_unique_id!=NULL)
 		{
@@ -610,7 +610,7 @@ static uint32_t otb_protocol_client_wrap_up_sending_pad(OtbProtocolContext *prot
 	if(input_packet_size==sizeof(OtbProtocolCommand) && PACKET_COMMAND(input_packet)==COMMAND_OK)
 	{
 		otb_pad_db_mark_pad_as_sent(protocol_context->pad_db, protocol_context->pad_unique_id);
-		otb_unique_id_free(protocol_context->pad_unique_id);
+		otb_unique_id_unref(protocol_context->pad_unique_id);
 		protocol_context->pad_unique_id=NULL;
 		return otb_protocol_client_send_pad_header_to_server(protocol_context, input_packet, input_packet_size, packet_out);
 	}
@@ -689,7 +689,7 @@ static uint32_t otb_protocol_server_establish_friend(OtbProtocolContext *protoco
 			packet_out_size=otb_protocol_create_ok_packet(packet_out);
 			g_object_unref(peer_friend);
 		}
-		otb_unique_id_free(friend_unique_id);
+		otb_unique_id_unref(friend_unique_id);
 	}
 	else
 		packet_out_size=otb_protocol_create_error_packet(protocol_context, packet_out);
@@ -787,7 +787,7 @@ static int otb_protocol_server_add_new_pad_id(OtbProtocolContext *protocol_conte
 		add_new_pad_status=ADD_NEW_PAD_ID_ERROR;
 	else
 	{
-		otb_unique_id_free(protocol_context->pad_unique_id);
+		otb_unique_id_unref(protocol_context->pad_unique_id);
 		protocol_context->pad_unique_id=otb_unique_id_from_bytes(INCOMING_PAD_HEADER_PACKET_PAD_UNIQUE_ID_BYTES(input_packet));
 		protocol_context->pad_bytes_transferred=0;
 		protocol_context->pad_size=INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(input_packet);
@@ -979,7 +979,7 @@ void otb_protocol_context_free(OtbProtocolContext *protocol_context)
 		g_object_unref(protocol_context->peer_friend);
 	if(protocol_context->peer_asym_cipher!=NULL)
 		g_object_unref(protocol_context->peer_asym_cipher);
-	otb_unique_id_free(protocol_context->pad_unique_id);
+	otb_unique_id_unref(protocol_context->pad_unique_id);
 	if(protocol_context->pad_io!=NULL)
 		otb_pad_db_close_pad(protocol_context->pad_db, protocol_context->pad_io);
 	if(protocol_context->pad_db!=NULL)

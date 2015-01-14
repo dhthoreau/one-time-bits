@@ -181,7 +181,7 @@ static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bi
 		g_object_get(current_friend, OTB_FRIEND_PROP_UNIQUE_ID, &current_unique_id, NULL);
 		if(otb_unique_id_compare(unique_id, current_unique_id)==0)
 			friend=current_friend;
-		otb_unique_id_free(current_unique_id);
+		otb_unique_id_unref(current_unique_id);
 	}
 	return friend;
 }
@@ -214,7 +214,7 @@ gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import
 	OtbUniqueId *import_unique_id;
 	g_object_get(import_friend, OTB_FRIEND_PROP_UNIQUE_ID, &import_unique_id, NULL);
 	OtbFriend *duplicate_friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, import_unique_id);
-	otb_unique_id_free(import_unique_id);
+	otb_unique_id_unref(import_unique_id);
 	if(duplicate_friend==NULL)
 		bitkeeper->priv->friends=g_slist_prepend(bitkeeper->priv->friends, import_friend);
 	else
