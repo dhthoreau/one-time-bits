@@ -25,7 +25,7 @@ static void test_otb_bitkeeper_user()
 	
 	otb_recreate_test_dir();
 	otb_settings_set_data_directory_path(otb_get_test_dir_path());
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
 	otb_setup_config_file_for_user_tests(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS);
@@ -170,8 +170,8 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 static void test_otb_bitkeeper_import_delete_friends()
 {
 	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
-	OtbUniqueId *expected_unique_id1=otb_unique_id_create();
-	OtbUniqueId *expected_unique_id2=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id1=otb_unique_id_new();
+	OtbUniqueId *expected_unique_id2=otb_unique_id_new();
 	otb_bitkeeper_import_test(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_bitkeeper_delete_test(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_unique_id_unref(expected_unique_id1);

@@ -437,6 +437,29 @@ gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique
 	return ret_val;
 }
 
+gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db)
+{
+	gboolean ret_val=TRUE;
+	GSList *pad_recs_to_remove=NULL;
+	long long now=g_get_real_time();
+	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
+	{
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		long long pad_rec_expiration;
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &pad_rec_expiration, NULL);
+		if(now>pad_rec_expiration)
+			pad_recs_to_remove=g_slist_prepend(pad_recs_to_remove, pad_rec);
+	}
+	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=g_slist_next(curr_element))
+	{
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		if(!otb_pad_db_remove_pad_rec(pad_db, pad_rec))
+			ret_val=FALSE;
+	}
+	g_slist_free(pad_recs_to_remove);
+	return ret_val;
+}
+
 static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;

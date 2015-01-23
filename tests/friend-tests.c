@@ -88,7 +88,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	
 	otb_test_setup_local_crypto();
 	char *friend_dir_path=otb_generate_unique_test_subdir_path();
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	char *import_string=otb_create_import_string(expected_unique_id, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ADDRESS1, EXPECTED_DUMMY_VALUE1);
 	*create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
 	g_assert(*create_friend!=NULL);

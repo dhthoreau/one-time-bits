@@ -167,7 +167,7 @@ static void test_otb_pad_db_rejects_pads_too_large()
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	g_assert(!otb_pad_db_create_unsent_pad(pad_db));
 	otb_assert_number_of_pads_in_status(pad_db, 1, OTB_PAD_REC_STATUS_UNSENT);
-	OtbUniqueId *unique_id=otb_unique_id_create();
+	OtbUniqueId *unique_id=otb_unique_id_new();
 	long long few_months_from_now=otb_few_months_from_now();
 	g_assert(otb_pad_db_add_incoming_pad(pad_db, unique_id, ABSOLUTE_MIN_PAD_SIZE, few_months_from_now)==NULL);
 	otb_unique_id_unref(unique_id);
@@ -180,7 +180,7 @@ static void test_otb_pad_db_rejects_pads_duplicate_id()
 	
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	OtbUniqueId *unique_id=otb_unique_id_create();
+	OtbUniqueId *unique_id=otb_unique_id_new();
 	long long few_months_from_now=otb_few_months_from_now();
 	OtbPadIO *pad_io=otb_pad_db_add_incoming_pad(pad_db, unique_id, ARBITRARY_SIZE, few_months_from_now);
 	g_assert(pad_io!=NULL);
@@ -257,7 +257,7 @@ static void otb_assert_save_pad_db(const char *pad_db_dir_path, off_t default_ne
 	g_assert(unsent_save_pad_io!=NULL);
 	*expected_unsent_bytes_out=otb_assert_pad_read(unsent_save_pad_io, NULL, default_new_pad_size);
 	g_assert(otb_pad_db_close_pad(save_pad_db, unsent_save_pad_io));
-	*expected_incoming_unique_id_out=otb_unique_id_create();
+	*expected_incoming_unique_id_out=otb_unique_id_new();
 	*expected_incoming_bytes_out=g_malloc(default_new_pad_size);
 	g_assert(otb_random_bytes(*expected_incoming_bytes_out, default_new_pad_size));
 	*expected_incoming_expiration_out=otb_few_months_from_now();
@@ -314,7 +314,7 @@ static void test_pads_save_load_delete()
 
 static OtbUniqueId *otb_pad_db_add_incoming_pad_from_bytes(const OtbPadDb *pad_db, const unsigned char *bytes, off_t size, long long expiration)
 {
-	OtbUniqueId *unique_id=otb_unique_id_create();
+	OtbUniqueId *unique_id=otb_unique_id_new();
 	OtbPadIO *pad_io=otb_pad_db_add_incoming_pad(pad_db, unique_id, size, expiration);
 	g_assert(pad_io!=NULL);
 	g_assert(otb_pad_write(pad_io, bytes, size));
@@ -351,14 +351,14 @@ static void test_get_random_rec_id()
 	long long expiration=otb_few_months_from_now();
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_INCOMING)==NULL);
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_SENT)==NULL);
-	OtbUniqueId *expected_unique_id_1=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id_1=otb_unique_id_new();
 	OtbPadIO *pad_io1=otb_pad_db_add_incoming_pad(pad_db, expected_unique_id_1, 10, expiration);
 	g_assert(pad_io1!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io1));
 	OtbUniqueId *actual_unique_id1=otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_INCOMING);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id_1, actual_unique_id1));
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_SENT)==NULL);
-	OtbUniqueId *expected_unique_id_2=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id_2=otb_unique_id_new();
 	OtbPadIO *pad_io2=otb_pad_db_add_incoming_pad(pad_db, expected_unique_id_2, 10, expiration);
 	g_assert(pad_io2!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io2));
@@ -377,11 +377,11 @@ static void test_otb_pad_db_get_ids_of_pads_in_status()
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
 	long long expiration=otb_few_months_from_now();
-	OtbUniqueId *expected_unique_id_1=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id_1=otb_unique_id_new();
 	OtbPadIO *pad_io1=otb_pad_db_add_incoming_pad(pad_db, expected_unique_id_1, 10, expiration);
 	g_assert(pad_io1!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io1));
-	OtbUniqueId *expected_unique_id_2=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id_2=otb_unique_id_new();
 	OtbPadIO *pad_io2=otb_pad_db_add_incoming_pad(pad_db, expected_unique_id_2, 10, expiration);
 	g_assert(pad_io2!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io2));
@@ -414,11 +414,11 @@ static void test_remove_rec()
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
 	long long expiration=otb_few_months_from_now();
-	OtbUniqueId *unique_id_to_remove=otb_unique_id_create();
+	OtbUniqueId *unique_id_to_remove=otb_unique_id_new();
 	OtbPadIO *pad_io_remove=otb_pad_db_add_incoming_pad(pad_db, unique_id_to_remove, INCOMING_PAD_SIZE, expiration);
 	g_assert(pad_io_remove!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io_remove));
-	OtbUniqueId *unique_id_to_keep=otb_unique_id_create();
+	OtbUniqueId *unique_id_to_keep=otb_unique_id_new();
 	OtbPadIO *pad_io_keep=otb_pad_db_add_incoming_pad(pad_db, unique_id_to_keep, INCOMING_PAD_SIZE, expiration);
 	g_assert(pad_io_keep!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io_keep));
@@ -432,9 +432,36 @@ static void test_remove_rec()
 static void test_remove_rec_that_does_not_exist()
 {
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	OtbUniqueId *unique_id=otb_unique_id_create();
+	OtbUniqueId *unique_id=otb_unique_id_new();
 	g_assert(otb_pad_db_remove_pad(pad_db, unique_id));
 	otb_unique_id_unref(unique_id);
+	g_object_unref(pad_db);
+}
+
+static void test_remove_expired_pads()
+{
+	const off_t INCOMING_PAD_SIZE=10;
+	
+	otb_test_setup_local_crypto();
+	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
+	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
+	g_assert(pad_db!=NULL);
+	OtbUniqueId *pad_unique_id_to_expire=otb_unique_id_new();
+	OtbUniqueId *pad_unique_id_to_preserve=otb_unique_id_new();
+	OtbPadIO *pad_io_to_expire=otb_pad_db_add_incoming_pad(pad_db, pad_unique_id_to_expire, INCOMING_PAD_SIZE, g_get_real_time()-10000000);
+	g_assert(pad_io_to_expire!=NULL);
+	g_assert(otb_pad_db_close_pad(pad_db, pad_io_to_expire));
+	OtbPadIO *pad_io_to_keep=otb_pad_db_add_incoming_pad(pad_db, pad_unique_id_to_preserve, INCOMING_PAD_SIZE, g_get_real_time()+10000000);
+	g_assert(pad_io_to_keep!=NULL);
+	g_assert(otb_pad_db_close_pad(pad_db, pad_io_to_keep));
+	otb_pad_db_remove_expired_pads(pad_db);
+	GSList *remaining_pads=otb_pad_db_get_ids_of_pads_in_status(pad_db, OTB_PAD_REC_STATUS_INCOMING);
+	g_assert_cmpint(1, ==, g_slist_length(remaining_pads));
+	g_assert_cmpint(0, ==, otb_unique_id_compare(g_slist_nth_data(remaining_pads, 0), pad_unique_id_to_preserve));
+	g_slist_free_full(remaining_pads, (GFreeFunc)otb_unique_id_unref);
+	otb_unique_id_unref(pad_unique_id_to_preserve);
+	otb_unique_id_unref(pad_unique_id_to_expire);
+	g_free(pad_db_dir_path);
 	g_object_unref(pad_db);
 }
 
@@ -472,7 +499,7 @@ static void test_pad_rec_mark_as_received()
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	OtbUniqueId *unique_id=otb_unique_id_create();
+	OtbUniqueId *unique_id=otb_unique_id_new();
 	long long expected_expiration=otb_few_months_from_now();
 	OtbPadIO *pad_io=otb_pad_db_add_incoming_pad(pad_db, unique_id, ABSOLUTE_MIN_PAD_SIZE, expected_expiration);
 	g_assert(pad_io!=NULL);
@@ -710,6 +737,7 @@ void otb_add_pad_db_tests()
 	otb_add_test_func("/pad-db/test_close_pad_fails_when_nothing_is_opened", test_close_pad_fails_when_nothing_is_opened);
 	otb_add_test_func("/pad-db/test_remove_rec", test_remove_rec);
 	otb_add_test_func("/pad-db/test_remove_rec_that_does_not_exist", test_remove_rec_that_does_not_exist);
+	otb_add_test_func("/pad-db/test_remove_expired_pads", test_remove_expired_pads);
 	otb_add_test_func("/pad-db/test_pad_rec_mark_as_sent", test_pad_rec_mark_as_sent);
 	otb_add_test_func("/pad-db/test_pad_rec_mark_as_received", test_pad_rec_mark_as_received);
 	otb_add_test_func("/pad-db/test_encryption_fails_due_to_not_enough_pad_bytes", test_encryption_fails_due_to_not_enough_pad_bytes);

@@ -89,8 +89,8 @@ static void otb_pad_rec_init(OtbPadRec *pad_rec)
 {
 	pad_rec->priv=G_TYPE_INSTANCE_GET_PRIVATE(pad_rec, OTB_TYPE_PAD_REC, OtbPadRecPrivate);
 	g_rec_mutex_init(&pad_rec->priv->recursive_mutex);
-	pad_rec->priv->unique_id=otb_unique_id_create();
-	pad_rec->priv->base_name=otb_unique_id_string_create();
+	pad_rec->priv->unique_id=otb_unique_id_new();
+	pad_rec->priv->base_name=otb_unique_id_string_new();
 	pad_rec->priv->pad_rec_file_path=NULL;
 	pad_rec->priv->pad_file_path=NULL;
 	pad_rec->priv->size=-1;

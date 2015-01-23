@@ -167,7 +167,7 @@ static void test_otb_pad_rec_initializing_expiration()
 static void test_otb_pad_rec_specifying_unique_id()
 {
 	otb_test_setup_local_crypto();
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, expected_unique_id, NULL);
 	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
@@ -180,7 +180,7 @@ static void test_otb_pad_rec_specifying_unique_id()
 static void test_otb_pad_rec_without_specifying_unique_id()
 {
 	otb_test_setup_local_crypto();
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, NULL);
 	OtbUniqueId *actual_unique_id=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &actual_unique_id, NULL);
@@ -193,8 +193,8 @@ static void test_otb_pad_rec_without_specifying_unique_id()
 static void test_otb_pad_rec_compare_by_id()
 {
 	otb_test_setup_local_crypto();
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
-	OtbUniqueId *unexpected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
+	OtbUniqueId *unexpected_unique_id=otb_unique_id_new();
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, expected_unique_id, NULL);
 	g_assert_cmpint(0, ==, otb_pad_rec_compare_by_id(pad_rec, expected_unique_id));
 	g_assert_cmpint(0, !=, otb_pad_rec_compare_by_id(pad_rec, unexpected_unique_id));
@@ -206,7 +206,7 @@ static void test_otb_pad_rec_compare_by_id()
 static void test_otb_pad_rec_save_load()
 {
 	otb_test_setup_local_crypto();
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbPadRecStatus expected_status=OTB_PAD_REC_STATUS_RECEIVED;
 	OtbPadRec *pad_rec_save=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, otb_get_test_dir_path(), OTB_PAD_REC_PROP_STATUS, expected_status, OTB_PAD_REC_PROP_UNIQUE_ID, expected_unique_id, NULL);
 	g_assert(otb_pad_rec_save(pad_rec_save));

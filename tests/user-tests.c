@@ -128,7 +128,7 @@ static void test_otb_user_create_from_existing_config_file()
 	const char *EXPECTED_ADDRESS1="akjsdhkljashgd.onion";
 	const char *EXPECTED_ADDRESS2="kjshdfjkhgssdj.onion";
 	
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
 	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS1);
@@ -168,7 +168,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kdjhgkfgjhfhj.onion";
 	
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
 	*user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS);

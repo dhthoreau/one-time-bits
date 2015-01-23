@@ -148,7 +148,7 @@ static void otb_user_initialize_unique_id(OtbUser *user)
 	if(unique_id_bytes==NULL || bytes_length!=OTB_UNIQUE_ID_BYTES_LENGTH)
 	{
 		otb_unique_id_unref(user->priv->unique_id);
-		user->priv->unique_id=otb_unique_id_create();
+		user->priv->unique_id=otb_unique_id_new();
 	}
 	else
 		user->priv->unique_id=otb_unique_id_from_bytes(unique_id_bytes);

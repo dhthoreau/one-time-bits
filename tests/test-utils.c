@@ -44,7 +44,7 @@ const char *otb_get_test_dir_path()
 
 char *otb_generate_unique_test_subdir_path()
 {
-	char *unique_id_str=otb_unique_id_string_create();
+	char *unique_id_str=otb_unique_id_string_new();
 	char *subdir_path=g_build_filename(otb_test_dir_path, unique_id_str, NULL);
 	g_free(unique_id_str);
 	return subdir_path;

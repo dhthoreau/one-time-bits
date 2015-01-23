@@ -13,8 +13,8 @@
 
 static void test_unique_id_create_compare()
 {
-	OtbUniqueId *unique_id1=otb_unique_id_create();
-	OtbUniqueId *unique_id2=otb_unique_id_create();
+	OtbUniqueId *unique_id1=otb_unique_id_new();
+	OtbUniqueId *unique_id2=otb_unique_id_new();
 	g_assert_cmpint(0, ==, otb_unique_id_compare(unique_id1, unique_id1));
 	g_assert_cmpint(0, !=, otb_unique_id_compare(unique_id1, unique_id2));
 	otb_unique_id_unref(unique_id1);
@@ -23,7 +23,7 @@ static void test_unique_id_create_compare()
 
 static void test_unique_id_duplicate()
 {
-	OtbUniqueId *unique_id1=otb_unique_id_create();
+	OtbUniqueId *unique_id1=otb_unique_id_new();
 	OtbUniqueId *unique_id2=otb_unique_id_ref(unique_id1);
 	g_assert(unique_id1==unique_id2);
 	otb_unique_id_unref(unique_id1);
@@ -32,7 +32,7 @@ static void test_unique_id_duplicate()
 
 static void test_unique_id_bytes()
 {
-	OtbUniqueId *expected_unique_id=otb_unique_id_create();
+	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbUniqueId *actual_unique_id=otb_unique_id_from_bytes(otb_unique_id_get_bytes(expected_unique_id));
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	g_assert_cmpint(0, ==, memcmp(otb_unique_id_get_bytes(expected_unique_id), otb_unique_id_get_bytes(actual_unique_id), OTB_UNIQUE_ID_BYTES_LENGTH));
@@ -42,7 +42,7 @@ static void test_unique_id_bytes()
 
 static void test_unique_id_strings()
 {
-	char *expected_unique_id_string=otb_unique_id_string_create();
+	char *expected_unique_id_string=otb_unique_id_string_new();
 	OtbUniqueId *unique_id=otb_unique_id_from_string(expected_unique_id_string);
 	char *actual_unique_id_string=otb_unique_id_to_string(unique_id);
 	g_assert_cmpstr(expected_unique_id_string, ==, actual_unique_id_string);

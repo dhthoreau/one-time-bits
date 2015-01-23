@@ -676,7 +676,7 @@ static void otb_do_server_receive_finish_from_client(const ProtocolParams params
 
 static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocolContext *context, off_t pad_size, unsigned char **packet_out)
 {
-	OtbUniqueId *pad_unique_id=otb_unique_id_create();
+	OtbUniqueId *pad_unique_id=otb_unique_id_new();
 	uint32_t packet_out_size=29;
 	*packet_out=g_malloc(packet_out_size);
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_PAD_HEADER;
@@ -824,7 +824,7 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	g_assert(incoming_pad_db!=NULL);
 	for(int counter=0; counter<RECEIVED_PAD_COUNT(params); counter++)
 	{
-		OtbUniqueId *received_pad_unique_id=otb_unique_id_create();
+		OtbUniqueId *received_pad_unique_id=otb_unique_id_new();
 		long long expiration=otb_few_months_from_now();
 		OtbPadIO *received_pad_io=NULL;
 		g_assert((received_pad_io=otb_pad_db_add_incoming_pad(incoming_pad_db, received_pad_unique_id, PAD_SIZE(params), expiration))!=NULL);

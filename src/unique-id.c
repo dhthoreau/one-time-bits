@@ -40,7 +40,7 @@ static OtbUniqueId *otb_unique_id_instantiate()
 	return unique_id;
 }
 
-OtbUniqueId *otb_unique_id_create()
+OtbUniqueId *otb_unique_id_new()
 {
 	OtbUniqueId *unique_id=otb_unique_id_instantiate();
 	uuid_generate(unique_id->uuid);
@@ -73,9 +73,9 @@ OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string)
 	return unique_id;
 }
 
-char *otb_unique_id_string_create()
+char *otb_unique_id_string_new()
 {
-	OtbUniqueId *unique_id=otb_unique_id_create();
+	OtbUniqueId *unique_id=otb_unique_id_new();
 	char *unique_id_string=otb_unique_id_to_string(unique_id);
 	g_slice_free(OtbUniqueId, unique_id);
 	return unique_id_string;

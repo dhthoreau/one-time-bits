@@ -198,7 +198,7 @@ OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniq
 
 static OtbFriend *otb_bitkeeper_import_friend_to_disk(const OtbBitkeeper *bitkeeper, const char *import_string)
 {
-	char *friend_directory_id_string=otb_unique_id_string_create();
+	char *friend_directory_id_string=otb_unique_id_string_new();
 	char *friend_base_path=g_build_filename(bitkeeper->priv->friends_base_path, friend_directory_id_string, NULL);
 	OtbFriend *import_friend=otb_friend_import_to_directory(import_string, friend_base_path);
 	g_free(friend_base_path);
