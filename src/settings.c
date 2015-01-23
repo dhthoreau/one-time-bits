@@ -178,6 +178,19 @@ unsigned int otb_settings_get_config_uint(const char *group_name, const char *ke
 	return (unsigned int)otb_settings_get_config_int(group_name, key, (int)error_value);
 }
 
+long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value)
+{
+	GError *error=NULL;
+	long long value=g_key_file_get_int64(key_file, group_name, key, &error);
+	if(error!=NULL)
+	{
+		value=error_value;
+		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
+		g_error_free(error);
+	}
+	return value;
+}
+
 unsigned long long otb_settings_get_uint64(GKeyFile *key_file, const char *group_name, const char *key, unsigned long long error_value)
 {
 	GError *error=NULL;

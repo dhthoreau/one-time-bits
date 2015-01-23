@@ -217,10 +217,16 @@ static uint32_t otb_protocol_create_error_packet(OtbProtocolContext *protocol_co
 #define SET_PACKET_NUMBER32(packet, position, type, value)	(PACKET_NUMBER((packet), (position), type)=g_htonl(value))
 #define GET_PACKET_NUMBER32(packet, position, type)			(g_ntohl(PACKET_NUMBER((packet), (position), type)))
 
+#define SET_PACKET_NUMBER64(packet, position, type, value)	(PACKET_NUMBER((packet), (position), type)=GINT64_TO_BE(value))
+#define GET_PACKET_NUMBER64(packet, position, type)			(GINT64_FROM_BE(PACKET_NUMBER((packet), (position), type)))
+
 #define SET_PACKET_UINT32(packet, position, value)			(SET_PACKET_NUMBER32((packet), (position), uint32_t, (value)))
 #define GET_PACKET_UINT32(packet, position)					(GET_PACKET_NUMBER32((packet), (position), uint32_t))
 #define SET_PACKET_INT32(packet, position, value)			(SET_PACKET_NUMBER32((packet), (position), int32_t, (value)))
 #define GET_PACKET_INT32(packet, position)					(GET_PACKET_NUMBER32((packet), (position), int32_t))
+
+#define SET_PACKET_INT64(packet, position, value)			(SET_PACKET_NUMBER64((packet), (position), int64_t, (value)))
+#define GET_PACKET_INT64(packet, position)					(GET_PACKET_NUMBER64((packet), (position), int64_t))
 
 #define ENCRYPTED_PACKET_SET_ENCRYPTED_KEY_SIZE(packet, size)	SET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand), (size))
 #define ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(packet)			GET_PACKET_UINT32((packet), sizeof(OtbProtocolCommand))
@@ -473,12 +479,15 @@ static uint32_t otb_protocol_client_send_pad_unique_ids_to_server(OtbProtocolCon
 ///  OtbProtocolCommand - Command
 ///  OtbUniqueId pad_id
 ///  int32_t - pad_size
+///  int64_t - pad_expiration (seconds that have elapsed since 1970-01-01 00:00:00 UTC)
 ///Will be wrapped in an encrypted packet.
-#define INCOMING_PAD_HEADER_PACKET_SIZE								(sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH+sizeof(int32_t))
-#define INCOMING_PAD_HEADER_PACKET_PAD_UNIQUE_ID_BYTES(packet)		((packet)+sizeof(OtbProtocolCommand))
-#define INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(packet, size)		SET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH, (size))
-#define INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(packet)				GET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH)
-#define INCOMING_PAD_HEADER_PACKET_IS_VALID(packet, packet_size)	(INCOMING_PAD_HEADER_PACKET_SIZE==(packet_size))
+#define INCOMING_PAD_HEADER_PACKET_SIZE										(sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH+sizeof(int32_t)+sizeof(int64_t))
+#define INCOMING_PAD_HEADER_PACKET_PAD_UNIQUE_ID_BYTES(packet)				((packet)+sizeof(OtbProtocolCommand))
+#define INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(packet, size)				SET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH, (size))
+#define INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(packet)						GET_PACKET_INT32((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH)
+#define INCOMING_PAD_HEADER_PACKET_SET_PAD_EXPIRATION(packet, expiration)	SET_PACKET_INT64((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH+sizeof(int32_t), (expiration))
+#define INCOMING_PAD_HEADER_PACKET_GET_PAD_EXPIRATION(packet)				GET_PACKET_INT64((packet), sizeof(OtbProtocolCommand)+OTB_UNIQUE_ID_BYTES_LENGTH+sizeof(int32_t))
+#define INCOMING_PAD_HEADER_PACKET_IS_VALID(packet, packet_size)			(INCOMING_PAD_HEADER_PACKET_SIZE==(packet_size))
 
 static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext *protocol_context, const unsigned char *input_packet, uint32_t input_packet_size, unsigned char **packet_out)
 {
@@ -497,10 +506,12 @@ static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext
 				memcpy(INCOMING_PAD_HEADER_PACKET_PAD_UNIQUE_ID_BYTES(plain_packet), otb_unique_id_get_bytes(protocol_context->pad_unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
 				protocol_context->pad_size=otb_pad_db_get_pad_size(protocol_context->pad_db, protocol_context->pad_unique_id);
 				INCOMING_PAD_HEADER_PACKET_SET_PAD_SIZE(plain_packet, protocol_context->pad_size);
+				long long pad_expiration=otb_pad_db_get_pad_expiration(protocol_context->pad_db, protocol_context->pad_unique_id);
+				INCOMING_PAD_HEADER_PACKET_SET_PAD_EXPIRATION(plain_packet, pad_expiration);
 				packet_out_size=otb_protocol_create_encrypted_packet(protocol_context, (unsigned char*)plain_packet, INCOMING_PAD_HEADER_PACKET_SIZE, packet_out);
-				g_free(plain_packet);
 				protocol_context->pad_bytes_transferred=0;
 				protocol_context->state=STATE_CLIENT_SENDING_PAD_HEADER_TO_SERVER;
+				g_free(plain_packet);
 			}
 			else
 				packet_out_size=otb_protocol_create_error_packet(protocol_context, packet_out);
@@ -791,7 +802,8 @@ static int otb_protocol_server_add_new_pad_id(OtbProtocolContext *protocol_conte
 		protocol_context->pad_unique_id=otb_unique_id_from_bytes(INCOMING_PAD_HEADER_PACKET_PAD_UNIQUE_ID_BYTES(input_packet));
 		protocol_context->pad_bytes_transferred=0;
 		protocol_context->pad_size=INCOMING_PAD_HEADER_PACKET_GET_PAD_SIZE(input_packet);
-		protocol_context->pad_io=otb_pad_db_add_incoming_pad(protocol_context->pad_db, protocol_context->pad_unique_id, protocol_context->pad_size);
+		long long pad_expiration=INCOMING_PAD_HEADER_PACKET_GET_PAD_EXPIRATION(input_packet);
+		protocol_context->pad_io=otb_pad_db_add_incoming_pad(protocol_context->pad_db, protocol_context->pad_unique_id, protocol_context->pad_size, pad_expiration);
 		if(protocol_context->pad_io==NULL)
 			add_new_pad_status=ADD_NEW_PAD_ID_UNABLE;
 		else

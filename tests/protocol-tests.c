@@ -15,6 +15,7 @@
 #include "bitkeeper-tests.h"
 #include "main.h"
 #include "pad-db-tests.h"
+#include "test-utils.h"
 #include "../src/protocol.h"
 #include "../src/random.h"
 
@@ -34,6 +35,8 @@
 #define EXPECTED_COMMAND_FINISH							13
 
 #define EXPECTED_DEFAULT_CHUNK_SIZE	10240
+
+#define EXPECTED_EXPIRATION_SPAN	MICROSECONDS_PER_MONTH*11
 
 typedef unsigned char ProtocolParams[6];
 
@@ -377,12 +380,12 @@ static void otb_do_client_send_pad_header_to_server(const ProtocolParams params,
 	unsigned char *encrypted_client_packet=NULL;
 	uint32_t encrypted_client_packet_size=otb_protocol_client(protocol_context, server_response_packet, server_response_packet_size, &encrypted_client_packet);
 	g_assert(encrypted_client_packet!=NULL);
-	g_assert_cmpint(77, ==, encrypted_client_packet_size);
+	g_assert_cmpint(85, ==, encrypted_client_packet_size);
 	unsigned char *plain_client_packet=NULL;
 	size_t plain_client_packet_buffer_size=0;
 	uint32_t plain_client_packet_size=otb_decrypt_packet(peer_asym_cipher, encrypted_client_packet, encrypted_client_packet_size, &plain_client_packet, &plain_client_packet_buffer_size);
-	g_assert_cmpint(32, ==, plain_client_packet_buffer_size);
-	g_assert_cmpint(21, ==, plain_client_packet_size);
+	g_assert_cmpint(40, ==, plain_client_packet_buffer_size);
+	g_assert_cmpint(29, ==, plain_client_packet_size);
 	g_assert(plain_client_packet!=NULL);
 	g_assert_cmpint(EXPECTED_COMMAND_SENDING_PAD_HEADER, ==, plain_client_packet[0]);
 	OtbUniqueId *actual_packet_pad_unique_id=otb_unique_id_from_bytes(plain_client_packet+1);
@@ -392,6 +395,7 @@ static void otb_do_client_send_pad_header_to_server(const ProtocolParams params,
 			break;
 	g_assert(potential_expected_pad_unique_id_iter!=NULL);
 	g_assert_cmpint(PAD_SIZE(params), ==, g_ntohl(*(int32_t*)(plain_client_packet+17)));
+	g_assert_cmpint((g_get_real_time()+EXPECTED_EXPIRATION_SPAN)/MICROSECONDS_PER_MONTH, ==, GINT64_FROM_BE(*(int64_t*)(plain_client_packet+21))/MICROSECONDS_PER_MONTH);
 	otb_asym_cipher_dispose_decryption_buffer(plain_client_packet, plain_client_packet_buffer_size);
 	otb_unique_id_unref(actual_packet_pad_unique_id);
 	g_free(encrypted_client_packet);
@@ -673,11 +677,12 @@ static void otb_do_server_receive_finish_from_client(const ProtocolParams params
 static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocolContext *context, off_t pad_size, unsigned char **packet_out)
 {
 	OtbUniqueId *pad_unique_id=otb_unique_id_create();
-	uint32_t packet_out_size=21;
+	uint32_t packet_out_size=29;
 	*packet_out=g_malloc(packet_out_size);
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_PAD_HEADER;
 	memcpy(*packet_out+1, otb_unique_id_get_bytes(pad_unique_id), 16);
 	*(uint32_t*)(*packet_out+17)=g_htonl(pad_size);
+	*(uint64_t*)(*packet_out+21)=GINT64_TO_BE(g_get_real_time()+EXPECTED_EXPIRATION_SPAN);
 	otb_unique_id_unref(pad_unique_id);
 	return packet_out_size;
 }
@@ -700,7 +705,7 @@ static void otb_do_server_receive_pad_header_too_large_from_client(const Protoco
 	uint32_t server_packet_size=otb_protocol_server(protocol_context, client_request_packet, client_request_packet_size, &server_packet);
 	g_assert(server_packet!=NULL);
 	g_assert_cmpint(1, ==, server_packet_size);
-	g_assert(server_packet[0]==EXPECTED_COMMAND_UNABLE);
+	g_assert_cmpint(EXPECTED_COMMAND_UNABLE, ==, server_packet[0]);
 	g_free(server_packet);
 	g_free(client_request_packet);
 }
@@ -797,6 +802,7 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	g_assert(outgoing_pad_db!=NULL);
 	g_assert(otb_pad_db_set_new_pad_min_size(outgoing_pad_db, PAD_SIZE(params)));
 	g_assert(otb_pad_db_set_new_pad_max_size(outgoing_pad_db, PAD_SIZE(params)));
+	g_assert(otb_pad_db_set_new_pad_expiration(outgoing_pad_db, EXPECTED_EXPIRATION_SPAN));
 	for(int counter=0; counter<UNSENT_PAD_COUNT(params)+SENT_PAD_COUNT(params)+CONSUMED_PAD_COUNT(params); counter++)
 		g_assert(otb_pad_db_create_unsent_pad(outgoing_pad_db));
 	for(int counter=0; counter<SENT_PAD_COUNT(params)+CONSUMED_PAD_COUNT(params); counter++)
@@ -819,8 +825,9 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	for(int counter=0; counter<RECEIVED_PAD_COUNT(params); counter++)
 	{
 		OtbUniqueId *received_pad_unique_id=otb_unique_id_create();
+		long long expiration=otb_few_months_from_now();
 		OtbPadIO *received_pad_io=NULL;
-		g_assert((received_pad_io=otb_pad_db_add_incoming_pad(incoming_pad_db, received_pad_unique_id, PAD_SIZE(params)))!=NULL);
+		g_assert((received_pad_io=otb_pad_db_add_incoming_pad(incoming_pad_db, received_pad_unique_id, PAD_SIZE(params), expiration))!=NULL);
 		unsigned char *pad_bytes=g_malloc(PAD_SIZE(params));
 		g_assert(otb_pad_write(received_pad_io, pad_bytes, PAD_SIZE(params)));
 		otb_pad_db_close_pad(incoming_pad_db, received_pad_io);

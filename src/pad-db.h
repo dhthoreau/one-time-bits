@@ -33,6 +33,7 @@ typedef enum
 #define OTB_PAD_DB_PROP_MAX_SIZE			"max-size"
 #define OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE	"new-pad-min-size"
 #define OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE	"new-pad-max-size"
+#define OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION	"new-pad-expiration"
 
 #define OTB_TYPE_PAD_DB				(otb_pad_db_get_type())
 #define OTB_PAD_DB(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_PAD_DB, OtbPadDb))
@@ -64,13 +65,15 @@ gboolean otb_pad_db_delete(const OtbPadDb *pad_db);
 gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, off_t max_size);
 gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, off_t new_pad_min_size);
 gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_max_size);
+gboolean otb_pad_db_set_new_pad_expiration(const OtbPadDb *pad_db, long long new_pad_expiration);
 gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db);
-OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size);
+OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size, long long expiration);
 GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status);
 gboolean otb_pad_db_mark_pad_as_sent(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_mark_pad_as_received(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 OtbUniqueId *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecStatus status);
 off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
+long long otb_pad_db_get_pad_expiration(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_id);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);

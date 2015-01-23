@@ -14,6 +14,7 @@
 #include "test-utils.h"
 #include "../src/io.h"
 #include "../src/local-crypto.h"
+#include "../src/random.h"
 #include "../src/settings.h"
 #include "../src/sym-cipher.h"
 #include "../src/unique-id.h"
@@ -78,4 +79,13 @@ void otb_assert_file_does_not_exist(const char *file_path)
 	for(clock_t start_clock=clock(), current_clock=clock(); (current_clock-start_clock)/CLOCKS_PER_SEC<SECONDS_TO_WAIT_FOR_DELETION_OPERATION_TO_COMPLETE && g_file_test(file_path, G_FILE_TEST_EXISTS) || current_clock==-1 || start_clock==-1; current_clock=clock())
 		;
 	g_assert(!g_file_test(file_path, G_FILE_TEST_EXISTS));
+}
+
+long long otb_few_months_from_now()
+{
+	long long now=g_get_real_time();
+	unsigned int months;
+	otb_random_bytes(&months, sizeof months);
+	months=otb_modulo(months, 3)+1;
+	return now+months*MICROSECONDS_PER_MONTH;
 }

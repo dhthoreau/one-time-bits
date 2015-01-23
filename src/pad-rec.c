@@ -29,7 +29,7 @@ struct _OtbPadRecPrivate
 	char *pad_rec_file_path;
 	char *pad_file_path;
 	off_t size;
-	GDateTime *expiration;
+	long long expiration;
 	GBytes *pad_iv;
 };
 
@@ -79,9 +79,11 @@ static void otb_pad_rec_class_init(OtbPadRecClass *klass)
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_REC_PROP_BASE_PATH, _("Base path"), _("Directory where the record will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_BASE_NAME, g_param_spec_string(OTB_PAD_REC_PROP_BASE_NAME, _("Base name"), _("Name of file where the record will be saved, excluding file extension"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_SIZE, g_param_spec_int(OTB_PAD_REC_PROP_SIZE, _("Size"), _("Size of the pad file"), -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_EXPIRATION, g_param_spec_boxed(OTB_PAD_REC_PROP_EXPIRATION, _("Expiration"), _("The date and time when the pad expires"), G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_EXPIRATION, g_param_spec_int64(OTB_PAD_REC_PROP_EXPIRATION, _("Expiration"), _("The date and time when the pad expires (microseconds from 1-Jan-1979 UTC)"), 0, G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_type_class_add_private(klass, sizeof(OtbPadRecPrivate));
 }
+
+#define MICROSECONDS_PER_YEAR	31536000000000
 
 static void otb_pad_rec_init(OtbPadRec *pad_rec)
 {
@@ -92,7 +94,7 @@ static void otb_pad_rec_init(OtbPadRec *pad_rec)
 	pad_rec->priv->pad_rec_file_path=NULL;
 	pad_rec->priv->pad_file_path=NULL;
 	pad_rec->priv->size=-1;
-	pad_rec->priv->expiration=NULL;
+	pad_rec->priv->expiration=g_get_real_time()+MICROSECONDS_PER_YEAR;
 	pad_rec->priv->pad_iv=g_bytes_new_static("", 0);
 }
 
@@ -107,8 +109,6 @@ static void otb_pad_rec_finalize(GObject *object)
 	g_free(pad_rec->priv->base_name);
 	g_free(pad_rec->priv->pad_rec_file_path);
 	g_free(pad_rec->priv->pad_file_path);
-	if(pad_rec->priv->expiration!=NULL)
-		g_date_time_unref(pad_rec->priv->expiration);
 	g_bytes_unref(pad_rec->priv->pad_iv);
 	G_OBJECT_CLASS(otb_pad_rec_parent_class)->finalize(object);
 }
@@ -175,15 +175,9 @@ static void otb_pad_rec_set_property(GObject *object, unsigned int prop_id, cons
 		}
 		case PROP_EXPIRATION:
 		{
-			if(pad_rec->priv->expiration!=NULL)
-				g_date_time_unref(pad_rec->priv->expiration);
-			pad_rec->priv->expiration=g_value_dup_boxed(value);
-			if(pad_rec->priv->expiration==NULL)
-			{
-				GDateTime *now=g_date_time_new_now_utc();
-				pad_rec->priv->expiration=g_date_time_add_years(now, 1);
-				g_date_time_unref(now);
-			}
+			long long expiration=g_value_get_int64(value);
+			if(expiration>0)
+				pad_rec->priv->expiration=g_value_get_int64(value);
 			break;
 		}
 		default:
@@ -228,7 +222,7 @@ static void otb_pad_rec_get_property(GObject *object, unsigned int prop_id, GVal
 		}
 		case PROP_EXPIRATION:
 		{
-			g_value_set_boxed(value, pad_rec->priv->expiration);
+			g_value_set_int64(value, pad_rec->priv->expiration);
 			break;
 		}
 		default:
@@ -248,6 +242,7 @@ int otb_pad_rec_compare_by_id(const OtbPadRec *pad_rec, const OtbUniqueId *uniqu
 #define SAVE_KEY_UNIQUE_ID	"unique-id"
 #define SAVE_KEY_STATUS		"status"
 #define SAVE_KEY_SIZE		"size"
+#define SAVE_KEY_EXPIRATION	"expiration"
 #define SAVE_KEY_PAD_IV		"pad-iv"
 
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec)
@@ -257,6 +252,7 @@ gboolean otb_pad_rec_save(const OtbPadRec *pad_rec)
 	otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, otb_unique_id_get_bytes(pad_rec->priv->unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_STATUS, pad_rec->priv->status);
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_SIZE, pad_rec->priv->size);
+	g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_EXPIRATION, pad_rec->priv->expiration);
 	otb_settings_set_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV, pad_rec->priv->pad_iv);
 	gboolean ret_val=otb_settings_save_key_file(key_file, pad_rec->priv->pad_rec_file_path);
 	otb_pad_rec_unlock(pad_rec);
@@ -283,6 +279,8 @@ OtbPadRec *otb_pad_rec_load(const char *base_path, const char *file_name)
 	else if((pad_rec->priv->status=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_STATUS, -1))==-1)
 		load_successful=FALSE;
 	else if((pad_rec->priv->size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_SIZE, -2))==-2)
+		load_successful=FALSE;
+	else if((pad_rec->priv->expiration=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_EXPIRATION, -1))==-1)
 		load_successful=FALSE;
 	else if((pad_rec->priv->pad_iv=otb_settings_get_gbytes(key_file, SAVE_GROUP, SAVE_KEY_PAD_IV))==NULL)
 		load_successful=FALSE;

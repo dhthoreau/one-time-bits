@@ -25,6 +25,7 @@ struct _OtbPadDbPrivate
 	unsigned long long max_size;
 	off_t new_pad_min_size;
 	off_t new_pad_max_size;
+	long long new_pad_expiration;
 	GSList *pad_recs;
 	OtbPadIO *open_pad_io;
 };
@@ -33,6 +34,8 @@ struct _OtbPadDbPrivate
 #define DEFAULT_NEW_PAD_MIN_SIZE	10240
 #define DEFAULT_NEW_PAD_MAX_SIZE	20480
 #define MINIMUM_NEW_PAD_SIZE		1024
+#define DEFAULT_NEW_PAD_EXPIRATION	31536000000000
+#define MINIMUM_NEW_PAD_EXPIRATION	86400000000
 
 enum
 {
@@ -40,7 +43,8 @@ enum
 	PROP_BASE_PATH,
 	PROP_MAX_SIZE,
 	PROP_NEW_PAD_MIN_SIZE,
-	PROP_NEW_PAD_MAX_SIZE
+	PROP_NEW_PAD_MAX_SIZE,
+	PROP_NEW_PAD_EXPIRATION
 };
 
 static void otb_pad_db_dispose(GObject *object);
@@ -60,7 +64,8 @@ static void otb_pad_db_class_init(OtbPadDbClass *klass)
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_DB_PROP_BASE_PATH, _("Base path"), _("Directory where the database will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_MAX_SIZE, g_param_spec_uint64(OTB_PAD_DB_PROP_MAX_SIZE, _("Max size"), _("Maximum size of the database"), 0, G_MAXINT64, DEFAULT_MAX_SIZE, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_NEW_PAD_MIN_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, _("New pad min size"), _("Minimum size for a newly created pad"), 0, G_MAXINT, DEFAULT_NEW_PAD_MIN_SIZE, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_NEW_PAD_MAX_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, _("New pad max size"), _("Maximum size for a newly created pad"), 0, G_MAXINT, DEFAULT_NEW_PAD_MAX_SIZE, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_NEW_PAD_MAX_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, _("New pad max size"), _("Maximum size for a newly created pad"), MINIMUM_NEW_PAD_SIZE, G_MAXINT, DEFAULT_NEW_PAD_MAX_SIZE, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_NEW_PAD_EXPIRATION, g_param_spec_int64(OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION, _("New pad expiration"), _("Time interval of expiration for a newly created pad"), MINIMUM_NEW_PAD_EXPIRATION, G_MAXINT64, DEFAULT_NEW_PAD_EXPIRATION, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbPadDbPrivate));
 }
 
@@ -73,6 +78,7 @@ static void otb_pad_db_init(OtbPadDb *pad_db)
 	pad_db->priv->max_size=DEFAULT_MAX_SIZE;
 	pad_db->priv->new_pad_min_size=DEFAULT_NEW_PAD_MIN_SIZE;
 	pad_db->priv->new_pad_max_size=DEFAULT_NEW_PAD_MAX_SIZE;
+	pad_db->priv->new_pad_expiration=DEFAULT_NEW_PAD_EXPIRATION;
 	pad_db->priv->open_pad_io=NULL;
 	pad_db->priv->pad_recs=NULL;
 }
@@ -164,6 +170,11 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 			g_value_set_int(value, pad_db->priv->new_pad_max_size);
 			break;
 		}
+		case PROP_NEW_PAD_EXPIRATION:
+		{
+			g_value_set_int64(value, pad_db->priv->new_pad_expiration);
+			break;
+		}
 		default:
 		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -177,6 +188,7 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 #define SAVE_KEY_MAX_SIZE			"max-size"
 #define SAVE_KEY_NEW_PAD_MIN_SIZE	"new-pad-min-size"
 #define SAVE_KEY_NEW_PAD_MAX_SIZE	"new-pad-max-size"
+#define SAVE_KEY_NEW_PAD_EXPIRATION	"new-pad-expiration"
 
 static gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 {
@@ -187,6 +199,7 @@ static gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 		g_key_file_set_uint64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, pad_db->priv->max_size);
 		g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, pad_db->priv->new_pad_min_size);
 		g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, pad_db->priv->new_pad_max_size);
+		g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_EXPIRATION, pad_db->priv->new_pad_expiration);
 		ret_val=otb_settings_save_key_file(key_file, pad_db->priv->file_path);
 		g_key_file_unref(key_file);
 	}
@@ -215,6 +228,8 @@ static gboolean otb_pad_db_load(const OtbPadDb *pad_db)
 	else if((pad_db->priv->new_pad_min_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, -1))==-1)
 		ret_val=FALSE;
 	else if((pad_db->priv->new_pad_max_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, -1))==-1)
+		ret_val=FALSE;
+	else if((pad_db->priv->new_pad_expiration=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_EXPIRATION, -1))==-1)
 		ret_val=FALSE;
 	if(key_file!=NULL)
 		g_key_file_unref(key_file);
@@ -396,6 +411,21 @@ gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_m
 	return ret_val;
 }
 
+gboolean otb_pad_db_set_new_pad_expiration(const OtbPadDb *pad_db, long long new_pad_expiration)
+{
+	gboolean ret_val=TRUE;
+	otb_pad_db_lock_write(pad_db);
+	long long old_new_pad_expiration=pad_db->priv->new_pad_expiration;
+	pad_db->priv->new_pad_expiration=new_pad_expiration;
+	if(!otb_pad_db_save(pad_db))
+	{
+		pad_db->priv->new_pad_expiration=old_new_pad_expiration;
+		ret_val=FALSE;
+	}
+	otb_pad_db_unlock_write(pad_db);
+	return ret_val;
+}
+
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id)
 {
 	gboolean ret_val=TRUE;
@@ -439,7 +469,8 @@ gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db)
 	else
 	{
 		new_pad_size=otb_modulo(new_pad_size, (pad_db->priv->new_pad_max_size-pad_db->priv->new_pad_min_size+1))+pad_db->priv->new_pad_min_size;
-		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, new_pad_size, NULL);
+		long long expiration=g_get_real_time()+pad_db->priv->new_pad_expiration;
+		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, new_pad_size, OTB_PAD_REC_PROP_EXPIRATION, expiration, NULL);
 		if(!otb_pad_db_add_pad_rec(pad_db, pad_rec))
 		{
 			ret_val=FALSE;
@@ -455,20 +486,20 @@ gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db)
 	return ret_val;
 }
 
-OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size)
+OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, off_t size, long long expiration)
 {
 	OtbPadIO *pad_io=NULL;
 	otb_pad_db_lock_write(pad_db);
 	if(pad_db->priv->open_pad_io==NULL)
 	{
-		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_INCOMING, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, NULL);
+		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_INCOMING, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, OTB_PAD_REC_PROP_EXPIRATION, expiration, NULL);
 		if(!otb_pad_db_add_pad_rec(pad_db, pad_rec))
 			g_object_unref(pad_rec);
 		else if((pad_io=otb_pad_rec_open_pad_for_write(pad_rec))==NULL)
 			otb_pad_db_remove_pad_rec(pad_db, pad_rec);
+		else
+			pad_db->priv->open_pad_io=pad_io;
 	}
-	if(pad_io!=NULL)
-		pad_db->priv->open_pad_io=pad_io;
 	otb_pad_db_unlock_write(pad_db);
 	return pad_io;
 }
@@ -595,6 +626,17 @@ off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
 	otb_pad_db_unlock_read(pad_db);
 	return pad_size;
+}
+
+long long otb_pad_db_get_pad_expiration(const OtbPadDb *pad_db, const OtbUniqueId *unique_id)
+{
+	otb_pad_db_lock_read(pad_db);
+	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
+	long long pad_expiration=-1;
+	if(pad_rec!=NULL)
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &pad_expiration, NULL);
+	otb_pad_db_unlock_read(pad_db);
+	return pad_expiration;
 }
 
 OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *unique_id)
