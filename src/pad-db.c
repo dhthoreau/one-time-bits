@@ -15,8 +15,6 @@
 #include "random.h"
 #include "settings.h"
 
-// FARE - Più G_UNLIKELY().
-
 struct _OtbPadDbPrivate
 {
 	GRWLock lock;
@@ -193,7 +191,7 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 static gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
-	if(otb_mkdir_with_parents(pad_db->priv->base_path))
+	if(G_LIKELY(otb_mkdir_with_parents(pad_db->priv->base_path)))
 	{
 		GKeyFile *key_file=g_key_file_new();
 		g_key_file_set_uint64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, pad_db->priv->max_size);
@@ -203,13 +201,15 @@ static gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 		ret_val=otb_settings_save_key_file(key_file, pad_db->priv->file_path);
 		g_key_file_unref(key_file);
 	}
+	else
+		ret_val=FALSE;
 	return ret_val;
 }
 
 OtbPadDb *otb_pad_db_create_in_directory(const char *base_path)
 {
 	OtbPadDb *pad_db=g_object_new(OTB_TYPE_PAD_DB, OTB_PAD_DB_PROP_BASE_PATH, base_path, NULL);
-	if(g_file_test(pad_db->priv->file_path, G_FILE_TEST_EXISTS) || !otb_pad_db_save(pad_db))
+	if(G_UNLIKELY(g_file_test(pad_db->priv->file_path, G_FILE_TEST_EXISTS) || !otb_pad_db_save(pad_db)))
 	{
 		g_object_unref(pad_db);
 		pad_db=NULL;
@@ -221,17 +221,17 @@ static gboolean otb_pad_db_load(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
 	GKeyFile *key_file=otb_settings_load_key_file_from_file(pad_db->priv->file_path);
-	if(key_file==NULL)
+	if(G_UNLIKELY(key_file==NULL))
 		ret_val=FALSE;
-	else if((pad_db->priv->max_size=otb_settings_get_uint64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, 0))==0)
+	else if(G_UNLIKELY((pad_db->priv->max_size=otb_settings_get_uint64(key_file, SAVE_GROUP, SAVE_KEY_MAX_SIZE, 0))==0))
 		ret_val=FALSE;
-	else if((pad_db->priv->new_pad_min_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, -1))==-1)
+	else if(G_UNLIKELY((pad_db->priv->new_pad_min_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MIN_SIZE, -1))==-1))
 		ret_val=FALSE;
-	else if((pad_db->priv->new_pad_max_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, -1))==-1)
+	else if(G_UNLIKELY((pad_db->priv->new_pad_max_size=otb_settings_get_int(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_MAX_SIZE, -1))==-1))
 		ret_val=FALSE;
-	else if((pad_db->priv->new_pad_expiration=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_EXPIRATION, -1))==-1)
+	else if(G_UNLIKELY((pad_db->priv->new_pad_expiration=otb_settings_get_int64(key_file, SAVE_GROUP, SAVE_KEY_NEW_PAD_EXPIRATION, -1))==-1))
 		ret_val=FALSE;
-	if(key_file!=NULL)
+	if(G_LIKELY(key_file!=NULL))
 		g_key_file_unref(key_file);
 	return ret_val;
 }
@@ -256,7 +256,7 @@ static off_t otb_pad_db_get_curr_size(const OtbPadDb *pad_db)
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		off_t pad_size;
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
-		if(pad_size>0)
+		if(G_LIKELY(pad_size>0))
 			curr_size+=pad_size;
 	}
 	return curr_size;
@@ -268,17 +268,17 @@ static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_re
 	OtbUniqueId *unique_id=NULL;
 	off_t pad_size;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
-	if(otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id)!=NULL)
+	if(G_UNLIKELY(otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id)!=NULL))
 	{
 		g_message(_("Failed to add record due to non-unique ID."));
 		ret_val=FALSE;
 	}
-	else if(otb_pad_db_get_curr_size(pad_db)+pad_size>pad_db->priv->max_size)
+	else if(G_UNLIKELY(otb_pad_db_get_curr_size(pad_db)+pad_size>pad_db->priv->max_size))
 	{
 		g_message(_("Failed to add record due to database size limitation."));
 		ret_val=FALSE;
 	}
-	else if(otb_pad_rec_save(pad_rec))
+	else if(G_UNLIKELY(otb_pad_rec_save(pad_rec)))
 		pad_db->priv->pad_recs=g_slist_prepend(pad_db->priv->pad_recs, pad_rec);
 	otb_unique_id_unref(unique_id);
 	return ret_val;
@@ -288,7 +288,7 @@ static gboolean otb_pad_db_load_all_recs(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
 	GDir *pad_db_directory=otb_open_directory(pad_db->priv->base_path);
-	if(pad_db_directory==NULL)
+	if(G_UNLIKELY(pad_db_directory==NULL))
 		ret_val=FALSE;
 	else
 	{
@@ -299,7 +299,7 @@ static gboolean otb_pad_db_load_all_recs(const OtbPadDb *pad_db)
 			if(g_str_has_suffix(file_name, ".rec"))
 			{
 				OtbPadRec *pad_rec=otb_pad_rec_load(pad_db->priv->base_path, file_name);
-				if(pad_rec==NULL)
+				if(G_UNLIKELY(pad_rec==NULL))
 					ret_val=FALSE;
 				pad_db->priv->pad_recs=g_slist_prepend(pad_db->priv->pad_recs, pad_rec);
 			}
@@ -313,11 +313,11 @@ OtbPadDb *otb_pad_db_load_from_directory(const char *base_path)
 {
 	OtbPadDb *pad_db=g_object_new(OTB_TYPE_PAD_DB, OTB_PAD_DB_PROP_BASE_PATH, base_path, NULL);
 	gboolean load_successful=TRUE;
-	if(!otb_pad_db_load(pad_db))
+	if(G_UNLIKELY(!otb_pad_db_load(pad_db)))
 		load_successful=FALSE;
-	else if(!otb_pad_db_load_all_recs(pad_db))
+	else if(G_UNLIKELY(!otb_pad_db_load_all_recs(pad_db)))
 		load_successful=FALSE;
-	if(!load_successful)
+	if(G_UNLIKELY(!load_successful))
 	{
 		g_object_unref(pad_db);
 		pad_db=NULL;
@@ -328,7 +328,7 @@ OtbPadDb *otb_pad_db_load_from_directory(const char *base_path)
 static gboolean otb_pad_db_remove_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_rec)
 {
 	gboolean ret_val=otb_pad_rec_delete(pad_rec);
-	if(ret_val)
+	if(G_LIKELY(ret_val))
 	{
 		pad_db->priv->pad_recs=g_slist_remove(pad_db->priv->pad_recs, pad_rec);
 		g_object_unref(pad_rec);
@@ -354,7 +354,7 @@ gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, off_t max_size)
 	otb_pad_db_lock_write(pad_db);
 	off_t old_max_size=pad_db->priv->max_size;
 	pad_db->priv->max_size=max_size;
-	if(!otb_pad_db_save(pad_db))
+	if(G_UNLIKELY(!otb_pad_db_save(pad_db)))
 	{
 		pad_db->priv->max_size=old_max_size;
 		ret_val=FALSE;
@@ -376,7 +376,7 @@ gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, off_t new_pad_m
 		pad_db->priv->new_pad_min_size=new_pad_min_size;
 		if(pad_db->priv->new_pad_min_size>pad_db->priv->new_pad_max_size)
 			pad_db->priv->new_pad_max_size=pad_db->priv->new_pad_min_size;
-		if(!otb_pad_db_save(pad_db))
+		if(G_UNLIKELY(!otb_pad_db_save(pad_db)))
 		{
 			pad_db->priv->new_pad_min_size=old_pad_min_size;
 			pad_db->priv->new_pad_max_size=old_pad_max_size;
@@ -400,7 +400,7 @@ gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, off_t new_pad_m
 		pad_db->priv->new_pad_max_size=new_pad_max_size;
 		if(pad_db->priv->new_pad_min_size>pad_db->priv->new_pad_max_size)
 			pad_db->priv->new_pad_max_size=pad_db->priv->new_pad_min_size;
-		if(!otb_pad_db_save(pad_db))
+		if(G_UNLIKELY(!otb_pad_db_save(pad_db)))
 		{
 			pad_db->priv->new_pad_min_size=old_pad_min_size;
 			pad_db->priv->new_pad_max_size=old_pad_max_size;
@@ -417,7 +417,7 @@ gboolean otb_pad_db_set_new_pad_expiration(const OtbPadDb *pad_db, long long new
 	otb_pad_db_lock_write(pad_db);
 	long long old_new_pad_expiration=pad_db->priv->new_pad_expiration;
 	pad_db->priv->new_pad_expiration=new_pad_expiration;
-	if(!otb_pad_db_save(pad_db))
+	if(G_UNLIKELY(!otb_pad_db_save(pad_db)))
 	{
 		pad_db->priv->new_pad_expiration=old_new_pad_expiration;
 		ret_val=FALSE;
@@ -431,7 +431,7 @@ gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique
 	gboolean ret_val=TRUE;
 	otb_pad_db_lock_write(pad_db);
 	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
-	if(pad_rec!=NULL && !otb_pad_db_remove_pad_rec(pad_db, pad_rec))
+	if(G_UNLIKELY(pad_rec!=NULL && !otb_pad_db_remove_pad_rec(pad_db, pad_rec)))
 		ret_val=FALSE;
 	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
@@ -447,13 +447,13 @@ gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db)
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
 		long long pad_rec_expiration;
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &pad_rec_expiration, NULL);
-		if(now>pad_rec_expiration)
+		if(G_UNLIKELY(now>pad_rec_expiration))
 			pad_recs_to_remove=g_slist_prepend(pad_recs_to_remove, pad_rec);
 	}
 	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		if(!otb_pad_db_remove_pad_rec(pad_db, pad_rec))
+		if(G_UNLIKELY(!otb_pad_db_remove_pad_rec(pad_db, pad_rec)))
 			ret_val=FALSE;
 	}
 	g_slist_free(pad_recs_to_remove);
@@ -475,7 +475,7 @@ static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
 	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=g_slist_next(curr_element))
 	{
 		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		if(!otb_pad_db_remove_pad_rec(pad_db, pad_rec))
+		if(G_UNLIKELY(!otb_pad_db_remove_pad_rec(pad_db, pad_rec)))
 			ret_val=FALSE;
 	}
 	g_slist_free(pad_recs_to_remove);
@@ -487,19 +487,19 @@ gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db)
 	gboolean ret_val=TRUE;
 	otb_pad_db_lock_write(pad_db);
 	off_t new_pad_size;
-	if(!otb_random_bytes(&new_pad_size, sizeof new_pad_size))
+	if(G_UNLIKELY(!otb_random_bytes(&new_pad_size, sizeof new_pad_size)))
 		ret_val=FALSE;
 	else
 	{
 		new_pad_size=otb_modulo(new_pad_size, (pad_db->priv->new_pad_max_size-pad_db->priv->new_pad_min_size+1))+pad_db->priv->new_pad_min_size;
 		long long expiration=g_get_real_time()+pad_db->priv->new_pad_expiration;
 		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, new_pad_size, OTB_PAD_REC_PROP_EXPIRATION, expiration, NULL);
-		if(!otb_pad_db_add_pad_rec(pad_db, pad_rec))
+		if(G_UNLIKELY(!otb_pad_db_add_pad_rec(pad_db, pad_rec)))
 		{
 			ret_val=FALSE;
 			g_object_unref(pad_rec);
 		}
-		else if(!otb_pad_rec_generate_pad_file(pad_rec))
+		else if(G_UNLIKELY(!otb_pad_rec_generate_pad_file(pad_rec)))
 		{
 			otb_pad_db_remove_pad_rec(pad_db, pad_rec);
 			ret_val=FALSE;
@@ -513,12 +513,12 @@ OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId 
 {
 	OtbPadIO *pad_io=NULL;
 	otb_pad_db_lock_write(pad_db);
-	if(pad_db->priv->open_pad_io==NULL)
+	if(G_UNLIKELY(pad_db->priv->open_pad_io==NULL))
 	{
 		OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_UNIQUE_ID, unique_id, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_INCOMING, OTB_PAD_REC_PROP_BASE_PATH, pad_db->priv->base_path, OTB_PAD_REC_PROP_SIZE, size, OTB_PAD_REC_PROP_EXPIRATION, expiration, NULL);
-		if(!otb_pad_db_add_pad_rec(pad_db, pad_rec))
+		if(G_UNLIKELY(!otb_pad_db_add_pad_rec(pad_db, pad_rec)))
 			g_object_unref(pad_rec);
-		else if((pad_io=otb_pad_rec_open_pad_for_write(pad_rec))==NULL)
+		else if(G_UNLIKELY((pad_io=otb_pad_rec_open_pad_for_write(pad_rec))==NULL))
 			otb_pad_db_remove_pad_rec(pad_db, pad_rec);
 		else
 			pad_db->priv->open_pad_io=pad_io;
@@ -551,12 +551,12 @@ static gboolean otb_pad_db_transition_status_of_pad(const OtbPadDb *pad_db, cons
 	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
 	OtbPadRecStatus pad_rec_status;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
-	if(pad_rec_status!=prerequisite_status)
+	if(G_UNLIKELY(pad_rec_status!=prerequisite_status))
 		ret_val=FALSE;
 	else
 	{
 		g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, new_status, NULL);
-		if(!otb_pad_rec_save(pad_rec))
+		if(G_UNLIKELY(!otb_pad_rec_save(pad_rec)))
 		{
 			g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, prerequisite_status, NULL);
 			ret_val=FALSE;
@@ -621,7 +621,7 @@ static OtbUniqueId *otb_pad_db_fetch_random_rec_id_no_lock(const OtbPadDb *pad_d
 	if(candidate_count!=0)
 	{
 		unsigned int nth;
-		if(otb_random_bytes(&nth, sizeof nth))
+		if(G_UNLIKELY(otb_random_bytes(&nth, sizeof nth)))
 		{
 			nth=otb_modulo(nth, candidate_count);
 			OtbPadRec *random_pad_rec=g_slist_nth(candidate_pad_recs, nth)->data;
@@ -645,7 +645,7 @@ off_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_
 	otb_pad_db_lock_read(pad_db);
 	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
 	off_t pad_size=-1;
-	if(pad_rec!=NULL)
+	if(G_LIKELY(pad_rec!=NULL))
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
 	otb_pad_db_unlock_read(pad_db);
 	return pad_size;
@@ -656,7 +656,7 @@ long long otb_pad_db_get_pad_expiration(const OtbPadDb *pad_db, const OtbUniqueI
 	otb_pad_db_lock_read(pad_db);
 	OtbPadRec *pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id);
 	long long pad_expiration=-1;
-	if(pad_rec!=NULL)
+	if(G_LIKELY(pad_rec!=NULL))
 		g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &pad_expiration, NULL);
 	otb_pad_db_unlock_read(pad_db);
 	return pad_expiration;
@@ -666,21 +666,21 @@ OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *uniq
 {
 	OtbPadIO *pad_io=NULL;
 	otb_pad_db_lock_read(pad_db);
-	if(pad_db->priv->open_pad_io==NULL)
+	if(G_LIKELY(pad_db->priv->open_pad_io==NULL))
 	{
 		OtbPadRec *pad_rec;
 		if((pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id))!=NULL)
 			pad_io=otb_pad_rec_open_pad_for_read(pad_rec, FALSE);
+		if(G_LIKELY(pad_io!=NULL))
+			pad_db->priv->open_pad_io=pad_io;
 	}
-	if(pad_io!=NULL)
-		pad_db->priv->open_pad_io=pad_io;
 	otb_pad_db_unlock_read(pad_db);
 	return pad_io;
 }
 
 gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_io)
 {
-	if(pad_db->priv->open_pad_io==NULL || pad_db->priv->open_pad_io!=pad_io)
+	if(G_UNLIKELY(pad_db->priv->open_pad_io==NULL || pad_db->priv->open_pad_io!=pad_io))
 		return FALSE;
 	pad_db->priv->open_pad_io=NULL;
 	otb_pad_io_free(pad_io);
@@ -712,9 +712,9 @@ static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const void *input_
 		unsigned char current_pad_byte=0;
 		unsigned char previous_pad_byte=0;
 		input_byte=((unsigned char*)input_bytes)[loop_count];
-		if(current_pad_io!=NULL && !otb_pad_read_byte(current_pad_io, &current_pad_byte))
+		if(G_UNLIKELY(current_pad_io!=NULL && !otb_pad_read_byte(current_pad_io, &current_pad_byte)))
 			ret_val=FALSE;
-		else if(previous_pad_io!=NULL && !otb_pad_read_byte(previous_pad_io, &previous_pad_byte))
+		else if(G_UNLIKELY(previous_pad_io!=NULL && !otb_pad_read_byte(previous_pad_io, &previous_pad_byte)))
 			ret_val=FALSE;
 		else
 		{
@@ -743,7 +743,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 		for(size_t plain_position=0, encrypted_bytes_buffer_size=plain_bytes_size+sizeof format_version+OTB_UNIQUE_ID_BYTES_LENGTH; encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && plain_position<plain_bytes_size; encrypted_bytes_buffer_size+=OTB_UNIQUE_ID_BYTES_LENGTH)
 		{
 			*encrypted_bytes_out=g_realloc(*encrypted_bytes_out, encrypted_bytes_buffer_size);
-			if(*encrypted_bytes_size_out==0)
+			if(G_UNLIKELY(*encrypted_bytes_size_out==0))
 			{
 				*encrypted_bytes_out[0]=format_version;
 				*encrypted_bytes_size_out=sizeof format_version;
@@ -806,7 +806,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 	OtbPadDbCryptResults decryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 	const unsigned char format_version=encrypted_bytes[0];
 	otb_pad_db_lock_write(pad_db);
-	if(format_version!=CURRENT_ENCRYPTION_FORMAT_VERSION)
+	if(G_UNLIKELY(format_version!=CURRENT_ENCRYPTION_FORMAT_VERSION))
 	{
 		g_message(_("Failed to decrypt file due to unsupported file version number."));
 		decryption_result=OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT;
@@ -839,7 +839,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 					g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_DEAD, NULL);
 				otb_unique_id_unref(unique_id);
 			}
-			if(previous_pad_io!=NULL && !otb_pad_io_free(previous_pad_io) && decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS)
+			if(G_UNLIKELY(previous_pad_io!=NULL && !otb_pad_io_free(previous_pad_io) && decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 				decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			previous_pad_io=current_pad_io;
 			current_pad_io=NULL;
@@ -857,7 +857,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 		if(G_UNLIKELY(decryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 			g_free(*plain_bytes_out);
 	}
-	if(decryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS)
+	if(G_UNLIKELY(decryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 	{
 		*plain_bytes_out=NULL;
 		*plain_bytes_size_out=0;

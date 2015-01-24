@@ -124,20 +124,20 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 {
 	gboolean ret_val=TRUE;
 	GDir *friends_dir=NULL;
-	if(!otb_mkdir_with_parents(bitkeeper->priv->friends_base_path))
+	if(G_UNLIKELY(!otb_mkdir_with_parents(bitkeeper->priv->friends_base_path)))
 		ret_val=FALSE;
-	else if((friends_dir=otb_open_directory(bitkeeper->priv->friends_base_path))==NULL)
+	else if(G_UNLIKELY((friends_dir=otb_open_directory(bitkeeper->priv->friends_base_path))==NULL))
 		ret_val=FALSE;
 	else
 	{
 		const char *file_name;
-		while(ret_val && (file_name=g_dir_read_name(friends_dir))!=NULL)
+		while(G_LIKELY(ret_val && (file_name=g_dir_read_name(friends_dir))!=NULL))
 		{
 			char *file_path=g_build_filename(bitkeeper->priv->friends_base_path, file_name, NULL);
-			if(g_file_test(file_path, G_FILE_TEST_IS_DIR))
+			if(G_LIKELY(g_file_test(file_path, G_FILE_TEST_IS_DIR)))
 			{
 				OtbFriend *friend=otb_friend_load_from_directory(file_path);
-				if(friend==NULL)
+				if(G_UNLIKELY(friend==NULL))
 					ret_val=FALSE;
 				else
 					bitkeeper->priv->friends=g_slist_prepend(bitkeeper->priv->friends, friend);
@@ -152,7 +152,7 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 OtbBitkeeper *otb_bitkeeper_load()
 {
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
-	if((bitkeeper->priv->user=otb_user_load())==NULL || !otb_bitkeeper_load_friends(bitkeeper))
+	if(G_UNLIKELY((bitkeeper->priv->user=otb_user_load())==NULL || !otb_bitkeeper_load_friends(bitkeeper)))
 	{
 		g_object_unref(bitkeeper);
 		bitkeeper=NULL;
@@ -190,7 +190,7 @@ OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniq
 {
 	otb_bitkeeper_lock_read(bitkeeper);
 	OtbFriend *friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, unique_id);
-	if(friend!=NULL)
+	if(G_LIKELY(friend!=NULL))
 		g_object_ref(friend);
 	otb_bitkeeper_unlock_read(bitkeeper);
 	return friend;
@@ -215,7 +215,7 @@ gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import
 	g_object_get(import_friend, OTB_FRIEND_PROP_UNIQUE_ID, &import_unique_id, NULL);
 	OtbFriend *duplicate_friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, import_unique_id);
 	otb_unique_id_unref(import_unique_id);
-	if(duplicate_friend==NULL)
+	if(G_LIKELY(duplicate_friend==NULL))
 		bitkeeper->priv->friends=g_slist_prepend(bitkeeper->priv->friends, import_friend);
 	else
 	{
@@ -233,7 +233,7 @@ gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId 
 	gboolean ret_val;
 	otb_bitkeeper_lock_write(bitkeeper);
 	OtbFriend *friend_to_delete=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, unique_id);
-	if(friend_to_delete==NULL)
+	if(G_UNLIKELY(friend_to_delete==NULL))
 		ret_val=FALSE;
 	else
 	{

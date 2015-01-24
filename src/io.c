@@ -16,7 +16,7 @@
 static FILE *otb_open_file_with_logging(const char *file_path, const char *mode)
 {
 	FILE *file=g_fopen(file_path, mode);
-	if(file==NULL)
+	if(G_UNLIKELY(file==NULL))
 	{
 		int orig_errno=errno;
 		g_warning(_("Failed to open file %s. Error == %s"), file_path, strerror(orig_errno));
@@ -42,7 +42,7 @@ FILE *otb_open_text_for_write(const char *file_path)
 size_t otb_write(const void *buffer, size_t size, size_t num_items, FILE *file)
 {
 	size_t ret_val=fwrite(buffer, size, num_items, file);
-	if(ret_val!=num_items)
+	if(G_UNLIKELY(ret_val!=num_items))
 	{
 		int orig_errno=errno;
 		g_warning(_("Failed to write file. Error == %s"), strerror(orig_errno));
@@ -53,7 +53,7 @@ size_t otb_write(const void *buffer, size_t size, size_t num_items, FILE *file)
 size_t otb_read(void *buffer, size_t size, size_t num_items, FILE *file)
 {
 	size_t ret_val=fread(buffer, size, num_items, file);
-	if(ret_val!=num_items && ferror(file))
+	if(G_UNLIKELY(ret_val!=num_items && ferror(file)))
 	{
 		int orig_errno=errno;
 		g_warning(_("Failed to read file. Error == %s"), strerror(orig_errno));
@@ -64,7 +64,7 @@ size_t otb_read(void *buffer, size_t size, size_t num_items, FILE *file)
 gboolean otb_close(FILE *file)
 {
 	gboolean ret_val=TRUE;
-	if(file!=NULL && fclose(file))
+	if(G_UNLIKELY(file!=NULL && fclose(file)))
 	{
 		int orig_errno=errno;
 		g_warning(_("Failed close file. Error == %s"), strerror(orig_errno));
@@ -76,7 +76,7 @@ gboolean otb_close(FILE *file)
 gboolean otb_unlink_if_exists(const char *file_path)
 {
 	gboolean ret_val=TRUE;
-	if(g_unlink(file_path)!=0 && errno!=ENOENT)
+	if(G_UNLIKELY(g_unlink(file_path)!=0 && errno!=ENOENT))
 	{
 		int orig_errno=errno;
 		g_warning(_("Failed delete file %s. Error == %s"), file_path, strerror(orig_errno));
@@ -88,7 +88,7 @@ gboolean otb_unlink_if_exists(const char *file_path)
 gboolean otb_mkdir_with_parents(const char *file_path)
 {
 	gboolean ret_val=TRUE;
-	if(g_mkdir_with_parents(file_path, S_IRUSR | S_IWUSR | S_IRWXU)!=0)
+	if(G_UNLIKELY(g_mkdir_with_parents(file_path, S_IRUSR | S_IWUSR | S_IRWXU)!=0))
 	{
 		int orig_errno=errno;
 		g_warning(_("Failed create directory %s. Error == %s"), file_path, strerror(orig_errno));
@@ -99,9 +99,9 @@ gboolean otb_mkdir_with_parents(const char *file_path)
 
 GDir *otb_open_directory(const char *directory_path)
 {
-	GError *error;
+	GError *error=NULL;
 	GDir *directory=g_dir_open(directory_path, 0, &error);
-	if(!directory)
+	if(G_UNLIKELY(!directory))
 	{
 		g_warning(_("Failed open directory %s. Error == %s"), directory_path, error->message);
 		g_error_free(error);
@@ -112,8 +112,7 @@ GDir *otb_open_directory(const char *directory_path)
 gboolean otb_delete_dir(const char *dir_path)
 {
 	gboolean ret_val=TRUE;
-	GError *error=NULL;
-	GDir *test_dir=g_dir_open(dir_path, 0, &error);
+	GDir *test_dir=g_dir_open(dir_path, 0, NULL);
 	if(test_dir!=NULL)
 	{
 		const char *file_name;
@@ -128,8 +127,6 @@ gboolean otb_delete_dir(const char *dir_path)
 		}
 		g_dir_close(test_dir);
 	}
-	else
-		g_error_free(error);
 	g_rmdir(dir_path);
 	return ret_val;
 }

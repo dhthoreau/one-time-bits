@@ -25,7 +25,7 @@ GType otb_unique_id_get_type()
 {
 	static GType unique_id_type;
 	static gboolean otb_unique_id_type_initialized=FALSE;
-	if(g_once_init_enter(&otb_unique_id_type_initialized))
+	if(G_UNLIKELY(g_once_init_enter(&otb_unique_id_type_initialized)))
 	{
 		unique_id_type=g_boxed_type_register_static("OtbUniqueId", (GBoxedCopyFunc)otb_unique_id_ref, (GDestroyNotify)otb_unique_id_unref);
 		g_once_init_leave(&otb_unique_id_type_initialized, TRUE);
@@ -95,6 +95,6 @@ int otb_unique_id_compare(const OtbUniqueId *unique_id1, const OtbUniqueId *uniq
 
 void otb_unique_id_unref(OtbUniqueId *unique_id)
 {
-	if(unique_id!=NULL && G_UNLIKELY(g_atomic_int_dec_and_test(&unique_id->ref_count)))
+	if(unique_id!=NULL && g_atomic_int_dec_and_test(&unique_id->ref_count))
 		g_slice_free(OtbUniqueId, unique_id);
 }

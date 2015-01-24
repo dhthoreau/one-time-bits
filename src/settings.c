@@ -35,7 +35,7 @@ GKeyFile *otb_settings_load_key_file_from_file(const char *file_path)
 {
 	GKeyFile *key_file=g_key_file_new();
 	GError *error=NULL;
-	if(g_file_test(file_path, G_FILE_TEST_EXISTS) && !g_key_file_load_from_file(key_file, file_path, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
+	if(G_UNLIKELY(g_file_test(file_path, G_FILE_TEST_EXISTS) && !g_key_file_load_from_file(key_file, file_path, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error)))
 	{
 		g_message(_("Failed to load key file from %s. Error == %s"), file_path, error->message);
 		g_error_free(error);
@@ -49,7 +49,7 @@ GKeyFile *otb_settings_load_key_file_from_string(const char *string)
 {
 	GKeyFile *key_file=g_key_file_new();
 	GError *error=NULL;
-	if(!g_key_file_load_from_data(key_file, string, strlen(string), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error))
+	if(G_UNLIKELY(!g_key_file_load_from_data(key_file, string, strlen(string), G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &error)))
 	{
 		g_message(_("Failed to load key file from %s. Error == %s"), string, error->message);
 		g_error_free(error);
@@ -81,7 +81,7 @@ static void otb_settings_initialize_directory_paths(const char *app_name, const 
 void otb_settings_initialize(const char *app_name, const char *otb_sub_dir)
 {
 	static gboolean otb_settings_directory_paths_initialized=FALSE;
-	if(g_once_init_enter(&otb_settings_directory_paths_initialized))
+	if(G_UNLIKELY(g_once_init_enter(&otb_settings_directory_paths_initialized)))
 	{
 		bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
 		otb_settings_initialize_directory_paths(app_name, otb_sub_dir);
@@ -119,11 +119,11 @@ gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path)
 	gsize key_file_data_size;
 	char *key_file_data=g_key_file_to_data(key_file, &key_file_data_size, NULL);
 	FILE *file=otb_open_text_for_write(file_path);
-	if(file==NULL)
+	if(G_UNLIKELY(file==NULL))
 		ret_val=FALSE;
-	else if(otb_write(key_file_data, sizeof *key_file_data, key_file_data_size, file)!=key_file_data_size)
+	else if(G_UNLIKELY(otb_write(key_file_data, sizeof *key_file_data, key_file_data_size, file)!=key_file_data_size))
 		ret_val=FALSE;
-	if(!otb_close(file))
+	if(G_UNLIKELY(!otb_close(file)))
 		ret_val=FALSE;
 	g_free(key_file_data);
 	return ret_val;
@@ -151,7 +151,7 @@ int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char 
 {
 	GError *error=NULL;
 	int value=g_key_file_get_integer(key_file, group_name, key, &error);
-	if(error!=NULL)
+	if(G_UNLIKELY(error!=NULL))
 	{
 		value=error_value;
 		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
@@ -182,7 +182,7 @@ long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, con
 {
 	GError *error=NULL;
 	long long value=g_key_file_get_int64(key_file, group_name, key, &error);
-	if(error!=NULL)
+	if(G_UNLIKELY(error!=NULL))
 	{
 		value=error_value;
 		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
@@ -195,7 +195,7 @@ unsigned long long otb_settings_get_uint64(GKeyFile *key_file, const char *group
 {
 	GError *error=NULL;
 	unsigned long long value=g_key_file_get_uint64(key_file, group_name, key, &error);
-	if(error!=NULL)
+	if(G_UNLIKELY(error!=NULL))
 	{
 		value=error_value;
 		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
@@ -216,7 +216,7 @@ char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const 
 {
 	GError *error=NULL;
 	char *value=g_key_file_get_string(key_file, group_name, key, &error);
-	if(error!=NULL)
+	if(G_UNLIKELY(error!=NULL))
 	{
 		g_free(value);
 		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
@@ -250,7 +250,7 @@ gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, 
 void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t *value_length)
 {
 	char *bytes=otb_settings_get_string(key_file, group_name, key);
-	if(bytes!=NULL)
+	if(G_LIKELY(bytes!=NULL))
 	{
 		size_t value_length_temp;
 		if(bytes[0])
@@ -284,7 +284,7 @@ GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, cons
 	GBytes *value=NULL;
 	size_t value_length;
 	void *value_bytes=otb_settings_get_bytes(key_file, group_name, key, &value_length);
-	if(value_bytes!=NULL)
+	if(G_LIKELY(value_bytes!=NULL))
 		value=g_bytes_new_take(value_bytes, value_length);
 	return value;
 }

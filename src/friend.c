@@ -148,7 +148,7 @@ static void otb_friend_compute_file_paths(const OtbFriend *friend)
 
 static void otb_friend_set_unique_id(const OtbFriend *friend, OtbUniqueId *unique_id)
 {
-	if(friend->priv->unique_id!=NULL)
+	if(G_UNLIKELY(friend->priv->unique_id!=NULL))
 		g_error(_("Tried to change unique ID of a friend."));
 	if(unique_id!=NULL)
 		friend->priv->unique_id=otb_unique_id_ref(unique_id);
@@ -259,7 +259,7 @@ static void otb_friend_export_key_file(const OtbFriend *friend, GKeyFile *export
 gboolean otb_friend_save(const OtbFriend *friend)
 {
 	gboolean ret_val=FALSE;
-	if(otb_mkdir_with_parents(friend->priv->base_path))
+	if(G_LIKELY(otb_mkdir_with_parents(friend->priv->base_path)))
 	{
 		GKeyFile *export_key_file=g_key_file_new();
 		otb_friend_lock_write(friend);
@@ -282,6 +282,8 @@ gboolean otb_friend_save(const OtbFriend *friend)
 		g_bytes_unref(import_string_iv);
 		g_free(encrypted_import_string);
 	}
+	else
+		ret_val=FALSE;
 	return ret_val;
 }
 
@@ -335,7 +337,7 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 static GType *otb_friend_get_runtime_type()
 {
 	static gboolean otb_friend_runtime_path_initialized=FALSE;
-	if(g_once_init_enter(&otb_friend_runtime_path_initialized))
+	if(G_UNLIKELY(g_once_init_enter(&otb_friend_runtime_path_initialized)))
 	{
 		otb_friend_runtime_type=OTB_TYPE_FRIEND;
 		g_once_init_leave(&otb_friend_runtime_path_initialized, TRUE);
@@ -354,15 +356,15 @@ OtbFriend *otb_friend_import_to_directory(const char *import_string, const char 
 	gboolean success=TRUE;
 	OtbFriend *friend=g_object_new(*otb_friend_get_runtime_type(), OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	GKeyFile *key_file=otb_settings_load_key_file_from_string(import_string);
-	if(key_file==NULL)
+	if(G_UNLIKELY(key_file==NULL))
 		success=FALSE;
 	else
 	{
 		OTB_FRIEND_GET_CLASS(friend)->otb_friend_import_key_file_private(friend, key_file);
-		if(g_file_test(friend->priv->file_path, G_FILE_TEST_EXISTS) || !otb_friend_save(friend) || otb_friend_set_incoming_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->incoming_pad_db_path))==NULL || otb_friend_set_outgoing_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->outgoing_pad_db_path))==NULL)
+		if(G_UNLIKELY(g_file_test(friend->priv->file_path, G_FILE_TEST_EXISTS) || !otb_friend_save(friend) || otb_friend_set_incoming_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->incoming_pad_db_path))==NULL || otb_friend_set_outgoing_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->outgoing_pad_db_path))==NULL))
 			success=FALSE;
 	}
-	if(!success)
+	if(G_UNLIKELY(!success))
 	{
 		g_object_unref(friend);
 		friend=NULL;
@@ -375,7 +377,7 @@ static gboolean otb_friend_load(OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
 	GKeyFile *settings_key_file=otb_settings_load_key_file_from_file(friend->priv->file_path);
-	if(settings_key_file==NULL)
+	if(G_UNLIKELY(settings_key_file==NULL))
 		ret_val=FALSE;
 	else
 	{
@@ -386,13 +388,13 @@ static gboolean otb_friend_load(OtbFriend *friend)
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		char *import_string=NULL;
 		size_t import_string_buffer_size=0;
-		if(import_string_iv==NULL || encrypted_import_string==NULL || otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_import_string, encrypted_import_string_size, import_string_iv, (void**)&import_string, &import_string_buffer_size)==0)
+		if(G_UNLIKELY(import_string_iv==NULL || encrypted_import_string==NULL || otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_import_string, encrypted_import_string_size, import_string_iv, (void**)&import_string, &import_string_buffer_size)==0))
 			ret_val=FALSE;
 		g_object_unref(local_crypto_sym_cipher);
-		if(ret_val)
+		if(G_LIKELY(ret_val))
 		{
 			GKeyFile *import_key_file=otb_settings_load_key_file_from_string(import_string);
-			if(import_key_file==NULL)
+			if(G_UNLIKELY(import_key_file==NULL))
 				ret_val=FALSE;
 			else
 			{
@@ -400,7 +402,7 @@ static gboolean otb_friend_load(OtbFriend *friend)
 				g_key_file_unref(import_key_file);
 			}
 		}
-		if(import_string_buffer_size>0)
+		if(G_LIKELY(import_string_buffer_size>0))
 			otb_sym_cipher_dispose_decryption_buffer(import_string, import_string_buffer_size);
 		g_free(encrypted_import_string);
 		g_bytes_unref(import_string_iv);
@@ -411,9 +413,9 @@ static gboolean otb_friend_load(OtbFriend *friend)
 static gboolean otb_friend_load_databases(const OtbFriend *friend)
 {
 	gboolean ret_val=TRUE;
-	if(otb_friend_set_incoming_pad_db(friend, otb_pad_db_load_from_directory(friend->priv->incoming_pad_db_path))==NULL)
+	if(G_UNLIKELY(otb_friend_set_incoming_pad_db(friend, otb_pad_db_load_from_directory(friend->priv->incoming_pad_db_path))==NULL))
 		ret_val=FALSE;
-	else if(otb_friend_set_outgoing_pad_db(friend, otb_pad_db_load_from_directory(friend->priv->outgoing_pad_db_path))==NULL)
+	else if(G_UNLIKELY(otb_friend_set_outgoing_pad_db(friend, otb_pad_db_load_from_directory(friend->priv->outgoing_pad_db_path))==NULL))
 		ret_val=FALSE;
 	return ret_val;
 }
@@ -422,11 +424,11 @@ OtbFriend *otb_friend_load_from_directory(const char *base_path)
 {
 	OtbFriend *friend=g_object_new(*otb_friend_get_runtime_type(), OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	gboolean load_successful=TRUE;
-	if(!otb_friend_load(friend))
+	if(G_UNLIKELY(!otb_friend_load(friend)))
 		load_successful=FALSE;
-	else if(!otb_friend_load_databases(friend))
+	else if(G_UNLIKELY(!otb_friend_load_databases(friend)))
 		load_successful=FALSE;
-	if(!load_successful)
+	if(G_UNLIKELY(!load_successful))
 	{
 		g_object_unref(friend);
 		friend=NULL;

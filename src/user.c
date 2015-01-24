@@ -64,7 +64,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 static GType *otb_user_get_runtime_type()
 {
 	static gboolean otb_user_runtime_path_initialized=FALSE;
-	if(g_once_init_enter(&otb_user_runtime_path_initialized))
+	if(G_UNLIKELY(g_once_init_enter(&otb_user_runtime_path_initialized)))
 	{
 		otb_user_runtime_type=OTB_TYPE_USER;
 		g_once_init_leave(&otb_user_runtime_path_initialized, TRUE);
@@ -145,7 +145,7 @@ static void otb_user_initialize_unique_id(OtbUser *user)
 	otb_unique_id_unref(user->priv->unique_id);
 	size_t bytes_length;
 	unsigned char *unique_id_bytes=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
-	if(unique_id_bytes==NULL || bytes_length!=OTB_UNIQUE_ID_BYTES_LENGTH)
+	if(G_UNLIKELY(unique_id_bytes==NULL || bytes_length!=OTB_UNIQUE_ID_BYTES_LENGTH))
 	{
 		otb_unique_id_unref(user->priv->unique_id);
 		user->priv->unique_id=otb_unique_id_new();
