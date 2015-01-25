@@ -118,6 +118,7 @@ gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path)
 	gboolean ret_val=TRUE;
 	gsize key_file_data_size;
 	char *key_file_data=g_key_file_to_data(key_file, &key_file_data_size, NULL);
+	/// Does not use g_key_file_save_to_file() because of performance problems. g_key_file_save_to_file() tries to write it to a temp file first then copy it over to the target file path. Makes unit tests run terribly slow.
 	FILE *file=otb_open_text_for_write(file_path);
 	if(G_UNLIKELY(file==NULL))
 		ret_val=FALSE;

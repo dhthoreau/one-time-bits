@@ -286,10 +286,10 @@ gboolean otb_sym_cipher_generate_random_key(OtbSymCipher *sym_cipher)
 	otb_sym_cipher_lock_write(sym_cipher);
 	size_t key_size=EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl);
 	unsigned char *key=otb_malloc_locked(key_size);
-	if(G_UNLIKELY(otb_random_bytes(key, key_size)))
-		ret_val=FALSE;
-	else
+	if(G_LIKELY(otb_random_bytes(key, key_size)))
 		otb_sym_cipher_set_key(sym_cipher, key, EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl));
+	else
+		ret_val=FALSE;
 	otb_smemset(key, 0, key_size);
 	otb_free_locked(key, key_size);
 	otb_sym_cipher_unlock_write(sym_cipher);

@@ -16,7 +16,6 @@
 
 #define otb_file_has_more_bytes(file)	(ungetc(fgetc((file)), (file))!=EOF)
 
-gboolean __otb_dummy_false();
 FILE *otb_open_binary_for_write(const char *file_path);
 FILE *otb_open_binary_for_read(const char *file_path);
 FILE *otb_open_text_for_write(const char *file_path);
