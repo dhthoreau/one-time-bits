@@ -136,7 +136,7 @@ void otb_munlock(const void *memory, size_t size)
 #endif
 }
 
-void *otb_malloc_locked(size_t size)
+void *otb_malloc_locked(size_t size)	// FARE - Sustitui con gcry_malloc_secure() o secmalloc() o equivalente.
 {
 	void *memory=g_malloc(size);
 	otb_mlock(memory, size);
