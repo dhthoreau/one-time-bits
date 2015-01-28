@@ -691,22 +691,6 @@ gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_io)
 	return TRUE;
 }
 
-static gboolean otb_pad_db_can_encrypt_data(const OtbPadDb *pad_db, size_t data_size)
-{
-	gboolean ret_val=FALSE;
-	off_t bytes_available_for_encryption=0;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; !ret_val && curr_element!=NULL; curr_element=g_slist_next(curr_element))
-	{
-		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		off_t pad_size=-1;
-		g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
-		bytes_available_for_encryption+=pad_size-OTB_UNIQUE_ID_BYTES_LENGTH;
-		if(bytes_available_for_encryption>=data_size)
-			ret_val=TRUE;
-	}
-	return ret_val;
-}
-
 static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const void *input_bytes, void *output_bytes, OtbPadIO *current_pad_io, OtbPadIO *previous_pad_io)
 {
 	gboolean ret_val=TRUE;
@@ -735,67 +719,62 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, OtbCipherContext
 {
 	OtbPadDbCryptResults encryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 	otb_pad_db_lock_write(pad_db);
-	if(!otb_pad_db_can_encrypt_data(pad_db, plain_bytes_size))
-		encryption_result=OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS;
-	else
+	const unsigned char format_version=CURRENT_ENCRYPTION_FORMAT_VERSION;
+	OtbPadIO *current_pad_io=NULL;
+	OtbPadIO *previous_pad_io=NULL;
+	*encrypted_bytes_out=NULL;
+	*encrypted_bytes_size_out=0;
+	for(size_t plain_position=0, encrypted_bytes_buffer_size=plain_bytes_size+sizeof format_version+OTB_UNIQUE_ID_BYTES_LENGTH; encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && plain_position<plain_bytes_size; encrypted_bytes_buffer_size+=OTB_UNIQUE_ID_BYTES_LENGTH)
 	{
-		const unsigned char format_version=CURRENT_ENCRYPTION_FORMAT_VERSION;
-		OtbPadIO *current_pad_io=NULL;
-		OtbPadIO *previous_pad_io=NULL;
-		*encrypted_bytes_out=NULL;
-		*encrypted_bytes_size_out=0;
-		for(size_t plain_position=0, encrypted_bytes_buffer_size=plain_bytes_size+sizeof format_version+OTB_UNIQUE_ID_BYTES_LENGTH; encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && plain_position<plain_bytes_size; encrypted_bytes_buffer_size+=OTB_UNIQUE_ID_BYTES_LENGTH)
+		*encrypted_bytes_out=g_realloc(*encrypted_bytes_out, encrypted_bytes_buffer_size);
+		if(G_UNLIKELY(*encrypted_bytes_size_out==0))
 		{
-			*encrypted_bytes_out=g_realloc(*encrypted_bytes_out, encrypted_bytes_buffer_size);
-			if(G_UNLIKELY(*encrypted_bytes_size_out==0))
-			{
-				*encrypted_bytes_out[0]=format_version;
-				*encrypted_bytes_size_out=sizeof format_version;
-			}
-			OtbPadRec *pad_rec=NULL;
-			off_t pad_size=-1;
-			OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
-			if(G_UNLIKELY(unique_id==NULL))
-				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			else if(G_UNLIKELY(!otb_pad_db_crypt_bytes(OTB_UNIQUE_ID_BYTES_LENGTH, otb_unique_id_get_bytes(unique_id), *encrypted_bytes_out+*encrypted_bytes_size_out, current_pad_io, previous_pad_io)))
-				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			else if(G_UNLIKELY((pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id))==NULL))
-				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			else if(g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL), G_UNLIKELY(pad_size<0))
-				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			else if(G_UNLIKELY((current_pad_io=otb_pad_rec_open_pad_for_read(pad_rec, TRUE))==NULL))
+			*encrypted_bytes_out[0]=format_version;
+			*encrypted_bytes_size_out=sizeof format_version;
+		}
+		OtbPadRec *pad_rec=NULL;
+		off_t pad_size=-1;
+		OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
+		if(G_UNLIKELY(unique_id==NULL))
+			encryption_result=OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS;
+		else if(G_UNLIKELY(!otb_pad_db_crypt_bytes(OTB_UNIQUE_ID_BYTES_LENGTH, otb_unique_id_get_bytes(unique_id), *encrypted_bytes_out+*encrypted_bytes_size_out, current_pad_io, previous_pad_io)))
+			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
+		else if(G_UNLIKELY((pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id))==NULL))
+			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
+		else if(g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL), G_UNLIKELY(pad_size<0))
+			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
+		else if(G_UNLIKELY((current_pad_io=otb_pad_rec_open_pad_for_read(pad_rec, TRUE))==NULL))
+			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
+		else
+		{
+			size_t bytes_to_crypt_max_from_pad=pad_size-OTB_UNIQUE_ID_BYTES_LENGTH;
+			size_t bytes_to_crypt_max_from_plain_bytes=plain_bytes_size-plain_position;
+			size_t bytes_to_crypt=MIN(bytes_to_crypt_max_from_pad, bytes_to_crypt_max_from_plain_bytes);
+			if(G_UNLIKELY(!otb_pad_db_crypt_bytes(bytes_to_crypt, (unsigned char*)plain_bytes+plain_position, *encrypted_bytes_out+*encrypted_bytes_size_out+OTB_UNIQUE_ID_BYTES_LENGTH, current_pad_io, previous_pad_io)))
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else
 			{
-				size_t bytes_to_crypt_max_from_pad=pad_size-OTB_UNIQUE_ID_BYTES_LENGTH;
-				size_t bytes_to_crypt_max_from_plain_bytes=plain_bytes_size-plain_position;
-				size_t bytes_to_crypt=MIN(bytes_to_crypt_max_from_pad, bytes_to_crypt_max_from_plain_bytes);
-				if(G_UNLIKELY(!otb_pad_db_crypt_bytes(bytes_to_crypt, (unsigned char*)plain_bytes+plain_position, *encrypted_bytes_out+*encrypted_bytes_size_out+OTB_UNIQUE_ID_BYTES_LENGTH, current_pad_io, previous_pad_io)))
-					encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-				else
-				{
-					g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_BEING_CONSUMED, NULL);
-					plain_position+=bytes_to_crypt;
-					*encrypted_bytes_size_out+=OTB_UNIQUE_ID_BYTES_LENGTH+bytes_to_crypt;
-				}
+				g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_BEING_CONSUMED, NULL);
+				plain_position+=bytes_to_crypt;
+				*encrypted_bytes_size_out+=OTB_UNIQUE_ID_BYTES_LENGTH+bytes_to_crypt;
 			}
-			otb_unique_id_unref(unique_id);
-			if(G_UNLIKELY(previous_pad_io!=NULL && !otb_pad_io_free(previous_pad_io) && encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
-				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			previous_pad_io=current_pad_io;
-			current_pad_io=NULL;
 		}
+		otb_unique_id_unref(unique_id);
 		if(G_UNLIKELY(previous_pad_io!=NULL && !otb_pad_io_free(previous_pad_io) && encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-		if(G_UNLIKELY(encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))
-		{
-			g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
-			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FINISHED_PAD_STATUS_UPDATE_FAILED;
-		}
-		otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);
-		if(G_UNLIKELY(encryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
-			g_free(*encrypted_bytes_out);
+		previous_pad_io=current_pad_io;
+		current_pad_io=NULL;
 	}
+	if(G_UNLIKELY(previous_pad_io!=NULL && !otb_pad_io_free(previous_pad_io) && encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
+		encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
+	if(G_UNLIKELY(encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))
+	{
+		g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
+		encryption_result=OTB_PAD_DB_CRYPT_RESULT_FINISHED_PAD_STATUS_UPDATE_FAILED;
+	}
+	otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);
+	if(G_UNLIKELY(encryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
+		g_free(*encrypted_bytes_out);
 	if(G_UNLIKELY(encryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 	{
 		*encrypted_bytes_out=NULL;
