@@ -15,6 +15,10 @@
 #include "random.h"
 #include "settings.h"
 
+struct _OtbCipherContext
+{
+};
+
 struct _OtbPadDbPrivate
 {
 	GRWLock lock;
@@ -727,7 +731,7 @@ static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const void *input_
 
 #define CURRENT_ENCRYPTION_FORMAT_VERSION	'\x00'
 
-OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out)
+OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, OtbCipherContext *cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out)
 {
 	OtbPadDbCryptResults encryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 	otb_pad_db_lock_write(pad_db);
@@ -786,7 +790,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 		if(G_UNLIKELY(encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))
 		{
 			g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
-			encryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
+			encryption_result=OTB_PAD_DB_CRYPT_RESULT_FINISHED_PAD_STATUS_UPDATE_FAILED;
 		}
 		otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);
 		if(G_UNLIKELY(encryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
@@ -801,7 +805,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plai
 	return encryption_result;
 }
 
-OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out)
+OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, OtbCipherContext *cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out)
 {
 	OtbPadDbCryptResults decryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 	const unsigned char format_version=encrypted_bytes[0];
@@ -851,7 +855,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 		if(G_UNLIKELY(decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(pad_db)))
 		{
 			g_message(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."));
-			decryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
+			decryption_result=OTB_PAD_DB_CRYPT_RESULT_FINISHED_PAD_STATUS_UPDATE_FAILED;
 		}
 		otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);
 		if(G_UNLIKELY(decryption_result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
@@ -864,4 +868,14 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned c
 	}
 	otb_pad_db_unlock_write(pad_db);
 	return decryption_result;
+}
+
+OtbCipherContext *otb_cipher_context_new()
+{
+	return g_malloc(sizeof(OtbCipherContext));
+}
+
+void otb_cipher_context_free(OtbCipherContext *cipher_context)
+{
+	g_free(cipher_context);
 }

@@ -816,8 +816,10 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	size_t encrypted_bytes_size=0;
 	for(int counter=0; counter<CONSUMED_PAD_COUNT(params); counter++)
 	{
-		g_assert_cmpint(0, ==, otb_pad_db_encrypt(outgoing_pad_db, "", 1, &encrypted_bytes, &encrypted_bytes_size));
+		OtbCipherContext *cipher_context=otb_cipher_context_new();
+		g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(outgoing_pad_db, cipher_context, "", 1, &encrypted_bytes, &encrypted_bytes_size));
 		g_free(encrypted_bytes);
+		otb_cipher_context_free(cipher_context);
 	}
 	OtbPadDb *incoming_pad_db=NULL;
 	g_object_get(friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &incoming_pad_db, NULL);

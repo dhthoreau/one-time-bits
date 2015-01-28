@@ -532,10 +532,12 @@ static void test_encryption_fails_due_to_not_enough_pad_bytes()
 	g_assert(pad_unique_id!=NULL);
 	unsigned char *encrypted_bytes;
 	size_t encrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS, ==, otb_pad_db_encrypt(pad_db, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new();
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS, ==, otb_pad_db_encrypt(pad_db, cipher_context, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
 	g_assert(encrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, encrypted_bytes_size);
 	g_free(encrypted_bytes);
+	otb_cipher_context_free(cipher_context);
 	otb_unique_id_unref(pad_unique_id);
 	g_object_unref(pad_db);
 	g_free(pad_db_dir_path);
@@ -558,7 +560,8 @@ static void test_encryption_with_one_pad()
 	OtbUniqueId *expected_unique_id=otb_mark_random_pad_as_sent(pad_db);
 	unsigned char *encrypted_bytes;
 	size_t encrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(pad_db, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new();
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(pad_db, cipher_context, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
 	g_assert(encrypted_bytes!=NULL);
 	g_assert_cmpint(EXPECTED_ENCRYPTED_MESSAGE_SIZE, ==, encrypted_bytes_size);
 	g_assert_cmpint(0, ==, (unsigned char)encrypted_bytes[0]);
@@ -569,11 +572,12 @@ static void test_encryption_with_one_pad()
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io));
 	for(size_t byte_index=0; byte_index<MESSAGE_SIZE; byte_index++)
 		g_assert_cmpint(EXPECTED_MESSAGE[byte_index], ==, encrypted_bytes[byte_index+START_OF_ENCRYPTED_MESSAGE]^pad_bytes[byte_index]);
-	g_free(pad_bytes);
-	g_free(encrypted_bytes);
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_SENT)==NULL);
 	OtbUniqueId *actual_unique_id=otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_CONSUMED);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
+	g_free(pad_bytes);
+	g_free(encrypted_bytes);
+	otb_cipher_context_free(cipher_context);
 	otb_unique_id_unref(expected_unique_id);
 	otb_unique_id_unref(actual_unique_id);
 	g_free(pad_db_dir_path);
@@ -591,10 +595,12 @@ static void test_decryption_fails_due_to_unsupported_file_format()
 	memcpy(input_bytes, &FORMAT_VERSION, sizeof(FORMAT_VERSION));
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH, &decrypted_bytes, &decrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new();
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_pad_db_decrypt(pad_db, cipher_context, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH, &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	otb_free_locked(decrypted_bytes, decrypted_bytes_size);
+	otb_cipher_context_free(cipher_context);
 	g_free(pad_db_dir_path);
 	g_object_unref(pad_db);
 }
@@ -610,10 +616,12 @@ static void test_decryption_fails_due_to_missing_pad()
 	memcpy(input_bytes, &FORMAT_VERSION, sizeof FORMAT_VERSION);
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_pad_db_decrypt(pad_db, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH, &decrypted_bytes, &decrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new();
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_pad_db_decrypt(pad_db, cipher_context, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH, &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	otb_free_locked(decrypted_bytes, decrypted_bytes_size);
+	otb_cipher_context_free(cipher_context);
 	g_object_unref(pad_db);
 	g_free(pad_db_dir_path);
 }
@@ -676,12 +684,14 @@ static void otb_encrypt_file_for_two_pad_test(const OtbPadDb *pad_db, const void
 {
 	*encrypted_message=NULL;
 	*encrypted_message_size=0;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(pad_db, message, message_size, encrypted_message, encrypted_message_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new();
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(pad_db, cipher_context, message, message_size, encrypted_message, encrypted_message_size));
 	g_assert(encrypted_message!=NULL);
 	g_assert_cmpint(0, !=, *encrypted_message_size);
 	otb_assert_number_of_pads_in_status(pad_db, 1, OTB_PAD_REC_STATUS_UNSENT);
 	otb_assert_number_of_pads_in_status(pad_db, 1, OTB_PAD_REC_STATUS_SENT);
 	otb_assert_number_of_pads_in_status(pad_db, 2, OTB_PAD_REC_STATUS_CONSUMED);
+	otb_cipher_context_free(cipher_context);
 }
 
 static void otb_pad_db_create_unsent_pads(const OtbPadDb *pad_db, size_t number_of_pads)
@@ -711,11 +721,13 @@ static void test_encryption_decryption_with_two_pads()
 	otb_encrypt_file_for_two_pad_test(sender_pad_db, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, &encrypted_message, &encrypted_message_size);
 	void *actual_message;
 	size_t actual_message_size;
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_decrypt(recipient_pad_db, encrypted_message, encrypted_message_size, &actual_message, &actual_message_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new();
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_decrypt(recipient_pad_db, cipher_context, encrypted_message, encrypted_message_size, &actual_message, &actual_message_size));
 	otb_assert_number_of_pads_in_status(recipient_pad_db, 1, OTB_PAD_REC_STATUS_INCOMING);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpint(0, ==, memcmp(EXPECTED_MESSAGE, actual_message, EXPECTED_MESSAGE_SIZE));
 	otb_free_locked(actual_message, actual_message_size);
+	otb_cipher_context_free(cipher_context);
 	g_free(encrypted_message);
 	g_object_unref(recipient_pad_db);
 	g_free(recipient_pad_db_dir_path);

@@ -9,6 +9,7 @@
 #ifndef OTB_PAD_DB_H
 #define OTB_PAD_DB_H
 
+#include <gio/gio.h>
 #include <glib-object.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -22,12 +23,15 @@
 typedef enum
 {
 	OTB_PAD_DB_CRYPT_RESULT_SUCCESS,
-	OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED,
+	OTB_PAD_DB_CRYPT_RESULT_FINISHED,
+	OTB_PAD_DB_CRYPT_RESULT_FINISHED_PAD_STATUS_UPDATE_FAILED,
 	OTB_PAD_DB_CRYPT_RESULT_FAILURE,
 	OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS,
 	OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD,
 	OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT
 } OtbPadDbCryptResults;
+
+typedef struct _OtbCipherContext OtbCipherContext;
 
 #define OTB_PAD_DB_PROP_BASE_PATH			"base-path"
 #define OTB_PAD_DB_PROP_MAX_SIZE			"max-size"
@@ -78,7 +82,9 @@ OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *uniq
 gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_id);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db);
-OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);	// FARE - Una versione che usa GIOStream.
-OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
+OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, OtbCipherContext *cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);
+OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, OtbCipherContext *cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
+OtbCipherContext *otb_cipher_context_new();
+void otb_cipher_context_free(OtbCipherContext *cipher_context);
 
 #endif
