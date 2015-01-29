@@ -771,6 +771,7 @@ OtbPadDbCryptResults otb_pad_db_encrypt(const OtbPadDb *pad_db, OtbCipherContext
 	}
 	if(G_UNLIKELY(cipher_context->previous_pad_io!=NULL && !otb_pad_io_free(cipher_context->previous_pad_io) && encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 		encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
+	cipher_context->previous_pad_io=NULL;
 	if(G_UNLIKELY(encryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))
 	{
 		g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
@@ -833,6 +834,7 @@ OtbPadDbCryptResults otb_pad_db_decrypt(const OtbPadDb *pad_db, OtbCipherContext
 		}
 		if(G_UNLIKELY(cipher_context->previous_pad_io!=NULL && !otb_pad_io_free(cipher_context->previous_pad_io) && decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 			decryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
+		cipher_context->previous_pad_io=NULL;
 		if(G_UNLIKELY(decryption_result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(pad_db)))
 		{
 			g_message(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."));
@@ -855,7 +857,9 @@ OtbCipherContext *otb_cipher_context_new()
 {
 	OtbCipherContext *cipher_context=g_malloc(sizeof(OtbCipherContext));
 	cipher_context->plain_buffer_length;
+	cipher_context->plain_buffer=NULL;
 	cipher_context->encrypted_buffer_length;
+	cipher_context->encrypted_buffer=NULL;
 	cipher_context->current_pad_io=NULL;
 	cipher_context->previous_pad_io=NULL;
 	return cipher_context;
@@ -863,5 +867,11 @@ OtbCipherContext *otb_cipher_context_new()
 
 void otb_cipher_context_free(OtbCipherContext *cipher_context)
 {
+	g_free(cipher_context->plain_buffer);
+	g_free(cipher_context->encrypted_buffer);
+	if(cipher_context->current_pad_io!=NULL)
+		otb_pad_io_free(cipher_context->current_pad_io);
+	if(cipher_context->previous_pad_io!=NULL)
+		otb_pad_io_free(cipher_context->previous_pad_io);
 	g_free(cipher_context);
 }
