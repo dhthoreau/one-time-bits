@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-01-23 16:24-0500\n"
-"PO-Revision-Date: 2015-01-23 16:27-0500\n"
+"POT-Creation-Date: 2015-01-30 16:46-0500\n"
+"PO-Revision-Date: 2015-01-30 16:46-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -46,7 +46,7 @@ msgstr "L'indirizzo dell'utente"
 msgid "Failed to load key file from %s. Error == %s"
 msgstr "Non è riuscito a aprire il file di chiave %s. Errore == %s"
 
-#: src/friend.c:67 src/pad-rec.c:79 src/pad-db.c:64
+#: src/friend.c:67 src/pad-rec.c:79 src/pad-db.c:74
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -218,73 +218,73 @@ msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 msgid "Failed to initialize decryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/asym-cipher.c:276 src/sym-cipher.c:344
+#: src/asym-cipher.c:276 src/sym-cipher.c:343
 #, c-format
 msgid "Failed to encrypt data. Error == %s"
 msgstr "Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:289 src/sym-cipher.c:357
+#: src/asym-cipher.c:289 src/sym-cipher.c:356
 #, c-format
 msgid "Failed to decrypt data. Error == %s"
 msgstr "Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:302 src/sym-cipher.c:370
+#: src/asym-cipher.c:302 src/sym-cipher.c:369
 #, c-format
 msgid "Failed to encrypt final data. Error == %s"
 msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/asym-cipher.c:316 src/sym-cipher.c:384
+#: src/asym-cipher.c:316 src/sym-cipher.c:383
 #, c-format
 msgid "Failed to decrypt final data. Error == %s"
 msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
 
-#: src/pad-db.c:64
+#: src/pad-db.c:74
 msgid "Directory where the database will be saved"
 msgstr "La directory dove il database sarà salvato"
 
-#: src/pad-db.c:65
+#: src/pad-db.c:75
 msgid "Max size"
 msgstr "Dimensione massima"
 
-#: src/pad-db.c:65
+#: src/pad-db.c:75
 msgid "Maximum size of the database"
 msgstr "Dimensione massima del database"
 
-#: src/pad-db.c:66
+#: src/pad-db.c:76
 msgid "New pad min size"
 msgstr "Dimensione minima di blocchi nuovi"
 
-#: src/pad-db.c:66
+#: src/pad-db.c:76
 msgid "Minimum size for a newly created pad"
 msgstr "Dimensione minima di blocchi creati di fresco"
 
-#: src/pad-db.c:67
+#: src/pad-db.c:77
 msgid "New pad max size"
 msgstr "Dimensione massima di blocchi nuovi"
 
-#: src/pad-db.c:67
+#: src/pad-db.c:77
 msgid "Maximum size for a newly created pad"
 msgstr "Dimensione massima di blocchi creati di fresco"
 
-#: src/pad-db.c:68
+#: src/pad-db.c:78
 msgid "New pad expiration"
 msgstr "Scadenza dei blocchi nuovi"
 
-#: src/pad-db.c:68
+#: src/pad-db.c:78
 msgid "Time interval of expiration for a newly created pad"
 msgstr "Intervallo di tempo di scadenza di blocchi creati di fresco"
 
-#: src/pad-db.c:273
+#: src/pad-db.c:285
 msgid "Failed to add record due to non-unique ID."
 msgstr "Non è riuscito ad aggiungere record a causa di ID non univoco."
 
-#: src/pad-db.c:278
+#: src/pad-db.c:290
 msgid "Failed to add record due to database size limitation."
 msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:765
+#: src/pad-db.c:814
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -295,13 +295,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:788
+#: src/pad-db.c:836
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:830
+#: src/pad-db.c:893
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."
