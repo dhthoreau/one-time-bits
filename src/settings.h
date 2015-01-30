@@ -29,10 +29,10 @@ unsigned long long otb_settings_get_uint64(GKeyFile *key_file, const char *group
 gboolean otb_settings_set_config_string(const char *group_name, const char *key, const char *value);
 char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const char *key);
 char *otb_settings_get_config_string(const char *group_name, const char *key);
-void otb_settings_set_bytes(GKeyFile *key_file, const char *group_name, const char *key, const void *value, size_t value_length);
-gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, const void *value, size_t value_length);
-void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t* value_length);
-void *otb_settings_get_config_bytes(const char *group_name, const char *key, size_t* value_length);
+void otb_settings_set_bytes(GKeyFile *key_file, const char *group_name, const char *key, const void *value, size_t value_size);
+gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, const void *value, size_t value_size);
+void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t* value_size);
+void *otb_settings_get_config_bytes(const char *group_name, const char *key, size_t* value_size);
 void otb_settings_set_gbytes(GKeyFile *key_file, const char *group_name, const char *key, GBytes *value);
 gboolean otb_settings_set_config_gbytes(const char *group_name, const char *key, GBytes *value);
 GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, const char *key);

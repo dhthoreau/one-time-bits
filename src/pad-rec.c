@@ -249,7 +249,7 @@ gboolean otb_pad_rec_save(const OtbPadRec *pad_rec)
 {
 	GKeyFile *key_file=g_key_file_new();
 	otb_pad_rec_lock(pad_rec);
-	otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, otb_unique_id_get_bytes(pad_rec->priv->unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
+	otb_settings_set_bytes(key_file, SAVE_GROUP, SAVE_KEY_UNIQUE_ID, otb_unique_id_get_bytes(pad_rec->priv->unique_id), OTB_UNIQUE_ID_BYTES_SIZE);
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_STATUS, pad_rec->priv->status);
 	g_key_file_set_integer(key_file, SAVE_GROUP, SAVE_KEY_SIZE, pad_rec->priv->size);
 	g_key_file_set_int64(key_file, SAVE_GROUP, SAVE_KEY_EXPIRATION, pad_rec->priv->expiration);

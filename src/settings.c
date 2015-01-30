@@ -234,38 +234,38 @@ char *otb_settings_get_config_string(const char *group_name, const char *key)
 	return ret_val;
 }
 
-void otb_settings_set_bytes(GKeyFile *key_file, const char *group_name, const char *key, const void *value, size_t value_length)
+void otb_settings_set_bytes(GKeyFile *key_file, const char *group_name, const char *key, const void *value, size_t value_size)
 {
-	char *encoded_bytes=g_base64_encode(value, value_length);
+	char *encoded_bytes=g_base64_encode(value, value_size);
 	g_key_file_set_string(key_file, group_name, key, encoded_bytes);
 	g_free(encoded_bytes);
 }
-gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, const void *value, size_t value_length)
+gboolean otb_settings_set_config_bytes(const char *group_name, const char *key, const void *value, size_t value_size)
 {
 	otb_settings_lock_config_write();
-	otb_settings_set_bytes(config_key_file, group_name, key, value, value_length);
+	otb_settings_set_bytes(config_key_file, group_name, key, value, value_size);
 	otb_settings_unlock_config_write();
 	return otb_settings_save_config_key_file();
 }
 
-void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t *value_length)
+void *otb_settings_get_bytes(GKeyFile *key_file, const char *group_name, const char *key, size_t *value_size)
 {
 	char *bytes=otb_settings_get_string(key_file, group_name, key);
 	if(G_LIKELY(bytes!=NULL))
 	{
-		size_t value_length_temp;
+		size_t value_size_temp;
 		if(bytes[0])
-			g_base64_decode_inplace(bytes, &value_length_temp);
-		if(value_length!=NULL)
-			*value_length=value_length_temp;
+			g_base64_decode_inplace(bytes, &value_size_temp);
+		if(value_size!=NULL)
+			*value_size=value_size_temp;
 	}
 	return bytes;
 }
 
-void *otb_settings_get_config_bytes(const char *group_name, const char *key, size_t* value_length)
+void *otb_settings_get_config_bytes(const char *group_name, const char *key, size_t* value_size)
 {
 	otb_settings_lock_config_read();
-	void *ret_val=otb_settings_get_bytes(config_key_file, group_name, key, value_length);
+	void *ret_val=otb_settings_get_bytes(config_key_file, group_name, key, value_size);
 	otb_settings_unlock_config_read();
 	return ret_val;
 }
@@ -283,10 +283,10 @@ gboolean otb_settings_set_config_gbytes(const char *group_name, const char *key,
 GBytes *otb_settings_get_gbytes(GKeyFile *key_file, const char *group_name, const char *key)
 {
 	GBytes *value=NULL;
-	size_t value_length;
-	void *value_bytes=otb_settings_get_bytes(key_file, group_name, key, &value_length);
+	size_t value_size;
+	void *value_bytes=otb_settings_get_bytes(key_file, group_name, key, &value_size);
 	if(G_LIKELY(value_bytes!=NULL))
-		value=g_bytes_new_take(value_bytes, value_length);
+		value=g_bytes_new_take(value_bytes, value_size);
 	return value;
 }
 

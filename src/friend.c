@@ -246,7 +246,7 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 
 static void otb_friend_export_key_file(const OtbFriend *friend, GKeyFile *export_file)
 {
-	otb_settings_set_bytes(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, otb_unique_id_get_bytes(friend->priv->unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
+	otb_settings_set_bytes(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, otb_unique_id_get_bytes(friend->priv->unique_id), OTB_UNIQUE_ID_BYTES_SIZE);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, friend->priv->public_key);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME, friend->priv->transport_cipher_name);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS, friend->priv->address);

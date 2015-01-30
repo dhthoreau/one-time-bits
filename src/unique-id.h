@@ -14,7 +14,7 @@
 
 #define OTB_TYPE_UNIQUE_ID	(otb_unique_id_get_type())
 
-#define OTB_UNIQUE_ID_BYTES_LENGTH	(sizeof(uuid_t))
+#define OTB_UNIQUE_ID_BYTES_SIZE	(sizeof(uuid_t))
 
 typedef struct _OtbUniqueId OtbUniqueId;
 

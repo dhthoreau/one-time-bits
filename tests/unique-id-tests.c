@@ -35,7 +35,7 @@ static void test_unique_id_bytes()
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbUniqueId *actual_unique_id=otb_unique_id_from_bytes(otb_unique_id_get_bytes(expected_unique_id));
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	g_assert_cmpint(0, ==, memcmp(otb_unique_id_get_bytes(expected_unique_id), otb_unique_id_get_bytes(actual_unique_id), OTB_UNIQUE_ID_BYTES_LENGTH));
+	g_assert_cmpint(0, ==, memcmp(otb_unique_id_get_bytes(expected_unique_id), otb_unique_id_get_bytes(actual_unique_id), OTB_UNIQUE_ID_BYTES_SIZE));
 	otb_unique_id_unref(actual_unique_id);
 	otb_unique_id_unref(expected_unique_id);
 }

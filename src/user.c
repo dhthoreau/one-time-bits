@@ -145,7 +145,7 @@ static void otb_user_initialize_unique_id(OtbUser *user)
 	otb_unique_id_unref(user->priv->unique_id);
 	size_t bytes_length;
 	unsigned char *unique_id_bytes=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
-	if(G_UNLIKELY(unique_id_bytes==NULL || bytes_length!=OTB_UNIQUE_ID_BYTES_LENGTH))
+	if(G_UNLIKELY(unique_id_bytes==NULL || bytes_length!=OTB_UNIQUE_ID_BYTES_SIZE))
 	{
 		otb_unique_id_unref(user->priv->unique_id);
 		user->priv->unique_id=otb_unique_id_new();
@@ -209,7 +209,7 @@ gboolean otb_user_set_address(const OtbUser *user, const char *address)
 	return ret_val;
 }
 
-#define otb_user_export_unique_id(user, export_key_file)	(otb_settings_set_bytes((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, otb_unique_id_get_bytes((user)->priv->unique_id), OTB_UNIQUE_ID_BYTES_LENGTH))
+#define otb_user_export_unique_id(user, export_key_file)	(otb_settings_set_bytes((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, otb_unique_id_get_bytes((user)->priv->unique_id), OTB_UNIQUE_ID_BYTES_SIZE))
 
 static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key_file)
 {

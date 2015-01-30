@@ -53,7 +53,7 @@ static void test_otb_user_create_with_no_config_file()
 
 static void otb_write_unique_id(FILE *file, const OtbUniqueId *unique_id)
 {
-	char *encoded_unique_id=g_base64_encode(otb_unique_id_get_bytes(unique_id), OTB_UNIQUE_ID_BYTES_LENGTH);
+	char *encoded_unique_id=g_base64_encode(otb_unique_id_get_bytes(unique_id), OTB_UNIQUE_ID_BYTES_SIZE);
 	g_assert(otb_write("unique-id=", 1, 10, file)==10);
 	g_assert(otb_write(encoded_unique_id, 1, strlen(encoded_unique_id), file)==strlen(encoded_unique_id));
 	g_assert(otb_write("\n", 1, 1, file)==1);
@@ -123,14 +123,14 @@ static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *uniqu
 
 static void test_otb_user_create_from_existing_config_file()
 {
-	const size_t NEW_KEY_LENGTH=512;
+	const size_t NEW_KEY_SIZE=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS1="akjsdhkljashgd.onion";
 	const char *EXPECTED_ADDRESS2="kjshdfjkhgssdj.onion";
 	
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
+	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_SIZE));
 	OtbUser *user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS1);
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
@@ -164,13 +164,13 @@ static void test_otb_user_create_from_existing_config_file()
 
 static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 {
-	const size_t NEW_KEY_LENGTH=512;
+	const size_t NEW_KEY_SIZE=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kdjhgkfgjhfhj.onion";
 	
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
+	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_SIZE));
 	*user=otb_load_user_from_existing_config_file(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS);
 	char *expected_public_key=NULL;
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);

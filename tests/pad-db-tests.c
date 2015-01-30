@@ -532,8 +532,8 @@ static void test_encryption_fails_due_to_not_enough_pad_bytes()
 	g_assert(pad_unique_id!=NULL);
 	unsigned char *encrypted_bytes;
 	size_t encrypted_bytes_size;
-	OtbCipherContext *cipher_context=otb_cipher_context_new();
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS, ==, otb_pad_db_encrypt(pad_db, cipher_context, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS, ==, otb_encrypt(cipher_context, TRUE, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
 	g_assert(encrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, encrypted_bytes_size);
 	g_free(encrypted_bytes);
@@ -547,7 +547,7 @@ static void test_encryption_with_one_pad()
 {
 	const size_t MESSAGE_SIZE=1008;
 	const char *EXPECTED_MESSAGE="I heartily accept the motto, \"That government is best which governs least\"; and I should like to see it acted up to more rapidly and systematically. Carried out, it finally amounts to this, which also I believe - \"That government is best which governs not at all\"; and when men are prepared for it, that will be the kind of government which they will have. Government is at best but an expedient; but most governments are usually, and all governments are sometimes, inexpedient. The objections which have been brought against a standing army, and they are many and weighty, and deserve to prevail, may also at last be brought against a standing government. The standing army is only an arm of the standing government. The government itself, which is only the mode which the people have chosen to execute their will, is equally liable to be abused and perverted before the people can act through it. Witness the present Mexican war, the work of comparatively a few individuals using the standing government as";
-	const size_t START_OF_ENCRYPTED_MESSAGE=sizeof(unsigned char)+OTB_UNIQUE_ID_BYTES_LENGTH;
+	const size_t START_OF_ENCRYPTED_MESSAGE=sizeof(unsigned char)+OTB_UNIQUE_ID_BYTES_SIZE;
 	const off_t EXPECTED_ENCRYPTED_MESSAGE_SIZE=START_OF_ENCRYPTED_MESSAGE+MESSAGE_SIZE;
 	
 	otb_test_setup_local_crypto();
@@ -560,12 +560,12 @@ static void test_encryption_with_one_pad()
 	OtbUniqueId *expected_unique_id=otb_mark_random_pad_as_sent(pad_db);
 	unsigned char *encrypted_bytes;
 	size_t encrypted_bytes_size;
-	OtbCipherContext *cipher_context=otb_cipher_context_new();
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(pad_db, cipher_context, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_encrypt(cipher_context, TRUE, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
 	g_assert(encrypted_bytes!=NULL);
 	g_assert_cmpint(EXPECTED_ENCRYPTED_MESSAGE_SIZE, ==, encrypted_bytes_size);
 	g_assert_cmpint(0, ==, (unsigned char)encrypted_bytes[0]);
-	g_assert_cmpint(0, ==, memcmp(otb_unique_id_get_bytes(expected_unique_id), (OtbUniqueId*)(encrypted_bytes+sizeof(unsigned char)), OTB_UNIQUE_ID_BYTES_LENGTH));
+	g_assert_cmpint(0, ==, memcmp(otb_unique_id_get_bytes(expected_unique_id), (OtbUniqueId*)(encrypted_bytes+sizeof(unsigned char)), OTB_UNIQUE_ID_BYTES_SIZE));
 	OtbPadIO *pad_io=otb_pad_db_open_pad_for_read(pad_db, expected_unique_id);
 	g_assert(pad_io!=NULL);
 	unsigned char *pad_bytes=otb_assert_pad_read(pad_io, NULL, ABSOLUTE_MIN_PAD_SIZE);
@@ -591,12 +591,12 @@ static void test_decryption_fails_due_to_unsupported_file_format()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
-	unsigned char input_bytes[sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH];
+	unsigned char input_bytes[sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE];
 	memcpy(input_bytes, &FORMAT_VERSION, sizeof(FORMAT_VERSION));
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	OtbCipherContext *cipher_context=otb_cipher_context_new();
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_pad_db_decrypt(pad_db, cipher_context, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH, &decrypted_bytes, &decrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_decrypt(cipher_context, TRUE, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE, &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	otb_free_locked(decrypted_bytes, decrypted_bytes_size);
@@ -612,12 +612,12 @@ static void test_decryption_fails_due_to_missing_pad()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
-	unsigned char input_bytes[sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH];
+	unsigned char input_bytes[sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE];
 	memcpy(input_bytes, &FORMAT_VERSION, sizeof FORMAT_VERSION);
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
-	OtbCipherContext *cipher_context=otb_cipher_context_new();
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_pad_db_decrypt(pad_db, cipher_context, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_LENGTH, &decrypted_bytes, &decrypted_bytes_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_decrypt(cipher_context, TRUE, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE, &decrypted_bytes, &decrypted_bytes_size));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
 	otb_free_locked(decrypted_bytes, decrypted_bytes_size);
@@ -680,12 +680,12 @@ static void otb_send_random_pads(OtbPadDb *sender_pad_db, const OtbPadDb *recipi
 		otb_send_random_pad(sender_pad_db, recipient_pad_db);
 }
 
-static void otb_encrypt_file_for_two_pad_test(const OtbPadDb *pad_db, const void *message, size_t message_size, unsigned char **encrypted_message, size_t *encrypted_message_size)
+static void otb_encrypt_file_for_two_pad_test(OtbPadDb *pad_db, const void *message, size_t message_size, unsigned char **encrypted_message, size_t *encrypted_message_size)
 {
 	*encrypted_message=NULL;
 	*encrypted_message_size=0;
-	OtbCipherContext *cipher_context=otb_cipher_context_new();
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(pad_db, cipher_context, message, message_size, encrypted_message, encrypted_message_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_encrypt(cipher_context, TRUE, message, message_size, encrypted_message, encrypted_message_size));
 	g_assert(encrypted_message!=NULL);
 	g_assert_cmpint(0, !=, *encrypted_message_size);
 	otb_assert_number_of_pads_in_status(pad_db, 1, OTB_PAD_REC_STATUS_UNSENT);
@@ -721,8 +721,8 @@ static void test_encryption_decryption_with_two_pads()
 	otb_encrypt_file_for_two_pad_test(sender_pad_db, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, &encrypted_message, &encrypted_message_size);
 	void *actual_message;
 	size_t actual_message_size;
-	OtbCipherContext *cipher_context=otb_cipher_context_new();
-	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_decrypt(recipient_pad_db, cipher_context, encrypted_message, encrypted_message_size, &actual_message, &actual_message_size));
+	OtbCipherContext *cipher_context=otb_cipher_context_new(recipient_pad_db);
+	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_decrypt(cipher_context, TRUE, encrypted_message, encrypted_message_size, &actual_message, &actual_message_size));
 	otb_assert_number_of_pads_in_status(recipient_pad_db, 1, OTB_PAD_REC_STATUS_INCOMING);
 	g_assert_cmpint(EXPECTED_MESSAGE_SIZE, ==, actual_message_size);
 	g_assert_cmpint(0, ==, memcmp(EXPECTED_MESSAGE, actual_message, EXPECTED_MESSAGE_SIZE));

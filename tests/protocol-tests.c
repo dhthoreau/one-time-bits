@@ -391,7 +391,7 @@ static void otb_do_client_send_pad_header_to_server(const ProtocolParams params,
 	OtbUniqueId *actual_packet_pad_unique_id=otb_unique_id_from_bytes(plain_client_packet+1);
 	GSList *potential_expected_pad_unique_id_iter=NULL;
 	for(potential_expected_pad_unique_id_iter=potential_expected_pad_ids; potential_expected_pad_unique_id_iter!=NULL; potential_expected_pad_unique_id_iter=g_slist_next(potential_expected_pad_unique_id_iter))
-		if(memcmp(otb_unique_id_get_bytes(potential_expected_pad_unique_id_iter->data), otb_unique_id_get_bytes(actual_packet_pad_unique_id), OTB_UNIQUE_ID_BYTES_LENGTH)==0)
+		if(memcmp(otb_unique_id_get_bytes(potential_expected_pad_unique_id_iter->data), otb_unique_id_get_bytes(actual_packet_pad_unique_id), OTB_UNIQUE_ID_BYTES_SIZE)==0)
 			break;
 	g_assert(potential_expected_pad_unique_id_iter!=NULL);
 	g_assert_cmpint(PAD_SIZE(params), ==, g_ntohl(*(int32_t*)(plain_client_packet+17)));
@@ -816,8 +816,8 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	size_t encrypted_bytes_size=0;
 	for(int counter=0; counter<CONSUMED_PAD_COUNT(params); counter++)
 	{
-		OtbCipherContext *cipher_context=otb_cipher_context_new();
-		g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_pad_db_encrypt(outgoing_pad_db, cipher_context, "", 1, &encrypted_bytes, &encrypted_bytes_size));
+		OtbCipherContext *cipher_context=otb_cipher_context_new(outgoing_pad_db);
+		g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_encrypt(cipher_context, TRUE, "", 1, &encrypted_bytes, &encrypted_bytes_size));
 		g_free(encrypted_bytes);
 		otb_cipher_context_free(cipher_context);
 	}

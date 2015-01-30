@@ -19,7 +19,7 @@
 
 static void test_otb_bitkeeper_user()
 {
-	const size_t NEW_KEY_LENGTH=512;
+	const size_t NEW_KEY_SIZE=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kfjjkjfdhgjkhfkjd.onion";
 	
@@ -27,7 +27,7 @@ static void test_otb_bitkeeper_user()
 	otb_settings_set_data_directory_path(otb_get_test_dir_path());
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_LENGTH));
+	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_SIZE));
 	otb_setup_config_file_for_user_tests(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS);
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
 	g_assert(bitkeeper!=NULL);
