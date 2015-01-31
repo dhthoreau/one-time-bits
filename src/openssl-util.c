@@ -50,6 +50,5 @@ void *otb_openssl_create_decryption_buffer(const EVP_CIPHER *cipher_impl, size_t
 {
 	size_t size=encrypted_bytes_buffer_size+EVP_CIPHER_block_size(cipher_impl);
 	*decryption_buffer_size_out=size;
-	void *decryption_buffer=otb_malloc_locked(size);
-	return decryption_buffer;
+	return otb_malloc_locked(size);
 }
