@@ -15,8 +15,9 @@
 
 static void otb_call_test(const gpointer test, const gpointer user_data)
 {
-	GTestFunc test_func=(GTestFunc)test;
-	test_func();
+	otb_recreate_test_dir();
+	((GTestFunc)test)();
+	otb_delete_test_dir();
 }
 
 static void test_memory_leaks()

@@ -48,10 +48,8 @@ static void otb_add_tests()
 
 static void otb_run_tests()
 {
-	otb_recreate_test_dir();
 	otb_add_tests();
 	g_test_run();
-	otb_delete_test_dir();
 	g_slist_free(otb_test_funcs);
 }
 

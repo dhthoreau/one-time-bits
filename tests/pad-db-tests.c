@@ -759,4 +759,5 @@ void otb_add_pad_db_tests()
 	otb_add_test_func("/pad-db/test_pad_db_get_pad_size", test_pad_db_get_pad_size);
 	otb_add_test_func("/pad-db/test_pad_db_get_pad_size_range", test_pad_db_get_pad_size_range);
 	otb_add_test_func("/pad-db/test_encryption_decryption_with_two_pads", test_encryption_decryption_with_two_pads);
+// FARE - Unit test_encryption_decryption_with_four_pads() con quatto invocazioni di otb_encrypt() e otb_decrypt().
 }

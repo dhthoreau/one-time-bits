@@ -11,7 +11,9 @@
 
 #include <glib-object.h>
 
-#define otb_add_test_func(name, func)	if(!g_test_perf()) g_test_add_func((name), (func)); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
+#include "test-utils.h"
+
+#define otb_add_test_func(name, func)	if(!g_test_perf()) g_test_add((name), void, NULL, otb_recreate_test_dir, (func), otb_delete_test_dir); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
 
 extern GSList *otb_test_funcs;
 
