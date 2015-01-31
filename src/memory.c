@@ -88,7 +88,7 @@ void otb_mlock(const void *memory, size_t size)
 	{
 		otb_mlock_initialize_hash_table();
 		const void *page_max=(const unsigned char*)memory+size;
-		void *page=(void*)((uintptr_t)memory-(uintptr_t)memory % page_size);
+		void *page=(void*)((uintptr_t)memory-(uintptr_t)memory%page_size);
 		otb_mlock_hash_table_lock();
 		do
 		{
@@ -136,7 +136,7 @@ void otb_munlock(const void *memory, size_t size)
 #endif
 }
 
-void *otb_malloc_locked(size_t size)	// FARE - Sustitui con gcry_malloc_secure() o secmalloc() o equivalente.
+void *otb_malloc_locked(size_t size)
 {
 	void *memory=g_malloc(size);
 	otb_mlock(memory, size);

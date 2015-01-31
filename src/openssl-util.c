@@ -40,7 +40,7 @@ GBytes *otb_openssl_generate_random_iv(const EVP_CIPHER *cipher_impl)
 
 unsigned char *otb_openssl_create_encryption_buffer(const EVP_CIPHER *cipher_impl, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out)
 {
-	size_t size=plain_bytes_buffer_size+EVP_CIPHER_block_size(cipher_impl)-1;
+	size_t size=plain_bytes_buffer_size+EVP_CIPHER_block_size(cipher_impl);
 	if(G_LIKELY(encryption_buffer_size_out!=NULL))
 		*encryption_buffer_size_out=size;
 	return g_malloc(size);
