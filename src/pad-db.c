@@ -21,8 +21,9 @@ struct _OtbCipherContext
 	OtbPadDbCryptResults result;
 	OtbPadIO *current_pad_io;
 	OtbPadIO *previous_pad_io;
-	size_t unique_id_bytes_position;
 	unsigned char unique_id_bytes[OTB_UNIQUE_ID_BYTES_SIZE];
+	unsigned char *current_unique_id_byte;
+	const unsigned char *unique_id_bytes_end;
 };
 
 struct _OtbPadDbPrivate
@@ -704,7 +705,8 @@ OtbCipherContext *otb_cipher_context_new(OtbPadDb *pad_db)
 	cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_NO_RESULT;
 	cipher_context->current_pad_io=NULL;
 	cipher_context->previous_pad_io=NULL;
-	cipher_context->unique_id_bytes_position=0;
+	cipher_context->current_unique_id_byte=cipher_context->unique_id_bytes;
+	cipher_context->unique_id_bytes_end=cipher_context->current_unique_id_byte+OTB_UNIQUE_ID_BYTES_SIZE;
 	return cipher_context;
 }
 
@@ -837,28 +839,32 @@ OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean fina
 		else
 		{
 			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
-			*plain_bytes_out=otb_malloc_locked(encrypted_bytes_size-sizeof(unsigned char)-OTB_UNIQUE_ID_BYTES_SIZE);
+			*plain_bytes_size_out=encrypted_bytes_size-sizeof(unsigned char)-OTB_UNIQUE_ID_BYTES_SIZE;
+			*plain_bytes_out=otb_malloc_locked(*plain_bytes_size_out);
 			current_encrypted_byte=encrypted_bytes+1;
 		}
 	}
 	else
 	{
-		*plain_bytes_out=otb_malloc_locked(encrypted_bytes_size-OTB_UNIQUE_ID_BYTES_SIZE);
+		*plain_bytes_size_out=encrypted_bytes_size-OTB_UNIQUE_ID_BYTES_SIZE;
+		*plain_bytes_out=otb_malloc_locked(*plain_bytes_size_out);
 		current_encrypted_byte=encrypted_bytes;
 	}
 	otb_pad_db_lock_write(cipher_context->pad_db);
 	const unsigned char *encrypted_bytes_end=encrypted_bytes+encrypted_bytes_size;
-	for(*plain_bytes_size_out=0; cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && current_encrypted_byte<encrypted_bytes_end; )
+	unsigned char *current_plain_byte;
+	for(current_plain_byte=*plain_bytes_out; cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && current_encrypted_byte<encrypted_bytes_end; )
 	{
 		off_t pad_size=-1;
-		if(cipher_context->unique_id_bytes_position!=OTB_UNIQUE_ID_BYTES_SIZE)
+		if(cipher_context->current_unique_id_byte!=cipher_context->unique_id_bytes_end)
 		{
-			size_t unique_id_bytes_to_read=MIN(OTB_UNIQUE_ID_BYTES_SIZE-cipher_context->unique_id_bytes_position, encrypted_bytes_end-current_encrypted_byte);
-			if(G_UNLIKELY(!otb_pad_db_crypt_bytes(unique_id_bytes_to_read, current_encrypted_byte, cipher_context->unique_id_bytes+cipher_context->unique_id_bytes_position, cipher_context)))
+			size_t unique_id_bytes_to_decrypt=MIN(cipher_context->unique_id_bytes_end-cipher_context->current_unique_id_byte, encrypted_bytes_end-current_encrypted_byte);
+			if(G_UNLIKELY(!otb_pad_db_crypt_bytes(unique_id_bytes_to_decrypt, current_encrypted_byte, cipher_context->current_unique_id_byte, cipher_context)))
 				cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			cipher_context->unique_id_bytes_position+=unique_id_bytes_to_read;
+			cipher_context->current_unique_id_byte+=unique_id_bytes_to_decrypt;
+			current_encrypted_byte+=unique_id_bytes_to_decrypt;
 		}
-		if(cipher_context->unique_id_bytes_position==OTB_UNIQUE_ID_BYTES_SIZE && cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS)
+		if(cipher_context->current_unique_id_byte==cipher_context->unique_id_bytes_end && cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS)
 		{
 			OtbPadRec *pad_rec=NULL;
 			OtbUniqueId *unique_id=otb_unique_id_from_bytes(cipher_context->unique_id_bytes);
@@ -868,18 +874,19 @@ OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean fina
 				cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else if(G_UNLIKELY((cipher_context->current_pad_io=otb_pad_rec_open_pad_for_read(pad_rec, TRUE))==NULL))
 				cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
-			else if(G_UNLIKELY(!otb_pad_db_crypt_bytes(pad_size-OTB_UNIQUE_ID_BYTES_SIZE, current_encrypted_byte+OTB_UNIQUE_ID_BYTES_SIZE, *(unsigned char**)plain_bytes_out+*plain_bytes_size_out, cipher_context)))
+			else if(G_UNLIKELY(!otb_pad_db_crypt_bytes(pad_size-OTB_UNIQUE_ID_BYTES_SIZE, current_encrypted_byte, current_plain_byte, cipher_context)))
 				cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else
 				g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_DEAD, NULL);
-			cipher_context->unique_id_bytes_position=0;
+			current_encrypted_byte+=pad_size-OTB_UNIQUE_ID_BYTES_SIZE;
+			current_plain_byte+=pad_size-OTB_UNIQUE_ID_BYTES_SIZE;
+			cipher_context->current_unique_id_byte=cipher_context->unique_id_bytes;
 			otb_unique_id_unref(unique_id);
 		}
 		if(G_UNLIKELY(cipher_context->previous_pad_io!=NULL && !otb_pad_io_free(cipher_context->previous_pad_io) && cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 		cipher_context->previous_pad_io=cipher_context->current_pad_io;
 		cipher_context->current_pad_io=NULL;
-		current_encrypted_byte+=pad_size;
 		*plain_bytes_size_out+=pad_size-OTB_UNIQUE_ID_BYTES_SIZE;
 	}
 	if(G_UNLIKELY(cipher_context->previous_pad_io!=NULL && !otb_pad_io_free(cipher_context->previous_pad_io) && cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
@@ -900,6 +907,8 @@ OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean fina
 		*plain_bytes_out=NULL;
 		*plain_bytes_size_out=0;
 	}
+	else
+		*plain_bytes_size_out=current_plain_byte-(unsigned char*)*plain_bytes_out;
 	otb_pad_db_unlock_write(cipher_context->pad_db);
 	return cipher_context->result;
 }
