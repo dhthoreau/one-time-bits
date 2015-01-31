@@ -830,7 +830,7 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 		long long expiration=otb_few_months_from_now();
 		OtbPadIO *received_pad_io=NULL;
 		g_assert((received_pad_io=otb_pad_db_add_incoming_pad(incoming_pad_db, received_pad_unique_id, PAD_SIZE(params), expiration))!=NULL);
-		unsigned char *pad_bytes=g_malloc(PAD_SIZE(params));
+		unsigned char *pad_bytes=otb_create_random_bytes(PAD_SIZE(params));
 		g_assert(otb_pad_write(received_pad_io, pad_bytes, PAD_SIZE(params)));
 		otb_pad_db_close_pad(incoming_pad_db, received_pad_io);
 		otb_pad_db_mark_pad_as_received(incoming_pad_db, received_pad_unique_id);
@@ -1250,7 +1250,6 @@ static void otb_protocol_execution_test(unsigned char client_server, GThreadFunc
 		otb_let_server_continue(FALSE);
 	g_mutex_unlock(&otb_protocol_mutex);
 	g_thread_join(dummy_io_thread);
-	g_thread_unref(dummy_io_thread);
 	g_ptr_array_unref(memory_io_streams);
 	otb_protocol_context_free(protocol_context);
 	g_object_unref(peer_asym_cipher);

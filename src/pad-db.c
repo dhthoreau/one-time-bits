@@ -804,12 +804,12 @@ OtbPadDbCryptResults otb_encrypt(OtbCipherContext *cipher_context, gboolean fina
 	cipher_context->previous_pad_io=NULL;
 	if(final_bytes)
 	{
-		if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))
+		if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))	// FARE - Metto i blocchi usati sul cipher_context.
 		{
 			g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
 			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
 		}
-		otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);
+		otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);	// FARE - Metto i blocchi usati sul cipher_context.
 	}
 	if(G_UNLIKELY(cipher_context->result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 	{
@@ -886,12 +886,12 @@ OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean fina
 	cipher_context->previous_pad_io=NULL;
 	if(final_bytes)
 	{
-		if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(cipher_context->pad_db)))
+		if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(cipher_context->pad_db)))	// FARE - Metto i blocchi morti sul cipher_context.
 		{
 			g_message(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."));
 			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
 		}
-		otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);
+		otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);	// FARE - Metto i blocchi morti sul cipher_context.
 	}
 	if(G_UNLIKELY(cipher_context->result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 	{
