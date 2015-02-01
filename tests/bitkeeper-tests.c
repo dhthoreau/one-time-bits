@@ -17,18 +17,33 @@
 #include "../src/bitkeeper.h"
 #include "../src/settings.h"
 
+static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
+{
+	otb_recreate_test_dir();
+	*unique_id_out=otb_unique_id_new();
+	*asym_cipher_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(*asym_cipher_out, new_key_size));
+	otb_setup_config_file_for_user_tests(*unique_id_out, sym_cipher_name, *asym_cipher_out, address);
+}
+
+static void otb_setup_configs_for_bitkeeper_tests_without_output(size_t new_key_size, const char *sym_cipher_name, const char *address)
+{
+	OtbUniqueId *unique_id=NULL;
+	OtbAsymCipher *asym_cipher=NULL;
+	otb_setup_configs_for_bitkeeper_tests(new_key_size, sym_cipher_name, address, &unique_id, &asym_cipher);
+	g_object_unref(asym_cipher);
+	otb_unique_id_unref(unique_id);
+}
+
 static void test_otb_bitkeeper_user()
 {
 	const size_t NEW_KEY_SIZE=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kfjjkjfdhgjkhfkjd.onion";
 	
-	otb_recreate_test_dir();
-	otb_settings_set_data_directory_path(otb_get_test_dir_path());
-	OtbUniqueId *expected_unique_id=otb_unique_id_new();
-	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_SIZE));
-	otb_setup_config_file_for_user_tests(expected_unique_id, EXPECTED_SYM_CIPHER_NAME, expected_asym_cipher, EXPECTED_ADDRESS);
+	OtbUniqueId *expected_unique_id=NULL;
+	OtbAsymCipher *expected_asym_cipher=NULL;
+	otb_setup_configs_for_bitkeeper_tests(NEW_KEY_SIZE, EXPECTED_SYM_CIPHER_NAME, EXPECTED_ADDRESS, &expected_unique_id, &expected_asym_cipher);
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
 	g_assert(bitkeeper!=NULL);
 	OtbUser *user=NULL;
@@ -62,6 +77,7 @@ static void test_otb_bitkeeper_user()
 
 static void test_otb_bitkeeper_proxy_port()
 {
+	otb_setup_configs_for_bitkeeper_tests_without_output(512, "DES-CBC", "sjhfgjzshdjf.onion");
 	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_load();
 	unsigned int proxy_port=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
@@ -160,8 +176,6 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_settings_initialize("otb-tests", "otb");
-	otb_settings_set_config_directory_path(otb_get_test_dir_path());
-	otb_settings_set_data_directory_path(otb_get_test_dir_path());
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
 	g_assert(bitkeeper!=NULL);
 	return bitkeeper;

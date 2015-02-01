@@ -192,6 +192,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	otb_unique_id_unref(expected_unique_id);
 	g_free(expected_public_key);
 	g_free(actual_public_key);
+	g_free(actual_sym_cipher_name);
 	g_free(actual_address);
 	g_object_unref(expected_asym_cipher);
 }

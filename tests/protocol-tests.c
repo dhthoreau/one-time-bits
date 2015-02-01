@@ -659,6 +659,7 @@ static void otb_do_server_receive_pad_ids_from_client(const ProtocolParams param
 	otb_assert_appropriate_pads_deleted_after_receiving_pad_ids_from_peer(params, incoming_pad_db, expected_pad_ids);
 	g_free(server_packet);
 	g_free(client_request_packet);
+	g_slist_free_full(expected_pad_ids, (GDestroyNotify)otb_unique_id_unref);
 	g_object_unref(incoming_pad_db);
 }
 
