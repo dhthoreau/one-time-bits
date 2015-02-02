@@ -24,6 +24,7 @@ struct _OtbCipherContext
 	unsigned char unique_id_bytes[OTB_UNIQUE_ID_BYTES_SIZE];
 	unsigned char *current_unique_id_byte;
 	const unsigned char *unique_id_bytes_end;
+	GSList *used_pad_recs;
 };
 
 struct _OtbPadDbPrivate
@@ -451,6 +452,7 @@ gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique
 gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
+	otb_pad_db_lock_write(pad_db);
 	GSList *pad_recs_to_remove=NULL;
 	long long now=g_get_real_time();
 	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
@@ -468,28 +470,7 @@ gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db)
 			ret_val=FALSE;
 	}
 	g_slist_free(pad_recs_to_remove);
-	return ret_val;
-}
-
-static gboolean otb_pad_db_remove_dead_pads(const OtbPadDb *pad_db)
-{
-	gboolean ret_val=TRUE;
-	GSList *pad_recs_to_remove=NULL;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
-	{
-		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		OtbPadRecStatus pad_rec_status;
-		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
-		if(pad_rec_status==OTB_PAD_REC_STATUS_DEAD)
-			pad_recs_to_remove=g_slist_prepend(pad_recs_to_remove, pad_rec);
-	}
-	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL && ret_val; curr_element=g_slist_next(curr_element))
-	{
-		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		if(G_UNLIKELY(!otb_pad_db_remove_pad_rec(pad_db, pad_rec)))
-			ret_val=FALSE;
-	}
-	g_slist_free(pad_recs_to_remove);
+	otb_pad_db_unlock_write(pad_db);
 	return ret_val;
 }
 
@@ -571,25 +552,6 @@ static gboolean otb_pad_db_transition_status_of_pad(const OtbPadDb *pad_db, cons
 		{
 			g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, prerequisite_status, NULL);
 			ret_val=FALSE;
-		}
-	}
-	return ret_val;
-}
-
-static gboolean otb_pad_db_transition_status_of_pads(const OtbPadDb *pad_db, OtbPadRecStatus prerequisite_status, OtbPadRecStatus new_status)
-{
-	gboolean ret_val=TRUE;
-	for(const GSList *curr_element=pad_db->priv->pad_recs; ret_val && curr_element!=NULL; curr_element=g_slist_next(curr_element))
-	{
-		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
-		OtbPadRecStatus pad_rec_status;
-		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
-		if(pad_rec_status==prerequisite_status)
-		{
-			OtbUniqueId *unique_id=NULL;
-			g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
-			ret_val=otb_pad_db_transition_status_of_pad(pad_db, unique_id, prerequisite_status, new_status);
-			otb_unique_id_unref(unique_id);
 		}
 	}
 	return ret_val;
@@ -707,6 +669,7 @@ OtbCipherContext *otb_cipher_context_new(OtbPadDb *pad_db)
 	cipher_context->previous_pad_io=NULL;
 	cipher_context->current_unique_id_byte=cipher_context->unique_id_bytes;
 	cipher_context->unique_id_bytes_end=cipher_context->current_unique_id_byte+OTB_UNIQUE_ID_BYTES_SIZE;
+	cipher_context->used_pad_recs=NULL;
 	return cipher_context;
 }
 
@@ -717,10 +680,11 @@ static void otb_cipher_context_free(OtbCipherContext *cipher_context)
 		otb_pad_io_free(cipher_context->current_pad_io);
 	if(cipher_context->previous_pad_io!=NULL)
 		otb_pad_io_free(cipher_context->previous_pad_io);
+	g_slist_free_full(cipher_context->used_pad_recs, g_object_unref);
 	g_free(cipher_context);
 }
 
-static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const unsigned char **current_input_byte_out, unsigned char **current_output_byte_out, OtbCipherContext *cipher_context)
+static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const unsigned char **current_input_byte_out, unsigned char **current_output_byte_out, const OtbCipherContext *cipher_context)
 {
 	gboolean ret_val=TRUE;
 	const unsigned char *current_input_byte_end=*current_input_byte_out+bytes_to_crypt;
@@ -768,7 +732,11 @@ static OtbPadDbCryptResult otb_encrypt_move_to_next_pad(const OtbPadDb *pad_db, 
 			if(G_UNLIKELY(!otb_pad_db_crypt_bytes(bytes_to_crypt, current_plain_byte_out, current_encrypted_byte_out, cipher_context)))
 				encryption_result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else
+			{
 				g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_BEING_CONSUMED, NULL);
+				g_object_ref(pad_rec);
+				cipher_context->used_pad_recs=g_slist_prepend(cipher_context->used_pad_recs, pad_rec);
+			}
 		}
 	}
 	otb_unique_id_unref(unique_id);
@@ -822,14 +790,38 @@ gboolean otb_encrypt(OtbCipherContext *cipher_context, gboolean final_bytes, con
 	return cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 }
 
+static gboolean otb_cipher_context_transition_status_of_pads(OtbCipherContext *cipher_context, OtbPadRecStatus prerequisite_status, OtbPadRecStatus new_status)
+{
+	gboolean ret_val=TRUE;
+	GSList *pad_recs_to_transition=NULL;
+	for(const GSList *curr_element=cipher_context->used_pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
+	{
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		OtbPadRecStatus pad_rec_status;
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
+		if(pad_rec_status==prerequisite_status)
+			pad_recs_to_transition=g_slist_prepend(pad_recs_to_transition, pad_rec);
+	}
+	for(const GSList *curr_element=pad_recs_to_transition; curr_element!=NULL && ret_val; curr_element=g_slist_next(curr_element))
+	{
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		cipher_context->used_pad_recs=g_slist_remove(cipher_context->used_pad_recs, pad_rec);
+		OtbUniqueId *unique_id=NULL;
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, NULL);
+		ret_val=otb_pad_db_transition_status_of_pad(cipher_context->pad_db, unique_id, prerequisite_status, new_status) && ret_val;
+		otb_unique_id_unref(unique_id);
+	}
+	return ret_val;
+}
+
 OtbPadDbCryptResult otb_finish_encrypt(OtbCipherContext *cipher_context)
 {
-	if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))	// FARE - Metto i blocchi usati sul cipher_context.
+	if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_cipher_context_transition_status_of_pads(cipher_context, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))
 	{
 		g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
 		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
 	}
-	otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);	// FARE - Metto i blocchi usati sul cipher_context.
+	otb_cipher_context_transition_status_of_pads(cipher_context, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);
 	OtbPadDbCryptResult result=cipher_context->result;
 	otb_cipher_context_free(cipher_context);
 	return result;
@@ -840,18 +832,18 @@ gboolean otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, con
 	const unsigned char *current_encrypted_byte;
 	if(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_NO_RESULT)
 	{
-		if(G_UNLIKELY(encrypted_bytes[0]!=CURRENT_ENCRYPTION_FORMAT_VERSION))
-		{
-			g_message(_("Failed to decrypt file due to unsupported file version number."));
-			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT;
-			*plain_bytes_out=NULL;
-		}
-		else
+		if(G_LIKELY(encrypted_bytes[0]==CURRENT_ENCRYPTION_FORMAT_VERSION))
 		{
 			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 			*plain_bytes_size_out=encrypted_bytes_size-sizeof(unsigned char)-OTB_UNIQUE_ID_BYTES_SIZE;
 			*plain_bytes_out=otb_malloc_locked(*plain_bytes_size_out);
 			current_encrypted_byte=encrypted_bytes+1;
+		}
+		else
+		{
+			g_message(_("Failed to decrypt file due to unsupported file version number."));
+			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT;
+			*plain_bytes_out=NULL;
 		}
 	}
 	else
@@ -885,7 +877,11 @@ gboolean otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, con
 			else if(G_UNLIKELY(!otb_pad_db_crypt_bytes(pad_size-OTB_UNIQUE_ID_BYTES_SIZE, &current_encrypted_byte, &current_plain_byte, cipher_context)))
 				cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 			else
+			{
 				g_object_set(pad_rec, OTB_PAD_REC_PROP_STATUS, OTB_PAD_REC_STATUS_DEAD, NULL);
+				g_object_ref(pad_rec);
+				cipher_context->used_pad_recs=g_slist_prepend(cipher_context->used_pad_recs, pad_rec);
+			}
 			cipher_context->current_unique_id_byte=cipher_context->unique_id_bytes;
 			otb_unique_id_unref(unique_id);
 		}
@@ -910,14 +906,37 @@ gboolean otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, con
 	return cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 }
 
+static gboolean otb_cipher_context_remove_dead_pads(OtbCipherContext *cipher_context)
+{
+	gboolean ret_val=TRUE;
+	GSList *pad_recs_to_remove=NULL;
+	for(const GSList *curr_element=cipher_context->used_pad_recs; curr_element!=NULL; curr_element=g_slist_next(curr_element))
+	{
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		OtbPadRecStatus pad_rec_status;
+		g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
+		if(pad_rec_status==OTB_PAD_REC_STATUS_DEAD)
+			pad_recs_to_remove=g_slist_prepend(pad_recs_to_remove, pad_rec);
+	}
+	for(const GSList *curr_element=pad_recs_to_remove; curr_element!=NULL; curr_element=g_slist_next(curr_element))
+	{
+		OtbPadRec *pad_rec=OTB_PAD_REC(curr_element->data);
+		cipher_context->used_pad_recs=g_slist_remove(cipher_context->used_pad_recs, pad_rec);
+		if(G_UNLIKELY(!otb_pad_db_remove_pad_rec(cipher_context->pad_db, pad_rec)))
+			ret_val=FALSE;
+	}
+	g_slist_free(pad_recs_to_remove);
+	return ret_val;
+}
+
 OtbPadDbCryptResult otb_finish_decrypt(OtbCipherContext *cipher_context)
 {
-	if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(cipher_context->pad_db)))	// FARE - Metto i blocchi morti sul cipher_context.
+	if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_cipher_context_remove_dead_pads(cipher_context)))
 	{
 		g_message(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."));
 		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
 	}
-	otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);	// FARE - Metto i blocchi morti sul cipher_context.
+	otb_cipher_context_transition_status_of_pads(cipher_context, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);
 	OtbPadDbCryptResult result=cipher_context->result;
 	otb_cipher_context_free(cipher_context);
 	return result;
