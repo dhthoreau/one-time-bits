@@ -67,4 +67,3 @@ int main(int argc, char *argv[])
 	otb_run_tests(&argc, &argv);
 	return 0;
 }
-

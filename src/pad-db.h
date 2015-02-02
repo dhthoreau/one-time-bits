@@ -83,8 +83,9 @@ gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_id);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db);
 OtbCipherContext *otb_cipher_context_new(OtbPadDb *pad_db);
-gboolean otb_encrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);
+gboolean otb_encrypt(OtbCipherContext *cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);
 OtbPadDbCryptResult otb_finish_encrypt(OtbCipherContext *cipher_context);
-gboolean otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
+gboolean otb_decrypt(OtbCipherContext *cipher_context, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
 OtbPadDbCryptResult otb_finish_decrypt(OtbCipherContext *cipher_context);
+
 #endif

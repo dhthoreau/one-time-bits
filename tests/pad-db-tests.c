@@ -533,7 +533,7 @@ static void test_encryption_fails_due_to_not_enough_pad_bytes()
 	unsigned char *encrypted_bytes;
 	size_t encrypted_bytes_size;
 	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
-	g_assert(!otb_encrypt(cipher_context, TRUE, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
+	g_assert(!otb_encrypt(cipher_context, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS, ==, otb_finish_encrypt(cipher_context));
 	g_assert(encrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, encrypted_bytes_size);
@@ -561,7 +561,7 @@ static void test_encryption_with_one_pad()
 	unsigned char *encrypted_bytes;
 	size_t encrypted_bytes_size;
 	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
-	g_assert(otb_encrypt(cipher_context, TRUE, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
+	g_assert(otb_encrypt(cipher_context, EXPECTED_MESSAGE, MESSAGE_SIZE, &encrypted_bytes, &encrypted_bytes_size));
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_finish_encrypt(cipher_context));
 	g_assert(encrypted_bytes!=NULL);
 	g_assert_cmpint(EXPECTED_ENCRYPTED_MESSAGE_SIZE, ==, encrypted_bytes_size);
@@ -596,7 +596,7 @@ static void test_decryption_fails_due_to_unsupported_file_format()
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
 	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
-	g_assert(!otb_decrypt(cipher_context, TRUE, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE, &decrypted_bytes, &decrypted_bytes_size));
+	g_assert(!otb_decrypt(cipher_context, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE, &decrypted_bytes, &decrypted_bytes_size));
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT, ==, otb_finish_decrypt(cipher_context));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
@@ -617,7 +617,7 @@ static void test_decryption_fails_due_to_missing_pad()
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
 	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);
-	g_assert(!otb_decrypt(cipher_context, TRUE, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE, &decrypted_bytes, &decrypted_bytes_size));
+	g_assert(!otb_decrypt(cipher_context, input_bytes, sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE, &decrypted_bytes, &decrypted_bytes_size));
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD, ==, otb_finish_decrypt(cipher_context));
 	g_assert(decrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, decrypted_bytes_size);
@@ -696,7 +696,7 @@ static size_t otb_encrypt_file_for_two_pad_test(OtbPadDb *pad_db, size_t chunk_s
 		unsigned char *encrypted_buffer=NULL;
 		size_t encrypted_buffer_size=0;
 		size_t chunk_size_to_encrypt=MIN(chunk_size, message_end_byte-current_message_byte);
-		g_assert(otb_encrypt(cipher_context, (current_message_byte+chunk_size_to_encrypt>=message_end_byte), current_message_byte, chunk_size_to_encrypt, &encrypted_buffer, &encrypted_buffer_size));
+		g_assert(otb_encrypt(cipher_context, current_message_byte, chunk_size_to_encrypt, &encrypted_buffer, &encrypted_buffer_size));
 		g_assert(encrypted_buffer!=NULL);
 		g_assert_cmpint(0, !=, encrypted_buffer_size);
 		g_byte_array_append(encrypted_message_byte_array, encrypted_buffer, encrypted_buffer_size);
@@ -723,7 +723,7 @@ static void otb_decrypt_file_for_two_pad_test(OtbPadDb *pad_db, size_t chunk_siz
 		unsigned char *decrypted_buffer=NULL;
 		size_t decrypted_buffer_size=0;
 		size_t chunk_size_to_decrypt=MIN(chunk_size, encrypted_message_end_byte-current_encrypted_message_byte);
-		g_assert(otb_decrypt(cipher_context, (current_encrypted_message_byte+chunk_size_to_decrypt>=encrypted_message_end_byte), current_encrypted_message_byte, chunk_size_to_decrypt, (void**)&decrypted_buffer, &decrypted_buffer_size));
+		g_assert(otb_decrypt(cipher_context, current_encrypted_message_byte, chunk_size_to_decrypt, (void**)&decrypted_buffer, &decrypted_buffer_size));
 		g_assert(decrypted_buffer!=NULL);
 		g_assert_cmpint(0, !=, decrypted_buffer_size);
 		g_byte_array_append(decrypted_message_byte_array, decrypted_buffer, decrypted_buffer_size);
@@ -736,11 +736,8 @@ static void otb_decrypt_file_for_two_pad_test(OtbPadDb *pad_db, size_t chunk_siz
 	g_byte_array_unref(decrypted_message_byte_array);
 }
 
-static void test_encryption_decryption_with_two_pads()
+static void otb_encryption_decryption_with_two_pads(size_t chunk_size, const unsigned char *message, size_t message_size)
 {
-	const size_t EXPECTED_MESSAGE_SIZE=2016;
-	const char *EXPECTED_MESSAGE="I heartily accept the motto, \"That government is best which governs least\"; and I should like to see it acted up to more rapidly and systematically. Carried out, it finally amounts to this, which also I believe - \"That government is best which governs not at all\"; and when men are prepared for it, that will be the kind of government which the will have. Government is at best but an expedient; but most governments are usually, and all governments are sometimes, inexpedient. The objections which have been brought against a standing army, and they are many and weighty, and deserve to prevail, may also at last be brought against a standing government. The standing army is only an arm of the standing government. The government itself, which is only the mode which the people have chosen to execute their will, is equally liable to be abused and perverted before the people can act through it. Witness the present Mexican war, the work of comparatively a few individuals using the standing government as their tool; for in the outset, the people would not have consented to this measure. This American government - what is it but a tradition, though a recent one, endeavoring to transmit itself unimpaired to posterity, but each instant losing some of its integrity? It has not the vitality and force of a single living man; for a single man can bend it to his will. It is a sort of wooden gun to the people themselves. But it is not the less necessary for this; for the people must have some complicated machinery or other, and hear its din, to satisfy that idea of government which they have. Governments show thus how successfully men can be imposed upon, even impose on themselves, for their own advantage. It is excellent, we must all allow. Yet this government never of itself furthered any enterprise, but by the alacrity with which it got out of its way. It does not keep the country free. It does not settle the West. It does not educate. The character inherent in the American people has done all that.";
-	
 	otb_test_setup_local_crypto();
 	char *sender_pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *sender_pad_db=otb_pad_db_create_in_directory(sender_pad_db_dir_path);
@@ -754,8 +751,8 @@ static void test_encryption_decryption_with_two_pads()
 	otb_send_random_pads(sender_pad_db, recipient_pad_db, 3);
 	unsigned char *encrypted_message;
 	size_t encrypted_message_size;
-	encrypted_message_size=otb_encrypt_file_for_two_pad_test(sender_pad_db, EXPECTED_MESSAGE_SIZE, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, &encrypted_message);
-	otb_decrypt_file_for_two_pad_test(recipient_pad_db, encrypted_message_size, EXPECTED_MESSAGE, EXPECTED_MESSAGE_SIZE, encrypted_message, encrypted_message_size);
+	encrypted_message_size=otb_encrypt_file_for_two_pad_test(sender_pad_db, chunk_size, message, message_size, &encrypted_message);
+	otb_decrypt_file_for_two_pad_test(recipient_pad_db, chunk_size, message, message_size, encrypted_message, encrypted_message_size);
 	g_free(encrypted_message);
 	g_object_unref(recipient_pad_db);
 	g_free(recipient_pad_db_dir_path);
@@ -763,6 +760,14 @@ static void test_encryption_decryption_with_two_pads()
 	g_free(sender_pad_db_dir_path);
 }
 
+static void test_encryption_decryption_with_two_pads_varying_chunk_size()
+{
+	const char *MESSAGE="I heartily accept the motto, \"That government is best which governs least\"; and I should like to see it acted up to more rapidly and systematically. Carried out, it finally amounts to this, which also I believe - \"That government is best which governs not at all\"; and when men are prepared for it, that will be the kind of government which the will have. Government is at best but an expedient; but most governments are usually, and all governments are sometimes, inexpedient. The objections which have been brought against a standing army, and they are many and weighty, and deserve to prevail, may also at last be brought against a standing government. The standing army is only an arm of the standing government. The government itself, which is only the mode which the people have chosen to execute their will, is equally liable to be abused and perverted before the people can act through it. Witness the present Mexican war, the work of comparatively a few individuals using the standing government as their tool; for in the outset, the people would not have consented to this measure. This American government - what is it but a tradition, though a recent one, endeavoring to transmit itself unimpaired to posterity, but each instant losing some of its integrity? It has not the vitality and force of a single living man; for a single man can bend it to his will. It is a sort of wooden gun to the people themselves. But it is not the less necessary for this; for the people must have some complicated machinery or other, and hear its din, to satisfy that idea of government which they have. Governments show thus how successfully men can be imposed upon, even impose on themselves, for their own advantage. It is excellent, we must all allow. Yet this government never of itself furthered any enterprise, but by the alacrity with which it got out of its way. It does not keep the country free. It does not settle the West. It does not educate. The character inherent in the American people has done all that.";
+	const size_t MESSAGE_SIZE=2016;
+	
+	for(size_t chunk_size=MESSAGE_SIZE+33; chunk_size<=MESSAGE_SIZE+33; chunk_size++)
+		otb_encryption_decryption_with_two_pads(chunk_size, MESSAGE, MESSAGE_SIZE);
+}
 
 void otb_add_pad_db_tests()
 {
@@ -787,5 +792,5 @@ void otb_add_pad_db_tests()
 	otb_add_test_func("/pad-db/test_decryption_fails_due_to_missing_pad", test_decryption_fails_due_to_missing_pad);
 	otb_add_test_func("/pad-db/test_pad_db_get_pad_size", test_pad_db_get_pad_size);
 	otb_add_test_func("/pad-db/test_pad_db_get_pad_size_range", test_pad_db_get_pad_size_range);
-	otb_add_test_func("/pad-db/test_encryption_decryption_with_two_pads", test_encryption_decryption_with_two_pads);
+	otb_add_test_func("/pad-db/test_encryption_decryption_with_two_pads_varying_chunk_size", test_encryption_decryption_with_two_pads_varying_chunk_size);
 }

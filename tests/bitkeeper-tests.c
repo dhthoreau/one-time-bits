@@ -20,6 +20,7 @@
 static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
 {
 	otb_recreate_test_dir();
+	otb_initialize_settings_for_tests();
 	*unique_id_out=otb_unique_id_new();
 	*asym_cipher_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(*asym_cipher_out, new_key_size));
@@ -175,7 +176,7 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 {
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
-	otb_settings_initialize("otb-tests", "otb");
+	otb_initialize_settings_for_tests();
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
 	g_assert(bitkeeper!=NULL);
 	return bitkeeper;

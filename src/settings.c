@@ -74,6 +74,8 @@ static void otb_settings_load_config_file()
 
 static void otb_settings_initialize_directory_paths(const char *app_name, const char *otb_sub_dir)
 {
+	g_free(otb_config_directory_path);
+	g_free(otb_data_directory_path);
 	otb_config_directory_path=g_build_filename(g_get_user_config_dir(), app_name, otb_sub_dir, NULL);
 	otb_data_directory_path=g_build_filename(g_get_user_data_dir(), app_name, otb_sub_dir, NULL);
 }

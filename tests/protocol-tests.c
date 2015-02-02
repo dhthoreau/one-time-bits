@@ -818,7 +818,7 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	for(int counter=0; counter<CONSUMED_PAD_COUNT(params); counter++)
 	{
 		OtbCipherContext *cipher_context=otb_cipher_context_new(outgoing_pad_db);
-		g_assert(otb_encrypt(cipher_context, TRUE, "", 1, &encrypted_bytes, &encrypted_bytes_size));
+		g_assert(otb_encrypt(cipher_context, "", 1, &encrypted_bytes, &encrypted_bytes_size));
 		g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_SUCCESS, ==, otb_finish_encrypt(cipher_context));
 		g_free(encrypted_bytes);
 	}

@@ -89,3 +89,10 @@ long long otb_few_months_from_now()
 	months=otb_modulo(months, 3)+1;
 	return now+months*MICROSECONDS_PER_MONTH;
 }
+
+void otb_initialize_settings_for_tests()
+{
+	otb_settings_initialize("otb-tests", "otb");
+	otb_settings_set_config_directory_path(otb_get_test_dir_path());
+	otb_settings_set_data_directory_path(otb_get_test_dir_path());
+}

@@ -25,8 +25,7 @@ static void test_otb_user_create_with_no_config_file()
 {
 	const char *EXPECTED_DEFAULT_SYM_CIPHER_NAME="AES-256-CBC";
 	
-	otb_settings_initialize("otb-tests", "otb");
-	otb_settings_set_config_directory_path(otb_get_test_dir_path());
+	otb_initialize_settings_for_tests();
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	g_unlink(config_file_path);
 	g_free(config_file_path);
@@ -109,8 +108,7 @@ void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const ch
 	otb_write_asym_cipher(file, asym_cipher);
 	otb_write_address(file, address);
 	g_assert(otb_close(file));
-	otb_settings_initialize("otb-tests", "otb");
-	otb_settings_set_config_directory_path(otb_get_test_dir_path());
+	otb_initialize_settings_for_tests();
 }
 
 static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *address)
