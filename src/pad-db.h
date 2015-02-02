@@ -29,7 +29,7 @@ typedef enum
 	OTB_PAD_DB_CRYPT_RESULT_MISSING_PAD,
 	OTB_PAD_DB_CRYPT_RESULT_UNSUPPORTED_FILE_FORMAT,
 	OTB_PAD_DB_CRYPT_RESULT_NO_RESULT
-} OtbPadDbCryptResults;
+} OtbPadDbCryptResult;
 
 typedef struct _OtbCipherContext OtbCipherContext;
 
@@ -83,8 +83,8 @@ gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_id);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db);
 OtbCipherContext *otb_cipher_context_new(OtbPadDb *pad_db);
-OtbPadDbCryptResults otb_encrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);
-OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
-void otb_cipher_context_free(OtbCipherContext *cipher_context);
-
+gboolean otb_encrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out);
+OtbPadDbCryptResult otb_finish_encrypt(OtbCipherContext *cipher_context);
+gboolean otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out);
+OtbPadDbCryptResult otb_finish_decrypt(OtbCipherContext *cipher_context);
 #endif

@@ -18,7 +18,7 @@
 struct _OtbCipherContext
 {
 	OtbPadDb *pad_db;
-	OtbPadDbCryptResults result;
+	OtbPadDbCryptResult result;
 	OtbPadIO *current_pad_io;
 	OtbPadIO *previous_pad_io;
 	unsigned char unique_id_bytes[OTB_UNIQUE_ID_BYTES_SIZE];
@@ -710,6 +710,16 @@ OtbCipherContext *otb_cipher_context_new(OtbPadDb *pad_db)
 	return cipher_context;
 }
 
+static void otb_cipher_context_free(OtbCipherContext *cipher_context)
+{
+	g_object_unref(cipher_context->pad_db);
+	if(cipher_context->current_pad_io!=NULL)
+		otb_pad_io_free(cipher_context->current_pad_io);
+	if(cipher_context->previous_pad_io!=NULL)
+		otb_pad_io_free(cipher_context->previous_pad_io);
+	g_free(cipher_context);
+}
+
 static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const unsigned char **current_input_byte_out, unsigned char **current_output_byte_out, OtbCipherContext *cipher_context)
 {
 	gboolean ret_val=TRUE;
@@ -730,9 +740,9 @@ static gboolean otb_pad_db_crypt_bytes(size_t bytes_to_crypt, const unsigned cha
 
 #define CURRENT_ENCRYPTION_FORMAT_VERSION	'\x00'
 
-static OtbPadDbCryptResults otb_encrypt_move_to_next_pad(const OtbPadDb *pad_db, OtbCipherContext *cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes, const unsigned char **current_plain_byte_out, unsigned char **current_encrypted_byte_out)
+static OtbPadDbCryptResult otb_encrypt_move_to_next_pad(const OtbPadDb *pad_db, OtbCipherContext *cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes, const unsigned char **current_plain_byte_out, unsigned char **current_encrypted_byte_out)
 {
-	OtbPadDbCryptResults encryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
+	OtbPadDbCryptResult encryption_result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 	OtbPadRec *pad_rec=NULL;
 	off_t pad_size=-1;
 	OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(pad_db, OTB_PAD_REC_STATUS_SENT);
@@ -765,7 +775,7 @@ static OtbPadDbCryptResults otb_encrypt_move_to_next_pad(const OtbPadDb *pad_db,
 	return encryption_result;
 }
 
-OtbPadDbCryptResults otb_encrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out)
+gboolean otb_encrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out)
 {
 	unsigned char *current_encrypted_byte;
 	if(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_NO_RESULT)
@@ -802,15 +812,6 @@ OtbPadDbCryptResults otb_encrypt(OtbCipherContext *cipher_context, gboolean fina
 	if(G_UNLIKELY(cipher_context->previous_pad_io!=NULL && !otb_pad_io_free(cipher_context->previous_pad_io) && cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 	cipher_context->previous_pad_io=NULL;
-	if(final_bytes)
-	{
-		if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))	// FARE - Metto i blocchi usati sul cipher_context.
-		{
-			g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
-			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
-		}
-		otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);	// FARE - Metto i blocchi usati sul cipher_context.
-	}
 	if(G_UNLIKELY(cipher_context->result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 	{
 		g_free(*encrypted_bytes_out);
@@ -818,10 +819,23 @@ OtbPadDbCryptResults otb_encrypt(OtbCipherContext *cipher_context, gboolean fina
 		*encrypted_bytes_size_out=0;
 	}
 	otb_pad_db_unlock_write(cipher_context->pad_db);
-	return cipher_context->result;
+	return cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 }
 
-OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out)
+OtbPadDbCryptResult otb_finish_encrypt(OtbCipherContext *cipher_context)
+{
+	if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_CONSUMED)))	// FARE - Metto i blocchi usati sul cipher_context.
+	{
+		g_warning(_("Failed to update the status of all pads used to encrypt a file, though file itself was fully encrypted. This could cause problems for the recipient of your encrypted files. Recomendation is that the encrypted file not be used."));
+		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
+	}
+	otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_BEING_CONSUMED, OTB_PAD_REC_STATUS_SENT);	// FARE - Metto i blocchi usati sul cipher_context.
+	OtbPadDbCryptResult result=cipher_context->result;
+	otb_cipher_context_free(cipher_context);
+	return result;
+}
+
+gboolean otb_decrypt(OtbCipherContext *cipher_context, gboolean final_bytes, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, void **plain_bytes_out, size_t *plain_bytes_size_out)
 {
 	const unsigned char *current_encrypted_byte;
 	if(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_NO_RESULT)
@@ -884,15 +898,6 @@ OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean fina
 	if(G_UNLIKELY(cipher_context->previous_pad_io!=NULL && !otb_pad_io_free(cipher_context->previous_pad_io) && cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_FAILURE;
 	cipher_context->previous_pad_io=NULL;
-	if(final_bytes)
-	{
-		if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(cipher_context->pad_db)))	// FARE - Metto i blocchi morti sul cipher_context.
-		{
-			g_message(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."));
-			cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
-		}
-		otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);	// FARE - Metto i blocchi morti sul cipher_context.
-	}
 	if(G_UNLIKELY(cipher_context->result!=OTB_PAD_DB_CRYPT_RESULT_SUCCESS))
 	{
 		g_free(*plain_bytes_out);
@@ -902,15 +907,18 @@ OtbPadDbCryptResults otb_decrypt(OtbCipherContext *cipher_context, gboolean fina
 	else
 		*plain_bytes_size_out=current_plain_byte-(unsigned char*)*plain_bytes_out;
 	otb_pad_db_unlock_write(cipher_context->pad_db);
-	return cipher_context->result;
+	return cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
 }
 
-void otb_cipher_context_free(OtbCipherContext *cipher_context)
+OtbPadDbCryptResult otb_finish_decrypt(OtbCipherContext *cipher_context)
 {
-	g_object_unref(cipher_context->pad_db);
-	if(cipher_context->current_pad_io!=NULL)
-		otb_pad_io_free(cipher_context->current_pad_io);
-	if(cipher_context->previous_pad_io!=NULL)
-		otb_pad_io_free(cipher_context->previous_pad_io);
-	g_free(cipher_context);
+	if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_pad_db_remove_dead_pads(cipher_context->pad_db)))	// FARE - Metto i blocchi morti sul cipher_context.
+	{
+		g_message(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."));
+		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
+	}
+	otb_pad_db_transition_status_of_pads(cipher_context->pad_db, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);	// FARE - Metto i blocchi morti sul cipher_context.
+	OtbPadDbCryptResult result=cipher_context->result;
+	otb_cipher_context_free(cipher_context);
+	return result;
 }
