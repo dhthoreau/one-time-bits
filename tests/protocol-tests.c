@@ -79,7 +79,8 @@ static uint32_t otb_decrypt_packet(const OtbAsymCipher *peer_asym_cipher, const 
 	g_assert_cmpint(encrypted_packet_size, ==, 13+encrypted_key_size+iv_size+encrypted_data_size);
 	GBytes *encrypted_key=g_bytes_new_static(encrypted_packet+13, encrypted_key_size);
 	GBytes *iv=g_bytes_new_static(encrypted_packet+13+encrypted_key_size, iv_size);
-	uint32_t decrypted_packet_size=otb_asym_cipher_decrypt(peer_asym_cipher, encrypted_packet+13+encrypted_key_size+iv_size, encrypted_data_size, encrypted_key, iv, (void**)decrypted_packet_out);
+	uint32_t decrypted_packet_size=0;
+	*decrypted_packet_out=otb_asym_cipher_decrypt(peer_asym_cipher, encrypted_packet+13+encrypted_key_size+iv_size, encrypted_data_size, encrypted_key, iv, &decrypted_packet_size);
 	g_assert_cmpint(0, <, decrypted_packet_size);
 	g_assert(*decrypted_packet_out!=NULL);
 	g_bytes_unref(iv);
@@ -183,8 +184,8 @@ static uint32_t otb_make_encrypted_packet(const OtbAsymCipher *asym_cipher, cons
 {
 	GBytes *encrypted_key=NULL;
 	GBytes *iv=NULL;
-	unsigned char *encrypted_data=NULL;
-	uint32_t encrypted_data_size=otb_asym_cipher_encrypt(asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data);
+	uint32_t encrypted_data_size=0;
+	unsigned char *encrypted_data=otb_asym_cipher_encrypt(asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data_size);
 	uint32_t encrypted_packet_size=13+g_bytes_get_size(encrypted_key)+g_bytes_get_size(iv)+encrypted_data_size;
 	*encrypted_packet_out=g_malloc(encrypted_packet_size);
 	*encrypted_packet_out[0]=EXPECTED_COMMAND_ENCRYPTED;

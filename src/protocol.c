@@ -244,8 +244,8 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *p
 {
 	GBytes *encrypted_key=NULL;
 	GBytes *iv=NULL;
-	unsigned char *encrypted_data=NULL;
-	uint32_t encrypted_data_size=otb_asym_cipher_encrypt(protocol_context->peer_asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data);
+	uint32_t encrypted_data_size=0;
+	unsigned char *encrypted_data=otb_asym_cipher_encrypt(protocol_context->peer_asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data_size);
 	uint32_t encrypted_key_size=g_bytes_get_size(encrypted_key);
 	uint32_t iv_size=g_bytes_get_size(iv);
 	uint32_t packet_out_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+encrypted_key_size+iv_size+encrypted_data_size;
@@ -270,7 +270,8 @@ static uint32_t otb_protocol_decrypt_packet(OtbProtocolContext *protocol_context
 	{
 		GBytes *encrypted_key_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_ENCRYPTED_KEY(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(encrypted_input_packet));
 		GBytes *iv_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_IV(encrypted_input_packet), ENCRYPTED_PACKET_GET_IV_SIZE(encrypted_input_packet));
-		decrypted_input_packet_out_size=otb_asym_cipher_decrypt(protocol_context->local_asym_cipher, ENCRYPTED_PACKET_ENCRYPTED_DATA(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(encrypted_input_packet), encrypted_key_gbytes, iv_gbytes, (void**)decrypted_input_packet_out);
+		decrypted_input_packet_out_size=0;
+		*decrypted_input_packet_out=otb_asym_cipher_decrypt(protocol_context->local_asym_cipher, ENCRYPTED_PACKET_ENCRYPTED_DATA(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_DATA_SIZE(encrypted_input_packet), encrypted_key_gbytes, iv_gbytes, &decrypted_input_packet_out_size);
 		g_bytes_unref(iv_gbytes);
 		g_bytes_unref(encrypted_key_gbytes);
 	}
