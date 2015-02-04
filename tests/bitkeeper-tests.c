@@ -15,6 +15,7 @@
 #include "test-utils.h"
 #include "user-tests.h"
 #include "../src/bitkeeper.h"
+#include "../src/local-crypto.h"
 #include "../src/settings.h"
 
 static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
@@ -64,6 +65,7 @@ static void test_otb_bitkeeper_user()
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
+	otb_local_crypto_lock_sym_cipher();
 	g_free(actual_public_key);
 	g_free(actual_sym_cipher_name);
 	g_free(expected_public_key);
@@ -89,6 +91,7 @@ static void test_otb_bitkeeper_proxy_port()
 	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(12345, ==, proxy_port);
+	otb_local_crypto_lock_sym_cipher();
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
 }
@@ -189,6 +192,7 @@ static void test_otb_bitkeeper_import_delete_friends()
 	OtbUniqueId *expected_unique_id2=otb_unique_id_new();
 	otb_bitkeeper_import_test(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_bitkeeper_delete_test(bitkeeper, expected_unique_id1, expected_unique_id2);
+	otb_local_crypto_lock_sym_cipher();
 	otb_unique_id_unref(expected_unique_id1);
 	otb_unique_id_unref(expected_unique_id2);
 	g_object_unref(bitkeeper);

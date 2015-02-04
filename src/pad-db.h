@@ -18,7 +18,7 @@
 #include "pad-rec.h"
 #include "unique-id.h"
 
-#define otb_pad_db_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size)	otb_free_locked((decryption_buffer), (decryption_buffer_size))
+#define otb_pad_db_dispose_decryption_buffer(decryption_buffer)	otb_free_locked((decryption_buffer))
 
 typedef enum
 {

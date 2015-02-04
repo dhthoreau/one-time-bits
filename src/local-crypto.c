@@ -168,6 +168,11 @@ gboolean otb_local_crypto_unlock_sym_cipher(const char *passphrase)
 	return unlock_successful;
 }
 
+void otb_local_crypto_lock_sym_cipher()
+{
+	otb_local_crypto_set_local_sym_cipher(NULL);
+}
+
 gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const char *new_passphrase)
 {
 	gboolean ret_val=TRUE;

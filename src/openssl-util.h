@@ -11,11 +11,11 @@
 
 #include "memory.h"
 
-#define otb_openssl_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size)	otb_free_locked((decryption_buffer), (decryption_buffer_size))
+#define otb_openssl_dispose_decryption_buffer(decryption_buffer)						otb_free_locked((decryption_buffer))
+#define otb_openssl_create_encryption_buffer(cipher_impl, plain_bytes_buffer_size)		g_malloc((plain_bytes_buffer_size)+EVP_CIPHER_block_size(cipher_impl))
+#define otb_openssl_create_decryption_buffer(cipher_impl, encrypted_bytes_buffer_size)	otb_malloc_locked((encrypted_bytes_buffer_size)+EVP_CIPHER_block_size(cipher_impl))
 
 char *otb_openssl_errors_as_string();
 GBytes *otb_openssl_generate_random_iv(const EVP_CIPHER *cipher_impl);
-unsigned char *otb_openssl_create_encryption_buffer(const EVP_CIPHER *cipher_impl, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
-void *otb_openssl_create_decryption_buffer(const EVP_CIPHER *cipher_impl, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
 
 #endif

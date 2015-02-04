@@ -9,19 +9,13 @@
 #include "../config.h"
 
 #include <glib.h>
+#include <glib/gi18n.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/mman.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
-volatile void *otb_smemset(volatile void *buffer, int value, size_t size)
-/// This is a hack to bypass compiler optimizations that remove memset() calls entirely. Not good when you wanted to call memset() to zero out sensitive information in memory!
-{
-	for(volatile unsigned char *buffPtr=buffer; buffPtr-(volatile unsigned char *)buffer<size; *buffPtr++=value);
-	return buffer;
-}
 
 int otb_smemcmp(const void *buffer1, const void *buffer2, size_t size)
 /// This to ensure that the memcmp executes every byte, no short circuiting, no optimizations. Slow compares prevent timing attacks on short circuited comparisons, where longer times indicate better matches then shorter times. So far it's only used to compare password hashes, which probably doesn't improve security, but what the heck: it can't hurt!
@@ -47,20 +41,30 @@ static gboolean otb_mlock_equality(const void *value1, const void *value2)
 	return value1==value2;
 }
 
+static GHashTable *otb_allocation_sizes=NULL;
+#ifdef HAVE_UNISTD_H
 static GHashTable *otb_locked_pages=NULL;
+#endif
 
-static void otb_mlock_initialize_hash_table()
+static void otb_mlock_initialize_hash_tables()
 {
-	static gboolean otb_mlock_hash_table_initialized=FALSE;
-	if(G_UNLIKELY(g_once_init_enter(&otb_mlock_hash_table_initialized)))
+	static gboolean otb_mlock_hash_tables_initialized=FALSE;
+	if(G_UNLIKELY(g_once_init_enter(&otb_mlock_hash_tables_initialized)))
 	{
+		otb_allocation_sizes=g_hash_table_new_full(otb_mlock_hash, otb_mlock_equality, NULL, g_free);
+#ifdef HAVE_UNISTD_H
 		otb_locked_pages=g_hash_table_new_full(otb_mlock_hash, otb_mlock_equality, NULL, g_free);
-		g_once_init_leave(&otb_mlock_hash_table_initialized, TRUE);
+#endif
+		g_once_init_leave(&otb_mlock_hash_tables_initialized, TRUE);
 	}
 }
 
-static GMutex otb_mlock_hash_table_mutex;
+static GMutex otb_mlock_hash_tables_mutex;
 
+#define otb_mlock_hash_tables_lock()	g_mutex_lock(&otb_mlock_hash_tables_mutex)
+#define otb_mlock_hash_tables_unlock()	g_mutex_unlock(&otb_mlock_hash_tables_mutex)
+
+#ifdef HAVE_UNISTD_H
 void otb_mlock_page(void *page)
 {
 	size_t *lock_count=NULL;
@@ -69,36 +73,29 @@ void otb_mlock_page(void *page)
 		lock_count=g_hash_table_lookup(otb_locked_pages, page);
 		(*lock_count)++;
 	}
-	else if(mlock(page, 1)==0)
+	else if(mlock(page, sysconf(_SC_PAGESIZE))==0)
 	{
 		lock_count=g_malloc(sizeof *lock_count);
 		*lock_count=1;
-		g_hash_table_insert(otb_locked_pages, page, lock_count);
+		if(G_UNLIKELY(!g_hash_table_insert(otb_locked_pages, page, lock_count)))
+			g_error(_("Failed to add locked page to hash table."));
 	}
 }
 
-#define otb_mlock_hash_table_lock()		g_mutex_lock(&otb_mlock_hash_table_mutex)
-#define otb_mlock_hash_table_unlock()	g_mutex_unlock(&otb_mlock_hash_table_mutex)
-
-void otb_mlock(const void *memory, size_t size)
+void otb_mlock(void *memory, size_t size)
 {
-#ifdef HAVE_UNISTD_H
 	uintptr_t page_size=sysconf(_SC_PAGESIZE);
 	if(page_size>0)
 	{
-		otb_mlock_initialize_hash_table();
 		const void *page_max=(const unsigned char*)memory+size;
 		void *page=(void*)((uintptr_t)memory-(uintptr_t)memory%page_size);
-		otb_mlock_hash_table_lock();
 		do
 		{
 			otb_mlock_page(page);
 			page=(unsigned char*)page+page_size;
 		}
 		while(page<page_max);
-		otb_mlock_hash_table_unlock();
 	}
-#endif
 }
 
 void otb_munlock_page(const void *page)
@@ -109,43 +106,75 @@ void otb_munlock_page(const void *page)
 		(*lock_count)--;
 		if(*lock_count==0)
 		{
-			g_hash_table_remove(otb_locked_pages, page);
-			munlock(page, 1);
+			if(G_UNLIKELY(!g_hash_table_remove(otb_locked_pages, page)))
+				g_error(_("Locked page already exists in hash table. Likely cause is calling free() instead of otb_free_locked()."));
+			if(munlock(page, sysconf(_SC_PAGESIZE))!=0)
+				g_error(_("otb_munlock_page() failed."));
 		}
 	}
 }
 
 void otb_munlock(const void *memory, size_t size)
 {
-#ifdef HAVE_UNISTD_H
 	uintptr_t page_size=sysconf(_SC_PAGESIZE);
 	if(page_size>0)
 	{
-		otb_mlock_initialize_hash_table();
 		void *page_max=(unsigned char*)memory+size;
-		void *page=(void *)((uintptr_t)memory-(uintptr_t)memory % page_size);
-		otb_mlock_hash_table_lock();
+		void *page=(void *)((uintptr_t)memory-(uintptr_t)memory%page_size);
 		do
 		{
 			otb_munlock_page(page);
 			page=(unsigned char*)page+page_size;
 		}
 		while(page<page_max);
-		otb_mlock_hash_table_unlock();
 	}
+}
 #endif
+
+static void otb_mlock_record_allocation_size(void *memory, size_t size)
+{
+	size_t *size_for_hash_table=g_malloc(sizeof *size_for_hash_table);
+	*size_for_hash_table=size;
+	if(G_UNLIKELY(!g_hash_table_insert(otb_allocation_sizes, memory, size_for_hash_table)))
+		g_error(_("Memory already exists in hash table. Likely cause is calling free() instead of otb_free_locked()."));
 }
 
 void *otb_malloc_locked(size_t size)
 {
+	otb_mlock_hash_tables_lock();
+	otb_mlock_initialize_hash_tables();
 	void *memory=g_malloc(size);
+	otb_mlock_record_allocation_size(memory, size);
+#ifdef HAVE_UNISTD_H
 	otb_mlock(memory, size);
+#endif
+	otb_mlock_hash_tables_unlock();
 	return memory;
 }
 
-void otb_free_locked(void *memory, size_t size)
+static size_t otb_mlock_release_allocation_size(const void *memory)
 {
+	size_t size=*(size_t*)g_hash_table_lookup(otb_allocation_sizes, memory);
+	if(G_UNLIKELY(!g_hash_table_remove(otb_allocation_sizes, memory)))
+		g_error(_("Failed to remove memory from hash table."));
+	return size;
+}
+
+volatile void *otb_smemset(volatile void *buffer, int value, size_t size)
+/// This is a hack to bypass compiler optimizations that remove memset() calls entirely. Not good when you wanted to call memset() to zero out sensitive information in memory!
+{
+	for(volatile unsigned char *buffPtr=buffer; buffPtr-(volatile unsigned char *)buffer<size; *buffPtr++=value);
+	return buffer;
+}
+
+void otb_free_locked(void *memory)
+{
+	otb_mlock_hash_tables_lock();
+	size_t size=otb_mlock_release_allocation_size(memory);
 	otb_smemset(memory, 0, size);
 	g_free(memory);
+#ifdef HAVE_UNISTD_H
 	otb_munlock(memory, size);
+#endif
+	otb_mlock_hash_tables_unlock();
 }

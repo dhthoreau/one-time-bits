@@ -387,8 +387,8 @@ static gboolean otb_friend_load(OtbFriend *friend)
 		g_key_file_unref(settings_key_file);
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		char *import_string=NULL;
-		size_t import_string_buffer_size=0;
-		if(G_UNLIKELY(import_string_iv==NULL || encrypted_import_string==NULL || otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_import_string, encrypted_import_string_size, import_string_iv, (void**)&import_string, &import_string_buffer_size)==0))
+		size_t import_string_size=0;
+		if(G_UNLIKELY(import_string_iv==NULL || encrypted_import_string==NULL || (import_string_size=otb_sym_cipher_decrypt(local_crypto_sym_cipher, encrypted_import_string, encrypted_import_string_size, import_string_iv, (void**)&import_string))==0))
 			ret_val=FALSE;
 		g_object_unref(local_crypto_sym_cipher);
 		if(G_LIKELY(ret_val))
@@ -402,8 +402,8 @@ static gboolean otb_friend_load(OtbFriend *friend)
 				g_key_file_unref(import_key_file);
 			}
 		}
-		if(G_LIKELY(import_string_buffer_size>0))
-			otb_sym_cipher_dispose_decryption_buffer(import_string, import_string_buffer_size);
+		if(G_LIKELY(import_string_size>0))
+			otb_sym_cipher_dispose_decryption_buffer(import_string);
 		g_free(encrypted_import_string);
 		g_bytes_unref(import_string_iv);
 	}

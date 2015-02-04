@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-01-30 16:46-0500\n"
-"PO-Revision-Date: 2015-01-30 16:46-0500\n"
+"POT-Creation-Date: 2015-02-03 18:44-0500\n"
+"PO-Revision-Date: 2015-02-03 18:48-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: src\n"
 
-#: src/user.c:58 src/friend.c:70 src/pad-rec.c:77
+#: src/user.c:58 src/friend.c:70 src/pad-rec.c:75
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -46,7 +46,7 @@ msgstr "L'indirizzo dell'utente"
 msgid "Failed to load key file from %s. Error == %s"
 msgstr "Non è riuscito a aprire il file di chiave %s. Errore == %s"
 
-#: src/friend.c:67 src/pad-rec.c:79 src/pad-db.c:74
+#: src/friend.c:67 src/pad-rec.c:77 src/pad-db.c:76
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -103,43 +103,71 @@ msgstr "Si è provato a cambiare ID univoco d'un amico."
 msgid "Failed to generate random data. Error == %s"
 msgstr "Non è riuscito a generare dati casuali. Errore == %s"
 
-#: src/pad-rec.c:77
+#: src/memory.c:81
+msgid "Failed to add locked page to hash table."
+msgstr "Non è riuscito ad aggiungere pagina bloccata a tabella hash."
+
+#: src/memory.c:110
+msgid ""
+"Locked page already exists in hash table. Likely cause is calling free() "
+"instead of otb_free_locked()."
+msgstr ""
+"Pagina bloccata esista già in tabella hash. La causa probabile è chiamare "
+"free() invece otb_free_locked()."
+
+#: src/memory.c:126
+msgid "otb_munlock_page() failed."
+msgstr "otb_munlock_page() non è ruiscito."
+
+#: src/memory.c:139
+msgid ""
+"Memory already exists in hash table. Likely cause is calling free() instead "
+"of otb_free_locked()."
+msgstr ""
+"Memoria esista già in tabella hash. La causa probabile è chiamare free() "
+"invece otb_free_locked()."
+
+#: src/memory.c:162
+msgid "Failed to remove memory from hash table."
+msgstr "Non è riuscito ad eliminare memoria da tabella hash."
+
+#: src/pad-rec.c:75
 msgid "UUID of the record"
 msgstr "UUID del record"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:76
 msgid "Status"
 msgstr "Stato"
 
-#: src/pad-rec.c:78
+#: src/pad-rec.c:76
 msgid "Status of the record"
 msgstr "Stato del record"
 
-#: src/pad-rec.c:79
+#: src/pad-rec.c:77
 msgid "Directory where the record will be saved"
 msgstr "La directory dove il record sarà salvato"
 
-#: src/pad-rec.c:80
+#: src/pad-rec.c:78
 msgid "Base name"
 msgstr "Name di base"
 
-#: src/pad-rec.c:80
+#: src/pad-rec.c:78
 msgid "Name of file where the record will be saved, excluding file extension"
 msgstr "Il nome del file per salvare il record, senza estensione"
 
-#: src/pad-rec.c:81
+#: src/pad-rec.c:79
 msgid "Size"
 msgstr "Dimensione"
 
-#: src/pad-rec.c:81
+#: src/pad-rec.c:79
 msgid "Size of the pad file"
 msgstr "Dimensione del file di blocco"
 
-#: src/pad-rec.c:82
+#: src/pad-rec.c:80
 msgid "Expiration"
 msgstr "Scadenza"
 
-#: src/pad-rec.c:82
+#: src/pad-rec.c:80
 msgid ""
 "The date and time when the pad expires (microseconds from 1-Jan-1979 UTC)"
 msgstr ""
@@ -208,83 +236,83 @@ msgstr "Cifra simmetrica"
 msgid "Name of the symmetric cipher to use"
 msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/asym-cipher.c:247 src/sym-cipher.c:212
+#: src/asym-cipher.c:246 src/sym-cipher.c:212
 #, c-format
 msgid "Failed to initialize encryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/asym-cipher.c:263 src/sym-cipher.c:226
+#: src/asym-cipher.c:262 src/sym-cipher.c:226
 #, c-format
 msgid "Failed to initialize decryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/asym-cipher.c:276 src/sym-cipher.c:343
+#: src/asym-cipher.c:275 src/sym-cipher.c:341
 #, c-format
 msgid "Failed to encrypt data. Error == %s"
 msgstr "Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:289 src/sym-cipher.c:356
+#: src/asym-cipher.c:288 src/sym-cipher.c:354
 #, c-format
 msgid "Failed to decrypt data. Error == %s"
 msgstr "Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:302 src/sym-cipher.c:369
+#: src/asym-cipher.c:301 src/sym-cipher.c:367
 #, c-format
 msgid "Failed to encrypt final data. Error == %s"
 msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/asym-cipher.c:316 src/sym-cipher.c:383
+#: src/asym-cipher.c:315 src/sym-cipher.c:381
 #, c-format
 msgid "Failed to decrypt final data. Error == %s"
 msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
 
-#: src/pad-db.c:74
+#: src/pad-db.c:76
 msgid "Directory where the database will be saved"
 msgstr "La directory dove il database sarà salvato"
 
-#: src/pad-db.c:75
+#: src/pad-db.c:77
 msgid "Max size"
 msgstr "Dimensione massima"
 
-#: src/pad-db.c:75
+#: src/pad-db.c:77
 msgid "Maximum size of the database"
 msgstr "Dimensione massima del database"
 
-#: src/pad-db.c:76
+#: src/pad-db.c:78
 msgid "New pad min size"
 msgstr "Dimensione minima di blocchi nuovi"
 
-#: src/pad-db.c:76
+#: src/pad-db.c:78
 msgid "Minimum size for a newly created pad"
 msgstr "Dimensione minima di blocchi creati di fresco"
 
-#: src/pad-db.c:77
+#: src/pad-db.c:79
 msgid "New pad max size"
 msgstr "Dimensione massima di blocchi nuovi"
 
-#: src/pad-db.c:77
+#: src/pad-db.c:79
 msgid "Maximum size for a newly created pad"
 msgstr "Dimensione massima di blocchi creati di fresco"
 
-#: src/pad-db.c:78
+#: src/pad-db.c:80
 msgid "New pad expiration"
 msgstr "Scadenza dei blocchi nuovi"
 
-#: src/pad-db.c:78
+#: src/pad-db.c:80
 msgid "Time interval of expiration for a newly created pad"
 msgstr "Intervallo di tempo di scadenza di blocchi creati di fresco"
 
-#: src/pad-db.c:285
+#: src/pad-db.c:287
 msgid "Failed to add record due to non-unique ID."
 msgstr "Non è riuscito ad aggiungere record a causa di ID non univoco."
 
-#: src/pad-db.c:290
+#: src/pad-db.c:292
 msgid "Failed to add record due to database size limitation."
 msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:814
+#: src/pad-db.c:826
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -295,13 +323,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:836
+#: src/pad-db.c:849
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:893
+#: src/pad-db.c:941
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."

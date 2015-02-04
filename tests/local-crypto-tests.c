@@ -34,6 +34,7 @@ static void test_local_crypto()
 	g_assert(otb_local_crypto_unlock_sym_cipher(NEW_PASSPHRASE));
 	local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 	g_assert(local_crypto_sym_cipher!=NULL);
+	otb_local_crypto_lock_sym_cipher();
 	g_object_unref(local_crypto_sym_cipher);
 }
 

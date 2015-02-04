@@ -12,6 +12,7 @@
 #include "main.h"
 #include "test-utils.h"
 #include "../src/friend.h"
+#include "../src/local-crypto.h"
 #include "../src/settings.h"
 #include "../src/unique-id.h"
 
@@ -132,6 +133,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
 	otb_friend_delete(*load_friend);
 	otb_assert_file_does_not_exist(friend_dir_path);
+	otb_local_crypto_lock_sym_cipher();
 	g_free(actual_base_path);
 	otb_unique_id_unref(actual_unique_id1);
 	otb_unique_id_unref(actual_unique_id2);

@@ -17,8 +17,8 @@
 
 typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 
-#define otb_asym_cipher_context_free(cipher_context)	EVP_CIPHER_CTX_free(cipher_context)
-#define otb_asym_cipher_dispose_decryption_buffer(decryption_buffer, decryption_buffer_size)	otb_openssl_dispose_decryption_buffer((decryption_buffer), (decryption_buffer_size))
+#define otb_asym_cipher_context_free(cipher_context)					EVP_CIPHER_CTX_free(cipher_context)
+#define otb_asym_cipher_dispose_decryption_buffer(decryption_buffer)	otb_openssl_dispose_decryption_buffer((decryption_buffer))
 
 #define OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE	4096
 
@@ -52,8 +52,8 @@ GType otb_asym_cipher_get_type();
 void otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv);
 GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_cipher, OtbSymCipher *private_key_sym_cipher, GBytes **private_key_iv_out);
 gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t key_size);
-unsigned char *otb_asym_cipher_create_encryption_buffer(const OtbAsymCipher *asym_cipher, size_t plain_bytes_buffer_size, size_t *encryption_buffer_size_out);
-void *otb_asym_cipher_create_decryption_buffer(const OtbAsymCipher *asym_cipher, size_t encrypted_bytes_buffer_size, size_t *decryption_buffer_size_out);
+unsigned char *otb_asym_cipher_create_encryption_buffer(const OtbAsymCipher *asym_cipher, size_t plain_bytes_buffer_size);
+void *otb_asym_cipher_create_decryption_buffer(const OtbAsymCipher *asym_cipher, size_t encrypted_bytes_buffer_size);
 OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_cipher, GBytes **encrypted_key_out, GBytes **iv_out);
 OtbAsymCipherContext *otb_asym_cipher_init_decryption(const OtbAsymCipher *asym_cipher, GBytes *encrypted_key, GBytes *iv);
 size_t otb_asym_cipher_encrypt_next(OtbAsymCipherContext *asym_cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes_out);
@@ -61,6 +61,6 @@ size_t otb_asym_cipher_decrypt_next(OtbAsymCipherContext *asym_cipher_context, c
 size_t otb_asym_cipher_finish_encrypt(OtbAsymCipherContext *asym_cipher_context, unsigned char *encrypted_bytes_out);
 size_t otb_asym_cipher_finish_decrypt(OtbAsymCipherContext *asym_cipher_context, void *plain_bytes_out);
 size_t otb_asym_cipher_encrypt(const OtbAsymCipher *asym_cipher, const void *plain_bytes, size_t plain_bytes_size, GBytes **encrypted_key_out, GBytes **iv_out, unsigned char **encrypted_bytes_out);
-size_t otb_asym_cipher_decrypt(const OtbAsymCipher *asym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *encrypted_key, GBytes *iv, void **plain_bytes_out, size_t *decrypted_buffer_size);
+size_t otb_asym_cipher_decrypt(const OtbAsymCipher *asym_cipher, const unsigned char *encrypted_bytes, size_t encrypted_bytes_size, GBytes *encrypted_key, GBytes *iv, void **plain_bytes_out);
 
 #endif
