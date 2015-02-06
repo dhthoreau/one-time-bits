@@ -697,11 +697,33 @@ static void otb_cipher_context_free(OtbCipherContext *cipher_context)
 	g_free(cipher_context);
 }
 
+static gboolean otb_pad_crypt_get_pad_bytes_for_unsigned_int_buffer(OtbPadIO *pad_io, unsigned int *buffer)
+{
+	gboolean ret_val=TRUE;
+	const unsigned char *buffer_end=(const unsigned char*)(buffer+1);
+	for(unsigned char *current_buffer_byte=(unsigned char*)buffer; current_buffer_byte<buffer_end; current_buffer_byte++)
+		if(G_UNLIKELY(!otb_pad_read_byte(pad_io, current_buffer_byte)))
+			ret_val=FALSE;
+	return ret_val;
+}
+
 static gboolean otb_pad_db_crypt_bytes(const OtbCipherContext *cipher_context, size_t bytes_to_crypt, const unsigned char **current_input_byte_out, unsigned char **current_output_byte_out)
 {
 	gboolean ret_val=TRUE;
 	const unsigned char *current_input_byte_end=*current_input_byte_out+bytes_to_crypt;
-	for(; ret_val && *current_input_byte_out<current_input_byte_end; (*current_input_byte_out)++, (*current_output_byte_out)++)
+	const unsigned char *current_input_byte_end_as_unsigned_int=current_input_byte_end-bytes_to_crypt%sizeof(unsigned int);
+	for(; *current_input_byte_out<current_input_byte_end_as_unsigned_int; *current_input_byte_out+=sizeof(unsigned int), *current_output_byte_out+=sizeof(unsigned int))
+	{
+		unsigned int current_pad_bytes=0;
+		unsigned int previous_pad_bytes=0;
+		if(G_UNLIKELY(cipher_context->current_pad_io!=NULL && !otb_pad_crypt_get_pad_bytes_for_unsigned_int_buffer(cipher_context->current_pad_io, &current_pad_bytes)))
+			ret_val=FALSE;
+		else if(G_UNLIKELY(cipher_context->previous_pad_io!=NULL && !otb_pad_crypt_get_pad_bytes_for_unsigned_int_buffer(cipher_context->previous_pad_io, &previous_pad_bytes)))
+			ret_val=FALSE;
+		else
+			**(unsigned int**)current_output_byte_out=(**(unsigned int**)current_input_byte_out ^ current_pad_bytes ^ previous_pad_bytes);
+	}
+	for(; *current_input_byte_out<current_input_byte_end; (*current_input_byte_out)++, (*current_output_byte_out)++)
 	{
 		unsigned char current_pad_byte=0;
 		unsigned char previous_pad_byte=0;
