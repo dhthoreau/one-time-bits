@@ -144,10 +144,13 @@ void *otb_malloc_locked(size_t size)
 	otb_mlock_hash_tables_lock();
 	otb_mlock_initialize_hash_tables();
 	void *memory=g_malloc(size);
-	otb_mlock_record_allocation_size(memory, size);
+	if(memory!=NULL)
+	{
+		otb_mlock_record_allocation_size(memory, size);
 #ifdef HAVE_UNISTD_H
-	otb_mlock(memory, size);
+		otb_mlock(memory, size);
 #endif
+	}
 	otb_mlock_hash_tables_unlock();
 	return memory;
 }
@@ -169,12 +172,15 @@ volatile void *otb_smemset(volatile void *buffer, int value, size_t size)
 
 void otb_free_locked(void *memory)
 {
-	otb_mlock_hash_tables_lock();
-	size_t size=otb_mlock_release_allocation_size(memory);
-	otb_smemset(memory, 0, size);
-	g_free(memory);
+	if(memory!=NULL)
+	{
+		otb_mlock_hash_tables_lock();
+		size_t size=otb_mlock_release_allocation_size(memory);
+		otb_smemset(memory, 0, size);
+		g_free(memory);
 #ifdef HAVE_UNISTD_H
-	otb_munlock(memory, size);
+		otb_munlock(memory, size);
 #endif
-	otb_mlock_hash_tables_unlock();
+		otb_mlock_hash_tables_unlock();
+	}
 }

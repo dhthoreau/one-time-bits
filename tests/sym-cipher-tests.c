@@ -55,7 +55,6 @@ static void test_sym_cipher_hash_passphrase()
 
 static void test_sym_cipher_encryption_in_steps()
 {
-	const size_t EXPECTED_MESSAGE_BUFFER_SIZE=544;
 	const size_t EXPECTED_MESSAGE_SIZE=523;
 	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
 	const char *PASSPHRASE="All is for the best in the best of all possible worlds!";
@@ -93,7 +92,6 @@ static void test_sym_cipher_encryption_in_steps()
 
 static void test_sym_cipher_encryption()
 {
-	const size_t EXPECTED_MESSAGE_BUFFER_SIZE=544;
 	const size_t EXPECTED_MESSAGE_SIZE=523;
 	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
 	const char *PASSPHRASE="All is for the best in the best of all possible worlds!";
