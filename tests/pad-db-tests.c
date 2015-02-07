@@ -677,9 +677,10 @@ static void otb_send_random_pad(OtbPadDb *sender_pad_db, const OtbPadDb *recipie
 	OtbPadIO *input_pad_io=otb_pad_db_open_pad_for_read(sender_pad_db, unique_id);
 	while(otb_pad_has_more_bytes(input_pad_io))
 	{
-		unsigned char byte;
-		g_assert(otb_pad_read_byte(input_pad_io, &byte));
-		g_assert(otb_pad_write(output_pad_io, &byte, sizeof byte));
+		void *buffer;
+		size_t buffer_size;
+		g_assert(otb_pad_read(input_pad_io, &buffer, &buffer_size));
+		g_assert(otb_pad_write(output_pad_io, buffer, buffer_size));
 	}
 	g_assert(!otb_pad_db_close_pad(sender_pad_db, output_pad_io));
 	g_assert(!otb_pad_db_close_pad(recipient_pad_db, input_pad_io));
