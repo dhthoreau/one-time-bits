@@ -767,8 +767,9 @@ static void otb_cipher_contect_move_to_processing_pad(OtbCipherContext *cipher_c
 	}
 }
 
-static void otb_encrypt_move_to_next_pad(OtbCipherContext *cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char *encrypted_bytes, const unsigned char **current_plain_byte_out, unsigned char **current_encrypted_byte_out)
+static void otb_encrypt_move_to_next_pad(OtbCipherContext *cipher_context, const void *plain_bytes, size_t plain_bytes_size, unsigned char **encrypted_bytes_out, size_t *encrypted_bytes_size_out, const unsigned char **current_plain_byte_out, unsigned char **current_encrypted_byte_out)
 {
+	otb_encrypt_allocate_room_for_pad_rec_unique_id(current_encrypted_byte_out, encrypted_bytes_out, encrypted_bytes_size_out);
 	OtbUniqueId *unique_id=otb_pad_db_fetch_random_rec_id_no_lock(cipher_context->pad_db, OTB_PAD_REC_STATUS_SENT);
 	if(G_UNLIKELY(unique_id==NULL))
 		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS;
@@ -815,15 +816,15 @@ gboolean otb_encrypt(OtbCipherContext *cipher_context, const void *plain_bytes, 
 	unsigned char *current_encrypted_byte;
 	if(cipher_context->status==CIPHER_CONTEXT_STATUS_NOT_STARTED)
 	{
-		*encrypted_bytes_size_out=sizeof(unsigned char)+OTB_UNIQUE_ID_BYTES_SIZE+plain_bytes_size;
+		*encrypted_bytes_size_out=sizeof(unsigned char)+plain_bytes_size;
 		*encrypted_bytes_out=g_malloc(*encrypted_bytes_size_out);
 		*encrypted_bytes_out[0]=CURRENT_ENCRYPTION_FORMAT_VERSION;
 		current_encrypted_byte=*encrypted_bytes_out+1;
-		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
+		cipher_context->status=CIPHER_CONTEXT_STATUS_PROCESSING_PAD_REC;
 	}
 	else
 	{
-		*encrypted_bytes_size_out=OTB_UNIQUE_ID_BYTES_SIZE+plain_bytes_size;
+		*encrypted_bytes_size_out=plain_bytes_size;
 		*encrypted_bytes_out=g_malloc(*encrypted_bytes_size_out);
 		current_encrypted_byte=*encrypted_bytes_out;
 	}
@@ -832,11 +833,7 @@ gboolean otb_encrypt(OtbCipherContext *cipher_context, const void *plain_bytes, 
 	for(const unsigned char *current_plain_byte=plain_bytes; cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && current_plain_byte<plain_bytes_end; )
 	{
 		if(cipher_context->status==CIPHER_CONTEXT_STATUS_PROCESSING_PAD_REC)
-			otb_encrypt_allocate_room_for_pad_rec_unique_id(&current_encrypted_byte, encrypted_bytes_out, encrypted_bytes_size_out);
-		if(cipher_context->status==CIPHER_CONTEXT_STATUS_NOT_STARTED)
-			cipher_context->status=CIPHER_CONTEXT_STATUS_PROCESSING_PAD_REC;
-		if(cipher_context->status==CIPHER_CONTEXT_STATUS_PROCESSING_PAD_REC)
-			otb_encrypt_move_to_next_pad(cipher_context, plain_bytes, plain_bytes_size, *encrypted_bytes_out, &current_plain_byte, &current_encrypted_byte);
+			otb_encrypt_move_to_next_pad(cipher_context, plain_bytes, plain_bytes_size, encrypted_bytes_out, encrypted_bytes_size_out, &current_plain_byte, &current_encrypted_byte);
 		if(cipher_context->status==CIPHER_CONTEXT_STATUS_PROCESSING_DATA && cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS)
 			otb_encrypt_data(cipher_context, plain_bytes, plain_bytes_size, *encrypted_bytes_out, &current_plain_byte, &current_encrypted_byte);
 	}

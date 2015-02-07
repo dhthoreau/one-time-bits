@@ -755,7 +755,7 @@ static void otb_decrypt_file_for_two_pad_test(OtbPadDb *pad_db, size_t chunk_siz
 	g_byte_array_unref(decrypted_message_byte_array);
 }
 
-static void otb_encryption_decryption_with_two_pads(size_t encryption_chunk_size, size_t decryption_chunk_size, const unsigned char *message, size_t message_size)
+static void otb_encryption_decryption_with_two_pads(size_t chunk_size, const unsigned char *message, size_t message_size)
 {
 	otb_test_setup_local_crypto();
 	char *sender_pad_db_dir_path=otb_generate_unique_test_subdir_path();
@@ -770,8 +770,8 @@ static void otb_encryption_decryption_with_two_pads(size_t encryption_chunk_size
 	otb_send_random_pads(sender_pad_db, recipient_pad_db, 3);
 	unsigned char *encrypted_message;
 	size_t encrypted_message_size;
-	encrypted_message_size=otb_encrypt_file_for_two_pad_test(sender_pad_db, encryption_chunk_size, message, message_size, &encrypted_message);
-	otb_decrypt_file_for_two_pad_test(recipient_pad_db, decryption_chunk_size, message, message_size, encrypted_message, encrypted_message_size);
+	encrypted_message_size=otb_encrypt_file_for_two_pad_test(sender_pad_db, chunk_size, message, message_size, &encrypted_message);
+	otb_decrypt_file_for_two_pad_test(recipient_pad_db, chunk_size, message, message_size, encrypted_message, encrypted_message_size);
 	otb_local_crypto_lock_sym_cipher();
 	g_free(encrypted_message);
 	g_object_unref(recipient_pad_db);
@@ -786,7 +786,7 @@ static void test_encryption_decryption_with_two_pads_varying_chunk_size()
 	const size_t MESSAGE_SIZE=2016;
 	
 	for(size_t chunk_size=1; chunk_size<=MESSAGE_SIZE+33; chunk_size++)
-		otb_encryption_decryption_with_two_pads(MESSAGE_SIZE+33, chunk_size, MESSAGE, MESSAGE_SIZE);
+		otb_encryption_decryption_with_two_pads(chunk_size, MESSAGE, MESSAGE_SIZE);
 }
 
 void otb_add_pad_db_tests()
