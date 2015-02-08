@@ -63,5 +63,6 @@ gboolean otb_friend_delete(OtbFriend *friend);
 gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_key);
 gboolean otb_friend_set_transport_cipher_name(const OtbFriend *friend, const char *transport_cipher_name);
 gboolean otb_friend_set_address(const OtbFriend *friend, const char *address);
+gboolean otb_friend_remove_expired_pads(const OtbFriend *friend);
 
 #endif

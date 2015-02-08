@@ -465,3 +465,13 @@ gboolean otb_friend_set_address(const OtbFriend *friend, const char *address)
 	otb_friend_unlock_write(friend);
 	return otb_friend_save(friend);
 }
+
+gboolean otb_friend_remove_expired_pads(const OtbFriend *friend)
+{
+	gboolean ret_val=TRUE;
+	if(!otb_pad_db_remove_expired_pads(friend->priv->incoming_pad_db))
+		ret_val=FALSE;
+	if(!otb_pad_db_remove_expired_pads(friend->priv->outgoing_pad_db))
+		ret_val=FALSE;
+	return ret_val;
+}

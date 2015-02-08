@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-02-03 18:44-0500\n"
-"PO-Revision-Date: 2015-02-03 18:48-0500\n"
+"POT-Creation-Date: 2015-02-08 13:49-0500\n"
+"PO-Revision-Date: 2015-02-08 13:51-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -46,7 +46,7 @@ msgstr "L'indirizzo dell'utente"
 msgid "Failed to load key file from %s. Error == %s"
 msgstr "Non è riuscito a aprire il file di chiave %s. Errore == %s"
 
-#: src/friend.c:67 src/pad-rec.c:77 src/pad-db.c:76
+#: src/friend.c:67 src/pad-rec.c:77 src/pad-db.c:85
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -115,7 +115,7 @@ msgstr ""
 "Pagina bloccata esista già in tabella hash. La causa probabile è chiamare "
 "free() invece otb_free_locked()."
 
-#: src/memory.c:126
+#: src/memory.c:112
 msgid "otb_munlock_page() failed."
 msgstr "otb_munlock_page() non è ruiscito."
 
@@ -173,21 +173,31 @@ msgid ""
 msgstr ""
 "La data e l'ora in cui il blocco scade (microsecondi da 1-gen-1979 UTC)"
 
-#: src/bitkeeper.c:53
+#: src/bitkeeper.c:62
 msgid "User"
 msgstr "Utente"
 
-#: src/bitkeeper.c:53
+#: src/bitkeeper.c:62
 msgid "The user who is using the application"
 msgstr "L'utente chi sta usando l'applicazione"
 
-#: src/bitkeeper.c:54
+#: src/bitkeeper.c:63
 msgid "Proxy port"
 msgstr "Porta della delega"
 
-#: src/bitkeeper.c:54
+#: src/bitkeeper.c:63
 msgid "The port for the local proxy, preferably TOR"
 msgstr "Porta della delega locale, preferibilmente TOR"
+
+#: src/bitkeeper.c:64
+msgid "Pad synchronization interval"
+msgstr "Intervallo della sincronizzazione dei blocchi"
+
+#: src/bitkeeper.c:64
+msgid "How often pads should be synchronized, measured in microseconds"
+msgstr ""
+"Quanto spesso i blocchi dovrebbero essere sincronizzati, misurato con "
+"microsecondi"
 
 #: src/io.c:22
 #, c-format
@@ -266,53 +276,53 @@ msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 msgid "Failed to decrypt final data. Error == %s"
 msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
 
-#: src/pad-db.c:76
+#: src/pad-db.c:85
 msgid "Directory where the database will be saved"
 msgstr "La directory dove il database sarà salvato"
 
-#: src/pad-db.c:77
+#: src/pad-db.c:86
 msgid "Max size"
 msgstr "Dimensione massima"
 
-#: src/pad-db.c:77
+#: src/pad-db.c:86
 msgid "Maximum size of the database"
 msgstr "Dimensione massima del database"
 
-#: src/pad-db.c:78
+#: src/pad-db.c:87
 msgid "New pad min size"
 msgstr "Dimensione minima di blocchi nuovi"
 
-#: src/pad-db.c:78
+#: src/pad-db.c:87
 msgid "Minimum size for a newly created pad"
 msgstr "Dimensione minima di blocchi creati di fresco"
 
-#: src/pad-db.c:79
+#: src/pad-db.c:88
 msgid "New pad max size"
 msgstr "Dimensione massima di blocchi nuovi"
 
-#: src/pad-db.c:79
+#: src/pad-db.c:88
 msgid "Maximum size for a newly created pad"
 msgstr "Dimensione massima di blocchi creati di fresco"
 
-#: src/pad-db.c:80
+#: src/pad-db.c:89
 msgid "New pad expiration"
 msgstr "Scadenza dei blocchi nuovi"
 
-#: src/pad-db.c:80
+#: src/pad-db.c:89
 msgid "Time interval of expiration for a newly created pad"
 msgstr "Intervallo di tempo di scadenza di blocchi creati di fresco"
 
-#: src/pad-db.c:287
+#: src/pad-db.c:296
 msgid "Failed to add record due to non-unique ID."
 msgstr "Non è riuscito ad aggiungere record a causa di ID non univoco."
 
-#: src/pad-db.c:292
+#: src/pad-db.c:301
 msgid "Failed to add record due to database size limitation."
 msgstr ""
 "Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
 "del database."
 
-#: src/pad-db.c:826
+#: src/pad-db.c:880
 msgid ""
 "Failed to update the status of all pads used to encrypt a file, though file "
 "itself was fully encrypted. This could cause problems for the recipient of "
@@ -323,13 +333,13 @@ msgstr ""
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
 
-#: src/pad-db.c:849
+#: src/pad-db.c:939
 msgid "Failed to decrypt file due to unsupported file version number."
 msgstr ""
 "Non è riuscito a decifrare il file a causa di numero di versione non "
 "supportata di file."
 
-#: src/pad-db.c:941
+#: src/pad-db.c:998
 msgid ""
 "Failed to delete all pads used to decrypt a file, though file itself was "
 "fully decrypted. Recomendation is reset the pad database."

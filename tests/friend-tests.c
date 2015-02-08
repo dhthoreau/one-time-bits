@@ -176,8 +176,66 @@ static void test_otb_dummy_friend_create_import_save_delete()
 	otb_friend_set_runtime_type(OTB_TYPE_FRIEND);
 }
 
+static void otb_fill_pad_db_with_pads_for_expiration_test(OtbPadDb *pad_db, OtbUniqueId **pad_unique_id_to_expire_out, OtbUniqueId **pad_unique_id_to_preserve_out)
+{
+	const off_t INCOMING_PAD_SIZE=10;
+	
+	*pad_unique_id_to_expire_out=otb_unique_id_new();
+	*pad_unique_id_to_preserve_out=otb_unique_id_new();
+	OtbPadIO *pad_io_to_expire=otb_pad_db_add_incoming_pad(pad_db, *pad_unique_id_to_expire_out, INCOMING_PAD_SIZE, g_get_real_time()-10000000);
+	g_assert(pad_io_to_expire!=NULL);
+	g_assert(otb_pad_db_close_pad(pad_db, pad_io_to_expire));
+	OtbPadIO *pad_io_to_keep=otb_pad_db_add_incoming_pad(pad_db, *pad_unique_id_to_preserve_out, INCOMING_PAD_SIZE, g_get_real_time()+10000000);
+	g_assert(pad_io_to_keep!=NULL);
+	g_assert(otb_pad_db_close_pad(pad_db, pad_io_to_keep));
+}
+
+static void otb_assert_pad_db_with_pads_for_expiration_test(OtbPadDb *pad_db, OtbUniqueId *pad_unique_id_to_expire, OtbUniqueId *pad_unique_id_to_preserve)
+{
+	GSList *remaining_pads=otb_pad_db_get_ids_of_pads_in_status(pad_db, OTB_PAD_REC_STATUS_INCOMING);
+	g_assert_cmpint(1, ==, g_slist_length(remaining_pads));
+	g_assert_cmpint(0, ==, otb_unique_id_compare(g_slist_nth_data(remaining_pads, 0), pad_unique_id_to_preserve));
+	g_slist_free_full(remaining_pads, (GFreeFunc)otb_unique_id_unref);
+}
+
+static void test_remove_expired_pads()
+{
+	const char *PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
+	const char *TRANSPORT_CIPHER_NAME="AES-256-CBC";
+	const char *ADDRESS="SoyMilkRoad.onion";
+	const char *DUMMY_VALUE="sldkfjklsdjfkslkfjsd.onion";
+	
+	otb_test_setup_local_crypto();
+	OtbUniqueId *friend_unique_id=otb_unique_id_new();
+	char *import_string=otb_create_import_string(friend_unique_id, PUBLIC_KEY, TRANSPORT_CIPHER_NAME, ADDRESS, DUMMY_VALUE);
+	OtbFriend *friend=otb_friend_import_to_directory(import_string, otb_get_test_dir_path());
+	OtbPadDb *incoming_pad_db=NULL;
+	OtbPadDb *outgoing_pad_db=NULL;
+	g_object_get(friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &incoming_pad_db, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
+	OtbUniqueId *incoming_pad_unique_id_to_expire=NULL;
+	OtbUniqueId *incoming_pad_unique_id_to_preserve=NULL;
+	otb_fill_pad_db_with_pads_for_expiration_test(incoming_pad_db, &incoming_pad_unique_id_to_expire, &incoming_pad_unique_id_to_preserve);
+	OtbUniqueId *outgoing_pad_unique_id_to_expire=NULL;
+	OtbUniqueId *outgoing_pad_unique_id_to_preserve=NULL;
+	otb_fill_pad_db_with_pads_for_expiration_test(outgoing_pad_db, &outgoing_pad_unique_id_to_expire, &outgoing_pad_unique_id_to_preserve);
+	otb_friend_remove_expired_pads(friend);
+	otb_assert_pad_db_with_pads_for_expiration_test(incoming_pad_db, incoming_pad_unique_id_to_expire, incoming_pad_unique_id_to_preserve);
+	otb_assert_pad_db_with_pads_for_expiration_test(outgoing_pad_db, outgoing_pad_unique_id_to_expire, outgoing_pad_unique_id_to_preserve);
+	otb_local_crypto_lock_sym_cipher();
+	otb_unique_id_unref(outgoing_pad_unique_id_to_preserve);
+	otb_unique_id_unref(outgoing_pad_unique_id_to_expire);
+	otb_unique_id_unref(incoming_pad_unique_id_to_preserve);
+	otb_unique_id_unref(incoming_pad_unique_id_to_expire);
+	g_object_unref(outgoing_pad_db);
+	g_object_unref(incoming_pad_db);
+	g_object_unref(friend);
+	g_free(import_string);
+	otb_unique_id_unref(friend_unique_id);
+}
+
 void otb_add_friend_tests()
 {
 	otb_add_test_func("/friend/test_otb_friend_create_import_save_delete", test_otb_friend_create_import_save_delete);
 	otb_add_test_func("/friend/test_otb_dummy_friend_create_import_save_delete", test_otb_dummy_friend_create_import_save_delete);
+	otb_add_test_func("/friend/test_remove_expired_pads", test_remove_expired_pads);
 }
