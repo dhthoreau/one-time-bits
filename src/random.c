@@ -29,7 +29,7 @@ gboolean otb_random_bytes(void *bytes, size_t num_bytes)
 
 unsigned char *otb_create_random_bytes(size_t size)
 {
-	unsigned char *byte_array=g_malloc(size);
+	unsigned char *byte_array=g_new(unsigned char, size);
 	if(G_UNLIKELY(!otb_random_bytes(byte_array, size)))
 	{
 		g_free(byte_array);

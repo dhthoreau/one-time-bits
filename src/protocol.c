@@ -164,7 +164,7 @@ static void otb_protocol_set_peer_friend_on_context(OtbProtocolContext *protocol
 
 OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, OtbFriend *peer_friend)
 {
-	OtbProtocolContext *protocol_context=g_malloc(sizeof *protocol_context);
+	OtbProtocolContext *protocol_context=g_new(OtbProtocolContext, 1);
 	protocol_context->authentication_token=otb_create_random_bytes(AUTHENTICATION_TOKEN_SIZE);
 	g_object_ref(bitkeeper);
 	protocol_context->bitkeeper=bitkeeper;
@@ -191,7 +191,7 @@ OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, 
 
 static uint32_t otb_protocol_create_basic_command_packet(OtbProtocolCommand command, unsigned char **packet_out)
 {
-	*packet_out=g_malloc(BASIC_COMMAND_PACKET_SIZE);
+	*packet_out=g_new(unsigned char, BASIC_COMMAND_PACKET_SIZE);
 	PACKET_COMMAND(*packet_out)=command;
 	return BASIC_COMMAND_PACKET_SIZE;
 }
@@ -249,7 +249,7 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *p
 	uint32_t encrypted_key_size=g_bytes_get_size(encrypted_key);
 	uint32_t iv_size=g_bytes_get_size(iv);
 	uint32_t packet_out_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+encrypted_key_size+iv_size+encrypted_data_size;
-	*packet_out=g_malloc(packet_out_size);
+	*packet_out=g_new(unsigned char, packet_out_size);
 	PACKET_COMMAND(*packet_out)=COMMAND_ENCRYPTED;
 	ENCRYPTED_PACKET_SET_ENCRYPTED_KEY_SIZE(*packet_out, encrypted_key_size);
 	ENCRYPTED_PACKET_SET_IV_SIZE(*packet_out, iv_size);
@@ -294,7 +294,7 @@ static uint32_t otb_protocol_decrypt_packet(OtbProtocolContext *protocol_context
 
 static uint32_t otb_protocol_client_establish_protocol_version(OtbProtocolContext *protocol_context, unsigned char **packet_out)
 {
-	*packet_out=g_malloc(PROTOCOL_PACKET_SIZE);
+	*packet_out=g_new(unsigned char, PROTOCOL_PACKET_SIZE);
 	PACKET_COMMAND(*packet_out)=COMMAND_PROTOCOL_VERSION;
 	PROTOCOL_PACKET_VERSION(*packet_out)=CURRENT_PROTOCOL_VERSION;
 	protocol_context->state=STATE_ESTABLISHING_PROTOCOL_VERSION;
@@ -312,7 +312,7 @@ static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolCon
 	uint32_t packet_out_size;
 	if(G_LIKELY(input_packet_size==sizeof(OtbProtocolCommand) && PACKET_COMMAND(input_packet)==COMMAND_OK))
 	{
-		*packet_out=g_malloc(ESTABLISHING_FRIEND_PACKET_SIZE);
+		*packet_out=g_new(unsigned char, ESTABLISHING_FRIEND_PACKET_SIZE);
 		PACKET_COMMAND(*packet_out)=COMMAND_SENDING_FRIEND_ID;
 		OtbUniqueId *unique_id=NULL;
 		g_object_get(protocol_context->local_user, OTB_USER_PROP_UNIQUE_ID, &unique_id, NULL);
@@ -339,7 +339,7 @@ static uint32_t otb_protocol_client_establishing_establish_friend(OtbProtocolCon
 static uint32_t otb_protocol_create_authentication_packet(const OtbProtocolContext *protocol_context, unsigned char **packet_out)
 {
 	uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+AUTHENTICATION_TOKEN_SIZE;
-	unsigned char *plain_packet=g_malloc(plain_packet_size);
+	unsigned char *plain_packet=g_new(unsigned char, plain_packet_size);
 	PACKET_COMMAND(plain_packet)=COMMAND_SENDING_AUTHENTICATION_TOKEN;
 	AUTHENTICATION_MESSAGE_PACKET_SET_TOKEN_SIZE(plain_packet, AUTHENTICATION_TOKEN_SIZE);
 	memcpy(AUTHENTICATION_MESSAGE_PACKET_TOKEN(plain_packet), protocol_context->authentication_token, AUTHENTICATION_TOKEN_SIZE);
@@ -454,9 +454,8 @@ static uint32_t otb_protocol_create_pad_unique_ids_packet(const OtbProtocolConte
 	if(status2<OTB_PAD_REC_STATUS_OUT_OF_BOUNDS)
 		pad_unique_ids=g_slist_concat(pad_unique_ids, otb_pad_db_get_ids_of_pads_in_status(protocol_context->pad_db, status2));
 	uint32_t total_pad_unique_ids=g_slist_length(pad_unique_ids);
-	unsigned char *plain_packet=NULL;
 	uint32_t plain_packet_size=sizeof(OtbProtocolCommand)+sizeof(uint32_t)+OTB_UNIQUE_ID_BYTES_SIZE*total_pad_unique_ids;
-	plain_packet=g_malloc(plain_packet_size);
+	unsigned char *plain_packet=g_new(unsigned char, plain_packet_size);
 	PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_UNIQUE_IDS;
 	PAD_UNIQUE_IDS_PACKET_SET_PAD_UNIQUE_ID_COUNT(plain_packet, total_pad_unique_ids);
 	for(uint32_t unique_id_iter=0; unique_id_iter<total_pad_unique_ids; unique_id_iter++)
@@ -509,7 +508,7 @@ static uint32_t otb_protocol_client_send_pad_header_to_server(OtbProtocolContext
 			protocol_context->pad_io=otb_pad_db_open_pad_for_read(protocol_context->pad_db, protocol_context->pad_unique_id);
 			if(G_LIKELY(protocol_context->pad_io!=NULL))
 			{
-				unsigned char *plain_packet=g_malloc(INCOMING_PAD_HEADER_PACKET_SIZE);
+				unsigned char *plain_packet=g_new(unsigned char, INCOMING_PAD_HEADER_PACKET_SIZE);
 				PACKET_COMMAND(plain_packet)=COMMAND_SENDING_PAD_HEADER;
 				memcpy(INCOMING_PAD_HEADER_PACKET_PAD_UNIQUE_ID_BYTES(plain_packet), otb_unique_id_get_bytes(protocol_context->pad_unique_id), OTB_UNIQUE_ID_BYTES_SIZE);
 				protocol_context->pad_size=otb_pad_db_get_pad_size(protocol_context->pad_db, protocol_context->pad_unique_id);
@@ -949,7 +948,7 @@ static gboolean otb_protocol_process_request_packet(OtbProtocolContext *protocol
 	if(request_packet_byte_array!=NULL)
 		g_byte_array_remove_range(request_packet_byte_array, 0, request_packet_byte_array->len);
 	unsigned int expected_bytes_written=sizeof response_packet_size+response_packet_size;
-	unsigned char *response_meta_packet=g_malloc(expected_bytes_written);
+	unsigned char *response_meta_packet=g_new(unsigned char, expected_bytes_written);
 	PROTOCOL_META_PACKET_SET_PACKET_SIZE(response_meta_packet, response_packet_size);
 	memcpy(PROTOCOL_META_PACKET_PACKET(response_meta_packet), response_packet, response_packet_size);
 	unsigned int actual_bytes_written=-1;

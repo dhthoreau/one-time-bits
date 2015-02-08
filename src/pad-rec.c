@@ -302,7 +302,7 @@ OtbPadIO *otb_pad_rec_open_pad_for_write(OtbPadRec *pad_rec)
 	if(G_LIKELY(file!=NULL))
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		pad_io=g_malloc(sizeof *pad_io);
+		pad_io=g_new(OtbPadIO, 1);
 		pad_io->pad_rec=pad_rec;
 		g_object_ref(pad_io->pad_rec);
 		otb_pad_rec_lock(pad_io->pad_rec);
@@ -331,14 +331,14 @@ OtbPadIO *otb_pad_rec_open_pad_for_read(OtbPadRec *pad_rec, gboolean auto_rewind
 	if(G_LIKELY(file!=NULL))
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		pad_io=g_malloc(sizeof *pad_io);
+		pad_io=g_new(OtbPadIO, 1);
 		pad_io->pad_rec=pad_rec;
 		g_object_ref(pad_io->pad_rec);
 		otb_pad_rec_lock(pad_io->pad_rec);
 		pad_io->is_for_write=FALSE;
 		pad_io->auto_rewind=auto_rewind;
 		pad_io->file=file;
-		pad_io->input_buffer=g_malloc(INPUT_BUFFER_SIZE);
+		pad_io->input_buffer=g_new(unsigned char, INPUT_BUFFER_SIZE);
 		pad_io->output_buffer=otb_sym_cipher_create_decryption_buffer(local_crypto_sym_cipher, INPUT_BUFFER_SIZE);
 		pad_io->output_buffer_position=0;
 		pad_io->output_buffer_size=0;

@@ -262,7 +262,7 @@ static void otb_assert_save_pad_db(const char *pad_db_dir_path, off_t default_ne
 	*expected_unsent_bytes_out=otb_assert_pad_read(unsent_save_pad_io, NULL, default_new_pad_size);
 	g_assert(otb_pad_db_close_pad(save_pad_db, unsent_save_pad_io));
 	*expected_incoming_unique_id_out=otb_unique_id_new();
-	*expected_incoming_bytes_out=g_malloc(default_new_pad_size);
+	*expected_incoming_bytes_out=g_new(unsigned char, default_new_pad_size);
 	g_assert(otb_random_bytes(*expected_incoming_bytes_out, default_new_pad_size));
 	*expected_incoming_expiration_out=otb_few_months_from_now();
 	OtbPadIO *incoming_save_pad_io=otb_pad_db_add_incoming_pad(save_pad_db, *expected_incoming_unique_id_out, INCOMING_PAD_SIZE, *expected_incoming_expiration_out);
@@ -407,7 +407,7 @@ static void test_close_pad_fails_when_nothing_is_opened()
 {
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
 	g_assert(!otb_pad_db_close_pad(pad_db, NULL));
-	void *dummy_pad_io=g_malloc(sizeof (unsigned char));
+	void *dummy_pad_io=g_malloc(1);
 	g_assert(!otb_pad_db_close_pad(pad_db, dummy_pad_io));
 	g_free(dummy_pad_io);
 	g_object_unref(pad_db);
@@ -722,7 +722,7 @@ static size_t otb_encrypt_file_for_two_pad_test(OtbPadDb *pad_db, size_t chunk_s
 	otb_assert_number_of_pads_in_status(pad_db, 1, OTB_PAD_REC_STATUS_SENT);
 	otb_assert_number_of_pads_in_status(pad_db, 2, OTB_PAD_REC_STATUS_CONSUMED);
 	size_t encrypted_message_size=encrypted_message_byte_array->len;
-	*encrypted_message_out=g_malloc(encrypted_message_size);
+	*encrypted_message_out=g_new(unsigned char, encrypted_message_size);
 	memcpy(*encrypted_message_out, encrypted_message_byte_array->data, encrypted_message_size);
 	g_byte_array_unref(encrypted_message_byte_array);
 	return encrypted_message_size;

@@ -61,7 +61,7 @@ OtbUniqueId *otb_unique_id_from_bytes(const unsigned char *unique_id_bytes)
 
 char *otb_unique_id_to_string(const OtbUniqueId *unique_id)
 {
-	char *unique_id_string=g_malloc(UNIQUE_ID_STRING_SIZE);
+	char *unique_id_string=g_new(char, UNIQUE_ID_STRING_SIZE);
 	uuid_unparse_lower(unique_id->uuid, unique_id_string);
 	return unique_id_string;
 }

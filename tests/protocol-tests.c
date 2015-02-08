@@ -91,7 +91,7 @@ static uint32_t otb_decrypt_packet(const OtbAsymCipher *peer_asym_cipher, const 
 static void otb_do_client_receive_unexpected_command(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
 	uint32_t server_response_packet_size=1;
-	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
+	unsigned char *server_response_packet=g_new(unsigned char, server_response_packet_size);
 	server_response_packet[0]=255;
 	unsigned char *client_packet=NULL;
 	uint32_t client_packet_size=otb_protocol_client(protocol_context, server_response_packet, server_response_packet_size, &client_packet);
@@ -105,7 +105,7 @@ static void otb_do_client_receive_unexpected_command(const ProtocolParams params
 static void otb_do_client_receive_malformed_packet(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
 	uint32_t server_response_packet_size=10000;
-	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
+	unsigned char *server_response_packet=g_new(unsigned char, server_response_packet_size);
 	server_response_packet[0]=EXPECTED_COMMAND_OK;
 	unsigned char *client_packet=NULL;
 	uint32_t client_packet_size=otb_protocol_client(protocol_context, server_response_packet, server_response_packet_size, &client_packet);
@@ -131,7 +131,7 @@ static void otb_do_client_establish_protocol_version(const ProtocolParams params
 static uint32_t otb_create_ok_packet(unsigned char **packet)
 {
 	uint32_t packet_size=1;
-	*packet=g_malloc(packet_size);
+	*packet=g_new(unsigned char, packet_size);
 	*packet[0]=EXPECTED_COMMAND_OK;
 	return packet_size;
 }
@@ -187,7 +187,7 @@ static uint32_t otb_make_encrypted_packet(const OtbAsymCipher *asym_cipher, cons
 	uint32_t encrypted_data_size=0;
 	unsigned char *encrypted_data=otb_asym_cipher_encrypt(asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data_size);
 	uint32_t encrypted_packet_size=13+g_bytes_get_size(encrypted_key)+g_bytes_get_size(iv)+encrypted_data_size;
-	*encrypted_packet_out=g_malloc(encrypted_packet_size);
+	*encrypted_packet_out=g_new(unsigned char, encrypted_packet_size);
 	*encrypted_packet_out[0]=EXPECTED_COMMAND_ENCRYPTED;
 	*(uint32_t*)(*encrypted_packet_out+1)=g_htonl(g_bytes_get_size(encrypted_key));
 	*(uint32_t*)(*encrypted_packet_out+5)=g_htonl(g_bytes_get_size(iv));
@@ -204,7 +204,7 @@ static uint32_t otb_make_encrypted_packet(const OtbAsymCipher *asym_cipher, cons
 static uint32_t otb_create_sending_authentication_token_packet_plain(const ProtocolParams params, const unsigned char *authentication_token, unsigned char **packet_out)
 {
 	const uint32_t packet_out_size=5+EXPECTED_AUTHENTICATION_TOKEN_SIZE;
-	*packet_out=g_malloc(packet_out_size);
+	*packet_out=g_new(unsigned char, packet_out_size);
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_AUTHENTICATION_TOKEN;
 	*(uint32_t*)(*packet_out+1)=g_htonl(EXPECTED_AUTHENTICATION_TOKEN_SIZE);
 	memcpy(*packet_out+5, authentication_token, EXPECTED_AUTHENTICATION_TOKEN_SIZE);
@@ -263,7 +263,7 @@ static uint32_t otb_create_pad_ids_packet_plain(GSList *pad_ids, unsigned char *
 {
 	unsigned int pad_ids_count=g_slist_length(pad_ids);
 	uint32_t packet_size=5+16*pad_ids_count;
-	*packet_out=g_malloc(packet_size);
+	*packet_out=g_new(unsigned char, packet_size);
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_PAD_IDS;
 	*(uint32_t*)(*packet_out+1)=g_htonl(pad_ids_count);
 	for(GSList *pad_ids_iter=pad_ids; pad_ids_iter!=NULL; pad_ids_iter=g_slist_next(pad_ids_iter))
@@ -407,7 +407,7 @@ static void otb_do_client_receive_unable_command(const ProtocolParams params, Ot
 	g_object_get(TEST_PROTOCOL_CONTEXT(protocol_context)->peer_friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
 	g_assert(outgoing_pad_db!=NULL);
 	uint32_t server_response_packet_size=1;
-	unsigned char *server_response_packet=g_malloc(server_response_packet_size);
+	unsigned char *server_response_packet=g_new(unsigned char, server_response_packet_size);
 	server_response_packet[0]=EXPECTED_COMMAND_UNABLE;
 	unsigned char *client_packet=NULL;
 	uint32_t client_packet_size=otb_protocol_client(protocol_context, server_response_packet, server_response_packet_size, &client_packet);
@@ -516,7 +516,7 @@ static void otb_do_server_establish_protocol_version(const ProtocolParams params
 {
 	unsigned char expected_protocol_version=0;
 	uint32_t client_request_packet_size=2;
-	unsigned char *client_request_packet=g_malloc(client_request_packet_size);
+	unsigned char *client_request_packet=g_new(unsigned char, client_request_packet_size);
 	client_request_packet[0]=EXPECTED_COMMAND_PROTOCOL_VERSION;
 	client_request_packet[1]=expected_protocol_version;
 	unsigned char *server_packet=NULL;
@@ -530,7 +530,7 @@ static void otb_do_server_establish_wrong_protocol_version(const ProtocolParams 
 {
 	unsigned char expected_protocol_version=1;
 	uint32_t client_request_packet_size=2;
-	unsigned char *client_request_packet=g_malloc(client_request_packet_size);
+	unsigned char *client_request_packet=g_new(unsigned char, client_request_packet_size);
 	client_request_packet[0]=EXPECTED_COMMAND_PROTOCOL_VERSION;
 	client_request_packet[1]=expected_protocol_version;
 	unsigned char *server_packet=NULL;
@@ -544,9 +544,8 @@ static void otb_do_server_establish_wrong_protocol_version(const ProtocolParams 
 
 static void otb_do_server_establish_unknown_friend(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
-	unsigned char *client_request_packet=NULL;
 	uint32_t client_request_packet_size=17;
-	client_request_packet=g_malloc(client_request_packet_size);
+	unsigned char *client_request_packet=g_new(unsigned char, client_request_packet_size);
 	client_request_packet[0]=EXPECTED_COMMAND_SENDING_FRIEND_ID;
 	uuid_generate(client_request_packet+1);
 	unsigned char *server_packet=NULL;
@@ -560,9 +559,8 @@ static void otb_do_server_establish_unknown_friend(const ProtocolParams params, 
 
 static void otb_do_server_establish_friend(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
-	unsigned char *client_request_packet=NULL;
 	uint32_t client_request_packet_size=17;
-	client_request_packet=g_malloc(client_request_packet_size);
+	unsigned char *client_request_packet=g_new(unsigned char, client_request_packet_size);
 	client_request_packet[0]=EXPECTED_COMMAND_SENDING_FRIEND_ID;
 	GSList *friend_unique_ids=NULL;
 	g_assert((friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends(TEST_PROTOCOL_CONTEXT(protocol_context)->bitkeeper))!=NULL);
@@ -591,9 +589,8 @@ static void otb_do_server_receive_authentication_token_from_client_for_server_au
 
 static void otb_do_server_receive_authentication_request_from_client(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
-	unsigned char *client_request_packet=NULL;
 	uint32_t client_request_packet_size=1;
-	client_request_packet=g_malloc(client_request_packet_size);
+	unsigned char *client_request_packet=g_new(unsigned char, client_request_packet_size);
 	client_request_packet[0]=EXPECTED_COMMAND_REQUESTING_AUTHENTICATION;
 	unsigned char *encrypted_server_packet=NULL;
 	uint32_t encrypted_server_packet_size=otb_protocol_server(protocol_context, client_request_packet, client_request_packet_size, &encrypted_server_packet);
@@ -615,9 +612,8 @@ static void otb_do_server_receive_authentication_token_from_client_for_client_au
 
 static void otb_do_server_receive_pad_ids_request_from_client(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
-	unsigned char *client_request_packet=NULL;
 	uint32_t client_request_packet_size=1;
-	client_request_packet=g_malloc(client_request_packet_size);
+	unsigned char *client_request_packet=g_new(unsigned char, client_request_packet_size);
 	client_request_packet[0]=EXPECTED_COMMAND_REQUESTING_PAD_IDS;
 	unsigned char *encrypted_server_packet=NULL;
 	uint32_t encrypted_server_packet_size=otb_protocol_server(protocol_context, client_request_packet, client_request_packet_size, &encrypted_server_packet);
@@ -658,7 +654,7 @@ static void otb_do_server_receive_pad_ids_from_client(const ProtocolParams param
 static void otb_do_server_receive_finish_from_client(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
 	const size_t CLIENT_REQUEST_PACKET_SIZE=1;
-	unsigned char *client_request_packet=g_malloc(CLIENT_REQUEST_PACKET_SIZE);
+	unsigned char *client_request_packet=g_new(unsigned char, CLIENT_REQUEST_PACKET_SIZE);
 	*client_request_packet=EXPECTED_COMMAND_FINISH;
 	unsigned char *server_packet=NULL;
 	uint32_t server_packet_size=otb_protocol_server(protocol_context, client_request_packet, 1, &server_packet);
@@ -671,7 +667,7 @@ static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocol
 {
 	OtbUniqueId *pad_unique_id=otb_unique_id_new();
 	uint32_t packet_out_size=29;
-	*packet_out=g_malloc(packet_out_size);
+	*packet_out=g_new(unsigned char, packet_out_size);
 	*packet_out[0]=EXPECTED_COMMAND_SENDING_PAD_HEADER;
 	memcpy(*packet_out+1, otb_unique_id_get_bytes(pad_unique_id), 16);
 	*(uint32_t*)(*packet_out+17)=g_htonl(pad_size);
@@ -718,7 +714,7 @@ static uint32_t otb_create_sending_pad_chunk_packet_plain(const OtbTestProtocolC
 {
 	uint32_t final_chunk_size=EXPECTED_DEFAULT_CHUNK_SIZE/(final?2:1);
 	uint32_t packet_out_size=5+final_chunk_size;
-	*packet_out=g_malloc(packet_out_size);
+	*packet_out=g_new(unsigned char, packet_out_size);
 	*packet_out[0]=(final?EXPECTED_COMMAND_SENDING_FINAL_PAD_CHUNK:EXPECTED_COMMAND_SENDING_PAD_CHUNK);
 	*(uint32_t*)(*packet_out+1)=g_htonl(final_chunk_size);
 	otb_random_bytes(*packet_out+5, final_chunk_size);
@@ -1120,7 +1116,7 @@ static uint32_t otb_dummy_client_protocol(OtbProtocolContext *protocol_context, 
 		}
 	}
 	uint32_t output_size=g_bytes_get_size(output_bytes)-sizeof(uint32_t);
-	*output_out=g_malloc(output_size);
+	*output_out=g_new(unsigned char, output_size);
 	memcpy(*output_out, g_bytes_get_data(output_bytes, NULL)+sizeof output_size, output_size);
 	return output_size;
 }
@@ -1164,7 +1160,7 @@ static uint32_t otb_dummy_server_protocol(OtbProtocolContext *protocol_context, 
 		}
 	}
 	uint32_t output_size=(output_bytes==NULL?0:g_bytes_get_size(output_bytes)-sizeof(uint32_t));
-	*output_out=(output_size==0?NULL:g_malloc(output_size));
+	*output_out=g_new(unsigned char, output_size);
 	if(output_size>0)
 		memcpy(*output_out, g_bytes_get_data(output_bytes, NULL)+sizeof output_size, output_size);
 	return output_size;

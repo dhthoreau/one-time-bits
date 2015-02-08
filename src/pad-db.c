@@ -673,7 +673,7 @@ gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_io)
 
 OtbCipherContext *otb_cipher_context_new(OtbPadDb *pad_db)
 {
-	OtbCipherContext *cipher_context=g_malloc(sizeof(OtbCipherContext));
+	OtbCipherContext *cipher_context=g_new(OtbCipherContext, 1);
 	cipher_context->pad_db=g_object_ref(pad_db);
 	cipher_context->status=CIPHER_CONTEXT_STATUS_NOT_STARTED;
 	cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS;
@@ -817,7 +817,7 @@ gboolean otb_encrypt(OtbCipherContext *cipher_context, const void *plain_bytes, 
 	if(cipher_context->status==CIPHER_CONTEXT_STATUS_NOT_STARTED)
 	{
 		*encrypted_bytes_size_out=sizeof(unsigned char)+plain_bytes_size;
-		*encrypted_bytes_out=g_malloc(*encrypted_bytes_size_out);
+		*encrypted_bytes_out=g_new(unsigned char, *encrypted_bytes_size_out);
 		*encrypted_bytes_out[0]=CURRENT_ENCRYPTION_FORMAT_VERSION;
 		current_encrypted_byte=*encrypted_bytes_out+1;
 		cipher_context->status=CIPHER_CONTEXT_STATUS_PROCESSING_PAD_REC;
@@ -825,7 +825,7 @@ gboolean otb_encrypt(OtbCipherContext *cipher_context, const void *plain_bytes, 
 	else
 	{
 		*encrypted_bytes_size_out=plain_bytes_size;
-		*encrypted_bytes_out=g_malloc(*encrypted_bytes_size_out);
+		*encrypted_bytes_out=g_new(unsigned char, *encrypted_bytes_size_out);
 		current_encrypted_byte=*encrypted_bytes_out;
 	}
 	otb_pad_db_lock_write(cipher_context->pad_db);

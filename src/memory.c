@@ -75,7 +75,7 @@ void otb_mlock_page(void *page)
 	}
 	else if(mlock(page, sysconf(_SC_PAGESIZE))==0)
 	{
-		lock_count=g_malloc(sizeof *lock_count);
+		lock_count=g_new(size_t, 1);
 		*lock_count=1;
 		if(G_UNLIKELY(!g_hash_table_insert(otb_locked_pages, page, lock_count)))
 			g_error(_("Failed to add locked page to hash table."));
@@ -133,7 +133,7 @@ void otb_munlock(const void *memory, size_t size)
 
 static void otb_mlock_record_allocation_size(void *memory, size_t size)
 {
-	size_t *size_for_hash_table=g_malloc(sizeof *size_for_hash_table);
+	size_t *size_for_hash_table=g_new(size_t, 1);
 	*size_for_hash_table=size;
 	if(G_UNLIKELY(!g_hash_table_insert(otb_allocation_sizes, memory, size_for_hash_table)))
 		g_error(_("Memory already exists in hash table. Likely cause is calling free() instead of otb_free_locked()."));

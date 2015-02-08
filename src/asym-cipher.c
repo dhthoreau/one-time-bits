@@ -131,7 +131,7 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 			{
 				char *public_key_in_buff=NULL;
 				long public_key_size=BIO_get_mem_data(buff_io, &public_key_in_buff);
-				char *public_key=g_malloc(public_key_size+1);
+				char *public_key=g_new(char, public_key_size+1);
 				memcpy(public_key, public_key_in_buff, public_key_size);
 				public_key[public_key_size]='\0';	/// Data in a BIO isn't always null terminated, though sometimes it is by random dumb luck. It's a PEM, not a string. This unusual code is meant to work around that, turn the PEM into a real C string.
 				g_value_take_string(value, public_key);
@@ -226,12 +226,12 @@ void *otb_asym_cipher_create_decryption_buffer(const OtbAsymCipher *asym_cipher,
 OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_cipher, GBytes **encrypted_key_out, GBytes **iv_out)
 {
 	OtbAsymCipherContext *asym_cipher_context=NULL;
-	asym_cipher_context=g_malloc(sizeof *asym_cipher_context);
+	asym_cipher_context=g_new(OtbAsymCipherContext, 1);
 	EVP_CIPHER_CTX_init(asym_cipher_context);
 	otb_asym_cipher_lock_read(asym_cipher);
-	unsigned char *encrypted_key_bytes=g_malloc(EVP_PKEY_size(asym_cipher->priv->key_impl));
+	unsigned char *encrypted_key_bytes=g_new(unsigned char, EVP_PKEY_size(asym_cipher->priv->key_impl));
 	int encrypted_key_size;
-	unsigned char *iv_bytes=g_malloc(EVP_CIPHER_iv_length(asym_cipher->priv->cipher_impl));
+	unsigned char *iv_bytes=g_new(unsigned char, EVP_CIPHER_iv_length(asym_cipher->priv->cipher_impl));
 	if(G_LIKELY(EVP_SealInit(asym_cipher_context, asym_cipher->priv->cipher_impl, &encrypted_key_bytes, &encrypted_key_size, iv_bytes, &asym_cipher->priv->key_impl, 1)>0))
 	{
 		*iv_out=g_bytes_new_take(iv_bytes, EVP_CIPHER_iv_length(asym_cipher->priv->cipher_impl));
@@ -252,7 +252,7 @@ OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_
 
 OtbAsymCipherContext *otb_asym_cipher_init_decryption(const OtbAsymCipher *asym_cipher, GBytes *encrypted_key, GBytes *iv)
 {
-	OtbAsymCipherContext *asym_cipher_context=g_malloc(sizeof *asym_cipher_context);
+	OtbAsymCipherContext *asym_cipher_context=g_new(OtbAsymCipherContext, sizeof *asym_cipher_context);
 	EVP_CIPHER_CTX_init(asym_cipher_context);
 	otb_asym_cipher_lock_read(asym_cipher);
 	if(G_UNLIKELY(EVP_OpenInit(asym_cipher_context, asym_cipher->priv->cipher_impl, g_bytes_get_data(encrypted_key, NULL), g_bytes_get_size(encrypted_key), g_bytes_get_data(iv, NULL), asym_cipher->priv->key_impl)<=0))

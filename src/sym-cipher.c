@@ -178,7 +178,7 @@ GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const cha
 	otb_sym_cipher_lock_read(sym_cipher);
 	size_t hash_size=EVP_MD_size(sym_cipher->priv->message_digest_impl);
 	*sym_cipher_salt_out=g_slice_new(OtbSymCipherSalt);
-	unsigned char *hash_bytes=g_malloc(hash_size);
+	unsigned char *hash_bytes=g_new(unsigned char, hash_size);
 	if(G_LIKELY(otb_random_bytes((*sym_cipher_salt_out)->salt, sizeof (*sym_cipher_salt_out)->salt) && PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), (*sym_cipher_salt_out)->salt, sizeof (*sym_cipher_salt_out)->salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes)))
 		hash=g_bytes_new_take(hash_bytes, hash_size);
 	else
@@ -192,7 +192,7 @@ gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, cons
 	gboolean ret_val=FALSE;
 	size_t hash_size;
 	const unsigned char *passphrase_hash_bytes=g_bytes_get_data(passphrase_hash, &hash_size);
-	unsigned char *hash_bytes=g_malloc(hash_size);
+	unsigned char *hash_bytes=g_new(unsigned char, hash_size);
 	otb_sym_cipher_lock_read(sym_cipher);
 	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), sym_cipher_salt->salt, sizeof sym_cipher_salt->salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, hash_size, hash_bytes) && otb_smemcmp(passphrase_hash_bytes, hash_bytes, hash_size)==0)
 		ret_val=TRUE;
@@ -203,7 +203,7 @@ gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, cons
 
 static OtbSymCipherContext *otb_sym_cipher_init_encryption_openssl(const EVP_CIPHER *sym_cipher_impl, const unsigned char *key, const unsigned char *iv)
 {
-	OtbSymCipherContext *sym_cipher_context=g_malloc(sizeof *sym_cipher_context);
+	OtbSymCipherContext *sym_cipher_context=g_new(OtbSymCipherContext, 1);
 	EVP_CIPHER_CTX_init(sym_cipher_context);
 	if(G_UNLIKELY(EVP_EncryptInit_ex(sym_cipher_context, sym_cipher_impl, NULL, key, iv)<=0))
 	{
@@ -217,7 +217,7 @@ static OtbSymCipherContext *otb_sym_cipher_init_encryption_openssl(const EVP_CIP
 
 static OtbSymCipherContext *otb_sym_cipher_init_decryption_openssl(const EVP_CIPHER *sym_cipher, const unsigned char *key, const unsigned char *iv)
 {
-	OtbSymCipherContext *sym_cipher_context=g_malloc(sizeof *sym_cipher_context);
+	OtbSymCipherContext *sym_cipher_context=g_new(OtbSymCipherContext, 1);
 	EVP_CIPHER_CTX_init(sym_cipher_context);
 	if(G_UNLIKELY(EVP_DecryptInit_ex(sym_cipher_context, sym_cipher, NULL, key, iv)<=0))
 	{
@@ -235,7 +235,7 @@ gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key
 {
 	gboolean ret_val=FALSE;
 	otb_sym_cipher_lock_write(sym_cipher);
-	unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
+	unsigned char *wrapping_key_and_iv=g_new(unsigned char, key_and_iv_size(sym_cipher));
 	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), sym_cipher_salt->salt, sizeof sym_cipher_salt->salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 	{
 		unsigned char *key_bytes=otb_sym_cipher_create_decryption_buffer(sym_cipher, g_bytes_get_size(wrapped_key));
@@ -261,7 +261,7 @@ GBytes *otb_sym_cipher_wrap_key(const OtbSymCipher *sym_cipher, const char *pass
 	if(G_UNLIKELY(otb_random_bytes((*sym_cipher_salt_out)->salt, sizeof (*sym_cipher_salt_out)->salt)))
 	{
 		otb_sym_cipher_lock_read(sym_cipher);
-		unsigned char *wrapping_key_and_iv=g_malloc(key_and_iv_size(sym_cipher));
+		unsigned char *wrapping_key_and_iv=g_new(unsigned char, key_and_iv_size(sym_cipher));
 		if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), (*sym_cipher_salt_out)->salt, sizeof (*sym_cipher_salt_out)->salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 		{
 			unsigned char *wrapped_key_bytes=otb_sym_cipher_create_encryption_buffer(sym_cipher, sym_cipher->priv->key_size);
