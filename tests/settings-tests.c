@@ -44,6 +44,15 @@ static void test_settings_get_set_config_string()
 	g_free(actual_string);
 }
 
+static void test_settings_get_config_file_version()
+{
+	const char *CONFIG_META_GROUP_NAME="config-meta";
+	const char *FILE_VERSION_KEY="file-version";
+	
+	otb_settings_initialize("otb-tests", "otb");
+	g_assert_cmpint(0, ==, otb_settings_get_config_int(CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, -1));
+}
+
 static void test_settings_get_set_config_int()
 {
 	const char *INT_KEY="int-key";
@@ -68,13 +77,16 @@ static void test_settings_get_set_config_uint()
 	g_assert_cmpint(EXPECTED_UINT, ==, otb_settings_get_config_uint(GROUP_NAME, UINT_KEY, ERROR_UINT));
 }
 
-static void test_settings_get_config_file_version()
+static void test_settings_get_set_config_int64()
 {
-	const char *CONFIG_META_GROUP_NAME="config-meta";
-	const char *FILE_VERSION_KEY="file-version";
+	const char *INT64_KEY="int64-key";
+	const long long EXPECTED_INT64=-42;
+	const long long ERROR_INT64=-1;
 	
-	otb_settings_initialize("otb-tests", "otb");
-	g_assert_cmpint(0, ==, otb_settings_get_config_int(CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, -1));
+	otb_initialize_settings_for_tests();
+	g_assert_cmpint(ERROR_INT64, ==, otb_settings_get_config_int(GROUP_NAME, INT64_KEY, ERROR_INT64));
+	g_assert(otb_settings_set_config_int(GROUP_NAME, INT64_KEY, EXPECTED_INT64));
+	g_assert_cmpint(EXPECTED_INT64, ==, otb_settings_get_config_int(GROUP_NAME, INT64_KEY, ERROR_INT64));
 }
 
 static void test_settings_get_set_bytes()
@@ -161,6 +173,7 @@ void otb_add_settings_tests()
 	otb_add_test_func("/settings/test_settings_get_set_config_string", test_settings_get_set_config_string);
 	otb_add_test_func("/settings/test_settings_get_set_config_int", test_settings_get_set_config_int);
 	otb_add_test_func("/settings/test_settings_get_set_config_uint", test_settings_get_set_config_uint);
+	otb_add_test_func("/settings/test_settings_get_set_config_int64", test_settings_get_set_config_int64);
 	otb_add_test_func("/settings/test_settings_get_set_config_bytes", test_settings_get_set_config_bytes);
 	otb_add_test_func("/settings/test_settings_get_set_bytes", test_settings_get_set_bytes);
 	otb_add_test_func("/settings/test_settings_get_set_gbytes", test_settings_get_set_gbytes);

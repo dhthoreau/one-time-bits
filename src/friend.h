@@ -19,7 +19,7 @@
 #define OTB_FRIEND_IMPORT_PUBLIC_KEY			"public-key"
 #define OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME	"transport-cipher-name"
 #define OTB_FRIEND_IMPORT_ADDRESS				"address"
-// FARA - Abbiamo bisogno di una porta.
+// FARE - Abbiamo bisogno di una porta.
 
 #define OTB_FRIEND_PROP_BASE_PATH				"base-path"
 #define OTB_FRIEND_PROP_INCOMING_PAD_DB			"incoming-pad-db"

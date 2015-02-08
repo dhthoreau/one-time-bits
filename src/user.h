@@ -14,7 +14,7 @@
 #define OTB_USER_PROP_UNIQUE_ID		"unique-id"
 #define OTB_USER_PROP_ASYM_CIPHER	"asym-cipher"
 #define OTB_USER_PROP_ADDRESS		"address"
-// FARA - Abbiamo bisogno di una porta.
+// FARE - Abbiamo bisogno di una porta.
 
 #define OTB_TYPE_USER				(otb_user_get_type())
 #define OTB_USER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_USER, OtbUser))

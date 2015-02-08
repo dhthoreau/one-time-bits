@@ -14,8 +14,9 @@
 #include "friend.h"
 #include "user.h"
 
-#define OTB_BITKEEPER_PROP_USER			"user"
-#define OTB_BITKEEPER_PROP_PROXY_PORT	"proxy-port"
+#define OTB_BITKEEPER_PROP_USER						"user"
+#define OTB_BITKEEPER_PROP_PROXY_PORT				"proxy-port"
+#define OTB_BITKEEPER_PROP_PAD_EXPIRATION_INTERVAL	"pad-expiration-interval"
 
 #define OTB_TYPE_BITKEEPER				(otb_bitkeeper_get_type())
 #define OTB_BITKEEPER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_BITKEEPER, OtbBitkeeper))
@@ -43,9 +44,12 @@ GType otb_bitkeeper_get_type();
 
 OtbBitkeeper *otb_bitkeeper_load();
 gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned short proxy_port);
+gboolean otb_bitkeeper_set_pad_expiration_interval(const OtbBitkeeper *bitkeeper, long long pad_expiration_interval);
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);
 gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string);
 gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);
 GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);
+void otb_bitkeeper_launch_tasks(OtbBitkeeper *bitkeeper);
+void otb_bitkeeper_shutdown_tasks(OtbBitkeeper *bitkeeper);
 
 #endif

@@ -13,7 +13,7 @@
 #include "main.h"
 #include "test-utils.h"
 
-static void otb_call_test(const gpointer test, const gpointer user_data)
+static void otb_call_test(const void *test, const void *user_data)
 {
 	otb_recreate_test_dir();
 	((GTestFunc)test)();

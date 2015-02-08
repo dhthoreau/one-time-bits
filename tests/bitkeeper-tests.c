@@ -96,6 +96,24 @@ static void test_otb_bitkeeper_proxy_port()
 	g_object_unref(original_bitkeeper);
 }
 
+static void test_otb_bitkeeper_pad_expiration_interval()
+{
+	otb_setup_configs_for_bitkeeper_tests_without_output(512, "DES-CBC", "sjhfgjzshdjf.onion");
+	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_load();
+	long long pad_expiration_interval=0;
+	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_EXPIRATION_INTERVAL, &pad_expiration_interval, NULL);
+	g_assert_cmpint(10000000, ==, pad_expiration_interval);
+	g_assert(otb_bitkeeper_set_pad_expiration_interval(original_bitkeeper, 12345000));
+	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_EXPIRATION_INTERVAL, &pad_expiration_interval, NULL);
+	g_assert_cmpint(12345000, ==, pad_expiration_interval);
+	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();
+	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_EXPIRATION_INTERVAL, &pad_expiration_interval, NULL);
+	g_assert_cmpint(12345000, ==, pad_expiration_interval);
+	otb_local_crypto_lock_sym_cipher();
+	g_object_unref(second_bitkeeper);
+	g_object_unref(original_bitkeeper);
+}
+
 static void otb_assert_bitkeeper_has_friends(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
 	GSList *unique_ids=otb_bitkeeper_get_unique_ids_of_friends(bitkeeper);
@@ -202,5 +220,6 @@ void otb_add_bitkeeper_tests()
 {
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_user", test_otb_bitkeeper_user);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_proxy_port", test_otb_bitkeeper_proxy_port);
+	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_pad_expiration_interval", test_otb_bitkeeper_pad_expiration_interval);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_import_delete_friends", test_otb_bitkeeper_import_delete_friends);
 }

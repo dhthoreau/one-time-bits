@@ -181,6 +181,14 @@ unsigned int otb_settings_get_config_uint(const char *group_name, const char *ke
 	return (unsigned int)otb_settings_get_config_int(group_name, key, (int)error_value);
 }
 
+gboolean otb_settings_set_config_int64(const char *group_name, const char *key, long long value)
+{
+	otb_settings_lock_config_write();
+	g_key_file_set_int64(config_key_file, group_name, key, value);
+	otb_settings_unlock_config_write();
+	return otb_settings_save_config_key_file();
+}
+
 long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, const char *key, long long error_value)
 {
 	GError *error=NULL;
@@ -192,6 +200,14 @@ long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, con
 		g_error_free(error);
 	}
 	return value;
+}
+
+long long otb_settings_get_config_int64(const char *group_name, const char *key, long long error_value)
+{
+	otb_settings_lock_config_read();
+	long long ret_val=otb_settings_get_int64(config_key_file, group_name, key, error_value);
+	otb_settings_unlock_config_read();
+	return ret_val;
 }
 
 unsigned long long otb_settings_get_uint64(GKeyFile *key_file, const char *group_name, const char *key, unsigned long long error_value)

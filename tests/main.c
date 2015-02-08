@@ -53,7 +53,7 @@ static void otb_run_tests()
 	g_slist_free(otb_test_funcs);
 }
 
-static void otb_null_log_handler(const char *log_domain, GLogLevelFlags log_level, const char *message, gpointer user_data)
+static void otb_null_log_handler(const char *log_domain, GLogLevelFlags log_level, const char *message, void *user_data)
 {
 }
 
