@@ -14,7 +14,7 @@
 #define OTB_USER_PROP_UNIQUE_ID		"unique-id"
 #define OTB_USER_PROP_ASYM_CIPHER	"asym-cipher"
 #define OTB_USER_PROP_ADDRESS		"address"
-// FARE - Abbiamo bisogno di una porta.
+#define OTB_USER_PROP_PORT			"port"
 
 #define OTB_TYPE_USER				(otb_user_get_type())
 #define OTB_USER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_USER, OtbUser))
@@ -44,6 +44,7 @@ GType otb_user_get_type();
 void otb_user_set_runtime_type(GType user_runtime_type);
 OtbUser *otb_user_load();
 gboolean otb_user_set_address(const OtbUser *user, const char *address);
+gboolean otb_user_set_port(const OtbUser *user, unsigned short port);
 char *otb_user_export(const OtbUser *user);
 
 #endif

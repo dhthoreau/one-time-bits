@@ -28,7 +28,8 @@ enum
 	PROP_UNIQUE_ID,
 	PROP_PUBLIC_KEY,
 	PROP_TRANSPORT_CIPHER_NAME,
-	PROP_ADDRESS
+	PROP_ADDRESS,
+	PROP_PORT
 };
 
 static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_key_file);
@@ -53,6 +54,7 @@ struct _OtbFriendPrivate
 	char *public_key;
 	char *transport_cipher_name;
 	char *address;
+	unsigned short port;
 };
 
 static void otb_friend_class_init(OtbFriendClass *klass)
@@ -71,6 +73,7 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), "", G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), "", G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_FRIEND_PROP_ADDRESS, _("Address"), _("The address of the friend"), NULL, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_FRIEND_PROP_PORT, _("Port"), _("The port of the friend"), 1, G_MAXUSHORT, DEFAULT_SYNCH_PORT, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbFriendPrivate));
 }
 
@@ -88,6 +91,7 @@ static void otb_friend_init(OtbFriend *friend)
 	friend->priv->public_key=NULL;
 	friend->priv->transport_cipher_name=NULL;
 	friend->priv->address=NULL;
+	friend->priv->port=DEFAULT_SYNCH_PORT;
 }
 
 static const OtbPadDb *otb_friend_set_incoming_pad_db(const OtbFriend *friend, OtbPadDb *incoming_pad_db)
@@ -236,6 +240,13 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 			otb_friend_unlock_read(friend);
 			break;
 		}
+		case PROP_PORT:
+		{
+			otb_friend_lock_read(friend);
+			g_value_set_uint(value, (unsigned int)friend->priv->port);
+			otb_friend_unlock_read(friend);
+			break;
+		}
 		default:
 		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -250,19 +261,19 @@ static void otb_friend_export_key_file(const OtbFriend *friend, GKeyFile *export
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, friend->priv->public_key);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME, friend->priv->transport_cipher_name);
 	g_key_file_set_string(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS, friend->priv->address);
+	g_key_file_set_integer(export_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, (int)friend->priv->port);
 }
 
 #define SAVE_GROUP					"friend"
 #define SAVE_KEY_IMPORT_STRING_IV	"import-string-iv"
 #define SAVE_KEY_IMPORT_STRING		"import-string"
 
-gboolean otb_friend_save(const OtbFriend *friend)
+static gboolean otb_friend_save_no_lock(const OtbFriend *friend)
 {
 	gboolean ret_val=FALSE;
 	if(G_LIKELY(otb_mkdir_with_parents(friend->priv->base_path)))
 	{
 		GKeyFile *export_key_file=g_key_file_new();
-		otb_friend_lock_write(friend);
 		OTB_FRIEND_GET_CLASS(friend)->otb_friend_export_key_file_private(friend, export_key_file);
 		char *export_string=g_key_file_to_data(export_key_file, NULL, NULL);
 		g_key_file_unref(export_key_file);
@@ -277,7 +288,6 @@ gboolean otb_friend_save(const OtbFriend *friend)
 		otb_settings_set_gbytes(save_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING_IV, import_string_iv);
 		otb_settings_set_bytes(save_key_file, SAVE_GROUP, SAVE_KEY_IMPORT_STRING, encrypted_import_string, encrypted_import_string_size);
 		ret_val=otb_settings_save_key_file(save_key_file, friend->priv->file_path);
-		otb_friend_unlock_write(friend);
 		g_key_file_unref(save_key_file);
 		g_bytes_unref(import_string_iv);
 		g_free(encrypted_import_string);
@@ -287,10 +297,19 @@ gboolean otb_friend_save(const OtbFriend *friend)
 	return ret_val;
 }
 
-#define otb_friend_import_unique_id_bytes(import_file)				(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL))
+gboolean otb_friend_save(const OtbFriend *friend)
+{
+	otb_friend_lock_read(friend);
+	gboolean ret_val=otb_friend_save_no_lock(friend);
+	otb_friend_unlock_read(friend);
+	return ret_val;
+}
+
+#define otb_friend_import_unique_id_bytes(import_file)			(otb_settings_get_bytes((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, NULL))
 #define otb_friend_import_public_key(import_file)				(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
 #define otb_friend_import_transport_cipher_name(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME))
 #define otb_friend_import_address(import_file)					(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS))
+#define otb_friend_import_port(import_file)						((unsigned short)otb_settings_get_uint((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, DEFAULT_SYNCH_PORT))
 
 static void otb_friend_set_unique_id_no_save(OtbFriend *friend, OtbUniqueId *unique_id)
 {
@@ -316,6 +335,8 @@ static void otb_friend_set_address_no_save(const OtbFriend *friend, const char *
 	friend->priv->address=g_strdup(address);
 }
 
+#define otb_friend_set_port_no_save(friend, port_value)	(friend)->priv->port=(port_value);
+
 static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 {
 	unsigned char *unique_id_bytes=otb_friend_import_unique_id_bytes(import_file);
@@ -323,10 +344,12 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 	char *public_key=otb_friend_import_public_key(import_file);
 	char *transport_cipher_name=otb_friend_import_transport_cipher_name(import_file);
 	char *address=otb_friend_import_address(import_file);
+	unsigned short port=otb_friend_import_port(import_file);
 	otb_friend_set_unique_id_no_save(friend, unique_id);
 	otb_friend_set_public_key_no_save(friend, public_key);
 	otb_friend_set_transport_cipher_name_no_save(friend, transport_cipher_name);
 	otb_friend_set_address_no_save(friend, address);
+	otb_friend_set_port_no_save(friend, port);
 	g_free(address);
 	g_free(transport_cipher_name);
 	g_free(public_key);
@@ -446,24 +469,36 @@ gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_k
 {
 	otb_friend_lock_write(friend);
 	otb_friend_set_public_key_no_save(friend, public_key);
+	gboolean ret_val=otb_friend_save_no_lock(friend);
 	otb_friend_unlock_write(friend);
-	return otb_friend_save(friend);
+	return ret_val;
 }
 
 gboolean otb_friend_set_transport_cipher_name(const OtbFriend *friend, const char *transport_cipher_name)
 {
 	otb_friend_lock_write(friend);
 	otb_friend_set_transport_cipher_name_no_save(friend, transport_cipher_name);
+	gboolean ret_val=otb_friend_save_no_lock(friend);
 	otb_friend_unlock_write(friend);
-	return otb_friend_save(friend);
+	return ret_val;
 }
 
 gboolean otb_friend_set_address(const OtbFriend *friend, const char *address)
 {
 	otb_friend_lock_write(friend);
 	otb_friend_set_address_no_save(friend, address);
+	gboolean ret_val=otb_friend_save_no_lock(friend);
 	otb_friend_unlock_write(friend);
-	return otb_friend_save(friend);
+	return ret_val;
+}
+
+gboolean otb_friend_set_port(const OtbFriend *friend, unsigned short port)
+{
+	otb_friend_lock_write(friend);
+	otb_friend_set_port_no_save(friend, port);
+	gboolean ret_val=otb_friend_save_no_lock(friend);
+	otb_friend_unlock_write(friend);
+	return ret_val;
 }
 
 gboolean otb_friend_remove_expired_pads(const OtbFriend *friend)

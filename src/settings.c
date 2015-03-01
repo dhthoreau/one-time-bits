@@ -157,7 +157,7 @@ int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char 
 	if(G_UNLIKELY(error!=NULL))
 	{
 		value=error_value;
-		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
+		g_message(_("Failed to read %s / %s from config file. Error == %s"), group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -176,9 +176,17 @@ gboolean otb_settings_set_config_uint(const char *group_name, const char *key, u
 	return otb_settings_set_config_int(group_name, key, (int)value);
 }
 
+unsigned int otb_settings_get_uint(GKeyFile *key_file, const char *group_name, const char *key, unsigned int error_value)
+{
+	return (unsigned int)otb_settings_get_int(key_file, group_name, key, (int)error_value);
+}
+
 unsigned int otb_settings_get_config_uint(const char *group_name, const char *key, unsigned int error_value)
 {
-	return (unsigned int)otb_settings_get_config_int(group_name, key, (int)error_value);
+	otb_settings_lock_config_read();
+	unsigned int ret_val=otb_settings_get_uint(config_key_file, group_name, key, error_value);
+	otb_settings_unlock_config_read();
+	return ret_val;
 }
 
 gboolean otb_settings_set_config_int64(const char *group_name, const char *key, long long value)
@@ -196,7 +204,7 @@ long long otb_settings_get_int64(GKeyFile *key_file, const char *group_name, con
 	if(G_UNLIKELY(error!=NULL))
 	{
 		value=error_value;
-		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
+		g_message(_("Failed to read %s / %s from config file. Error == %s"), group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -217,7 +225,7 @@ unsigned long long otb_settings_get_uint64(GKeyFile *key_file, const char *group
 	if(G_UNLIKELY(error!=NULL))
 	{
 		value=error_value;
-		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
+		g_message(_("Failed to read %s / %s from config file. Error == %s"), group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;
@@ -238,7 +246,7 @@ char *otb_settings_get_string(GKeyFile *key_file, const char *group_name, const 
 	if(G_UNLIKELY(error!=NULL))
 	{
 		g_free(value);
-		g_message("Failed to read %s / %s from config file. Error == %s", group_name, key, error->message);
+		g_message(_("Failed to read %s / %s from config file. Error == %s"), group_name, key, error->message);
 		g_error_free(error);
 	}
 	return value;

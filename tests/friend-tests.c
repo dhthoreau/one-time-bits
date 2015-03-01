@@ -62,13 +62,14 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 	g_object_unref(create_outgoing_pad_db);
 }
 
-char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *transport_cipher_name, const char *address, const char *dummy_value)
+char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *transport_cipher_name, const char *address, unsigned short port, const char *dummy_value)
 {
 	GKeyFile *import_file=g_key_file_new();
 	otb_settings_set_bytes(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, otb_unique_id_get_bytes(unique_id), OTB_UNIQUE_ID_BYTES_SIZE);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME, transport_cipher_name);
 	g_key_file_set_string(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS, address);
+	g_key_file_set_integer(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, (int)port);
 	g_key_file_set_string(import_file, OTB_DUMMY_FRIEND_GROUP, OTB_DUMMY_FRIEND_KEY, dummy_value);
 	char *import_string=g_key_file_to_data(import_file, NULL, NULL);
 	g_key_file_unref(import_file);
@@ -83,6 +84,8 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	const char *EXPECTED_TRANSPORT_CIPHER_NAME2="AES-128-CBC";
 	const char *EXPECTED_ADDRESS1="SoyMilkRoad.onion";
 	const char *EXPECTED_ADDRESS2="SoyMilkRoad2.onion";
+	const unsigned short EXPECTED_PORT1=1357;
+	const unsigned short EXPECTED_PORT2=2468;
 	const char *EXPECTED_DUMMY_VALUE1="sldkfjklsdjfkslkfjsd.onion";
 	const char *EXPECTED_DUMMY_VALUE2="uyhrhyfrgyrfgghfg.onion";
 	const char *UNEXPECTED_PATH="garbage";
@@ -90,7 +93,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	otb_test_setup_local_crypto();
 	char *friend_dir_path=otb_generate_unique_test_subdir_path();
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
-	char *import_string=otb_create_import_string(expected_unique_id, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ADDRESS1, EXPECTED_DUMMY_VALUE1);
+	char *import_string=otb_create_import_string(expected_unique_id, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ADDRESS1, EXPECTED_PORT1, EXPECTED_DUMMY_VALUE1);
 	*create_friend=otb_friend_import_to_directory(import_string, friend_dir_path);
 	g_assert(*create_friend!=NULL);
 	g_assert(g_file_test(friend_dir_path, G_FILE_TEST_EXISTS));
@@ -99,14 +102,17 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	char *actual_public_key1=NULL;
 	char *actual_transport_cipher_name1=NULL;
 	char *actual_address1=NULL;
-	g_object_get(*create_friend, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id1, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name1, OTB_FRIEND_PROP_ADDRESS, &actual_address1, NULL);
+	unsigned int actual_port1=0;
+	g_object_get(*create_friend, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id1, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name1, OTB_FRIEND_PROP_ADDRESS, &actual_address1, OTB_FRIEND_PROP_PORT, &actual_port1, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id1));
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY1, ==, actual_public_key1);
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME1, ==, actual_transport_cipher_name1);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
+	g_assert_cmpint(EXPECTED_PORT1, ==, (unsigned short)actual_port1);
 	g_assert(otb_friend_set_public_key(*create_friend, EXPECTED_PUBLIC_KEY2));
 	g_assert(otb_friend_set_transport_cipher_name(*create_friend, EXPECTED_TRANSPORT_CIPHER_NAME2));
 	g_assert(otb_friend_set_address(*create_friend, EXPECTED_ADDRESS2));
+	g_assert(otb_friend_set_port(*create_friend, EXPECTED_PORT2));
 	if(OTB_IS_DUMMY_FRIEND(*create_friend))
 	{
 		OtbDummyFriend *create_dummy_friend=OTB_DUMMY_FRIEND(*create_friend);
@@ -122,12 +128,14 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	char *actual_public_key2=NULL;
 	char *actual_transport_cipher_name2=NULL;
 	char *actual_address2=NULL;
-	g_object_get(*load_friend, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id2, OTB_FRIEND_PROP_BASE_PATH, &actual_base_path, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name2, OTB_FRIEND_PROP_ADDRESS, &actual_address2, NULL);
+	unsigned int actual_port2=0;
+	g_object_get(*load_friend, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id2, OTB_FRIEND_PROP_BASE_PATH, &actual_base_path, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name2, OTB_FRIEND_PROP_ADDRESS, &actual_address2, OTB_FRIEND_PROP_PORT, &actual_port2, NULL);
 	g_assert_cmpstr(friend_dir_path, ==, actual_base_path);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id2));
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY2, ==, actual_public_key2);
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME2, ==, actual_transport_cipher_name2);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
+	g_assert_cmpint(EXPECTED_PORT2, ==, (unsigned short)actual_port2);
 	if(OTB_IS_DUMMY_FRIEND(*load_friend))
 		g_assert_cmpstr(EXPECTED_DUMMY_VALUE2, ==, OTB_DUMMY_FRIEND(*load_friend)->dummy_value);
 	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
@@ -203,11 +211,12 @@ static void test_remove_expired_pads()
 	const char *PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *TRANSPORT_CIPHER_NAME="AES-256-CBC";
 	const char *ADDRESS="SoyMilkRoad.onion";
+	const unsigned short PORT=31415;
 	const char *DUMMY_VALUE="sldkfjklsdjfkslkfjsd.onion";
 	
 	otb_test_setup_local_crypto();
 	OtbUniqueId *friend_unique_id=otb_unique_id_new();
-	char *import_string=otb_create_import_string(friend_unique_id, PUBLIC_KEY, TRANSPORT_CIPHER_NAME, ADDRESS, DUMMY_VALUE);
+	char *import_string=otb_create_import_string(friend_unique_id, PUBLIC_KEY, TRANSPORT_CIPHER_NAME, ADDRESS, PORT, DUMMY_VALUE);
 	OtbFriend *friend=otb_friend_import_to_directory(import_string, otb_get_test_dir_path());
 	OtbPadDb *incoming_pad_db=NULL;
 	OtbPadDb *outgoing_pad_db=NULL;

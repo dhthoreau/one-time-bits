@@ -22,6 +22,7 @@
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV	"asym-cipher-private-key-iv"
 #define CONFIG_ASYM_CIPHER_PRIVATE_KEY		"asym-cipher-private-key"
 #define CONFIG_ADDRESS						"address"
+#define CONFIG_PORT							"port"
 
 static GType otb_user_runtime_type;
 
@@ -30,7 +31,8 @@ enum
 	PROP_0,
 	PROP_UNIQUE_ID,
 	PROP_ASYM_CIPHER,
-	PROP_ADDRESS
+	PROP_ADDRESS,
+	PROP_PORT
 };
 
 static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
@@ -46,6 +48,7 @@ struct _OtbUserPrivate
 	OtbUniqueId *unique_id;
 	OtbAsymCipher *asym_cipher;
 	char *address;
+	unsigned short port;
 };
 
 static void otb_user_class_init(OtbUserClass *klass)
@@ -58,6 +61,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), OTB_TYPE_UNIQUE_ID, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_object(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), OTB_TYPE_ASYM_CIPHER, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_USER_PROP_ADDRESS, _("Address"), _("The address of the user"), NULL, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, DEFAULT_SYNCH_PORT, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
@@ -79,6 +83,7 @@ static void otb_user_init(OtbUser *user)
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
 	user->priv->address=NULL;
+	user->priv->port=DEFAULT_SYNCH_PORT;
 }
 
 static void otb_user_dispose(GObject *object)
@@ -132,6 +137,13 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 			otb_user_unlock_read(user);
 			break;
 		}
+		case PROP_PORT:
+		{
+			otb_user_lock_read(user);
+			g_value_set_uint(value, (unsigned int)user->priv->port);
+			otb_user_unlock_read(user);
+			break;
+		}
 		default:
 		{
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -179,10 +191,8 @@ static void otb_user_initialize_asym_cipher(OtbUser *user)
 	g_bytes_unref(encrypted_private_key);
 }
 
-static void otb_user_initialize_address(OtbUser *user)
-{
-	user->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS);
-}
+#define otb_user_initialize_address(user)	(user)->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS)
+#define otb_user_initialize_port(user)		(user)->priv->port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PORT, DEFAULT_SYNCH_PORT)
 
 void otb_user_set_runtime_type(GType user_runtime_type)
 {
@@ -196,6 +206,7 @@ OtbUser *otb_user_load()
 	otb_user_initialize_unique_id(user);
 	otb_user_initialize_asym_cipher(user);
 	otb_user_initialize_address(user);
+	otb_user_initialize_port(user);
 	return user;
 }
 
@@ -205,6 +216,15 @@ gboolean otb_user_set_address(const OtbUser *user, const char *address)
 	g_free(user->priv->address);
 	user->priv->address=g_strdup(address);
 	gboolean ret_val=otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ADDRESS, user->priv->address);
+	otb_user_unlock_write(user);
+	return ret_val;
+}
+
+gboolean otb_user_set_port(const OtbUser *user, unsigned short port)
+{
+	otb_user_lock_write(user);
+	user->priv->port=port;
+	gboolean ret_val=otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_PORT, user->priv->port);
 	otb_user_unlock_write(user);
 	return ret_val;
 }
@@ -228,6 +248,7 @@ static void otb_user_export_transport_cipher_name(const OtbUser *user, GKeyFile 
 }
 
 #define otb_user_export_address(user, export_key_file)	(g_key_file_set_string((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS, (user)->priv->address))
+#define otb_user_export_port(user, export_key_file)	(g_key_file_set_integer((export_key_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, (int)(user)->priv->port))
 
 static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file)
 {
@@ -235,6 +256,7 @@ static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_f
 	otb_user_export_public_key(user, export_key_file);
 	otb_user_export_transport_cipher_name(user, export_key_file);
 	otb_user_export_address(user, export_key_file);
+	otb_user_export_port(user, export_key_file);
 }
 
 char *otb_user_export(const OtbUser *user)

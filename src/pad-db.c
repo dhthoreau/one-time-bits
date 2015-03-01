@@ -995,7 +995,7 @@ OtbPadDbCryptResult otb_finish_decrypt(OtbCipherContext *cipher_context)
 {
 	if(G_UNLIKELY(cipher_context->result==OTB_PAD_DB_CRYPT_RESULT_SUCCESS && !otb_cipher_context_remove_dead_pads(cipher_context)))
 	{
-		g_message(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is reset the pad database."));
+		g_warning(_("Failed to delete all pads used to decrypt a file, though file itself was fully decrypted. Recomendation is to reset the pad database."));
 		cipher_context->result=OTB_PAD_DB_CRYPT_RESULT_SUCCESS_PAD_STATUS_UPDATE_FAILED;
 	}
 	otb_cipher_context_transition_status_of_pads(cipher_context, OTB_PAD_REC_STATUS_DEAD, OTB_PAD_REC_STATUS_RECEIVED);

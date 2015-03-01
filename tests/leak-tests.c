@@ -25,7 +25,7 @@ static void test_memory_leaks()
 	/// This test will never exit nor fail. It is intended to be run while you monitor memory consumption for possible leaks,
 	/// then terminate the process (CNTRL-C) when you are finished monitoring.
 	while(TRUE)
-		g_slist_foreach(otb_test_funcs, otb_call_test, NULL);
+		g_slist_foreach(otb_test_funcs, (GFunc)otb_call_test, NULL);
 }
 
 void otb_add_leak_tests()

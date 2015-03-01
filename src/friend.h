@@ -14,12 +14,14 @@
 #include "pad-db.h"
 #include "unique-id.h"
 
+#define DEFAULT_SYNCH_PORT	9876
+
 #define OTB_FRIEND_IMPORT_GROUP					"otb-user"
 #define OTB_FRIEND_IMPORT_UNIQUE_ID				"unique-id"
 #define OTB_FRIEND_IMPORT_PUBLIC_KEY			"public-key"
 #define OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME	"transport-cipher-name"
 #define OTB_FRIEND_IMPORT_ADDRESS				"address"
-// FARE - Abbiamo bisogno di una porta.
+#define OTB_FRIEND_IMPORT_PORT					"port"
 
 #define OTB_FRIEND_PROP_BASE_PATH				"base-path"
 #define OTB_FRIEND_PROP_INCOMING_PAD_DB			"incoming-pad-db"
@@ -28,6 +30,7 @@
 #define OTB_FRIEND_PROP_PUBLIC_KEY				"public-key"
 #define OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME	"transport-cipher-name"
 #define OTB_FRIEND_PROP_ADDRESS					"adddress"
+#define OTB_FRIEND_PROP_PORT					"port"
 
 #define OTB_TYPE_FRIEND				(otb_friend_get_type())
 #define OTB_FRIEND(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_FRIEND, OtbFriend))
@@ -63,6 +66,8 @@ gboolean otb_friend_delete(OtbFriend *friend);
 gboolean otb_friend_set_public_key(const OtbFriend *friend, const char *public_key);
 gboolean otb_friend_set_transport_cipher_name(const OtbFriend *friend, const char *transport_cipher_name);
 gboolean otb_friend_set_address(const OtbFriend *friend, const char *address);
+gboolean otb_friend_set_port(const OtbFriend *friend, unsigned short port);
 gboolean otb_friend_remove_expired_pads(const OtbFriend *friend);
+gboolean otb_friend_synchronize_pads_with_remote(const OtbFriend *friend, unsigned short proxy_port);
 
 #endif
