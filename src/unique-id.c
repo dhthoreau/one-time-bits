@@ -83,7 +83,7 @@ char *otb_unique_id_string_new()
 
 OtbUniqueId *otb_unique_id_ref(OtbUniqueId *unique_id)
 {
-	g_return_val_if_fail(unique_id!= NULL, NULL);
+	g_return_val_if_fail(unique_id!=NULL, NULL);
 	g_atomic_int_inc(&unique_id->ref_count);
 	return unique_id;
 }

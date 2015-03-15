@@ -42,6 +42,7 @@ static void otb_add_tests()
 	otb_add_friend_tests();
 	otb_add_user_tests();
 	otb_add_bitkeeper_tests();
+	otb_add_loopable_thread_tests();
 	otb_add_protocol_tests();
 	otb_add_leak_tests();
 }
