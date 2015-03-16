@@ -18,6 +18,8 @@ static int otb_test_loopable_thread_loop_count;
 
 static void otb_test_loopable_thread(OtbLoopableThread *loopable_thread)
 {
+	if(!otb_test_loopable_thread_call_count)
+		g_assert(loopable_thread->continue_looping);
 	otb_test_loopable_thread_call_count++;
 	g_assert_cmpint(otb_test_loopable_thread_data, ==, *((int*)loopable_thread->data));
 	for(unsigned int otb_test_loopable_thread_loop_count=0; otb_test_loopable_thread_loop_count<1000; otb_test_loopable_thread_loop_count++)
@@ -33,6 +35,7 @@ static void test_loopable_thread()
 	while(otb_test_loopable_thread_call_count<3 && otb_test_loopable_thread_loop_count<2)
 		;
 	otb_loopable_thread_stop(loopable_thread);
+	g_assert(!loopable_thread->continue_looping);
 	otb_loopable_thread_unref(loopable_thread);
 }
 
