@@ -334,16 +334,16 @@ static gboolean otb_friend_synchronize_pads_with_remote(OtbBitkeeper *bitkeeper,
 
 static void otb_bitkeeper_synchronize_pads_of_friend_from_unique_id(OtbUniqueId *friend_unique_id, OtbLoopableThread *loopable_thread)
 {
-	if(loopable_thread->continue_looping)
+	if(otb_loopable_thread_continue_looping(loopable_thread))
 	{
-		OtbBitkeeper *bitkeeper=loopable_thread->data;
+		OtbBitkeeper *bitkeeper=otb_loopable_thread_data(loopable_thread);
 		OtbFriend *friend=otb_bitkeeper_get_friend(bitkeeper, friend_unique_id);
 		if(friend!=NULL)
 		{
 			if(!otb_friend_remove_expired_pads(friend))
 				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_WARNING, _("Failed to delete expired pads."));
 			otb_loopable_thread_yield(loopable_thread, 1);
-			if(loopable_thread->continue_looping && !otb_friend_synchronize_pads_with_remote(bitkeeper, friend, loopable_thread))
+			if(otb_loopable_thread_continue_looping(loopable_thread) && !otb_friend_synchronize_pads_with_remote(bitkeeper, friend, loopable_thread))
 				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_MESSAGE, _("Failed to synchronize pads with friend."));
 			otb_loopable_thread_yield(loopable_thread, 1);
 			g_object_unref(friend);
@@ -354,7 +354,7 @@ static void otb_bitkeeper_synchronize_pads_of_friend_from_unique_id(OtbUniqueId 
 
 static void otb_bitkeeper_synchronize_pads_loopable_thread_func(OtbLoopableThread *loopable_thread)
 {
-	OtbBitkeeper *bitkeeper=loopable_thread->data;
+	OtbBitkeeper *bitkeeper=otb_loopable_thread_data(loopable_thread);
 	otb_bitkeeper_lock_read(bitkeeper);
 	GSList *unique_ids_of_friends=otb_bitkeeper_get_unique_ids_of_friends(bitkeeper);
 	otb_bitkeeper_unlock_read(bitkeeper);

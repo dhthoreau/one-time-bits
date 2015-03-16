@@ -966,7 +966,7 @@ void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc pro
 	gboolean error=FALSE;
 	if(initiate_communication)
 		error=!otb_protocol_process_request_packet(protocol_context, protocol_func, NULL, output_stream);
-	while(G_LIKELY(protocol_context->loopable_thread->continue_looping && protocol_context->state!=STATE_FINISHED && !g_input_stream_is_closed(input_stream) && !g_output_stream_is_closed(output_stream) && !error))
+	while(G_LIKELY(otb_loopable_thread_continue_looping(protocol_context->loopable_thread) && protocol_context->state!=STATE_FINISHED && !g_input_stream_is_closed(input_stream) && !g_output_stream_is_closed(output_stream) && !error))
 	{
 		unsigned char input_buffer[PROTOCOL_BUFFER_SIZE];
 		signed long input_buffer_bytes_received=g_input_stream_read(input_stream, input_buffer, PROTOCOL_BUFFER_SIZE, NULL, NULL);

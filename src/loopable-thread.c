@@ -17,6 +17,8 @@ struct _OtbLoopableThreadPriv
 	int ref_count;
 	OtbLoopableThreadFunc loopable_thread_func;
 	long long looping_interval;
+	void *data;
+	gboolean continue_looping;
 	GMutex mutex;
 	GCond cond;
 	GThread *thread;
@@ -25,7 +27,7 @@ struct _OtbLoopableThreadPriv
 void *otb_loopable_thread_loop(OtbLoopableThread *loopable_thread)
 {
 	g_mutex_lock(&loopable_thread->priv->mutex);
-	while(loopable_thread->continue_looping)
+	while(loopable_thread->priv->continue_looping)
 	{
 		loopable_thread->priv->loopable_thread_func(loopable_thread);
 		otb_loopable_thread_yield(loopable_thread, loopable_thread->priv->looping_interval);
@@ -41,10 +43,10 @@ OtbLoopableThread *otb_loopable_thread_new(const unsigned char *name, OtbLoopabl
 	loopable_thread->priv->ref_count=1;
 	loopable_thread->priv->loopable_thread_func=loopable_thread_func;
 	loopable_thread->priv->looping_interval=looping_interval;
+	loopable_thread->priv->data=data;
+	loopable_thread->priv->continue_looping=TRUE;
 	g_mutex_init(&loopable_thread->priv->mutex);
 	g_cond_init(&loopable_thread->priv->cond);
-	loopable_thread->continue_looping=TRUE;
-	loopable_thread->data=data;
 	loopable_thread->priv->thread=g_thread_new(name, (GThreadFunc)otb_loopable_thread_loop, loopable_thread);
 	return loopable_thread;
 }
@@ -56,17 +58,27 @@ OtbLoopableThread *otb_loopable_thread_ref(OtbLoopableThread *loopable_thread)
 	return loopable_thread;
 }
 
+void *otb_loopable_thread_data(OtbLoopableThread *loopable_thread)
+{
+	return loopable_thread->priv->data;
+}
+
+gboolean otb_loopable_thread_continue_looping(OtbLoopableThread *loopable_thread)
+{
+	return loopable_thread->priv->continue_looping;
+}
+
 void otb_loopable_thread_yield(OtbLoopableThread *loopable_thread, long long interval)
 {
 	long long end_time=g_get_monotonic_time()+loopable_thread->priv->looping_interval;
-	while(g_get_monotonic_time()<end_time && loopable_thread->continue_looping)
+	while(g_get_monotonic_time()<end_time && loopable_thread->priv->continue_looping)
 		g_cond_wait_until(&loopable_thread->priv->cond, &loopable_thread->priv->mutex, end_time);
 }
 
 void otb_loopable_thread_stop(OtbLoopableThread *loopable_thread)
 {
 	g_mutex_lock(&loopable_thread->priv->mutex);
-	loopable_thread->continue_looping=FALSE;
+	loopable_thread->priv->continue_looping=FALSE;
 	g_cond_signal(&loopable_thread->priv->cond);
 	g_mutex_unlock(&loopable_thread->priv->mutex);
 	g_thread_join(loopable_thread->priv->thread);
