@@ -14,8 +14,8 @@ typedef struct _OtbLoopableThreadPriv OtbLoopableThreadPriv;
 
 struct _OtbLoopableThread
 {
-	gboolean continue_looping;
-	void *data;
+	gboolean continue_looping;	// FARE - priv.
+	void *data;	// FARE - priv.
 	OtbLoopableThreadPriv *priv;
 };
 

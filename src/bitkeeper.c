@@ -343,7 +343,7 @@ static void otb_bitkeeper_synchronize_pads_of_friend_from_unique_id(OtbUniqueId 
 			if(!otb_friend_remove_expired_pads(friend))
 				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_WARNING, _("Failed to delete expired pads."));
 			otb_loopable_thread_yield(loopable_thread, 1);
-			if(!otb_friend_synchronize_pads_with_remote(bitkeeper, friend, loopable_thread))
+			if(loopable_thread->continue_looping && !otb_friend_synchronize_pads_with_remote(bitkeeper, friend, loopable_thread))
 				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_MESSAGE, _("Failed to synchronize pads with friend."));
 			otb_loopable_thread_yield(loopable_thread, 1);
 			g_object_unref(friend);
