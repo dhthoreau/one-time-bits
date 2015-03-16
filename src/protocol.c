@@ -84,6 +84,7 @@ STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER -> COMMAND_FINISH -> <null> -> ST
 #include <glib.h>
 #include <string.h>
 
+#include "loopable-thread.h"
 #include "memory.h"
 #include "pad-db.h"
 #include "pad-rec.h"
@@ -106,6 +107,7 @@ struct _OtbProtocolContext
 	unsigned char *authentication_token;
 	OtbBitkeeper *bitkeeper;
 	OtbUser *local_user;
+	OtbLoopableThread *loopable_thread;
 	OtbAsymCipher *local_asym_cipher;
 	OtbFriend *peer_friend;
 	OtbAsymCipher *peer_asym_cipher;
@@ -152,8 +154,7 @@ enum
 
 static void otb_protocol_set_peer_friend_on_context(OtbProtocolContext *protocol_context, OtbFriend *peer_friend)
 {
-	g_object_ref(peer_friend);
-	protocol_context->peer_friend=peer_friend;
+	protocol_context->peer_friend=g_object_ref(peer_friend);
 	char *peer_public_key=NULL;
 	char *peer_transport_cipher_name=NULL;
 	g_object_get(peer_friend, OTB_FRIEND_PROP_PUBLIC_KEY, &peer_public_key, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &peer_transport_cipher_name, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &protocol_context->pad_db, NULL);
@@ -162,12 +163,11 @@ static void otb_protocol_set_peer_friend_on_context(OtbProtocolContext *protocol
 	g_free(peer_public_key);
 }
 
-OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, OtbFriend *peer_friend)
+OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, OtbFriend *peer_friend, OtbLoopableThread *loopable_thread)
 {
 	OtbProtocolContext *protocol_context=g_new(OtbProtocolContext, 1);
 	protocol_context->authentication_token=otb_create_random_bytes(AUTHENTICATION_TOKEN_SIZE);
-	g_object_ref(bitkeeper);
-	protocol_context->bitkeeper=bitkeeper;
+	protocol_context->bitkeeper=g_object_ref(bitkeeper);
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &protocol_context->local_user, NULL);
 	g_object_get(protocol_context->local_user, OTB_USER_PROP_ASYM_CIPHER, &protocol_context->local_asym_cipher, NULL);
 	if(peer_friend!=NULL)
@@ -178,6 +178,7 @@ OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, 
 		protocol_context->peer_asym_cipher=NULL;
 		protocol_context->pad_db=NULL;
 	}
+	protocol_context->loopable_thread=otb_loopable_thread_ref(loopable_thread);
 	protocol_context->pad_unique_id=NULL;
 	protocol_context->pad_io=NULL;
 	protocol_context->state=STATE_INITIAL;
@@ -977,6 +978,7 @@ void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc pro
 			if(PROTOCOL_META_PACKET_IS_RECEIVED(request_packet_byte_array->data, request_packet_byte_array->len))
 				error=!otb_protocol_process_request_packet(protocol_context, protocol_func, request_packet_byte_array, output_stream);
 		}
+		otb_loopable_thread_yield(protocol_context->loopable_thread, 1);
 	}
 	g_byte_array_unref(request_packet_byte_array);
 }
@@ -986,6 +988,7 @@ void otb_protocol_context_free(OtbProtocolContext *protocol_context)
 	g_free(protocol_context->authentication_token);
 	g_object_unref(protocol_context->bitkeeper);
 	g_object_unref(protocol_context->local_user);
+	otb_loopable_thread_unref(protocol_context->loopable_thread);
 	g_object_unref(protocol_context->local_asym_cipher);
 	if(protocol_context->peer_friend!=NULL)
 		g_object_unref(protocol_context->peer_friend);

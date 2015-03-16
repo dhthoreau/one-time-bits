@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-03-01 10:36-0500\n"
-"PO-Revision-Date: 2015-03-01 10:38-0500\n"
+"POT-Creation-Date: 2015-03-01 13:25-0500\n"
+"PO-Revision-Date: 2015-03-01 13:26-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -191,31 +191,46 @@ msgid ""
 msgstr ""
 "La data e l'ora in cui il blocco scade (microsecondi da 1-gen-1979 UTC)"
 
-#: src/bitkeeper.c:57
+#: src/bitkeeper.c:58
 msgid "User"
 msgstr "Utente"
 
-#: src/bitkeeper.c:57
+#: src/bitkeeper.c:58
 msgid "The user who is using the application"
 msgstr "L'utente chi sta usando l'applicazione"
 
-#: src/bitkeeper.c:58
+#: src/bitkeeper.c:59
 msgid "Proxy port"
 msgstr "Porta della delega"
 
-#: src/bitkeeper.c:58
+#: src/bitkeeper.c:59
 msgid "The port for the local proxy, preferably TOR"
 msgstr "Porta della delega locale, preferibilmente TOR"
 
-#: src/bitkeeper.c:59
+#: src/bitkeeper.c:60
 msgid "Pad synchronization interval"
 msgstr "Intervallo della sincronizzazione dei blocchi"
 
-#: src/bitkeeper.c:59
+#: src/bitkeeper.c:60
 msgid "How often pads should be synchronized, measured in microseconds"
 msgstr ""
 "Quanto spesso i blocchi dovrebbero essere sincronizzati, misurato con "
 "microsecondi"
+
+#: src/bitkeeper.c:306
+#, c-format
+msgid "sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."
+msgstr ""
+"sprintf() non è riuscito a otb_socket_client_set_proxy_resolver() per porta "
+"%u."
+
+#: src/bitkeeper.c:344
+msgid "Failed to delete expired pads."
+msgstr "Non è riuscito a cancellare i blocchi scaduti."
+
+#: src/bitkeeper.c:347
+msgid "Failed to synchronize pads with friend."
+msgstr "Non è riuscito a sincronizzare i blocchi con l'amico."
 
 #: src/io.c:22
 #, c-format

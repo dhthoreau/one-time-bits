@@ -68,6 +68,5 @@ gboolean otb_friend_set_transport_cipher_name(const OtbFriend *friend, const cha
 gboolean otb_friend_set_address(const OtbFriend *friend, const char *address);
 gboolean otb_friend_set_port(const OtbFriend *friend, unsigned short port);
 gboolean otb_friend_remove_expired_pads(const OtbFriend *friend);
-gboolean otb_friend_synchronize_pads_with_remote(const OtbFriend *friend, unsigned short proxy_port);
 
 #endif

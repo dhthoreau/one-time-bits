@@ -14,6 +14,7 @@
 #include "bitkeeper.h"
 #include "io.h"
 #include "loopable-thread.h"
+#include "protocol.h"
 #include "settings.h"
 
 #define CONFIG_GROUP						"bitkeeper"
@@ -286,6 +287,51 @@ GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper)
 	return selected_friend_unique_ids;
 }
 
+static void otb_bitkeeper_friend_message(OtbFriend *friend, GLogLevelFlags log_level, const char *message)
+{
+	OtbUniqueId *friend_unique_id=NULL;
+	g_object_get(friend, OTB_FRIEND_IMPORT_UNIQUE_ID, &friend_unique_id, NULL);
+	char *friend_unique_id_string=otb_unique_id_to_string(friend_unique_id);
+	g_log(G_LOG_DOMAIN, log_level, message, friend_unique_id_string);
+	g_free(friend_unique_id_string);
+	otb_unique_id_unref(friend_unique_id);
+}
+
+static void otb_socket_client_set_proxy_resolver(GSocketClient *socket_client, unsigned short proxy_port)
+{
+	if(proxy_port>0)
+	{
+		char proxy_uri[25];
+		if(G_UNLIKELY(sprintf(proxy_uri, "socks5://127.0.0.1:%u", (unsigned int)proxy_port)<0))
+			g_error(_("sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."), (unsigned int)proxy_port);
+		GProxyResolver *proxy_resolver=g_simple_proxy_resolver_new(proxy_uri, NULL);
+		g_socket_client_set_proxy_resolver(socket_client, proxy_resolver);
+		g_object_unref(proxy_resolver);
+	}
+}
+
+static gboolean otb_friend_synchronize_pads_with_remote(OtbBitkeeper *bitkeeper, OtbFriend *friend, OtbLoopableThread *loopable_thread)
+{
+	gboolean ret_val=TRUE;
+	GSocketClient *socket_client=g_socket_client_new();
+	otb_socket_client_set_proxy_resolver(socket_client, bitkeeper->priv->proxy_port);
+	char *remote_address=NULL;
+	unsigned int remote_port=0;
+	g_object_get(friend, OTB_FRIEND_PROP_ADDRESS, &remote_address, OTB_FRIEND_PROP_PORT, &remote_port, NULL);
+	GSocketConnection *socket_connect=g_socket_client_connect_to_host(socket_client, remote_address, (unsigned short)remote_port, NULL, NULL);
+	if(socket_connect!=NULL)
+	{
+		OtbProtocolContext *protocol_context=otb_protocol_context_create_client(bitkeeper, friend, loopable_thread);
+		otb_protocol_execute(protocol_context, otb_protocol_client, g_io_stream_get_input_stream(G_IO_STREAM(socket_connect)), g_io_stream_get_output_stream(G_IO_STREAM(socket_connect)), TRUE);
+		otb_protocol_context_free(protocol_context);
+		g_object_unref(socket_connect);
+	}
+	else
+		ret_val=FALSE;
+	g_free(remote_address);
+	g_object_unref(socket_client);
+}
+
 static void otb_bitkeeper_synchronize_pads_of_friend_from_unique_id(OtbUniqueId *friend_unique_id, OtbLoopableThread *loopable_thread)
 {
 	if(loopable_thread->continue_looping)
@@ -294,12 +340,12 @@ static void otb_bitkeeper_synchronize_pads_of_friend_from_unique_id(OtbUniqueId 
 		OtbFriend *friend=otb_bitkeeper_get_friend(bitkeeper, friend_unique_id);
 		if(friend!=NULL)
 		{
-/*			if(!otb_friend_remove_expired_pads(friend))
-				g_
+			if(!otb_friend_remove_expired_pads(friend))
+				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_WARNING, _("Failed to delete expired pads."));
 			otb_loopable_thread_yield(loopable_thread, 1);
-			if(!otb_friend_synchronize_pads_with_remote(friend, proxy_port))
-				g_
-			otb_loopable_thread_yield(loopable_thread, 1);*/
+			if(!otb_friend_synchronize_pads_with_remote(bitkeeper, friend, loopable_thread))
+				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_MESSAGE, _("Failed to synchronize pads with friend."));
+			otb_loopable_thread_yield(loopable_thread, 1);
 			g_object_unref(friend);
 		}
 		otb_loopable_thread_yield(loopable_thread, 1);

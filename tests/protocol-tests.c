@@ -17,6 +17,7 @@
 #include "pad-db-tests.h"
 #include "test-utils.h"
 #include "../src/local-crypto.h"
+#include "../src/loopable-thread.h"
 #include "../src/protocol.h"
 #include "../src/random.h"
 
@@ -47,6 +48,7 @@ typedef struct
 	unsigned char *authentication_token;
 	OtbBitkeeper *bitkeeper;
 	OtbUser *local_user;
+	OtbLoopableThread *loopable_thread;
 	OtbAsymCipher *local_asym_cipher;
 	OtbFriend *peer_friend;
 	OtbAsymCipher *peer_asym_cipher;
@@ -830,6 +832,10 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	g_object_unref(outgoing_pad_db);
 }
 
+static void otb_dummy_loopable_thread(OtbLoopableThread *loopable_thread)
+{
+}
+
 typedef void (*ProtocolTestFunc)(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher);
 
 static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolContext **context_out, OtbAsymCipher **peer_asym_cipher_out)
@@ -842,10 +848,11 @@ static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolCont
 	OtbFriend *peer_friend=otb_bitkeeper_get_friend(local_bitkeeper, peer_unique_id);
 	g_assert(peer_friend!=NULL);
 	otb_setup_friend_pads_for_test(peer_friend, params);
+	OtbLoopableThread *loopable_thread=otb_loopable_thread_new("DummyTestLoop", otb_dummy_loopable_thread, NULL, 1);
 	if(CLIENT_SERVER(params)==CLIENT)
-		*context_out=otb_protocol_context_create_client(local_bitkeeper, peer_friend);
+		*context_out=otb_protocol_context_create_client(local_bitkeeper, peer_friend, loopable_thread);
 	else
-		*context_out=otb_protocol_context_create_server(local_bitkeeper);
+		*context_out=otb_protocol_context_create_server(local_bitkeeper, loopable_thread);
 	g_assert(*context_out!=NULL);
 	g_object_unref(peer_friend);
 	g_object_unref(local_bitkeeper);
@@ -877,6 +884,7 @@ static gboolean otb_run_protocol_error_injected_tests(const ProtocolParams param
 		transmitted_pad_byte_array=NULL;
 	}
 	otb_local_crypto_lock_sym_cipher();
+	otb_loopable_thread_stop(TEST_PROTOCOL_CONTEXT(protocol_context)->loopable_thread);
 	otb_protocol_context_free(protocol_context);
 	g_object_unref(peer_asym_cipher);
 	return current_test_func!=NULL;
