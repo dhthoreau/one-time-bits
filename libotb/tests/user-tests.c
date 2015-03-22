@@ -102,11 +102,14 @@ static void otb_write_address(FILE *file, const char *address)
 
 static void otb_write_port(FILE *file, unsigned short port)
 {
-	char port_string[6];
-	g_assert_cmpint(sprintf(port_string, "%hu", port), >, 0);
-	g_assert(otb_write("port=", 1, 5, file)==5);
-	g_assert(otb_write(port_string, 1, strlen(port_string), file)==strlen(port_string));
-	g_assert(otb_write("\n", 1, 1, file)==1);
+	if(port>0)
+	{
+		char port_string[6];
+		g_assert_cmpint(sprintf(port_string, "%u", (unsigned int)port), >, 0);
+		g_assert(otb_write("port=", 1, 5, file)==5);
+		g_assert(otb_write(port_string, 1, strlen(port_string), file)==strlen(port_string));
+		g_assert(otb_write("\n", 1, 1, file)==1);
+	}
 }
 
 void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *address, unsigned short port)
@@ -162,7 +165,7 @@ static void test_otb_user_create_from_existing_config_file()
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
-	g_assert_cmpint(EXPECTED_PORT1, ==, (unsigned short)actual_port1);
+	g_assert_cmpint((unsigned int)EXPECTED_PORT1, ==, actual_port1);
 	g_assert(otb_user_set_address(user, EXPECTED_ADDRESS2));
 	g_assert(otb_user_set_port(user, EXPECTED_PORT2));
 	char *actual_address2=NULL;
@@ -170,7 +173,7 @@ static void test_otb_user_create_from_existing_config_file()
 	g_object_get(user, OTB_USER_PROP_ADDRESS, &actual_address2, NULL);
 	g_object_get(user, OTB_USER_PROP_PORT, &actual_port2, NULL);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
-	g_assert_cmpint(EXPECTED_PORT2, ==, (unsigned short)actual_port2);
+	g_assert_cmpint((unsigned int)EXPECTED_PORT2, ==, actual_port2);
 	otb_local_crypto_lock_sym_cipher();
 	otb_unique_id_unref(actual_unique_id);
 	otb_unique_id_unref(expected_unique_id);

@@ -20,6 +20,7 @@
 #include "friend-tests.h"
 #include "leak-tests.h"
 #include "local-crypto-tests.h"
+#include "loopable-thread-tests.h"
 #include "pad-db-tests.h"
 #include "pad-rec-tests.h"
 #include "settings-tests.h"

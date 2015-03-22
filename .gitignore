@@ -19,8 +19,8 @@ Makefile
 Makefile.in
 POTFILES
 one-time-bits.pot
-otb-tests
-otb-tests.exe
+libotb-tests
+libotb-tests.exe
 stamp-*
 
 insecure-using-dummy-replacements-of-the-original-openssl-functions.c

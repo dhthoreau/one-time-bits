@@ -18,21 +18,21 @@
 #include "../src/local-crypto.h"
 #include "../src/settings.h"
 
-static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
+static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, unsigned short port, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
 {
 	otb_recreate_test_dir();
 	otb_initialize_settings_for_tests();
 	*unique_id_out=otb_unique_id_new();
 	*asym_cipher_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(*asym_cipher_out, new_key_size));
-	otb_setup_config_file_for_user_tests(*unique_id_out, sym_cipher_name, *asym_cipher_out, address);
+	otb_setup_config_file_for_user_tests(*unique_id_out, sym_cipher_name, *asym_cipher_out, address, port);
 }
 
 static void otb_setup_configs_for_bitkeeper_tests_without_output(size_t new_key_size, const char *sym_cipher_name, const char *address)
 {
 	OtbUniqueId *unique_id=NULL;
 	OtbAsymCipher *asym_cipher=NULL;
-	otb_setup_configs_for_bitkeeper_tests(new_key_size, sym_cipher_name, address, &unique_id, &asym_cipher);
+	otb_setup_configs_for_bitkeeper_tests(new_key_size, sym_cipher_name, address, 0, &unique_id, &asym_cipher);
 	g_object_unref(asym_cipher);
 	otb_unique_id_unref(unique_id);
 }
@@ -42,10 +42,11 @@ static void test_otb_bitkeeper_user()
 	const size_t NEW_KEY_SIZE=512;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kfjjkjfdhgjkhfkjd.onion";
+	const unsigned short EXPECTED_PORT=13579;
 	
 	OtbUniqueId *expected_unique_id=NULL;
 	OtbAsymCipher *expected_asym_cipher=NULL;
-	otb_setup_configs_for_bitkeeper_tests(NEW_KEY_SIZE, EXPECTED_SYM_CIPHER_NAME, EXPECTED_ADDRESS, &expected_unique_id, &expected_asym_cipher);
+	otb_setup_configs_for_bitkeeper_tests(NEW_KEY_SIZE, EXPECTED_SYM_CIPHER_NAME, EXPECTED_ADDRESS, EXPECTED_PORT, &expected_unique_id, &expected_asym_cipher);
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
 	g_assert(bitkeeper!=NULL);
 	OtbUser *user=NULL;
@@ -54,7 +55,8 @@ static void test_otb_bitkeeper_user()
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
 	char *actual_address=NULL;
-	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, NULL);
+	unsigned int actual_port=0;
+	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, &actual_unique_id, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, OTB_USER_PROP_PORT, &actual_port, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	char *expected_public_key=NULL;
 	g_object_get(expected_asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &expected_public_key, NULL);
@@ -65,6 +67,7 @@ static void test_otb_bitkeeper_user()
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
+	g_assert_cmpint((unsigned int)EXPECTED_PORT, ==, actual_port);
 	otb_local_crypto_lock_sym_cipher();
 	g_free(actual_public_key);
 	g_free(actual_sym_cipher_name);
@@ -143,9 +146,11 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	const char *EXPECTED_TRANSPORT_CIPHER_NAME2="AES-512-CBC";
 	const char *EXPECTED_ADDRESS1="SoyMilkRoad.onion";
 	const char *EXPECTED_ADDRESS2="SoyMilkRoad2.onion";
+	const unsigned short EXPECTED_PORT1=12345;
+	const unsigned short EXPECTED_PORT2=54321;
 	
-	char *friend1_import_string=otb_create_import_string(expected_unique_id1, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ADDRESS1, "");
-	char *friend2_import_string=otb_create_import_string(expected_unique_id2, EXPECTED_PUBLIC_KEY2, EXPECTED_TRANSPORT_CIPHER_NAME2, EXPECTED_ADDRESS2, "");
+	char *friend1_import_string=otb_create_import_string(expected_unique_id1, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ADDRESS1, EXPECTED_PORT1, "");
+	char *friend2_import_string=otb_create_import_string(expected_unique_id2, EXPECTED_PUBLIC_KEY2, EXPECTED_TRANSPORT_CIPHER_NAME2, EXPECTED_ADDRESS2, EXPECTED_PORT2, "");
 	g_assert(otb_bitkeeper_import_friend(bitkeeper, friend1_import_string));
 	g_assert(otb_bitkeeper_import_friend(bitkeeper, friend2_import_string));
 	OtbFriend *friend1=otb_bitkeeper_get_friend(bitkeeper, expected_unique_id1);
@@ -160,8 +165,10 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	char *actual_transport_cipher_name2=NULL;
 	char *actual_address1=NULL;
 	char *actual_address2=NULL;
-	g_object_get(friend1, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id1, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name1, OTB_FRIEND_PROP_ADDRESS, &actual_address1, NULL);
-	g_object_get(friend2, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id2, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name2, OTB_FRIEND_PROP_ADDRESS, &actual_address2, NULL);
+	unsigned int actual_port1=0;
+	unsigned int actual_port2=0;
+	g_object_get(friend1, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id1, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key1, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name1, OTB_FRIEND_PROP_ADDRESS, &actual_address1, OTB_FRIEND_PROP_PORT, &actual_port1, NULL);
+	g_object_get(friend2, OTB_FRIEND_PROP_UNIQUE_ID, &actual_unique_id2, OTB_FRIEND_PROP_PUBLIC_KEY, &actual_public_key2, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, &actual_transport_cipher_name2, OTB_FRIEND_PROP_ADDRESS, &actual_address2, OTB_FRIEND_PROP_PORT, &actual_port2, NULL);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id1, actual_unique_id1));
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id2, actual_unique_id2));
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY1, ==, actual_public_key1);
@@ -170,6 +177,8 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME2, ==, actual_transport_cipher_name2);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
+	g_assert_cmpint((unsigned int)EXPECTED_PORT1, ==, actual_port1);
+	g_assert_cmpint((unsigned int)EXPECTED_PORT2, ==, actual_port2);
 	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_unique_id_unref(actual_unique_id1);
 	otb_unique_id_unref(actual_unique_id2);

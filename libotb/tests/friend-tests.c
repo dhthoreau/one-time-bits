@@ -108,7 +108,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY1, ==, actual_public_key1);
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME1, ==, actual_transport_cipher_name1);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
-	g_assert_cmpint(EXPECTED_PORT1, ==, (unsigned short)actual_port1);
+	g_assert_cmpint((unsigned int)EXPECTED_PORT1, ==, actual_port1);
 	g_assert(otb_friend_set_public_key(*create_friend, EXPECTED_PUBLIC_KEY2));
 	g_assert(otb_friend_set_transport_cipher_name(*create_friend, EXPECTED_TRANSPORT_CIPHER_NAME2));
 	g_assert(otb_friend_set_address(*create_friend, EXPECTED_ADDRESS2));
@@ -135,7 +135,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY2, ==, actual_public_key2);
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME2, ==, actual_transport_cipher_name2);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
-	g_assert_cmpint(EXPECTED_PORT2, ==, (unsigned short)actual_port2);
+	g_assert_cmpint((unsigned int)EXPECTED_PORT2, ==, actual_port2);
 	if(OTB_IS_DUMMY_FRIEND(*load_friend))
 		g_assert_cmpstr(EXPECTED_DUMMY_VALUE2, ==, OTB_DUMMY_FRIEND(*load_friend)->dummy_value);
 	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
