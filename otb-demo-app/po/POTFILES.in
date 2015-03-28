@@ -1,0 +1,8 @@
+src/cipher.c
+src/friends.c
+src/io.c
+src/pad-db.c
+src/pad-rec.c
+src/random.c
+src/rsa.c
+src/settings.c

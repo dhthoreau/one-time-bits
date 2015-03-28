@@ -14,13 +14,14 @@ auxiliaryconfig
 config.*
 configure
 local
+libotb-tests
+libotb-tests.exe
 libtool
 Makefile
 Makefile.in
-POTFILES
+otb-demo-app
 one-time-bits.pot
-libotb-tests
-libotb-tests.exe
+POTFILES
 stamp-*
 
 insecure-using-dummy-replacements-of-the-original-openssl-functions.c
