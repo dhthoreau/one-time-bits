@@ -31,6 +31,15 @@ static OtbSymCipher *otb_local_crypto_sym_cipher=NULL;
 #define otb_local_crypto_lock_write()	(g_rw_lock_writer_lock(&otb_local_crypto_lock))
 #define otb_local_crypto_unlock_write()	(g_rw_lock_writer_unlock(&otb_local_crypto_lock))
 
+gboolean otb_local_crypto_can_be_unlocked()
+{
+	GBytes *passphrase_hash=NULL;
+	passphrase_hash=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH);
+	gboolean local_crypto_can_be_unlocked=(passphrase_hash!=NULL);
+	g_bytes_unref(passphrase_hash);
+	return local_crypto_can_be_unlocked;
+}
+
 static void otb_local_crypto_new_sym_cipher_initialize_string_property(OtbSymCipher *sym_cipher, const char *config_key, const char *sym_cipher_property)
 {
 	char *value=otb_settings_get_config_string(CONFIG_GROUP, config_key);

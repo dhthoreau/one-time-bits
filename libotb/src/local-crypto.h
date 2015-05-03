@@ -11,6 +11,7 @@
 
 #include "sym-cipher.h"
 
+gboolean otb_local_crypto_can_be_unlocked();	// FARE - Unit test.
 gboolean otb_local_crypto_create_sym_cipher(const char *passphrase);
 gboolean otb_local_crypto_unlock_sym_cipher(const char *passphrase);
 void otb_local_crypto_lock_sym_cipher();

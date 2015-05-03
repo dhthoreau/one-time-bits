@@ -53,6 +53,19 @@ static void test_settings_get_config_file_version()
 	g_assert_cmpint(0, ==, otb_settings_get_config_int(CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, -1));
 }
 
+static void test_settings_get_set_config_int_directory_does_not_exist()
+{
+	const char *INT_KEY="int-key";
+	const int EXPECTED_INT=-42;
+	const int ERROR_INT=-1;
+	
+	otb_delete_dir(otb_get_test_dir_path());
+	otb_initialize_settings_for_tests();
+	g_assert_cmpint(ERROR_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
+	g_assert(otb_settings_set_config_int(GROUP_NAME, INT_KEY, EXPECTED_INT));
+	g_assert_cmpint(EXPECTED_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
+}
+
 static void test_settings_get_set_config_int()
 {
 	const char *INT_KEY="int-key";
@@ -171,6 +184,7 @@ void otb_add_settings_tests()
 	otb_add_test_func("/settings/test_settings_set_data_dir", test_settings_set_data_dir);
 	otb_add_test_func("/settings/test_settings_get_config_file_version", test_settings_get_config_file_version);
 	otb_add_test_func("/settings/test_settings_get_set_config_string", test_settings_get_set_config_string);
+	otb_add_test_func("/settings/test_settings_get_set_config_int_directory_does_not_exist", test_settings_get_set_config_int_directory_does_not_exist);
 	otb_add_test_func("/settings/test_settings_get_set_config_int", test_settings_get_set_config_int);
 	otb_add_test_func("/settings/test_settings_get_set_config_uint", test_settings_get_set_config_uint);
 	otb_add_test_func("/settings/test_settings_get_set_config_int64", test_settings_get_set_config_int64);

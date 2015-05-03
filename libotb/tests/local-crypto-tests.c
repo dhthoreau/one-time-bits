@@ -23,7 +23,9 @@ static void test_local_crypto()
 	
 	otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long();
 	otb_initialize_settings_for_tests();
+	g_assert(!otb_local_crypto_can_be_unlocked());
 	g_assert(otb_local_crypto_create_sym_cipher(EXPECTED_PASSPHRASE));
+	g_assert(otb_local_crypto_can_be_unlocked());
 	g_assert(!otb_local_crypto_unlock_sym_cipher(NEW_PASSPHRASE));
 	g_assert(otb_local_crypto_unlock_sym_cipher(EXPECTED_PASSPHRASE));
 	OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();

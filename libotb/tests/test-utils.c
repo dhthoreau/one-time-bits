@@ -19,7 +19,7 @@
 #include "../src/sym-cipher.h"
 #include "../src/unique-id.h"
 
-char *otb_test_dir_path=NULL;
+static char *otb_test_dir_path=NULL;
 
 void otb_recreate_test_dir()
 {

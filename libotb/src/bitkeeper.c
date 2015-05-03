@@ -165,6 +165,7 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 }
 
 OtbBitkeeper *otb_bitkeeper_load()
+// FARE - Vietare molti OtbBitkeeper a volta.
 {
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
 	if(G_UNLIKELY((bitkeeper->priv->user=otb_user_load())==NULL || !otb_bitkeeper_load_friends(bitkeeper)))
