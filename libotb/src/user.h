@@ -43,7 +43,7 @@ GType otb_user_get_type();
 
 void otb_user_set_runtime_type(GType user_runtime_type);
 gboolean otb_user_exists();
-OtbUser *otb_user_create(const unsigned char *address, unsigned short port, unsigned int key_size);
+OtbUser *otb_user_create(const unsigned char *address, unsigned short port, unsigned int key_size);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_user_delete().
 OtbUser *otb_user_load();
 gboolean otb_user_set_address(const OtbUser *user, const char *address);
 gboolean otb_user_set_port(const OtbUser *user, unsigned short port);

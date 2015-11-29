@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits Demo App\n"
-"POT-Creation-Date: 2015-03-01 13:25-0500\n"
-"PO-Revision-Date: 2015-03-01 13:26-0500\n"
+"POT-Creation-Date: 2015-11-29 17:20-0500\n"
+"PO-Revision-Date: 2015-11-29 17:26-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -10,6 +10,54 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.5.4\n"
-"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop;label;title\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: src\n"
+
+#: src/main.c:110
+msgid "Failed to load bitkeeper."
+msgstr "Non è riuscito a caricare bitkeeper."
+
+#: src/create-user.ui:7
+msgid "OTB Demo App"
+msgstr "OTB Demo App"
+
+#: src/create-user.ui:35
+msgid "Name:"
+msgstr "Nome:"
+
+#: src/create-user.ui:53
+msgid "Address:"
+msgstr "Indirizzo:"
+
+#: src/create-user.ui:71
+msgid "Port:"
+msgstr "Porta:"
+
+#: src/create-user.ui:141
+msgid "Key size:"
+msgstr "Dimensione delle chiave:"
+
+#: src/create-user.ui:173
+msgid "Basic"
+msgstr "Di base"
+
+#: src/create-user.ui:193
+msgid "Proxy port:"
+msgstr "Porta della delega"
+
+#: src/create-user.ui:211
+msgid "Refresh time:"
+msgstr "Intervallo di aggiornamento:"
+
+#: src/create-user.ui:266
+msgid "Advanced"
+msgstr "Avvanzato"
+
+#: src/create-user.ui:287
+msgid "Save"
+msgstr "Salva"
+
+#: src/create-user.ui:304
+msgid "Cancel"
+msgstr "Annulla"

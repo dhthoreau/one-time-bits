@@ -1,4 +1,4 @@
-bin_PROGRAMS=otb-demo-app
-otb_demo_app_SOURCES=main.c
-otb_demo_app_LDADD=../../libotb/src/libotb.la
-AM_CPPFLAGS=-DLOCALEDIR=\""$(datadir)/locale"\"
+bin_PROGRAMS=otbdemo
+otbdemo_SOURCES=create-user-container.c main.c
+otbdemo_LDADD=../../libotb/src/libotb.la $(libgtk_LIBS) $(libgmodule_LIBS)
+AM_CPPFLAGS=$(libgtk_CFLAGS) $(libgmodule_CFLAGS) -DLOCALEDIR=\""$(datadir)/locale"\"

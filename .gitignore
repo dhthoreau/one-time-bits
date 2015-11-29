@@ -19,7 +19,7 @@ libotb-tests.exe
 libtool
 Makefile
 Makefile.in
-otb-demo-app
+otbdemo
 one-time-bits.pot
 POTFILES
 stamp-*

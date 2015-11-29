@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-03-01 13:25-0500\n"
-"PO-Revision-Date: 2015-03-01 13:26-0500\n"
+"POT-Creation-Date: 2015-11-29 17:15-0500\n"
+"PO-Revision-Date: 2015-11-29 17:16-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: src\n"
 
-#: src/user.c:61 src/friend.c:72 src/pad-rec.c:75
+#: src/user.c:61 src/friend.c:73 src/pad-rec.c:75
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Cifra asimmetrica usata per identificare l'utente e comunicare con amici."
 
-#: src/user.c:63 src/friend.c:75
+#: src/user.c:63 src/friend.c:76
 msgid "Address"
 msgstr "Indirizzo"
 
@@ -41,7 +41,7 @@ msgstr "Indirizzo"
 msgid "The address of the user"
 msgstr "L'indirizzo dell'utente"
 
-#: src/user.c:64 src/friend.c:76
+#: src/user.c:64 src/friend.c:77
 msgid "Port"
 msgstr "Porta"
 
@@ -52,67 +52,67 @@ msgstr "La porta dell'utente"
 #: src/settings.c:40 src/settings.c:54
 #, c-format
 msgid "Failed to load key file from %s. Error == %s"
-msgstr "Non è riuscito a aprire il file di chiave %s. Errore == %s"
+msgstr "Non è riuscito ad aprire il file di chiave %s. Errore == %s"
 
-#: src/settings.c:160 src/settings.c:207 src/settings.c:228 src/settings.c:249
+#: src/settings.c:168 src/settings.c:216 src/settings.c:237 src/settings.c:259
 #, c-format
 msgid "Failed to read %s / %s from config file. Error == %s"
 msgstr ""
 "Non è riuscito a leggere %s / %s da file di configurazione. Errore == %s"
 
-#: src/friend.c:69 src/pad-rec.c:77 src/pad-db.c:85
+#: src/friend.c:70 src/pad-rec.c:77 src/pad-db.c:85
 msgid "Base path"
 msgstr "Precorso di base"
 
-#: src/friend.c:69
+#: src/friend.c:70
 msgid "Directory where the friend's data will be saved"
 msgstr "La directory dove i dati del amico saranno salvati"
 
-#: src/friend.c:70
+#: src/friend.c:71
 msgid "Incoming pads"
 msgstr "Blocchi in arrivo"
 
-#: src/friend.c:70
+#: src/friend.c:71
 msgid "Database of incoming pads"
 msgstr "Il database di blocchi in arrivo"
 
-#: src/friend.c:71
+#: src/friend.c:72
 msgid "Outgoing pads"
 msgstr "Blocchi in partenza"
 
-#: src/friend.c:71
+#: src/friend.c:72
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:72
+#: src/friend.c:73
 msgid "UUID of the friend"
 msgstr "UUID dell'amico"
 
-#: src/friend.c:73 src/asym-cipher.c:49
+#: src/friend.c:74 src/asym-cipher.c:49
 msgid "Public key"
 msgstr "Chiave pubblica"
 
-#: src/friend.c:73
+#: src/friend.c:74
 msgid "Key that is used to identify the friend"
 msgstr "La chiave usata per identificare l'amico"
 
-#: src/friend.c:74
+#: src/friend.c:75
 msgid "Transport cipher"
 msgstr "Cifra di trasporto"
 
-#: src/friend.c:74
+#: src/friend.c:75
 msgid "The cipher used for data transport"
 msgstr "La cifra per trasportare i dati"
 
-#: src/friend.c:75
+#: src/friend.c:76
 msgid "The address of the friend"
 msgstr "L'indirizzo dell'amico"
 
-#: src/friend.c:76
+#: src/friend.c:77
 msgid "The port of the friend"
 msgstr "La porta dell'amico"
 
-#: src/friend.c:156
+#: src/friend.c:157
 msgid "Tried to change unique ID of a friend."
 msgstr "Si è provato a cambiare ID univoco d'un amico."
 
@@ -191,51 +191,51 @@ msgid ""
 msgstr ""
 "La data e l'ora in cui il blocco scade (microsecondi da 1-gen-1979 UTC)"
 
-#: src/bitkeeper.c:58
+#: src/bitkeeper.c:55
 msgid "User"
 msgstr "Utente"
 
-#: src/bitkeeper.c:58
+#: src/bitkeeper.c:55
 msgid "The user who is using the application"
 msgstr "L'utente chi sta usando l'applicazione"
 
-#: src/bitkeeper.c:59
+#: src/bitkeeper.c:56
 msgid "Proxy port"
 msgstr "Porta della delega"
 
-#: src/bitkeeper.c:59
+#: src/bitkeeper.c:56
 msgid "The port for the local proxy, preferably TOR"
 msgstr "Porta della delega locale, preferibilmente TOR"
 
-#: src/bitkeeper.c:60
+#: src/bitkeeper.c:57
 msgid "Pad synchronization interval"
 msgstr "Intervallo della sincronizzazione dei blocchi"
 
-#: src/bitkeeper.c:60
+#: src/bitkeeper.c:57
 msgid "How often pads should be synchronized, measured in microseconds"
 msgstr ""
 "Quanto spesso i blocchi dovrebbero essere sincronizzati, misurato con "
 "microsecondi"
 
-#: src/bitkeeper.c:306
+#: src/bitkeeper.c:322
 #, c-format
 msgid "sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."
 msgstr ""
 "sprintf() non è riuscito a otb_socket_client_set_proxy_resolver() per porta "
 "%u."
 
-#: src/bitkeeper.c:344
+#: src/bitkeeper.c:360
 msgid "Failed to delete expired pads."
 msgstr "Non è riuscito a cancellare i blocchi scaduti."
 
-#: src/bitkeeper.c:347
+#: src/bitkeeper.c:363
 msgid "Failed to synchronize pads with friend."
 msgstr "Non è riuscito a sincronizzare i blocchi con l'amico."
 
 #: src/io.c:22
 #, c-format
 msgid "Failed to open file %s. Error == %s"
-msgstr "Non è riuscito a aprire il file %s. Errore == %s"
+msgstr "Non è riuscito ad aprire il file %s. Errore == %s"
 
 #: src/io.c:48
 #, c-format
@@ -265,7 +265,7 @@ msgstr "Non è riuscito a creare la directory %s. Errore == %s"
 #: src/io.c:106
 #, c-format
 msgid "Failed open directory %s. Error == %s"
-msgstr "Non è riuscito a aprire la directory %s. Errore == %s"
+msgstr "Non è riuscito ad aprire la directory %s. Errore == %s"
 
 #: src/asym-cipher.c:49
 msgid "The public key to use for encryption"
@@ -361,7 +361,7 @@ msgid ""
 "itself was fully encrypted. This could cause problems for the recipient of "
 "your encrypted files. Recomendation is that the encrypted file not be used."
 msgstr ""
-"Non è riuscito a aggiornare lo stato di tutti blocchi utilizzati per cifrare "
+"Non è riuscito ad aggiornare lo stato di tutti blocchi utilizzati per cifrare "
 "un file, sebbene il file era cifrato completamente. Quello potrebbe causare "
 "problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
 "il file cifrato non sia utilizzato."
