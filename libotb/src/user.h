@@ -11,8 +11,6 @@
 
 #include "asym-cipher.h"
 
-#define OTB_USER_DEFAULT_KEY_SIZE	4096
-
 #define OTB_USER_PROP_UNIQUE_ID		"unique-id"
 #define OTB_USER_PROP_ASYM_CIPHER	"asym-cipher"
 #define OTB_USER_PROP_ADDRESS		"address"
@@ -45,7 +43,7 @@ GType otb_user_get_type();
 
 void otb_user_set_runtime_type(GType user_runtime_type);
 gboolean otb_user_exists();
-OtbUser *otb_user_create(const unsigned char *address, unsigned int key_size);
+OtbUser *otb_user_create(const unsigned char *address, unsigned short port, unsigned int key_size);
 OtbUser *otb_user_load();
 gboolean otb_user_set_address(const OtbUser *user, const char *address);
 gboolean otb_user_set_port(const OtbUser *user, unsigned short port);

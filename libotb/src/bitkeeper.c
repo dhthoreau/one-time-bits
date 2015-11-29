@@ -166,10 +166,10 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 	return ret_val;
 }
 
-OtbBitkeeper *otb_bitkeeper_create(unsigned short proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned int user_key_size)
+OtbBitkeeper *otb_bitkeeper_create(unsigned short proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size)
 {
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
-	if(G_UNLIKELY((bitkeeper->priv->user=otb_user_create(user_address, user_key_size))==NULL || !otb_bitkeeper_set_proxy_port(bitkeeper, proxy_port) || !otb_bitkeeper_set_pad_synchronization_interval(bitkeeper, pad_synchronization_interval) || !otb_bitkeeper_load_friends(bitkeeper)))
+	if(G_UNLIKELY((bitkeeper->priv->user=otb_user_create(user_address, user_port, user_key_size))==NULL || !otb_bitkeeper_set_proxy_port(bitkeeper, proxy_port) || !otb_bitkeeper_set_pad_synchronization_interval(bitkeeper, pad_synchronization_interval) || !otb_bitkeeper_load_friends(bitkeeper)))
 	{
 		g_object_unref(bitkeeper);
 		bitkeeper=NULL;
@@ -179,7 +179,7 @@ OtbBitkeeper *otb_bitkeeper_create(unsigned short proxy_port, long long pad_sync
 
 OtbBitkeeper *otb_bitkeeper_create_with_defaults(const unsigned char *user_address)
 {
-	return otb_bitkeeper_create(OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, user_address, OTB_USER_DEFAULT_KEY_SIZE);
+	return otb_bitkeeper_create(OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, user_address, OTB_BITKEEPER_DEFAULT_USER_PORT, OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
 }
 
 #define otb_bitkeeper_load_proxy_port(bitkeeper)					((bitkeeper->priv->proxy_port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, 0))!=0)

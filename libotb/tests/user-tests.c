@@ -25,7 +25,7 @@ static void test_otb_user_create_with_no_config_file()
 {
 	const char *EXPECTED_DEFAULT_SYM_CIPHER_NAME="AES-256-CBC";
 	const char *EXPECTED_ADDRESS="sajkhdgdjashg.onion";
-	const unsigned short EXPECTED_DEFAULT_PORT=9876;
+	const unsigned short EXPECTED_PORT=31415;
 	
 	otb_initialize_settings_for_tests();
 	otb_local_crypto_create_sym_cipher("");
@@ -35,7 +35,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(!otb_user_exists());
 	OtbUser *user=otb_user_load();
 	g_assert(user==NULL);
-	user=otb_user_create(EXPECTED_ADDRESS, 512);
+	user=otb_user_create(EXPECTED_ADDRESS, EXPECTED_PORT, 256);
 	g_assert(user!=NULL);
 	g_assert(otb_user_exists());
 	OtbUniqueId *actual_unique_id=NULL;
@@ -50,7 +50,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert_cmpstr(EXPECTED_DEFAULT_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert(actual_public_key!=NULL);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
-	g_assert_cmpint(EXPECTED_DEFAULT_PORT, ==, (unsigned short)actual_port);
+	g_assert_cmpint(EXPECTED_PORT, ==, (unsigned short)actual_port);
 	otb_local_crypto_lock_sym_cipher();
 	g_free(actual_sym_cipher_name);
 	g_free(actual_public_key);
@@ -144,7 +144,7 @@ static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *uniqu
 
 static void test_otb_user_create_from_existing_config_file()
 {
-	const size_t NEW_KEY_SIZE=512;
+	const size_t NEW_KEY_SIZE=256;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS1="akjsdhkljashgd.onion";
 	const char *EXPECTED_ADDRESS2="kjshdfjkhgssdj.onion";
@@ -196,7 +196,7 @@ static void test_otb_user_create_from_existing_config_file()
 
 static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 {
-	const size_t NEW_KEY_SIZE=512;
+	const size_t NEW_KEY_SIZE=256;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kdjhgkfgjhfhj.onion";
 	const unsigned short EXPECTED_PORT=11235;

@@ -61,7 +61,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), OTB_TYPE_UNIQUE_ID, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_object(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), OTB_TYPE_ASYM_CIPHER, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_USER_PROP_ADDRESS, _("Address"), _("The address of the user"), NULL, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, OTB_DEFAULT_SYNCH_PORT, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_USER_PORT, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
@@ -83,7 +83,7 @@ static void otb_user_init(OtbUser *user)
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
 	user->priv->address=NULL;
-	user->priv->port=OTB_DEFAULT_SYNCH_PORT;
+	user->priv->port=OTB_BITKEEPER_DEFAULT_USER_PORT;
 }
 
 static void otb_user_dispose(GObject *object)
@@ -186,8 +186,6 @@ static gboolean otb_user_initialize_asym_cipher(OtbUser *user, unsigned int key_
 	return success;
 }
 
-#define otb_user_initialize_port(user)				otb_user_set_port(user, OTB_DEFAULT_SYNCH_PORT)
-
 void otb_user_set_runtime_type(GType user_runtime_type)
 {
 	g_return_if_fail(g_type_is_a(user_runtime_type, OTB_TYPE_USER));
@@ -199,10 +197,10 @@ gboolean otb_user_exists()
 	return otb_settings_config_group_exists(CONFIG_GROUP);
 }
 
-OtbUser *otb_user_create(const unsigned char *address, unsigned int key_size)
+OtbUser *otb_user_create(const unsigned char *address, unsigned short port, unsigned int key_size)
 {
 	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
-	if(G_UNLIKELY(!otb_user_initialize_unique_id(user) || !otb_user_initialize_asym_cipher(user, key_size) || !otb_user_set_address(user, address) || !otb_user_initialize_port(user)))
+	if(G_UNLIKELY(!otb_user_initialize_unique_id(user) || !otb_user_initialize_asym_cipher(user, key_size) || !otb_user_set_address(user, address) || !otb_user_set_port(user, port)))
 	{
 		g_object_unref(user);
 		user=NULL;
