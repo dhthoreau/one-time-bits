@@ -10,6 +10,7 @@
 
 #include <glib/gi18n.h>
 
+#include "bitkeeper.h"
 #include "friend.h"
 #include "io.h"
 #include "local-crypto.h"
@@ -73,7 +74,7 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), "", G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), "", G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_FRIEND_PROP_ADDRESS, _("Address"), _("The address of the friend"), NULL, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_FRIEND_PROP_PORT, _("Port"), _("The port of the friend"), 1, G_MAXUSHORT, DEFAULT_SYNCH_PORT, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_FRIEND_PROP_PORT, _("Port"), _("The port of the friend"), 1, G_MAXUSHORT, OTB_DEFAULT_SYNCH_PORT, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbFriendPrivate));
 }
 
@@ -91,7 +92,7 @@ static void otb_friend_init(OtbFriend *friend)
 	friend->priv->public_key=NULL;
 	friend->priv->transport_cipher_name=NULL;
 	friend->priv->address=NULL;
-	friend->priv->port=DEFAULT_SYNCH_PORT;
+	friend->priv->port=OTB_DEFAULT_SYNCH_PORT;
 }
 
 static const OtbPadDb *otb_friend_set_incoming_pad_db(const OtbFriend *friend, OtbPadDb *incoming_pad_db)
@@ -309,7 +310,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 #define otb_friend_import_public_key(import_file)				(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
 #define otb_friend_import_transport_cipher_name(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME))
 #define otb_friend_import_address(import_file)					(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS))
-#define otb_friend_import_port(import_file)						((unsigned short)otb_settings_get_uint((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, DEFAULT_SYNCH_PORT))
+#define otb_friend_import_port(import_file)						((unsigned short)otb_settings_get_uint((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, OTB_DEFAULT_SYNCH_PORT))
 
 static void otb_friend_set_unique_id_no_save(OtbFriend *friend, OtbUniqueId *unique_id)
 {

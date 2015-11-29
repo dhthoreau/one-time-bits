@@ -31,19 +31,6 @@ static void test_settings_set_data_dir()
 	g_assert_cmpstr(otb_get_test_dir_path(), == , otb_settings_get_data_directory_path());
 }
 
-static void test_settings_get_set_config_string()
-{
-	const char *STRING_KEY="string-key";
-	const char *EXPECTED_STRING="It was decided by the university of Coimbre that the sight of several persons being slowly burned in great ceremony is an infallible secret for preventing earthquakes.";
-	
-	otb_initialize_settings_for_tests();
-	g_assert(otb_settings_get_config_string(GROUP_NAME, STRING_KEY)==NULL);
-	g_assert(otb_settings_set_config_string(GROUP_NAME, STRING_KEY, EXPECTED_STRING));
-	char *actual_string=otb_settings_get_config_string(GROUP_NAME, STRING_KEY);
-	g_assert_cmpstr(EXPECTED_STRING, ==, actual_string);
-	g_free(actual_string);
-}
-
 static void test_settings_get_config_file_version()
 {
 	const char *CONFIG_META_GROUP_NAME="config-meta";
@@ -51,6 +38,21 @@ static void test_settings_get_config_file_version()
 	
 	otb_settings_initialize("otb-tests", "otb");
 	g_assert_cmpint(0, ==, otb_settings_get_config_int(CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, -1));
+}
+
+static void test_settings_get_set_config_string()
+{
+	const char *STRING_KEY="string-key";
+	const char *EXPECTED_STRING="It was decided by the university of Coimbre that the sight of several persons being slowly burned in great ceremony is an infallible secret for preventing earthquakes.";
+	
+	otb_initialize_settings_for_tests();
+	g_assert(!otb_settings_config_group_exists(GROUP_NAME));
+	g_assert(otb_settings_get_config_string(GROUP_NAME, STRING_KEY)==NULL);
+	g_assert(otb_settings_set_config_string(GROUP_NAME, STRING_KEY, EXPECTED_STRING));
+	g_assert(otb_settings_config_group_exists(GROUP_NAME));
+	char *actual_string=otb_settings_get_config_string(GROUP_NAME, STRING_KEY);
+	g_assert_cmpstr(EXPECTED_STRING, ==, actual_string);
+	g_free(actual_string);
 }
 
 static void test_settings_get_set_config_int_directory_does_not_exist()
@@ -61,8 +63,10 @@ static void test_settings_get_set_config_int_directory_does_not_exist()
 	
 	otb_delete_dir(otb_get_test_dir_path());
 	otb_initialize_settings_for_tests();
+	g_assert(!otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(ERROR_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 	g_assert(otb_settings_set_config_int(GROUP_NAME, INT_KEY, EXPECTED_INT));
+	g_assert(otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(EXPECTED_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 }
 
@@ -73,8 +77,10 @@ static void test_settings_get_set_config_int()
 	const int ERROR_INT=-1;
 	
 	otb_initialize_settings_for_tests();
+	g_assert(!otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(ERROR_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 	g_assert(otb_settings_set_config_int(GROUP_NAME, INT_KEY, EXPECTED_INT));
+	g_assert(otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(EXPECTED_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 }
 
@@ -85,8 +91,10 @@ static void test_settings_get_set_config_uint()
 	const unsigned int ERROR_UINT=0;
 	
 	otb_initialize_settings_for_tests();
+	g_assert(!otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(ERROR_UINT, ==, otb_settings_get_config_uint(GROUP_NAME, UINT_KEY, ERROR_UINT));
 	g_assert(otb_settings_set_config_uint(GROUP_NAME, UINT_KEY, EXPECTED_UINT));
+	g_assert(otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(EXPECTED_UINT, ==, otb_settings_get_config_uint(GROUP_NAME, UINT_KEY, ERROR_UINT));
 }
 
@@ -97,8 +105,10 @@ static void test_settings_get_set_config_int64()
 	const long long ERROR_INT64=-1;
 	
 	otb_initialize_settings_for_tests();
+	g_assert(!otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(ERROR_INT64, ==, otb_settings_get_config_int(GROUP_NAME, INT64_KEY, ERROR_INT64));
 	g_assert(otb_settings_set_config_int(GROUP_NAME, INT64_KEY, EXPECTED_INT64));
+	g_assert(otb_settings_config_group_exists(GROUP_NAME));
 	g_assert_cmpint(EXPECTED_INT64, ==, otb_settings_get_config_int(GROUP_NAME, INT64_KEY, ERROR_INT64));
 }
 
@@ -131,9 +141,11 @@ static void test_settings_get_set_config_bytes()
 	const unsigned char EXPECTED_BYTES[9]={0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa, 0x99, 0x88, 0x77};
 	
 	otb_initialize_settings_for_tests();
+	g_assert(!otb_settings_config_group_exists(GROUP_NAME));
 	size_t actual_bytes_size;
 	g_assert(otb_settings_get_config_bytes(GROUP_NAME, BYTES_KEY, &actual_bytes_size)==NULL);
 	g_assert(otb_settings_set_config_bytes(GROUP_NAME, BYTES_KEY, EXPECTED_BYTES, EXPECTED_BYTES_SIZE));
+	g_assert(otb_settings_config_group_exists(GROUP_NAME));
 	unsigned char *actual_bytes=otb_settings_get_config_bytes(GROUP_NAME, BYTES_KEY, &actual_bytes_size);
 	g_assert_cmpint(EXPECTED_BYTES_SIZE, ==, actual_bytes_size);
 	g_assert_cmpint(0, ==, memcmp(EXPECTED_BYTES, actual_bytes, EXPECTED_BYTES_SIZE));
@@ -169,9 +181,11 @@ static void test_settings_get_set_config_gbytes()
 	const unsigned char EXPECTED_GBYTES[7]={0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00};
 	
 	otb_initialize_settings_for_tests();
+	g_assert(!otb_settings_config_group_exists(GROUP_NAME));
 	g_assert(otb_settings_get_config_gbytes(GROUP_NAME, GBYTES_KEY)==NULL);
 	GBytes *expected_gbytes=g_bytes_new_static(EXPECTED_GBYTES, EXPECTED_GBYTES_SIZE);
 	g_assert(otb_settings_set_config_gbytes(GROUP_NAME, GBYTES_KEY, expected_gbytes));
+	g_assert(otb_settings_config_group_exists(GROUP_NAME));
 	GBytes *actual_gbytes=otb_settings_get_config_gbytes(GROUP_NAME, GBYTES_KEY);
 	g_assert(g_bytes_equal(expected_gbytes, actual_gbytes));
 	g_bytes_unref(actual_gbytes);

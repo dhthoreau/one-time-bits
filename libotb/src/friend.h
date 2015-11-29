@@ -14,8 +14,6 @@
 #include "pad-db.h"
 #include "unique-id.h"
 
-#define DEFAULT_SYNCH_PORT	9876
-
 #define OTB_FRIEND_IMPORT_GROUP					"otb-user"
 #define OTB_FRIEND_IMPORT_UNIQUE_ID				"unique-id"
 #define OTB_FRIEND_IMPORT_PUBLIC_KEY			"public-key"

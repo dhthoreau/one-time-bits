@@ -12,7 +12,7 @@
 #define MICROSECONDS_PER_MONTH	2629822965840
 
 void otb_recreate_test_dir();
-void otb_delete_test_dir();
+void otb_test_clean_up();
 const char *otb_get_test_dir_path();
 char *otb_generate_unique_test_subdir_path();
 void otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long();

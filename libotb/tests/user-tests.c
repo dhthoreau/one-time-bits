@@ -24,16 +24,20 @@
 static void test_otb_user_create_with_no_config_file()
 {
 	const char *EXPECTED_DEFAULT_SYM_CIPHER_NAME="AES-256-CBC";
-	const char *EXPECTED_DEFAULT_ADDRESS=NULL;
+	const char *EXPECTED_ADDRESS="sajkhdgdjashg.onion";
 	const unsigned short EXPECTED_DEFAULT_PORT=9876;
 	
 	otb_initialize_settings_for_tests();
+	otb_local_crypto_create_sym_cipher("");
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	g_unlink(config_file_path);
 	g_free(config_file_path);
-	otb_test_setup_local_crypto();
+	g_assert(!otb_user_exists());
 	OtbUser *user=otb_user_load();
+	g_assert(user==NULL);
+	user=otb_user_create(EXPECTED_ADDRESS, 512);
 	g_assert(user!=NULL);
+	g_assert(otb_user_exists());
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
 	char *actual_address=NULL;
@@ -45,7 +49,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
 	g_assert_cmpstr(EXPECTED_DEFAULT_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert(actual_public_key!=NULL);
-	g_assert_cmpstr(EXPECTED_DEFAULT_ADDRESS, ==, actual_address);
+	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
 	g_assert_cmpint(EXPECTED_DEFAULT_PORT, ==, (unsigned short)actual_port);
 	otb_local_crypto_lock_sym_cipher();
 	g_free(actual_sym_cipher_name);
@@ -105,7 +109,7 @@ static void otb_write_port(FILE *file, unsigned short port)
 	if(port>0)
 	{
 		char port_string[6];
-		g_assert_cmpint(sprintf(port_string, "%u", (unsigned int)port), >, 0);
+		g_assert_cmpint(sprintf(port_string, "%hu", port), >, 0);
 		g_assert(otb_write("port=", 1, 5, file)==5);
 		g_assert(otb_write(port_string, 1, strlen(port_string), file)==strlen(port_string));
 		g_assert(otb_write("\n", 1, 1, file)==1);
@@ -134,6 +138,7 @@ static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *uniqu
 	otb_setup_config_file_for_user_tests(unique_id, sym_cipher_name, asym_cipher, address, port);
 	OtbUser *user=otb_user_load();
 	g_assert(user!=NULL);
+	g_assert(otb_user_exists());
 	return user;
 }
 
@@ -146,6 +151,8 @@ static void test_otb_user_create_from_existing_config_file()
 	const unsigned short EXPECTED_PORT1=12345;
 	const unsigned short EXPECTED_PORT2=6789;
 	
+	otb_initialize_settings_for_tests();
+	otb_local_crypto_create_sym_cipher("");
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(expected_asym_cipher, NEW_KEY_SIZE));

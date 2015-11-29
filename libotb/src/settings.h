@@ -22,6 +22,8 @@ void otb_settings_set_config_directory_path(const char *config_directory_path);
 const char *otb_settings_get_data_directory_path();
 void otb_settings_set_data_directory_path(const char *data_directory_path);
 
+gboolean otb_settings_config_group_exists(const char *group_name);
+
 gboolean otb_settings_set_config_int(const char *group_name, const char *key, int value);
 int otb_settings_get_int(GKeyFile *key_file, const char *group_name, const char *key, int error_value);
 int otb_settings_get_config_int(const char *group_name, const char *key, int error_value);

@@ -10,7 +10,7 @@
 
 #include <glib/gi18n.h>
 
-#include "friend.h"
+#include "bitkeeper.h"
 #include "local-crypto.h"
 #include "settings.h"
 #include "user.h"
@@ -61,7 +61,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), OTB_TYPE_UNIQUE_ID, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_object(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), OTB_TYPE_ASYM_CIPHER, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_USER_PROP_ADDRESS, _("Address"), _("The address of the user"), NULL, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, DEFAULT_SYNCH_PORT, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, OTB_DEFAULT_SYNCH_PORT, G_PARAM_READABLE));
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
@@ -83,7 +83,7 @@ static void otb_user_init(OtbUser *user)
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
 	user->priv->address=NULL;
-	user->priv->port=DEFAULT_SYNCH_PORT;
+	user->priv->port=OTB_DEFAULT_SYNCH_PORT;
 }
 
 static void otb_user_dispose(GObject *object)
@@ -152,47 +152,41 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 	}
 }
 
-static void otb_user_initialize_unique_id(OtbUser *user)
+static gboolean otb_user_initialize_unique_id(OtbUser *user)
 {
 	otb_unique_id_unref(user->priv->unique_id);
-	size_t bytes_length;
-	unsigned char *unique_id_bytes=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
-	if(G_UNLIKELY(unique_id_bytes==NULL || bytes_length!=OTB_UNIQUE_ID_BYTES_SIZE))
-	{
-		otb_unique_id_unref(user->priv->unique_id);
-		user->priv->unique_id=otb_unique_id_new();
-	}
-	else
-		user->priv->unique_id=otb_unique_id_from_bytes(unique_id_bytes);
-	g_free(unique_id_bytes);
+	user->priv->unique_id=otb_unique_id_new();
+	return otb_settings_set_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, otb_unique_id_get_bytes(user->priv->unique_id), OTB_UNIQUE_ID_BYTES_SIZE);
 }
 
-static void otb_user_initialize_asym_cipher(OtbUser *user)
+static gboolean otb_user_initialize_asym_cipher(OtbUser *user, unsigned int key_size)
 {
+	gboolean success=FALSE;
 	user->priv->asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	char *sym_cipher_name=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_SYM_CIPHER);
-	if(sym_cipher_name!=NULL)
-		g_object_set(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, sym_cipher_name, NULL);
+	char *sym_cipher_name=NULL;
+	g_object_get(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &sym_cipher_name, NULL);
+	if(G_LIKELY(otb_settings_set_config_string(CONFIG_GROUP, CONFIG_SYM_CIPHER, sym_cipher_name) && otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_ASYM_CIPHER_NEW_KEY_SIZE, key_size) && otb_asym_cipher_generate_random_keys(user->priv->asym_cipher, key_size)))
+	{
+		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+		GBytes *private_key_iv=NULL;
+		GBytes *encrypted_private_key=otb_asym_cipher_get_encrypted_private_key(user->priv->asym_cipher, local_crypto_sym_cipher, &private_key_iv);
+		if(G_LIKELY(otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV, private_key_iv) && otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY, encrypted_private_key)))
+			success=TRUE;
+		g_bytes_unref(encrypted_private_key);
+		g_bytes_unref(private_key_iv);
+		g_object_unref(local_crypto_sym_cipher);
+	}
+	if(!success)
+	{
+		OtbAsymCipher *asym_cipher=user->priv->asym_cipher;
+		user->priv->asym_cipher=NULL;
+		g_object_unref(asym_cipher);
+	}
 	g_free(sym_cipher_name);
-	GBytes *private_key_iv=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV);
-	GBytes *encrypted_private_key=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY);
-	if(private_key_iv!=NULL && encrypted_private_key!=NULL)
-	{
-		OtbSymCipher *sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		otb_asym_cipher_set_encrypted_private_key(user->priv->asym_cipher, encrypted_private_key, sym_cipher, private_key_iv);
-		g_object_unref(sym_cipher);
-	}
-	else
-	{
-		size_t key_size=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_ASYM_CIPHER_NEW_KEY_SIZE, OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE);
-		otb_asym_cipher_generate_random_keys(user->priv->asym_cipher, key_size);
-	}
-	g_bytes_unref(private_key_iv);
-	g_bytes_unref(encrypted_private_key);
+	return success;
 }
 
-#define otb_user_initialize_address(user)	(user)->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS)
-#define otb_user_initialize_port(user)		(user)->priv->port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PORT, DEFAULT_SYNCH_PORT)
+#define otb_user_initialize_port(user)				otb_user_set_port(user, OTB_DEFAULT_SYNCH_PORT)
 
 void otb_user_set_runtime_type(GType user_runtime_type)
 {
@@ -200,13 +194,76 @@ void otb_user_set_runtime_type(GType user_runtime_type)
 	*otb_user_get_runtime_type()=user_runtime_type;
 }
 
-OtbUser *otb_user_load()
+gboolean otb_user_exists()
+{
+	return otb_settings_config_group_exists(CONFIG_GROUP);
+}
+
+OtbUser *otb_user_create(const unsigned char *address, unsigned int key_size)
 {
 	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
-	otb_user_initialize_unique_id(user);
-	otb_user_initialize_asym_cipher(user);
-	otb_user_initialize_address(user);
-	otb_user_initialize_port(user);
+	if(G_UNLIKELY(!otb_user_initialize_unique_id(user) || !otb_user_initialize_asym_cipher(user, key_size) || !otb_user_set_address(user, address) || !otb_user_initialize_port(user)))
+	{
+		g_object_unref(user);
+		user=NULL;
+	}
+	return user;
+}
+
+static gboolean otb_user_load_unique_id(OtbUser *user)
+{
+	gboolean ret_val=FALSE;
+	otb_unique_id_unref(user->priv->unique_id);
+	size_t bytes_length;
+	unsigned char *unique_id_bytes=otb_settings_get_config_bytes(CONFIG_GROUP, CONFIG_UNIQUE_ID, &bytes_length);
+	if(G_LIKELY(unique_id_bytes!=NULL && bytes_length==OTB_UNIQUE_ID_BYTES_SIZE))
+	{
+		user->priv->unique_id=otb_unique_id_from_bytes(unique_id_bytes);
+		ret_val=TRUE;
+	}
+	else
+		otb_unique_id_unref(user->priv->unique_id);
+	g_free(unique_id_bytes);
+	return ret_val;
+}
+
+
+static gboolean otb_user_load_asym_cipher(OtbUser *user)
+{
+	gboolean success=FALSE;
+	char *sym_cipher_name=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_SYM_CIPHER);
+	GBytes *private_key_iv=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV);
+	GBytes *encrypted_private_key=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY);
+	if(G_LIKELY(sym_cipher_name!=NULL && private_key_iv!=NULL && encrypted_private_key!=NULL))
+	{
+		if(user->priv->asym_cipher!=NULL)
+			g_object_unref(user->priv->asym_cipher);
+		user->priv->asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+		g_object_set(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, sym_cipher_name, NULL);
+		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+		otb_asym_cipher_set_encrypted_private_key(user->priv->asym_cipher, encrypted_private_key, local_crypto_sym_cipher, private_key_iv);
+		success=TRUE;
+		g_object_unref(local_crypto_sym_cipher);
+	}
+	g_bytes_unref(encrypted_private_key);
+	g_bytes_unref(private_key_iv);
+	g_free(sym_cipher_name);
+	return success;
+}
+
+#define otb_user_load_address(user)		(((user)->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS))!=NULL)
+#define otb_user_load_port(user)		(((user)->priv->port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PORT, 0))!=0)
+
+OtbUser *otb_user_load()
+{
+	if(G_UNLIKELY(!otb_user_exists()))
+		return NULL;
+	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
+	if(G_UNLIKELY(!otb_user_load_unique_id(user) || !otb_user_load_asym_cipher(user) || !otb_user_load_address(user) || !otb_user_load_port(user)))
+	{
+		g_object_unref(user);
+		user=NULL;
+	}
 	return user;
 }
 

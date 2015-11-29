@@ -25,16 +25,22 @@ void otb_recreate_test_dir()
 {
 	g_free(otb_test_dir_path);
 	otb_test_dir_path=NULL;
-	otb_test_dir_path=g_strconcat(g_get_tmp_dir(), "/otb-pad-tests", NULL);
+	otb_test_dir_path=g_strconcat(g_get_tmp_dir(), "/libotb-tests", NULL);
 	otb_delete_dir(otb_test_dir_path);
 	g_mkdir(otb_test_dir_path, S_IRUSR | S_IWUSR | S_IRWXU);
 }
 
-void otb_delete_test_dir()
+static void otb_delete_test_dir()
 {
 	otb_delete_dir(otb_test_dir_path);
 	g_free(otb_test_dir_path);
 	otb_test_dir_path=NULL;
+}
+
+void otb_test_clean_up()
+{
+	otb_delete_test_dir();
+	otb_initialize_settings_for_tests();
 }
 
 const char *otb_get_test_dir_path()

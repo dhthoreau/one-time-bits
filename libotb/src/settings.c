@@ -141,6 +141,14 @@ static gboolean otb_settings_save_config_key_file()
 	return ret_val;
 }
 
+gboolean otb_settings_config_group_exists(const char *group_name)
+{
+	otb_settings_lock_config_read();
+	gboolean exists=(config_key_file!=NULL && g_key_file_has_group(config_key_file, group_name));
+	otb_settings_unlock_config_read();
+	return exists;
+}
+
 gboolean otb_settings_set_config_int(const char *group_name, const char *key, int value)
 {
 	otb_settings_lock_config_write();

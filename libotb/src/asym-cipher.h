@@ -20,8 +20,6 @@ typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 #define otb_asym_cipher_context_free(cipher_context)					EVP_CIPHER_CTX_free(cipher_context)
 #define otb_asym_cipher_dispose_decryption_buffer(decryption_buffer)	otb_openssl_dispose_decryption_buffer((decryption_buffer))
 
-#define OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE	4096
-
 #define OTB_ASYM_CIPHER_PROP_PUBLIC_KEY			"public-key"
 #define OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME	"sym-cipher-name"
 
