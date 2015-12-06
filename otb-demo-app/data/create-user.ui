@@ -19,7 +19,7 @@
             <property name="margin_bottom">5</property>
             <property name="hexpand">True</property>
             <child>
-              <object class="GtkGrid" id="userGrid">
+              <object class="GtkGrid" id="basicGrid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -59,25 +59,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="portLabel">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="xalign">1</property>
-                    <property name="label" translatable="yes">Port:</property>
-                    <property name="ellipsize">end</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">2</property>
-                    <property name="width">1</property>
-                    <property name="height">1</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkEntry" id="nameValue">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -86,6 +67,7 @@
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
                     <property name="hexpand">True</property>
+                    <signal name="focus-out-event" handler="otb_validate_not_blank" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -103,6 +85,7 @@
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
                     <property name="hexpand">True</property>
+                    <signal name="focus-out-event" handler="otb_validate_not_blank" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -112,32 +95,33 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="portValue">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="hexpand">True</property>
-                    <property name="max_length">5</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">2</property>
-                    <property name="width">1</property>
-                    <property name="height">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="keySizeLabel">
+                  <object class="GtkLabel" id="passphraseLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="margin_left">5</property>
                     <property name="margin_right">5</property>
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
-                    <property name="label" translatable="yes">Key size:</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">Passphrase:</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">2</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="repeatPassphraseLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">Repeat passphrase:</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -147,14 +131,35 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="keySizeValue">
+                  <object class="GtkEntry" id="passphraseValue">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="margin_left">5</property>
                     <property name="margin_right">5</property>
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
-                    <property name="max_length">10</property>
+                    <property name="visibility">False</property>
+                    <property name="invisible_char">●</property>
+                    <signal name="focus-out-event" handler="otb_validate_not_blank" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">2</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="repeatPassphraseValue">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="visibility">False</property>
+                    <property name="invisible_char">●</property>
+                    <signal name="focus-out-event" handler="otb_validate_equal" object="passphraseValue" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -177,7 +182,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkGrid" id="bitkeeperGrid">
+              <object class="GtkGrid" id="advancedGrid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -193,7 +198,7 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
+                    <property name="top_attach">2</property>
                     <property name="width">1</property>
                     <property name="height">1</property>
                   </packing>
@@ -212,7 +217,7 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
+                    <property name="top_attach">3</property>
                     <property name="width">1</property>
                     <property name="height">1</property>
                   </packing>
@@ -227,10 +232,11 @@
                     <property name="margin_bottom">5</property>
                     <property name="hexpand">True</property>
                     <property name="max_length">5</property>
+                    <signal name="focus-out-event" handler="otb_validate_unsigned_short_int" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
-                    <property name="top_attach">0</property>
+                    <property name="top_attach">2</property>
                     <property name="width">1</property>
                     <property name="height">1</property>
                   </packing>
@@ -245,6 +251,80 @@
                     <property name="margin_bottom">5</property>
                     <property name="hexpand">True</property>
                     <property name="max_length">19</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">3</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="portLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">User port:</property>
+                    <property name="ellipsize">end</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="portValue">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="hexpand">True</property>
+                    <property name="max_length">5</property>
+                    <signal name="focus-out-event" handler="otb_validate_unsigned_short_int" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="keySizeLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">Key size:</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="keySizeValue">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="max_length">10</property>
+                    <signal name="focus-out-event" handler="otb_validate_unsigned_positive_int" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>

@@ -1,3 +1,3 @@
 ACLOCAL_AMFLAGS=-I m4
-SUBDIRS=src
+SUBDIRS=data src
 dist_doc_DATA=../README.md

@@ -16,6 +16,8 @@
 
 #include "../../libotb/src/libotb.h"
 
+#include "main.h"
+
 G_MODULE_EXPORT
 void signal_main_close_window(GtkWidget *widget, GtkWindow *window)
 {
@@ -49,7 +51,7 @@ static void run_otb_demo_app_window(OtbBitkeeper *bitkeeper)
 
 static void activate(GtkApplication *application, void *user_data)
 {
-	otb_settings_initialize("otb-demo-app", "otb");
+	otb_settings_initialize(OTB_DEMO_APP_NAME, "otb");
 	setup_local_crypto();
 	OtbBitkeeper *bitkeeper=NULL;
 	if(!otb_bitkeeper_exists())
@@ -70,5 +72,4 @@ int main(int argc, char *argv[])
 	int status=g_application_run(G_APPLICATION(application), argc, argv);
 	g_object_unref(application);
 	return status;
-
 }

@@ -23,6 +23,8 @@ otbdemo
 one-time-bits.pot
 POTFILES
 stamp-*
+tmp
+one-time-bits-demo-app
 
 insecure-using-dummy-replacements-of-the-original-openssl-functions.c
 secure-using-real-openssl-functions.c
