@@ -10,7 +10,7 @@
 
 #include <gtk/gtk.h>
 
-#include "otb-demo-app.h"
+#include "app.h"
 
 void otb_demo_app_create_window(const char *file_name, const WindowCreationSetupCallback setup_callback, GtkApplication *application)
 {
@@ -24,4 +24,10 @@ void otb_demo_app_create_window(const char *file_name, const WindowCreationSetup
 	gtk_application_add_window(application, window);
 	gtk_widget_show(GTK_WIDGET(window));
 	g_free(file_path);
+}
+
+G_MODULE_EXPORT
+void otb_demo_app_signal_close_window(const GtkWidget *widget, GtkWindow *window)
+{
+	gtk_window_close(window);
 }

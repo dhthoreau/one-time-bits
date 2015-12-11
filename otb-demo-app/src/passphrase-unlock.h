@@ -6,11 +6,9 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_DEMO_VALIDATION_H
-#define OTB_DEMO_VALIDATION_H
+#ifndef OTB_DEMO_PASSPHRASE_H
+#define OTB_DEMO_PASSPHRASE_H
 
-gboolean otb_validation_validate_not_blank(GtkEntry *entry);
-gboolean otb_validation_validate_equal(GtkEntry *entry1, GtkEntry *entry2);
-gboolean otb_validation_validate_local_crypto_unlock(GtkEntry *entry);
+void otb_demo_passphrase_unlock_show_new_window(GtkApplication *application);
 
 #endif

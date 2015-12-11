@@ -11,18 +11,13 @@
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 
+#include "app.h"
 #include "create-user.h"
-#include "otb-demo-app.h"
+#include "passphrase-unlock.h"
 
 #include "../../libotb/src/libotb.h"
 
 #include "main.h"
-
-G_MODULE_EXPORT
-void signal_main_close_window(GtkWidget *widget, GtkWindow *window)
-{
-	gtk_window_close(window);
-}
 
 static void destroy_bitkeeper(OtbBitkeeper *bitkeeper)
 {
@@ -33,7 +28,7 @@ static void destroy_bitkeeper(OtbBitkeeper *bitkeeper)
 static void run_otb_demo_app_window(OtbBitkeeper *bitkeeper)
 {
 	otb_bitkeeper_launch_tasks(bitkeeper);
-	GtkWindow *window=NULL;
+	const GtkWindow *window=NULL;
 	otb_demo_app_create_window("main.ui", NULL, NULL);
 	g_signal_connect_after(GTK_WIDGET(window), "delete_event", G_CALLBACK(destroy_bitkeeper), bitkeeper);
 	gtk_widget_show(GTK_WIDGET(window));
@@ -43,18 +38,24 @@ static void run_otb_demo_app_window(OtbBitkeeper *bitkeeper)
 
 #define otb_data_is_corrupted_or_missing()	(!otb_local_crypto_can_be_unlocked() || !otb_bitkeeper_exists() || !otb_user_exists())
 
-static void activate(GtkApplication *application, void *user_data)
+static void activate(GtkApplication *application, const void *user_data)
 {
 	otb_settings_initialize(OTB_DEMO_APP_NAME, "otb");
-	OtbBitkeeper *bitkeeper=NULL;
+	const OtbBitkeeper *bitkeeper=NULL;
 	if(otb_data_is_corrupted_or_missing())
 		otb_demo_create_user_show_new_window(application);
+	else if(otb_local_crypto_unlock_sym_cipher(""))
+		;
 	else
-	{
+		otb_demo_passphrase_unlock_show_new_window(application);
+/*
+{
 		bitkeeper=otb_bitkeeper_load();
 		if(bitkeeper==NULL)
 			g_error(_("Failed to load bitkeeper."));
-	}
+		run_otb_demo_app_window(bitkeeper);
+}
+*/
 }
 
 int main(int argc, char *argv[])

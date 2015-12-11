@@ -13,7 +13,7 @@
 #include <glib/gi18n.h>
 #include <stdlib.h>
 
-#include "main.h"
+#include "../../libotb/src/libotb.h"
 
 static GtkCssProvider *provider=NULL;
 
@@ -28,28 +28,50 @@ static void *initialize_css_provider(void *garbage)
 
 static GOnce initialize_css_provider_once=G_ONCE_INIT;
 
-gboolean otb_validate_not_blank(GtkEntry *entry)
+static void invalidate_entry(const GtkEntry *entry)
 {
 	g_once(&initialize_css_provider_once, initialize_css_provider, NULL);
+	gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(entry)), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+}
+
+gboolean otb_validation_validate_not_blank(GtkEntry *entry)
+{
 	if(strlen(gtk_entry_get_text(entry))==0)
 	{
-		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(entry)), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		invalidate_entry(entry);
 		return FALSE;
 	}
-	gtk_style_context_remove_provider(gtk_widget_get_style_context(GTK_WIDGET(entry)), GTK_STYLE_PROVIDER(provider));
 	return TRUE;
 }
 
-gboolean otb_validate_equal(GtkEntry *entry1, GtkEntry *entry2)
+gboolean otb_validation_validate_equal(GtkEntry *entry1, GtkEntry *entry2)
 {
-	g_once(&initialize_css_provider_once, initialize_css_provider, NULL);
 	if(strcmp(gtk_entry_get_text(entry1), gtk_entry_get_text(entry2))!=0)
 	{
-		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(entry1)), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(entry2)), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		invalidate_entry(entry1);
+		invalidate_entry(entry2);
 		return FALSE;
 	}
-	gtk_style_context_remove_provider(gtk_widget_get_style_context(GTK_WIDGET(entry1)), GTK_STYLE_PROVIDER(provider));
-	gtk_style_context_remove_provider(gtk_widget_get_style_context(GTK_WIDGET(entry2)), GTK_STYLE_PROVIDER(provider));
 	return TRUE;
+}
+
+gboolean otb_validation_validate_local_crypto_unlock(GtkEntry *entry)
+{
+	if(!otb_local_crypto_unlock_sym_cipher(gtk_entry_get_text(entry)))
+	{
+		invalidate_entry(entry);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+G_MODULE_EXPORT
+void otb_demo_validation_signal_clear_error_style(GtkWidget *widget1, GtkWidget *widget2)
+{
+	if(provider!=NULL)
+	{
+		gtk_style_context_remove_provider(gtk_widget_get_style_context(widget1), GTK_STYLE_PROVIDER(provider));
+		if(widget2!=NULL)
+			gtk_style_context_remove_provider(gtk_widget_get_style_context(widget2), GTK_STYLE_PROVIDER(provider));
+	}
 }
