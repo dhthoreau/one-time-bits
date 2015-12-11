@@ -28,52 +28,28 @@ static void *initialize_css_provider(void *garbage)
 
 static GOnce initialize_css_provider_once=G_ONCE_INIT;
 
-G_MODULE_EXPORT
-gboolean otb_validate_unsigned_short_int(GtkWidget *widget, GdkEvent *event, void *user_data)
+gboolean otb_validate_not_blank(GtkEntry *entry)
 {
 	g_once(&initialize_css_provider_once, initialize_css_provider, NULL);
-	errno=0;
-	char *last_char=NULL;
-	unsigned int entry_value=strtoul(gtk_entry_get_text(GTK_ENTRY(widget)), &last_char, 0);
-	if(errno!=0 || entry_value>USHRT_MAX || last_char!=gtk_entry_get_text(GTK_ENTRY(widget))+strlen(gtk_entry_get_text(GTK_ENTRY(widget))))
-		gtk_style_context_add_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	else
-		gtk_style_context_remove_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider));
-	return FALSE;
+	if(strlen(gtk_entry_get_text(entry))==0)
+	{
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(entry)), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		return FALSE;
+	}
+	gtk_style_context_remove_provider(gtk_widget_get_style_context(GTK_WIDGET(entry)), GTK_STYLE_PROVIDER(provider));
+	return TRUE;
 }
 
-G_MODULE_EXPORT
-gboolean otb_validate_unsigned_positive_int(GtkWidget *widget, GdkEvent *event, void *user_data)
+gboolean otb_validate_equal(GtkEntry *entry1, GtkEntry *entry2)
 {
 	g_once(&initialize_css_provider_once, initialize_css_provider, NULL);
-	errno=0;
-	char *last_char=NULL;
-	int entry_value=strtol(gtk_entry_get_text(GTK_ENTRY(widget)), &last_char, 0);
-	if(errno!=0 || entry_value<0 || last_char!=gtk_entry_get_text(GTK_ENTRY(widget))+strlen(gtk_entry_get_text(GTK_ENTRY(widget))))
-		gtk_style_context_add_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	else
-		gtk_style_context_remove_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider));
-	return FALSE;
-}
-
-G_MODULE_EXPORT
-gboolean otb_validate_not_blank(GtkWidget *widget, GdkEvent *event, void *user_data)
-{
-	g_once(&initialize_css_provider_once, initialize_css_provider, NULL);
-	if(strlen(gtk_entry_get_text(GTK_ENTRY(widget)))==0)
-		gtk_style_context_add_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	else
-		gtk_style_context_remove_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider));
-	return FALSE;
-}
-
-G_MODULE_EXPORT
-gboolean otb_validate_equal(GtkWidget *widget, GdkEvent *event, void *user_data)
-{
-	g_once(&initialize_css_provider_once, initialize_css_provider, NULL);
-	if(strcmp(gtk_entry_get_text(GTK_ENTRY(widget)), gtk_entry_get_text(GTK_ENTRY(user_data)))!=0)
-		gtk_style_context_add_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	else
-		gtk_style_context_remove_provider(gtk_widget_get_style_context(widget), GTK_STYLE_PROVIDER(provider));
-	return FALSE;
+	if(strcmp(gtk_entry_get_text(entry1), gtk_entry_get_text(entry2))!=0)
+	{
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(entry1)), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(entry2)), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		return FALSE;
+	}
+	gtk_style_context_remove_provider(gtk_widget_get_style_context(GTK_WIDGET(entry1)), GTK_STYLE_PROVIDER(provider));
+	gtk_style_context_remove_provider(gtk_widget_get_style_context(GTK_WIDGET(entry2)), GTK_STYLE_PROVIDER(provider));
+	return TRUE;
 }

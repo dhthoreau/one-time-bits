@@ -24,14 +24,6 @@ void signal_main_close_window(GtkWidget *widget, GtkWindow *window)
 	gtk_window_close(window);
 }
 
-static gboolean setup_local_crypto()
-{
-	if(otb_local_crypto_can_be_unlocked())
-		otb_local_crypto_unlock_sym_cipher("");
-	else
-		otb_local_crypto_create_sym_cipher("");
-}
-
 static void destroy_bitkeeper(OtbBitkeeper *bitkeeper)
 {
 	otb_bitkeeper_shutdown_tasks(bitkeeper);
@@ -49,19 +41,19 @@ static void run_otb_demo_app_window(OtbBitkeeper *bitkeeper)
 	gtk_widget_destroy(GTK_WIDGET(window));
 }
 
+#define otb_data_is_corrupted_or_missing()	(!otb_local_crypto_can_be_unlocked() || !otb_bitkeeper_exists() || !otb_user_exists())
+
 static void activate(GtkApplication *application, void *user_data)
 {
 	otb_settings_initialize(OTB_DEMO_APP_NAME, "otb");
-	setup_local_crypto();
 	OtbBitkeeper *bitkeeper=NULL;
-	if(!otb_bitkeeper_exists())
+	if(otb_data_is_corrupted_or_missing())
 		otb_demo_create_user_show_new_window(application);
 	else
 	{
 		bitkeeper=otb_bitkeeper_load();
 		if(bitkeeper==NULL)
 			g_error(_("Failed to load bitkeeper."));
-		run_otb_demo_app_window(bitkeeper);
 	}
 }
 

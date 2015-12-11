@@ -6,11 +6,10 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_DEMO_OTB_DEMO_APP_H
-#define OTB_DEMO_OTB_DEMO_APP_H
+#ifndef OTB_DEMO_VALIDATION_H
+#define OTB_DEMO_VALIDATION_H
 
-typedef void (*WindowCreationSetupCallback)(GtkBuilder *builder);
-
-void otb_demo_app_create_window(const char *file_name, const WindowCreationSetupCallback setup_callback, GtkApplication *application);
+gboolean otb_validate_not_blank(GtkEntry *entry);
+gboolean otb_validate_equal(GtkEntry *entry1, GtkEntry *entry2);
 
 #endif

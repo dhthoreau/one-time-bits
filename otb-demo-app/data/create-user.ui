@@ -2,9 +2,38 @@
 <!-- Generated with glade 3.16.1 -->
 <interface>
   <requires lib="gtk+" version="3.10"/>
+  <object class="GtkAdjustment" id="keySizeRange">
+    <property name="lower">1</property>
+    <property name="upper">2147483647</property>
+    <property name="value">4096</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="padSynchronizationIntervalRange">
+    <property name="lower">1</property>
+    <property name="upper">9.2233720368547758e+18</property>
+    <property name="value">10000000</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="portRange">
+    <property name="lower">1</property>
+    <property name="upper">65535</property>
+    <property name="value">9876</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="proxyPortRange">
+    <property name="lower">1</property>
+    <property name="upper">65535</property>
+    <property name="value">9050</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkApplicationWindow" id="window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">OTB Demo App</property>
+    <property name="window_position">center</property>
     <child>
       <object class="GtkGrid" id="mainGrid">
         <property name="visible">True</property>
@@ -67,7 +96,6 @@
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
                     <property name="hexpand">True</property>
-                    <signal name="focus-out-event" handler="otb_validate_not_blank" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -85,7 +113,6 @@
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
                     <property name="hexpand">True</property>
-                    <signal name="focus-out-event" handler="otb_validate_not_blank" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -140,7 +167,7 @@
                     <property name="margin_bottom">5</property>
                     <property name="visibility">False</property>
                     <property name="invisible_char">●</property>
-                    <signal name="focus-out-event" handler="otb_validate_not_blank" swapped="no"/>
+                    <property name="input_purpose">password</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -159,7 +186,7 @@
                     <property name="margin_bottom">5</property>
                     <property name="visibility">False</property>
                     <property name="invisible_char">●</property>
-                    <signal name="focus-out-event" handler="otb_validate_equal" object="passphraseValue" swapped="no"/>
+                    <property name="input_purpose">password</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -223,43 +250,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="proxyPortValue">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="hexpand">True</property>
-                    <property name="max_length">5</property>
-                    <signal name="focus-out-event" handler="otb_validate_unsigned_short_int" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">2</property>
-                    <property name="width">1</property>
-                    <property name="height">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="padSynchronizationIntervalValue">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="hexpand">True</property>
-                    <property name="max_length">19</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">3</property>
-                    <property name="width">1</property>
-                    <property name="height">1</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkLabel" id="portLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -273,25 +263,6 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                    <property name="width">1</property>
-                    <property name="height">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="portValue">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="hexpand">True</property>
-                    <property name="max_length">5</property>
-                    <signal name="focus-out-event" handler="otb_validate_unsigned_short_int" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
                     <property name="top_attach">0</property>
                     <property name="width">1</property>
                     <property name="height">1</property>
@@ -316,19 +287,76 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="keySizeValue">
+                  <object class="GtkSpinButton" id="portValue">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="margin_left">5</property>
                     <property name="margin_right">5</property>
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
-                    <property name="max_length">10</property>
-                    <signal name="focus-out-event" handler="otb_validate_unsigned_positive_int" swapped="no"/>
+                    <property name="max_length">5</property>
+                    <property name="input_purpose">digits</property>
+                    <property name="adjustment">portRange</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSpinButton" id="proxyPortValue">
+                    <property name="name">55</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="input_purpose">digits</property>
+                    <property name="adjustment">proxyPortRange</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">2</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSpinButton" id="keySizeValue">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="input_purpose">digits</property>
+                    <property name="adjustment">keySizeRange</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="top_attach">1</property>
+                    <property name="width">1</property>
+                    <property name="height">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSpinButton" id="padSynchronizationIntervalValue">
+                    <property name="name">5</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="input_purpose">digits</property>
+                    <property name="adjustment">padSynchronizationIntervalRange</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">3</property>
                     <property name="width">1</property>
                     <property name="height">1</property>
                   </packing>
@@ -403,6 +431,63 @@
             <property name="top_attach">1</property>
             <property name="width">1</property>
             <property name="height">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkApplicationWindow" id="workingWindow">
+    <property name="can_focus">False</property>
+    <property name="type">popup</property>
+    <property name="title" translatable="yes">Working...</property>
+    <property name="resizable">False</property>
+    <property name="modal">True</property>
+    <property name="window_position">center</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="type_hint">dialog</property>
+    <property name="deletable">False</property>
+    <property name="transient_for">window</property>
+    <property name="show_menubar">False</property>
+    <child>
+      <object class="GtkBox" id="box">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="margin_left">5</property>
+        <property name="margin_right">5</property>
+        <property name="margin_top">5</property>
+        <property name="margin_bottom">5</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkSpinner" id="spinner">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">5</property>
+            <property name="active">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="workingLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">5</property>
+            <property name="label" translatable="yes">Working on it...</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

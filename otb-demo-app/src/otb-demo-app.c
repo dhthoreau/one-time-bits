@@ -17,9 +17,9 @@ void otb_demo_app_create_window(const char *file_name, const WindowCreationSetup
 	char *file_path=g_build_filename(DATA_DIRECTORY, file_name, NULL);
 	GtkBuilder *builder=gtk_builder_new_from_file(file_path);
 	gtk_builder_connect_signals(builder, NULL);
+	GtkWindow *window=GTK_WINDOW(gtk_builder_get_object(builder, "window"));
 	if(setup_callback!=NULL)
 		setup_callback(builder);
-	GtkWindow *window=GTK_WINDOW(gtk_builder_get_object(builder, "window"));
 	g_object_unref(builder);
 	gtk_application_add_window(application, window);
 	gtk_widget_show(GTK_WIDGET(window));
