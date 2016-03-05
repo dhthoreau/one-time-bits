@@ -18,6 +18,7 @@
 #include "../src/friend.h"
 #include "../src/io.h"
 #include "../src/local-crypto.h"
+#include "../src/random.h"
 #include "../src/settings.h"
 #include "../src/user.h"
 
@@ -260,10 +261,69 @@ static void test_otb_dummy_user_export()
 	otb_user_set_runtime_type(OTB_TYPE_USER);
 }
 
+static gboolean writing=FALSE;
+static int readers=0;
+static GMutex reader_writer_test_mutex;
+
+static void sleep_for_up_to_100_microseconds()
+{
+	useconds_t sleep_time;
+	otb_random_bytes(&sleep_time, sizeof(sleep_time));
+	usleep(otb_modulo(sleep_time, 100));
+}
+
+static void *reader_thread_func(OtbUser *user)
+{
+	for(int iter=0; iter<1000; iter++)
+	{
+		otb_user_lock_read(user);
+		g_assert(!writing);
+		g_mutex_lock(&reader_writer_test_mutex);
+		readers++;
+		g_mutex_unlock(&reader_writer_test_mutex);
+		sleep_for_up_to_100_microseconds();
+		g_mutex_lock(&reader_writer_test_mutex);
+		readers--;
+		g_mutex_unlock(&reader_writer_test_mutex);
+		g_assert(!writing);
+		otb_user_unlock_read(user);
+	}
+	return NULL;
+}
+
+static void test_locks()
+{
+	otb_initialize_settings_for_tests();
+	otb_local_crypto_create_sym_cipher("");
+	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
+	g_unlink(config_file_path);
+	g_free(config_file_path);
+	g_assert(!otb_user_exists());
+	OtbUser *user=otb_user_create("asjhdgjsahgd.onion", 1234, 256);
+	g_assert(user!=NULL);
+	GThread *reader_thread1=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);
+	GThread *reader_thread2=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);
+	GThread *reader_thread3=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);
+	for(int iter=0; iter<1000; iter++)
+	{
+		otb_user_lock_write(user);
+		g_assert_cmpint(readers, ==, 0);
+		writing=TRUE;
+		sleep_for_up_to_100_microseconds();
+		writing=FALSE;
+		g_assert_cmpint(readers, ==, 0);
+		otb_user_unlock_write(user);
+	}
+	g_thread_join(reader_thread3);
+	g_thread_join(reader_thread2);
+	g_thread_join(reader_thread1);
+}
+
 void otb_add_user_tests()
 {
 	otb_add_test_func("/user/test_otb_user_create_with_no_config_file", test_otb_user_create_with_no_config_file);
 	otb_add_test_func("/user/test_otb_user_create_from_existing_config_file", test_otb_user_create_from_existing_config_file);
 	otb_add_test_func("/user/test_otb_user_export", test_otb_user_export);
 	otb_add_test_func("/user/test_otb_dummy_user_export", test_otb_dummy_user_export);
+	otb_add_test_func("/user/test_locks", test_locks);
 }

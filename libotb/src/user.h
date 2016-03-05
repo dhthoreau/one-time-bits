@@ -42,6 +42,10 @@ struct _OtbUserClass
 GType otb_user_get_type();
 
 void otb_user_set_runtime_type(GType user_runtime_type);
+void otb_user_lock_read(const OtbUser *user);
+void otb_user_unlock_read(const OtbUser *user);
+void otb_user_lock_write(const OtbUser *user);
+void otb_user_unlock_write(const OtbUser *user);
 gboolean otb_user_exists();
 OtbUser *otb_user_create(const unsigned char *address, unsigned short port, unsigned int key_size);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_user_delete().
 OtbUser *otb_user_load();

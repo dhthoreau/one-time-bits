@@ -36,4 +36,3 @@ struct _OtbDummyUserClass
 GType otb_dummy_user_get_type();
 
 #endif
-

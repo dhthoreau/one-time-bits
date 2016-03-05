@@ -110,10 +110,25 @@ static void otb_user_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_user_parent_class)->finalize(object);
 }
 
-#define otb_user_lock_read(user)	(g_rw_lock_reader_lock(&user->priv->lock))
-#define otb_user_unlock_read(user)	(g_rw_lock_reader_unlock(&user->priv->lock))
-#define otb_user_lock_write(user)	(g_rw_lock_writer_lock(&user->priv->lock))
-#define otb_user_unlock_write(user)	(g_rw_lock_writer_unlock(&user->priv->lock))
+void otb_user_lock_read(const OtbUser *user)
+{
+	g_rw_lock_reader_lock(&user->priv->lock);
+}
+
+void otb_user_unlock_read(const OtbUser *user)
+{
+	g_rw_lock_reader_unlock(&user->priv->lock);
+}
+
+void otb_user_lock_write(const OtbUser *user)
+{
+	g_rw_lock_writer_lock(&user->priv->lock);
+}
+
+void otb_user_unlock_write(const OtbUser *user)
+{
+	g_rw_lock_writer_unlock(&user->priv->lock);
+}
 
 static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {

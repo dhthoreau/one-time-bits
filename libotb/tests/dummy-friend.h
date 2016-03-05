@@ -6,10 +6,10 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#include "../src/friend.h"
-
 #ifndef OTB_DUMMY_FRIEND_H
 #define OTB_DUMMY_FRIEND_H
+
+#include "../src/friend.h"
 
 #define OTB_DUMMY_FRIEND_GROUP	"dummy-group"
 #define OTB_DUMMY_FRIEND_KEY	"dummy-key"
@@ -40,4 +40,3 @@ GType otb_dummy_friend_get_type();
 gboolean otb_dummy_friend_set_dummy_value(OtbDummyFriend *dummy_friend, const char *dummy_value);
 
 #endif
-
