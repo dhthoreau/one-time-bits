@@ -360,7 +360,7 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 
 static GType *otb_friend_get_runtime_type()
 {
-	static gboolean otb_friend_runtime_path_initialized=FALSE;
+	static long otb_friend_runtime_path_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_friend_runtime_path_initialized)))
 	{
 		otb_friend_runtime_type=OTB_TYPE_FRIEND;

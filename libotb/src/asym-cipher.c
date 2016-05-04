@@ -188,7 +188,7 @@ GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_ciph
 gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t key_size)
 {
 	gboolean ret_val=TRUE;
-	// FARE - Potrebbe essere bene se c'erano più di EVP_PKEY_RSA e potremmo avere asym_cipher->priv->asym_cipher_impl come sym_cipher.
+	// FARE - Potrebbe essere bene se ci fossero più di EVP_PKEY_RSA e potremmo avere asym_cipher->priv->asym_cipher_impl come sym_cipher.
 	EVP_PKEY_CTX *context=EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
 	EVP_PKEY *key_impl=NULL;
 	if(G_UNLIKELY(EVP_PKEY_keygen_init(context)<=0))

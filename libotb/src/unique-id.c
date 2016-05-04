@@ -24,7 +24,7 @@ struct _OtbUniqueId
 GType otb_unique_id_get_type()
 {
 	static GType unique_id_type;
-	static gboolean otb_unique_id_type_initialized=FALSE;
+	static long otb_unique_id_type_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_unique_id_type_initialized)))
 	{
 		unique_id_type=g_boxed_type_register_static("OtbUniqueId", (GBoxedCopyFunc)otb_unique_id_ref, (GDestroyNotify)otb_unique_id_unref);

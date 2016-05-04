@@ -48,7 +48,7 @@ static GHashTable *otb_locked_pages=NULL;
 
 static void otb_mlock_initialize_hash_tables()
 {
-	static gboolean otb_mlock_hash_tables_initialized=FALSE;
+	static long otb_mlock_hash_tables_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_mlock_hash_tables_initialized)))
 	{
 		otb_allocation_sizes=g_hash_table_new_full(otb_mlock_hash, otb_mlock_equality, NULL, g_free);

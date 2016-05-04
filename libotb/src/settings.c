@@ -82,7 +82,7 @@ static void otb_settings_initialize_directory_paths(const char *app_name, const 
 
 void otb_settings_initialize(const char *app_name, const char *otb_sub_dir)
 {
-	static gboolean otb_settings_directory_paths_initialized=FALSE;
+	static long otb_settings_directory_paths_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_settings_directory_paths_initialized)))
 	{
 		bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);

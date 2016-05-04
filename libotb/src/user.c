@@ -67,7 +67,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 
 static GType *otb_user_get_runtime_type()
 {
-	static gboolean otb_user_runtime_path_initialized=FALSE;
+	static long otb_user_runtime_path_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_user_runtime_path_initialized)))
 	{
 		otb_user_runtime_type=OTB_TYPE_USER;
