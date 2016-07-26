@@ -12,6 +12,7 @@
 #include <glib/gi18n.h>
 
 #include "app.h"
+#include "console.h"
 #include "validation.h"
 
 #include "../../libotb/src/libotb.h"
@@ -47,7 +48,10 @@ static void signal_passphrase_unlock_button_clicked(const GtkWidget *widget, Pas
 		gtk_widget_destroy(error_dialog);
 	}
 	else
+	{
+		otb_demo_console_show_new_window(gtk_window_get_application(passphrase_unlock_container->window));
 		gtk_widget_destroy(GTK_WIDGET(passphrase_unlock_container->window));
+	}
 }
 
 static void signal_passphrase_unlock_container_free(const GtkWidget *widget, PassphraseUnlockContainer *passphrase_unlock_container)

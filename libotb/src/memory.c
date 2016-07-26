@@ -33,7 +33,7 @@ int otb_smemcmp(const void *buffer1, const void *buffer2, size_t size)
 
 static unsigned int otb_mlock_hash(const void *key)
 {
-	return (unsigned int)key;
+	return (unsigned long)key;
 }
 
 static gboolean otb_mlock_equality(const void *value1, const void *value2)

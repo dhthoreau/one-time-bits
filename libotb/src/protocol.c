@@ -245,7 +245,7 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *p
 {
 	GBytes *encrypted_key=NULL;
 	GBytes *iv=NULL;
-	uint32_t encrypted_data_size=0;
+	unsigned long encrypted_data_size=0;
 	unsigned char *encrypted_data=otb_asym_cipher_encrypt(protocol_context->peer_asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data_size);
 	uint32_t encrypted_key_size=g_bytes_get_size(encrypted_key);
 	uint32_t iv_size=g_bytes_get_size(iv);
@@ -266,7 +266,7 @@ static uint32_t otb_protocol_create_encrypted_packet(const OtbProtocolContext *p
 
 static uint32_t otb_protocol_decrypt_packet(OtbProtocolContext *protocol_context, const unsigned char *encrypted_input_packet, uint32_t encrypted_input_packet_size, unsigned char **decrypted_input_packet_out)
 {
-	uint32_t decrypted_input_packet_out_size;
+	unsigned long decrypted_input_packet_out_size;
 	if(G_LIKELY(PACKET_COMMAND(encrypted_input_packet)==COMMAND_ENCRYPTED && ENCRYPTED_PACKET_IS_VALID(encrypted_input_packet, encrypted_input_packet_size)))
 	{
 		GBytes *encrypted_key_gbytes=g_bytes_new_static(ENCRYPTED_PACKET_ENCRYPTED_KEY(encrypted_input_packet), ENCRYPTED_PACKET_GET_ENCRYPTED_KEY_SIZE(encrypted_input_packet));
@@ -952,7 +952,7 @@ static gboolean otb_protocol_process_request_packet(OtbProtocolContext *protocol
 	unsigned char *response_meta_packet=g_new(unsigned char, expected_bytes_written);
 	PROTOCOL_META_PACKET_SET_PACKET_SIZE(response_meta_packet, response_packet_size);
 	memcpy(PROTOCOL_META_PACKET_PACKET(response_meta_packet), response_packet, response_packet_size);
-	unsigned int actual_bytes_written=-1;
+	unsigned long actual_bytes_written=-1;
 	gboolean ret_val=g_output_stream_write_all(output_stream, response_meta_packet, expected_bytes_written, &actual_bytes_written, NULL, NULL);
 	ret_val=(ret_val && expected_bytes_written==actual_bytes_written);
 	g_free(response_meta_packet);

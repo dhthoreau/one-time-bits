@@ -12,6 +12,7 @@
 #include <glib/gi18n.h>
 
 #include "app.h"
+#include "console.h"
 #include "create-user.h"
 #include "passphrase-unlock.h"
 
@@ -45,7 +46,7 @@ static void activate(GtkApplication *application, const void *user_data)
 	if(otb_data_is_corrupted_or_missing())
 		otb_demo_create_user_show_new_window(application);
 	else if(otb_local_crypto_unlock_sym_cipher(""))
-		;
+		otb_demo_console_show_new_window(application);
 	else
 		otb_demo_passphrase_unlock_show_new_window(application);
 /*

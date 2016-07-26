@@ -12,6 +12,7 @@
 #include <glib/gi18n.h>
 
 #include "app.h"
+#include "console.h"
 #include "create-user.h"
 #include "validation.h"
 
@@ -55,11 +56,18 @@ static CreateUserContainer *create_user_container_from_builder(GtkBuilder *build
 #define create_user_container_get_proxy_port(create_user_container)						((unsigned short)gtk_adjustment_get_value((create_user_container)->proxy_port))
 #define create_user_container_get_pad_synchronization_interval(create_user_container)	((long long)gtk_adjustment_get_value((create_user_container)->pad_synchronization_interval))
 
-static const void *create_user_thread(const CreateUserContainer *create_user_container)
+static const gboolean switch_to_console_window(const CreateUserContainer *create_user_container)
+{
+	otb_demo_console_show_new_window(gtk_window_get_application(create_user_container->window));
+	gtk_widget_destroy(GTK_WIDGET(create_user_container->window));
+	return FALSE;
+}
+
+static const void *create_user_thread(CreateUserContainer *create_user_container)
 {
 	otb_local_crypto_create_sym_cipher(create_user_container_get_passphrase(create_user_container));
 	otb_bitkeeper_create(create_user_container_get_proxy_port(create_user_container), create_user_container_get_pad_synchronization_interval(create_user_container), create_user_container_get_address(create_user_container), create_user_container_get_user_port(create_user_container), create_user_container_get_key_size(create_user_container));
-	gtk_widget_destroy(GTK_WIDGET(create_user_container->window));
+	gdk_threads_add_idle((GSourceFunc)switch_to_console_window, create_user_container);
 	return NULL;
 }
 
