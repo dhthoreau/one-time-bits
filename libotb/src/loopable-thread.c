@@ -24,6 +24,13 @@ struct _OtbLoopableThreadPriv
 	GThread *thread;
 };
 
+static void otb_loopable_thread_yield(OtbLoopableThread *loopable_thread, long long interval)
+{
+	long long end_time=g_get_monotonic_time()+loopable_thread->priv->looping_interval;
+	while(g_get_monotonic_time()<end_time && loopable_thread->priv->continue_looping)
+		g_cond_wait_until(&loopable_thread->priv->cond, &loopable_thread->priv->mutex, end_time);
+}
+
 void *otb_loopable_thread_loop(OtbLoopableThread *loopable_thread)
 {
 	g_mutex_lock(&loopable_thread->priv->mutex);
@@ -66,13 +73,6 @@ void *otb_loopable_thread_data(OtbLoopableThread *loopable_thread)
 gboolean otb_loopable_thread_continue_looping(OtbLoopableThread *loopable_thread)
 {
 	return loopable_thread->priv->continue_looping;
-}
-
-void otb_loopable_thread_yield(OtbLoopableThread *loopable_thread, long long interval)
-{
-	long long end_time=g_get_monotonic_time()+loopable_thread->priv->looping_interval;
-	while(g_get_monotonic_time()<end_time && loopable_thread->priv->continue_looping)
-		g_cond_wait_until(&loopable_thread->priv->cond, &loopable_thread->priv->mutex, end_time);
 }
 
 void otb_loopable_thread_stop(OtbLoopableThread *loopable_thread)

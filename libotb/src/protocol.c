@@ -978,7 +978,6 @@ void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc pro
 			if(PROTOCOL_META_PACKET_IS_RECEIVED(request_packet_byte_array->data, request_packet_byte_array->len))
 				error=!otb_protocol_process_request_packet(protocol_context, protocol_func, request_packet_byte_array, output_stream);
 		}
-		otb_loopable_thread_yield(protocol_context->loopable_thread, 1);
 	}
 	g_byte_array_unref(request_packet_byte_array);
 }
