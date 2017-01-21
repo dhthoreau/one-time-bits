@@ -238,7 +238,7 @@ gboolean otb_sym_cipher_unwrap_key(OtbSymCipher *sym_cipher, GBytes *wrapped_key
 	unsigned char *wrapping_key_and_iv=g_new(unsigned char, key_and_iv_size(sym_cipher));
 	if(PKCS5_PBKDF2_HMAC(passphrase, strlen(passphrase), sym_cipher_salt->salt, sizeof sym_cipher_salt->salt, sym_cipher->priv->hash_iterations, sym_cipher->priv->message_digest_impl, key_and_iv_size(sym_cipher), wrapping_key_and_iv))
 	{
-		unsigned char *key_bytes=otb_sym_cipher_create_decryption_buffer(sym_cipher, g_bytes_get_size(wrapped_key));
+		unsigned char *key_bytes=otb_openssl_create_decryption_buffer(sym_cipher->priv->sym_cipher_impl, g_bytes_get_size(wrapped_key));
 		OtbSymCipherContext *sym_cipher_context=otb_sym_cipher_init_decryption_openssl(sym_cipher->priv->sym_cipher_impl, wrapping_key_and_iv, wrapping_key_and_iv+EVP_CIPHER_key_length(sym_cipher->priv->sym_cipher_impl));
 		size_t key_size=otb_sym_cipher_decrypt_next(sym_cipher_context, g_bytes_get_data(wrapped_key, NULL), g_bytes_get_size(wrapped_key), key_bytes);
 		size_t final_bytes_size=otb_sym_cipher_finish_decrypt(sym_cipher_context, key_bytes+key_size);
