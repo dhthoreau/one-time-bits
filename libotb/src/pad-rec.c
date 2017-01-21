@@ -28,7 +28,7 @@ struct _OtbPadRecPrivate
 	char *base_name;
 	char *pad_rec_file_path;
 	char *pad_file_path;
-	off_t size;
+	int32_t size;
 	long long expiration;
 	GBytes *pad_iv;
 };
@@ -358,7 +358,7 @@ gboolean otb_pad_rec_generate_pad_file(OtbPadRec *pad_rec)
 	else
 	{
 		unsigned char *buffer_bytes=otb_malloc_locked(INPUT_BUFFER_SIZE);
-		for(off_t bytes_remaining=pad_rec->priv->size; bytes_remaining>0 && ret_val; bytes_remaining-=INPUT_BUFFER_SIZE)
+		for(int32_t bytes_remaining=pad_rec->priv->size; bytes_remaining>0 && ret_val; bytes_remaining-=INPUT_BUFFER_SIZE)
 		{
 			size_t bytes_to_write=(bytes_remaining<=INPUT_BUFFER_SIZE?bytes_remaining:INPUT_BUFFER_SIZE);
 			if(G_UNLIKELY(!otb_random_bytes(buffer_bytes, bytes_to_write)))

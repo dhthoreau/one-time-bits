@@ -53,8 +53,8 @@ typedef struct
 	OtbFriend *peer_friend;
 	OtbAsymCipher *peer_asym_cipher;
 	OtbPadDb *pad_db;
-	off_t pad_size;
-	off_t pad_bytes_transferred;
+	int32_t pad_size;
+	int32_t pad_bytes_transferred;
 	OtbUniqueId *pad_unique_id;
 	OtbPadIO *pad_io;
 } OtbTestProtocolContext;
@@ -81,7 +81,7 @@ static uint32_t otb_decrypt_packet(const OtbAsymCipher *peer_asym_cipher, const 
 	g_assert_cmpint(encrypted_packet_size, ==, 13+encrypted_key_size+iv_size+encrypted_data_size);
 	GBytes *encrypted_key=g_bytes_new_static(encrypted_packet+13, encrypted_key_size);
 	GBytes *iv=g_bytes_new_static(encrypted_packet+13+encrypted_key_size, iv_size);
-	uint32_t decrypted_packet_size=0;
+	size_t decrypted_packet_size=0;
 	*decrypted_packet_out=otb_asym_cipher_decrypt(peer_asym_cipher, encrypted_packet+13+encrypted_key_size+iv_size, encrypted_data_size, encrypted_key, iv, &decrypted_packet_size);
 	g_assert_cmpint(0, <, decrypted_packet_size);
 	g_assert(*decrypted_packet_out!=NULL);
@@ -186,7 +186,7 @@ static uint32_t otb_make_encrypted_packet(const OtbAsymCipher *asym_cipher, cons
 {
 	GBytes *encrypted_key=NULL;
 	GBytes *iv=NULL;
-	uint32_t encrypted_data_size=0;
+	size_t encrypted_data_size=0;
 	unsigned char *encrypted_data=otb_asym_cipher_encrypt(asym_cipher, plain_packet, plain_packet_size, &encrypted_key, &iv, &encrypted_data_size);
 	uint32_t encrypted_packet_size=13+g_bytes_get_size(encrypted_key)+g_bytes_get_size(iv)+encrypted_data_size;
 	*encrypted_packet_out=g_new(unsigned char, encrypted_packet_size);
@@ -665,7 +665,7 @@ static void otb_do_server_receive_finish_from_client(const ProtocolParams params
 	g_free(client_request_packet);
 }
 
-static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocolContext *context, off_t pad_size, unsigned char **packet_out)
+static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocolContext *context, int32_t pad_size, unsigned char **packet_out)
 {
 	OtbUniqueId *pad_unique_id=otb_unique_id_new();
 	uint32_t packet_out_size=29;
@@ -678,7 +678,7 @@ static uint32_t otb_create_sending_pad_header_packet_plain(const OtbTestProtocol
 	return packet_out_size;
 }
 
-static uint32_t otb_create_sending_pad_header_packet_encrypted(const OtbTestProtocolContext *protocol_context, off_t pad_size, unsigned char **encrypted_packet_out)
+static uint32_t otb_create_sending_pad_header_packet_encrypted(const OtbTestProtocolContext *protocol_context, int32_t pad_size, unsigned char **encrypted_packet_out)
 {
 	unsigned char *plain_packet=NULL;
 	uint32_t plain_packet_size=otb_create_sending_pad_header_packet_plain(protocol_context, pad_size, &plain_packet);
@@ -689,7 +689,7 @@ static uint32_t otb_create_sending_pad_header_packet_encrypted(const OtbTestProt
 
 static void otb_do_server_receive_pad_header_too_large_from_client(const ProtocolParams params, OtbProtocolContext *protocol_context, const OtbAsymCipher *peer_asym_cipher)
 {
-	const off_t PAD_SIZE_TOO_LARGE=2147483647;
+	const int32_t PAD_SIZE_TOO_LARGE=2147483647;
 	unsigned char *client_request_packet=NULL;
 	uint32_t client_request_packet_size=otb_create_sending_pad_header_packet_encrypted(TEST_PROTOCOL_CONTEXT(protocol_context), PAD_SIZE_TOO_LARGE, &client_request_packet);
 	unsigned char *server_packet=NULL;
@@ -1174,13 +1174,13 @@ static uint32_t otb_dummy_server_protocol(OtbProtocolContext *protocol_context, 
 	return output_size;
 }
 
-static void otb_dummy_io_thread_fill_response_buffer(GMemoryInputStream *memory_input_stream, const GPtrArray *local_data_array, off_t iteration)
+static void otb_dummy_io_thread_fill_response_buffer(GMemoryInputStream *memory_input_stream, const GPtrArray *local_data_array, int32_t iteration)
 {
 	if(iteration<local_data_array->len)
 		g_memory_input_stream_add_bytes(memory_input_stream, g_ptr_array_index(local_data_array, iteration));
 }
 
-static void otb_dummy_io_thread_prep_iteration(const GPtrArray *memory_io_streams, const GPtrArray *local_data_array, off_t iteration)
+static void otb_dummy_io_thread_prep_iteration(const GPtrArray *memory_io_streams, const GPtrArray *local_data_array, int32_t iteration)
 {
 	otb_dummy_io_thread_fill_response_buffer(G_MEMORY_INPUT_STREAM(g_ptr_array_index(memory_io_streams, 0)), local_data_array, iteration);
 	otb_truncate_output_memory_stream(G_MEMORY_OUTPUT_STREAM(g_ptr_array_index(memory_io_streams, 1)));
@@ -1199,7 +1199,7 @@ static void otb_dummy_io_thread_process_peer_incoming_data(GMemoryOutputStream *
 static void *otb_dummy_server_io_thread(const GPtrArray *memory_io_streams)
 {
 	g_mutex_lock(&otb_protocol_mutex);
-	for(off_t iteration=0; iteration<otb_client_data_array->len; iteration++)
+	for(int32_t iteration=0; iteration<otb_client_data_array->len; iteration++)
 	{
 		otb_dummy_io_thread_prep_iteration(memory_io_streams, otb_server_data_array, iteration);
 		otb_let_client_continue();
@@ -1212,7 +1212,7 @@ static void *otb_dummy_server_io_thread(const GPtrArray *memory_io_streams)
 static void *otb_dummy_client_io_thread(const GPtrArray *memory_io_streams)
 {
 	g_mutex_lock(&otb_protocol_mutex);
-	for(off_t iteration=0; iteration<otb_client_data_array->len; iteration++)
+	for(int32_t iteration=0; iteration<otb_client_data_array->len; iteration++)
 	{
 		otb_dummy_io_thread_prep_iteration(memory_io_streams, otb_client_data_array, iteration);
 		otb_let_server_continue(TRUE);

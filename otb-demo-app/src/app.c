@@ -31,3 +31,23 @@ void otb_demo_app_signal_close_window(const GtkWidget *widget, GtkWindow *window
 {
 	gtk_window_close(window);
 }
+
+G_MODULE_EXPORT
+void otb_demo_app_signal_decrypt_file(const GtkWidget *widget, GtkWindow *window)
+{
+}
+
+G_MODULE_EXPORT
+void otb_demo_app_signal_encrypt_file(const GtkWidget *widget, GtkWindow *window)
+{
+}
+
+G_MODULE_EXPORT
+void otb_demo_app_signal_edit_profile(const GtkWidget *widget, GtkWindow *window)
+{
+}
+
+G_MODULE_EXPORT
+void otb_demo_app_signal_manage_friends(const GtkWidget *widget, GtkWindow *window)
+{
+}

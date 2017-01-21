@@ -112,8 +112,8 @@ struct _OtbProtocolContext
 	OtbFriend *peer_friend;
 	OtbAsymCipher *peer_asym_cipher;
 	OtbPadDb *pad_db;
-	off_t pad_size;
-	off_t pad_bytes_transferred;
+	int32_t pad_size;
+	int32_t pad_bytes_transferred;
 	OtbUniqueId *pad_unique_id;
 	OtbPadIO *pad_io;
 };

@@ -69,16 +69,16 @@ static void otb_assert_pad_file_does_not_exist(OtbPadRec *pad_rec)
 	g_free(expected_pad_file_path);
 }
 
-static void otb_assert_pad_file(OtbPadRec *pad_rec, const unsigned char *expected_pad_bytes, off_t expected_pad_size, gboolean auto_rewind)
+static void otb_assert_pad_file(OtbPadRec *pad_rec, const unsigned char *expected_pad_bytes, int32_t expected_pad_size, gboolean auto_rewind)
 {
-	off_t actual_pad_size;
+	int32_t actual_pad_size;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_SIZE, &actual_pad_size, NULL);
 	g_assert_cmpint(expected_pad_size, ==, actual_pad_size);
 	OtbPadIO *pad_io=otb_pad_rec_open_pad_for_read(pad_rec, auto_rewind);
 	g_assert(pad_io!=NULL);
 	for(int read_count=0; read_count<(auto_rewind?4:1); read_count++)
 	{
-		for(off_t iter=0; iter<expected_pad_size; iter++)
+		for(int32_t iter=0; iter<expected_pad_size; iter++)
 		{
 			unsigned char actual_byte;
 			g_assert(otb_pad_has_more_bytes(pad_io));
@@ -240,7 +240,7 @@ static void test_otb_pad_rec_save_load()
 
 static void test_otb_pad_rec_generate_pad_file()
 {
-	const off_t EXPECTED_PAD_SIZE=20;
+	const int32_t EXPECTED_PAD_SIZE=20;
 	
 	otb_test_setup_local_crypto();
 	OtbPadRec *pad_rec=g_object_new(OTB_TYPE_PAD_REC, OTB_PAD_REC_PROP_BASE_PATH, otb_get_test_dir_path(), OTB_PAD_REC_PROP_SIZE, EXPECTED_PAD_SIZE, NULL);
@@ -253,7 +253,7 @@ static void test_otb_pad_rec_generate_pad_file()
 
 static void test_otb_pad_rec_io_and_full_deletion()
 {
-	const off_t EXPECTED_PAD_SIZE=1;
+	const int32_t EXPECTED_PAD_SIZE=1;
 	const unsigned char EXPECTED_PAD_BYTES[10]={0x85, 0x83, 0x3b, 0xee, 0x34, 0x7a, 0x2b, 0x96, 0xec, 0x87};
 	
 	otb_test_setup_local_crypto();
@@ -275,7 +275,7 @@ static void test_otb_pad_rec_io_and_full_deletion()
 
 static void test_otb_pad_rec_io_and_pad_deletion()
 {
-	const off_t EXPECTED_PAD_SIZE=1;
+	const int32_t EXPECTED_PAD_SIZE=1;
 	const unsigned char EXPECTED_PAD_BYTES[10]={0x85, 0x83, 0x3b, 0xee, 0x34, 0x7a, 0x2b, 0x96, 0xec, 0x87};
 	
 	otb_test_setup_local_crypto();
