@@ -326,7 +326,7 @@ static OtbUniqueId *otb_bitkeeper_generate_incoming_pad_for_friend(const OtbBitk
 	char random_byte;
 	g_assert(otb_random_bytes(&random_byte, 1));
 	g_assert(otb_pad_write(pad_io, &random_byte, 1));
-	g_assert(otb_pad_io_free(pad_io));
+	g_assert(otb_pad_db_close_pad(incoming_pad_db, pad_io));
 	g_object_unref(incoming_pad_db);
 	g_object_unref(friend);
 	return pad_unique_id;

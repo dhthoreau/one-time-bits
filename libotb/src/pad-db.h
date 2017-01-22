@@ -78,7 +78,7 @@ OtbUniqueId *otb_pad_db_fetch_random_rec_id(const OtbPadDb *pad_db, OtbPadRecSta
 int32_t otb_pad_db_get_pad_size(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 long long otb_pad_db_get_pad_expiration(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 OtbPadIO *otb_pad_db_open_pad_for_read(OtbPadDb *pad_db, const OtbUniqueId *unique_id);
-gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_id);
+gboolean otb_pad_db_close_pad(const OtbPadDb *pad_db, OtbPadIO *pad_io);
 gboolean otb_pad_db_remove_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_remove_expired_pads(const OtbPadDb *pad_db);
 OtbCipherContext *otb_cipher_context_new(OtbPadDb *pad_db);
