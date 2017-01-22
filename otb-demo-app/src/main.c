@@ -15,6 +15,7 @@
 #include "console.h"
 #include "create-user.h"
 #include "passphrase-unlock.h"
+#include "user.h"
 
 #include "../../libotb/src/libotb.h"
 
@@ -35,6 +36,7 @@ static void activate(GtkApplication *application, const void *user_data)
 
 int main(int argc, char *argv[])
 {
+	otb_user_set_runtime_type(OTB_DEMO_TYPE_USER);
 	GtkApplication *application=gtk_application_new("otb.DemoApp", G_APPLICATION_FLAGS_NONE);
 	g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);
 	int status=g_application_run(G_APPLICATION(application), argc, argv);

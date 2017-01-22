@@ -11,6 +11,7 @@
 #include <gtk/gtk.h>
 
 #include "app.h"
+#include "edit-user.h"
 
 void otb_demo_app_create_window(const char *file_name, const WindowCreationSetupCallback setup_callback, GtkApplication *application)
 {
@@ -27,9 +28,9 @@ void otb_demo_app_create_window(const char *file_name, const WindowCreationSetup
 }
 
 G_MODULE_EXPORT
-void otb_demo_app_signal_close_window(const GtkWidget *widget, GtkWindow *window)
+void otb_demo_app_signal_close_window(GtkWidget *widget, void *callback_data)
 {
-	gtk_window_close(window);
+	gtk_window_close(GTK_WINDOW(gtk_widget_get_toplevel(widget)));
 }
 
 G_MODULE_EXPORT

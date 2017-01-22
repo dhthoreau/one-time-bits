@@ -13,7 +13,6 @@
 
 #include "app.h"
 #include "console.h"
-#include "create-user.h"
 #include "validation.h"
 
 #include "../../libotb/src/libotb.h"
@@ -51,7 +50,7 @@ static CreateUserContainer *create_user_container_from_builder(GtkBuilder *build
 #define create_user_container_get_name(create_user_container) 							(gtk_entry_get_text((create_user_container)->name))
 #define create_user_container_get_address(create_user_container)						(gtk_entry_get_text((create_user_container)->address))
 #define create_user_container_get_passphrase(create_user_container)						(gtk_entry_get_text((create_user_container)->passphrase))
-#define create_user_container_get_user_port(create_user_container)						((unsigned short)gtk_adjustment_get_value((create_user_container)->port))
+#define create_user_container_get_port(create_user_container)							((unsigned short)gtk_adjustment_get_value((create_user_container)->port))
 #define create_user_container_get_key_size(create_user_container)						((int)gtk_adjustment_get_value((create_user_container)->key_size))
 #define create_user_container_get_proxy_port(create_user_container)						((unsigned short)gtk_adjustment_get_value((create_user_container)->proxy_port))
 #define create_user_container_get_pad_synchronization_interval(create_user_container)	((long long)gtk_adjustment_get_value((create_user_container)->pad_synchronization_interval))
@@ -66,7 +65,7 @@ static const gboolean switch_to_console_window(const CreateUserContainer *create
 static const void *create_user_thread(CreateUserContainer *create_user_container)
 {
 	otb_local_crypto_create_sym_cipher(create_user_container_get_passphrase(create_user_container));
-	otb_bitkeeper_create(create_user_container_get_proxy_port(create_user_container), create_user_container_get_pad_synchronization_interval(create_user_container), create_user_container_get_address(create_user_container), create_user_container_get_user_port(create_user_container), create_user_container_get_key_size(create_user_container));
+	otb_bitkeeper_create(create_user_container_get_proxy_port(create_user_container), create_user_container_get_pad_synchronization_interval(create_user_container), create_user_container_get_address(create_user_container), create_user_container_get_port(create_user_container), create_user_container_get_key_size(create_user_container));
 	gdk_threads_add_idle((GSourceFunc)switch_to_console_window, create_user_container);
 	return NULL;
 }
@@ -107,16 +106,16 @@ static void signal_create_user_container_free(const GtkWidget *widget, CreateUse
 
 static void new_create_user_window_setup(GtkBuilder *builder)
 {
-	char user_port_string[6];
-	char user_key_size_string[12];
+	char port_string[6];
+	char key_size_string[12];
 	char proxy_port_string[6];
 	char pad_synchonization_interval_string[21];
-	sprintf(user_port_string, "%hu", OTB_BITKEEPER_DEFAULT_USER_PORT);
-	sprintf(user_key_size_string, "%hu", OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	sprintf(port_string, "%hu", OTB_BITKEEPER_DEFAULT_USER_PORT);
+	sprintf(key_size_string, "%hu", OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
 	sprintf(proxy_port_string, "%hu", OTB_BITKEEPER_DEFAULT_PROXY_PORT);
 	sprintf(pad_synchonization_interval_string, "%lli", OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
-	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "portValue")), user_port_string);
-	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "keySizeValue")), user_key_size_string);
+	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "portValue")), port_string);
+	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "keySizeValue")), key_size_string);
 	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "proxyPortValue")), proxy_port_string);
 	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "padSynchronizationIntervalValue")), pad_synchonization_interval_string);
 	CreateUserContainer *create_user_container=create_user_container_from_builder(builder);
