@@ -26,6 +26,7 @@ typedef struct _OtbDummyUserClass OtbDummyUserClass;
 struct _OtbDummyUser
 {
 	OtbUser parent_instance;
+	char *loaded_key_value;
 };
 
 struct _OtbDummyUserClass

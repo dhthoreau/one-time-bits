@@ -35,6 +35,7 @@ enum
 	PROP_PORT
 };
 
+static gboolean otb_user_load_from_settings(OtbUser *user);
 static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
 static void otb_user_dispose(GObject *object);
 static void otb_user_finalize(GObject *object);
@@ -53,6 +54,7 @@ struct _OtbUserPrivate
 
 static void otb_user_class_init(OtbUserClass *klass)
 {
+	klass->otb_user_load_from_settings_private=otb_user_load_from_settings;
 	klass->otb_user_export_key_file_private=otb_user_export_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_user_dispose;
@@ -267,12 +269,17 @@ static gboolean otb_user_load_asym_cipher(OtbUser *user)
 #define otb_user_load_address(user)		(((user)->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS))!=NULL)
 #define otb_user_load_port(user)		(((user)->priv->port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PORT, 0))!=0)
 
+static gboolean otb_user_load_from_settings(OtbUser *user)
+{
+	return otb_user_load_unique_id(user) && otb_user_load_asym_cipher(user) && otb_user_load_address(user) && otb_user_load_port(user);
+}
+
 OtbUser *otb_user_load()
 {
 	if(G_UNLIKELY(!otb_user_exists()))
 		return NULL;
 	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
-	if(G_UNLIKELY(!otb_user_load_unique_id(user) || !otb_user_load_asym_cipher(user) || !otb_user_load_address(user) || !otb_user_load_port(user)))
+	if(G_UNLIKELY(!OTB_USER_GET_CLASS(user)->otb_user_load_from_settings_private(user)))
 	{
 		g_object_unref(user);
 		user=NULL;

@@ -36,7 +36,8 @@ struct _OtbUser
 struct _OtbUserClass
 {
 	GObjectClass parent_class;
-	void (*otb_user_export_key_file_private)(const OtbUser *user, GKeyFile *);
+	gboolean (*otb_user_load_from_settings_private)(OtbUser *user);
+	void (*otb_user_export_key_file_private)(const OtbUser *user, GKeyFile *export_key_file);
 };
 
 GType otb_user_get_type();

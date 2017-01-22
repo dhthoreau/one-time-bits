@@ -117,6 +117,22 @@ static void otb_write_port(FILE *file, unsigned short port)
 	}
 }
 
+static void otb_write_dummy_value(FILE *file)
+{
+	g_assert(otb_write(OTB_DUMMY_FRIEND_KEY, 1, strlen(OTB_DUMMY_FRIEND_KEY), file)==strlen(OTB_DUMMY_FRIEND_KEY));
+	g_assert(otb_write("=", 1, 1, file)==1);
+	g_assert(otb_write(OTB_DUMMY_USER_EXPORT_VALUE, 1, strlen(OTB_DUMMY_USER_EXPORT_VALUE), file)==strlen(OTB_DUMMY_USER_EXPORT_VALUE));
+	g_assert(otb_write("\n", 1, 1, file)==1);
+}
+
+static void otb_write_dummy_data(FILE *file)
+{
+	g_assert(otb_write("[", 1, 1, file)==1);
+	g_assert(otb_write(OTB_DUMMY_FRIEND_GROUP, 1, strlen(OTB_DUMMY_FRIEND_GROUP), file)==strlen(OTB_DUMMY_FRIEND_GROUP));
+	g_assert(otb_write("]\n", 1, 2, file)==2);
+	otb_write_dummy_value(file);
+}
+
 void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *address, unsigned short port)
 {
 	otb_test_setup_local_crypto();
@@ -130,6 +146,7 @@ void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const ch
 	otb_write_asym_cipher(file, asym_cipher);
 	otb_write_address(file, address);
 	otb_write_port(file, port);
+	otb_write_dummy_data(file);
 	g_assert(otb_close(file));
 	otb_initialize_settings_for_tests();
 }
@@ -143,7 +160,7 @@ static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *uniqu
 	return user;
 }
 
-static void test_otb_user_create_from_existing_config_file()
+static OtbUser *otb_do_user_create_from_existing_config_file_test()
 {
 	const size_t NEW_KEY_SIZE=256;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
@@ -191,8 +208,27 @@ static void test_otb_user_create_from_existing_config_file()
 	g_object_unref(actual_asym_cipher);
 	g_free(actual_address1);
 	g_free(actual_address2);
-	g_object_unref(user);
 	g_object_unref(expected_asym_cipher);
+	return user;
+}
+
+static void test_otb_user_create_from_existing_config_file()
+{
+	OtbUser *user=otb_do_user_create_from_existing_config_file_test();
+	g_assert(OTB_IS_USER(user));
+	g_assert(!OTB_IS_DUMMY_USER(user));
+	g_object_unref(user);
+}
+
+static void test_otb_dummy_user_create_from_existing_config_file()
+{
+	otb_user_set_runtime_type(OTB_TYPE_DUMMY_USER);
+	OtbUser *user=otb_do_user_create_from_existing_config_file_test();
+	g_assert(OTB_IS_USER(user));
+	g_assert(OTB_IS_DUMMY_USER(user));
+	g_assert_cmpstr(OTB_DUMMY_USER_EXPORT_VALUE, ==, OTB_DUMMY_USER(user)->loaded_key_value);
+	g_object_unref(user);
+	otb_user_set_runtime_type(OTB_TYPE_USER);
 }
 
 static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
@@ -323,6 +359,7 @@ void otb_add_user_tests()
 {
 	otb_add_test_func("/user/test_otb_user_create_with_no_config_file", test_otb_user_create_with_no_config_file);
 	otb_add_test_func("/user/test_otb_user_create_from_existing_config_file", test_otb_user_create_from_existing_config_file);
+	otb_add_test_func("/user/test_otb_dummy_user_create_from_existing_config_file", test_otb_dummy_user_create_from_existing_config_file);
 	otb_add_test_func("/user/test_otb_user_export", test_otb_user_export);
 	otb_add_test_func("/user/test_otb_dummy_user_export", test_otb_dummy_user_export);
 	otb_add_test_func("/user/test_locks", test_locks);
