@@ -178,12 +178,12 @@ static gboolean otb_user_initialize_asym_cipher(OtbUser *user, unsigned int key_
 {
 	gboolean success=FALSE;
 	user->priv->asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	char *sym_cipher_name=NULL;
+	char *sym_cipher_name;
 	g_object_get(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &sym_cipher_name, NULL);
 	if(G_LIKELY(otb_settings_set_config_string(CONFIG_GROUP, CONFIG_SYM_CIPHER, sym_cipher_name) && otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_ASYM_CIPHER_NEW_KEY_SIZE, key_size) && otb_asym_cipher_generate_random_keys(user->priv->asym_cipher, key_size)))
 	{
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-		GBytes *private_key_iv=NULL;
+		GBytes *private_key_iv;
 		GBytes *encrypted_private_key=otb_asym_cipher_get_encrypted_private_key(user->priv->asym_cipher, local_crypto_sym_cipher, &private_key_iv);
 		if(G_LIKELY(otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV, private_key_iv) && otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY, encrypted_private_key)))
 			success=TRUE;
@@ -303,7 +303,7 @@ gboolean otb_user_set_port(const OtbUser *user, unsigned short port)
 
 static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key_file)
 {
-	char *public_key=NULL;
+	char *public_key;
 	g_object_get(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &public_key, NULL);
 	g_key_file_set_string(export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY, public_key);
 	g_free(public_key);
@@ -311,7 +311,7 @@ static void otb_user_export_public_key(const OtbUser *user, GKeyFile *export_key
 
 static void otb_user_export_transport_cipher_name(const OtbUser *user, GKeyFile *export_key_file)
 {
-	char *transport_cipher_name=NULL;
+	char *transport_cipher_name;
 	g_object_get(user->priv->asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &transport_cipher_name, NULL);
 	g_key_file_set_string(export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME, transport_cipher_name);
 	g_free(transport_cipher_name);

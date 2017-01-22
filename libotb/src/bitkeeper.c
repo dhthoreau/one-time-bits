@@ -140,7 +140,7 @@ gboolean otb_bitkeeper_exists()
 static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 {
 	gboolean ret_val=TRUE;
-	GDir *friends_dir=NULL;
+	GDir *friends_dir;
 	if(G_UNLIKELY(!otb_mkdir_with_parents(bitkeeper->priv->friends_base_path)))
 		ret_val=FALSE;
 	else if(G_UNLIKELY((friends_dir=otb_open_directory(bitkeeper->priv->friends_base_path))==NULL))
@@ -220,7 +220,7 @@ static GSList *otb_bitkeeper_get_unique_ids_of_friends_no_lock(const OtbBitkeepe
 	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
 	{
 		OtbFriend *friend=OTB_FRIEND(curr_element->data);
-		OtbUniqueId *unique_id=NULL;
+		OtbUniqueId *unique_id;
 		g_object_get(friend, OTB_FRIEND_PROP_UNIQUE_ID, &unique_id, NULL);
 		selected_friend_unique_ids=g_slist_prepend(selected_friend_unique_ids, unique_id);
 	}
@@ -241,7 +241,7 @@ static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bi
 	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL && friend==NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbFriend *current_friend=OTB_FRIEND(curr_element->data);
-		OtbUniqueId *current_friend_unique_id=NULL;
+		OtbUniqueId *current_friend_unique_id;
 		g_object_get(current_friend, OTB_FRIEND_PROP_UNIQUE_ID, &current_friend_unique_id, NULL);
 		if(otb_unique_id_compare(friend_unique_id, current_friend_unique_id)==0)
 			friend=current_friend;
@@ -268,7 +268,7 @@ OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbBitkeeper *bitkeeper, 
 	for(const GSList *curr_element=friend_unique_ids; friend==NULL && curr_element!=NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbFriend *curr_friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, (OtbUniqueId*)curr_element->data);
-		OtbPadDb *incoming_pad_db=NULL;
+		OtbPadDb *incoming_pad_db;
 		g_object_get(curr_friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &incoming_pad_db, NULL);
 		if(G_UNLIKELY(otb_pad_db_get_pad_size(incoming_pad_db, pad_unique_id)>0))
 		{
@@ -333,7 +333,7 @@ gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId 
 
 static void otb_bitkeeper_friend_message(OtbFriend *friend, GLogLevelFlags log_level, const char *message)
 {
-	OtbUniqueId *friend_unique_id=NULL;
+	OtbUniqueId *friend_unique_id;
 	g_object_get(friend, OTB_FRIEND_IMPORT_UNIQUE_ID, &friend_unique_id, NULL);
 	char *friend_unique_id_string=otb_unique_id_to_string(friend_unique_id);
 	g_log(G_LOG_DOMAIN, log_level, message, friend_unique_id_string);
@@ -359,8 +359,8 @@ static gboolean otb_friend_synchronize_pads_with_remote(OtbBitkeeper *bitkeeper,
 	gboolean ret_val=TRUE;
 	GSocketClient *socket_client=g_socket_client_new();
 	otb_socket_client_set_proxy_resolver(socket_client, bitkeeper->priv->proxy_port);
-	char *remote_address=NULL;
-	unsigned int remote_port=0;
+	char *remote_address;
+	unsigned int remote_port;
 	g_object_get(friend, OTB_FRIEND_PROP_ADDRESS, &remote_address, OTB_FRIEND_PROP_PORT, &remote_port, NULL);
 	GSocketConnection *socket_connect=g_socket_client_connect_to_host(socket_client, remote_address, (unsigned short)remote_port, NULL, NULL);
 	if(socket_connect!=NULL)

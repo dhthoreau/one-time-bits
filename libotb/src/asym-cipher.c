@@ -129,7 +129,7 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 			otb_asym_cipher_lock_read(asym_cipher);
 			if(G_LIKELY(PEM_write_bio_PUBKEY(buff_io, asym_cipher->priv->key_impl)))
 			{
-				char *public_key_in_buff=NULL;
+				char *public_key_in_buff;
 				long public_key_size=BIO_get_mem_data(buff_io, &public_key_in_buff);
 				char *public_key=g_new(char, public_key_size+1);
 				memcpy(public_key, public_key_in_buff, public_key_size);
@@ -157,7 +157,7 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 
 void otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv)
 {
-	void *private_key=NULL;
+	void *private_key;
 	unsigned int private_key_size=otb_sym_cipher_decrypt(private_key_sym_cipher, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key_iv, &private_key);
 	BIO *buff_io=BIO_new_mem_buf(private_key, private_key_size);
 	otb_asym_cipher_lock_write(asym_cipher);
@@ -174,9 +174,9 @@ GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_ciph
 	otb_asym_cipher_lock_read(asym_cipher);
 	if(G_LIKELY(PEM_write_bio_PrivateKey(buff_io, asym_cipher->priv->key_impl, NULL, NULL, 0, NULL, NULL)))
 	{
-		char *private_key=NULL;
+		char *private_key;
 		long private_key_size=BIO_get_mem_data(buff_io, &private_key);
-		unsigned char *encrypted_private_key_bytes=NULL;
+		unsigned char *encrypted_private_key_bytes;
 		unsigned int encrypted_private_key_size=otb_sym_cipher_encrypt(private_key_sym_cipher, private_key, private_key_size, private_key_iv_out, &encrypted_private_key_bytes);
 		encrypted_private_key=g_bytes_new_take(encrypted_private_key_bytes, encrypted_private_key_size);
 	}
@@ -225,8 +225,7 @@ void *otb_asym_cipher_create_decryption_buffer(const OtbAsymCipher *asym_cipher,
 
 OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_cipher, GBytes **encrypted_key_out, GBytes **iv_out)
 {
-	OtbAsymCipherContext *asym_cipher_context=NULL;
-	asym_cipher_context=g_new(OtbAsymCipherContext, 1);
+	OtbAsymCipherContext *asym_cipher_context=g_new(OtbAsymCipherContext, 1);
 	EVP_CIPHER_CTX_init(asym_cipher_context);
 	otb_asym_cipher_lock_read(asym_cipher);
 	unsigned char *encrypted_key_bytes=g_new(unsigned char, EVP_PKEY_size(asym_cipher->priv->key_impl));

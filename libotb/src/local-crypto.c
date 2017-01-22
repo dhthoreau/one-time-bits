@@ -33,8 +33,7 @@ static OtbSymCipher *otb_local_crypto_sym_cipher=NULL;
 
 gboolean otb_local_crypto_can_be_unlocked()
 {
-	GBytes *passphrase_hash=NULL;
-	passphrase_hash=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH);
+	GBytes *passphrase_hash=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH);
 	gboolean local_crypto_can_be_unlocked=(passphrase_hash!=NULL);
 	g_bytes_unref(passphrase_hash);
 	return local_crypto_can_be_unlocked;

@@ -278,9 +278,9 @@ static gboolean otb_friend_save_no_lock(const OtbFriend *friend)
 		OTB_FRIEND_GET_CLASS(friend)->otb_friend_export_key_file_private(friend, export_key_file);
 		char *export_string=g_key_file_to_data(export_key_file, NULL, NULL);
 		g_key_file_unref(export_key_file);
-		GBytes *import_string_iv=NULL;
+		GBytes *import_string_iv;
 		size_t encrypted_import_string_size;
-		unsigned char *encrypted_import_string=NULL;
+		unsigned char *encrypted_import_string;
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		encrypted_import_string_size=otb_sym_cipher_encrypt(local_crypto_sym_cipher, export_string, strlen(export_string)+1, &import_string_iv, &encrypted_import_string);
 		g_free(export_string);

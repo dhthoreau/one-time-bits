@@ -288,7 +288,7 @@ static int32_t otb_pad_db_get_curr_size(const OtbPadDb *pad_db)
 static gboolean otb_pad_db_add_pad_rec(const OtbPadDb *pad_db, OtbPadRec *pad_rec)
 {
 	gboolean ret_val=TRUE;
-	OtbUniqueId *unique_id=NULL;
+	OtbUniqueId *unique_id;
 	int32_t pad_size;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_UNIQUE_ID, &unique_id, OTB_PAD_REC_PROP_SIZE, &pad_size, NULL);
 	if(G_UNLIKELY(otb_pad_db_find_pad_rec_by_id_no_ref(pad_db, unique_id)!=NULL))
@@ -747,7 +747,7 @@ static void otb_encrypt_allocate_room_for_pad_rec_unique_id(unsigned char **curr
 
 static void otb_cipher_contect_move_to_processing_pad(OtbCipherContext *cipher_context, const OtbUniqueId *unique_id, OtbPadRecStatus pad_rec_status_if_pad_rec_found, OtbPadDbCryptResult result_code_if_missing_pad_rec)
 {
-	OtbPadRec *pad_rec=NULL;
+	OtbPadRec *pad_rec;
 	int32_t pad_size=-1;
 	if(G_UNLIKELY((pad_rec=otb_pad_db_find_pad_rec_by_id_no_ref(cipher_context->pad_db, unique_id))==NULL))
 		cipher_context->result=result_code_if_missing_pad_rec;

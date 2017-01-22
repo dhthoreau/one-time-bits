@@ -49,6 +49,7 @@ GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
 OtbBitkeeper *otb_bitkeeper_create(unsigned short proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_bitkeeper_delete().
+																																																// FARE - Non utilizzare short.
 OtbBitkeeper *otb_bitkeeper_create_with_defaults(const unsigned char *user_address);
 OtbBitkeeper *otb_bitkeeper_load();
 gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned short proxy_port);

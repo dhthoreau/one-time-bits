@@ -41,7 +41,7 @@ static gboolean otb_mlock_equality(const void *value1, const void *value2)
 	return value1==value2;
 }
 
-static GHashTable *otb_allocation_sizes=NULL;
+static GHashTable *otb_allocation_sizes;
 #ifdef HAVE_UNISTD_H
 static GHashTable *otb_locked_pages=NULL;
 #endif
@@ -67,7 +67,7 @@ static GMutex otb_mlock_hash_tables_mutex;
 #ifdef HAVE_UNISTD_H
 void otb_mlock_page(void *page)
 {
-	size_t *lock_count=NULL;
+	size_t *lock_count;
 	if(g_hash_table_contains(otb_locked_pages, page))
 	{
 		lock_count=g_hash_table_lookup(otb_locked_pages, page);

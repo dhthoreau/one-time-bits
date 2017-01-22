@@ -20,7 +20,7 @@ char *otb_openssl_errors_as_string()
 {
 	BIO *bio=BIO_new(BIO_s_mem());
 	ERR_print_errors(bio);
-	char *buffer=NULL;
+	char *buffer;
 	size_t size=BIO_get_mem_data(bio, &buffer);
 	char *error_string=g_strnfill(size+1, 0);
 	if(G_LIKELY(error_string))
