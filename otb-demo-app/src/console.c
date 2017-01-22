@@ -21,3 +21,11 @@ void otb_demo_console_show_new_window(GtkApplication *application)
 {
 	otb_demo_app_create_window("console.ui", NULL, application);
 }
+
+G_MODULE_EXPORT
+void otb_demo_app_signal_switch_to_console(GtkWidget *widget, void *callback_data)
+{
+	GtkWindow *window=GTK_WINDOW(gtk_widget_get_toplevel(widget));
+	otb_demo_console_show_new_window(gtk_window_get_application(window));
+	gtk_widget_destroy(GTK_WIDGET(window));
+}
