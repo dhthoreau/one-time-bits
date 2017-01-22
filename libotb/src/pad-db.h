@@ -70,7 +70,7 @@ gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, int32_t new_pad
 gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, int32_t new_pad_max_size);
 gboolean otb_pad_db_set_new_pad_expiration(const OtbPadDb *pad_db, long long new_pad_expiration);
 gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db);
-OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, int32_t size, long long expiration);
+OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, int32_t size, long long expiration);	// FARE - Deve confermare che la dimensione finale è veramente == size.
 GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status);
 gboolean otb_pad_db_mark_pad_as_sent(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);
 gboolean otb_pad_db_mark_pad_as_received(const OtbPadDb *pad_db, const OtbUniqueId *unique_id);

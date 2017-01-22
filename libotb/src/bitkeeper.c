@@ -214,28 +214,71 @@ gboolean otb_bitkeeper_set_pad_synchronization_interval(const OtbBitkeeper *bitk
 	return ret_val;
 }
 
-static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
+static GSList *otb_bitkeeper_get_unique_ids_of_friends_no_lock(const OtbBitkeeper *bitkeeper)
+{
+	GSList *selected_friend_unique_ids=NULL;
+	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
+	{
+		OtbFriend *friend=OTB_FRIEND(curr_element->data);
+		OtbUniqueId *unique_id=NULL;
+		g_object_get(friend, OTB_FRIEND_PROP_UNIQUE_ID, &unique_id, NULL);
+		selected_friend_unique_ids=g_slist_prepend(selected_friend_unique_ids, unique_id);
+	}
+	return selected_friend_unique_ids;
+}
+
+GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper)
+{
+	otb_bitkeeper_lock_read(bitkeeper);
+	GSList *selected_friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends_no_lock(bitkeeper);
+	otb_bitkeeper_unlock_read(bitkeeper);
+	return selected_friend_unique_ids;
+}
+
+static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id)
 {
 	OtbFriend *friend=NULL;
 	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL && friend==NULL; curr_element=g_slist_next(curr_element))
 	{
 		OtbFriend *current_friend=OTB_FRIEND(curr_element->data);
-		OtbUniqueId *current_unique_id=NULL;
-		g_object_get(current_friend, OTB_FRIEND_PROP_UNIQUE_ID, &current_unique_id, NULL);
-		if(otb_unique_id_compare(unique_id, current_unique_id)==0)
+		OtbUniqueId *current_friend_unique_id=NULL;
+		g_object_get(current_friend, OTB_FRIEND_PROP_UNIQUE_ID, &current_friend_unique_id, NULL);
+		if(otb_unique_id_compare(friend_unique_id, current_friend_unique_id)==0)
 			friend=current_friend;
-		otb_unique_id_unref(current_unique_id);
+		otb_unique_id_unref(current_friend_unique_id);
 	}
 	return friend;
 }
 
-OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
+OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id)
 {
 	otb_bitkeeper_lock_read(bitkeeper);
-	OtbFriend *friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, unique_id);
+	OtbFriend *friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, friend_unique_id);
 	if(G_LIKELY(friend!=NULL))
 		g_object_ref(friend);
 	otb_bitkeeper_unlock_read(bitkeeper);
+	return friend;
+}
+
+OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbBitkeeper *bitkeeper, const OtbUniqueId *pad_unique_id)
+{
+	OtbFriend *friend=NULL;
+	otb_bitkeeper_lock_read(bitkeeper);
+	GSList *friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends_no_lock(bitkeeper);
+	for(const GSList *curr_element=friend_unique_ids; friend==NULL && curr_element!=NULL; curr_element=g_slist_next(curr_element))
+	{
+		OtbFriend *curr_friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, (OtbUniqueId*)curr_element->data);
+		OtbPadDb *incoming_pad_db=NULL;
+		g_object_get(curr_friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &incoming_pad_db, NULL);
+		if(G_UNLIKELY(otb_pad_db_get_pad_size(incoming_pad_db, pad_unique_id)>0))
+		{
+			friend=curr_friend;
+			g_object_ref(friend);
+		}
+		g_object_unref(incoming_pad_db);
+	}
+	otb_bitkeeper_unlock_read(bitkeeper);
+	g_slist_free_full(friend_unique_ids, (GDestroyNotify)otb_unique_id_unref);
 	return friend;
 }
 
@@ -286,21 +329,6 @@ gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId 
 	}
 	otb_bitkeeper_unlock_write(bitkeeper);
 	return ret_val;
-}
-
-GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper)
-{
-	GSList *selected_friend_unique_ids=NULL;
-	otb_bitkeeper_lock_read(bitkeeper);
-	for(const GSList *curr_element=bitkeeper->priv->friends; curr_element!=NULL; curr_element=(const GSList*)g_slist_next(curr_element))
-	{
-		OtbFriend *friend=OTB_FRIEND(curr_element->data);
-		OtbUniqueId *unique_id=NULL;
-		g_object_get(friend, OTB_FRIEND_PROP_UNIQUE_ID, &unique_id, NULL);
-		selected_friend_unique_ids=g_slist_prepend(selected_friend_unique_ids, unique_id);
-	}
-	otb_bitkeeper_unlock_read(bitkeeper);
-	return selected_friend_unique_ids;
 }
 
 static void otb_bitkeeper_friend_message(OtbFriend *friend, GLogLevelFlags log_level, const char *message)

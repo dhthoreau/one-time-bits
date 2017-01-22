@@ -18,6 +18,7 @@
 #include "../src/bitkeeper.h"
 #include "../src/io.h"
 #include "../src/local-crypto.h"
+#include "../src/random.h"
 #include "../src/settings.h"
 
 static void otb_assert_asym_cipher(OtbAsymCipher *asym_cipher, int expected_key_size)
@@ -312,6 +313,52 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	g_free(friend2_import_string);
 }
 
+static OtbUniqueId *otb_bitkeeper_generate_incoming_pad_for_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id)
+{
+	OtbFriend *friend=otb_bitkeeper_get_friend(bitkeeper, friend_unique_id);
+	g_assert(friend!=NULL);
+	OtbPadDb *incoming_pad_db=NULL;
+	g_object_get(friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &incoming_pad_db, NULL);
+	g_assert(incoming_pad_db!=NULL);
+	OtbUniqueId *pad_unique_id=otb_unique_id_new();
+	OtbPadIO *pad_io=otb_pad_db_add_incoming_pad(incoming_pad_db, pad_unique_id, 1, 50000000);
+	g_assert(pad_io!=NULL);
+	char random_byte;
+	g_assert(otb_random_bytes(&random_byte, 1));
+	g_assert(otb_pad_write(pad_io, &random_byte, 1));
+	g_assert(otb_pad_io_free(pad_io));
+	g_object_unref(incoming_pad_db);
+	g_object_unref(friend);
+	return pad_unique_id;
+}
+
+static void otb_assert_bitkeeper_friend_is_expected(const OtbUniqueId *expected_friend_unique_id, OtbFriend *actual_friend)
+{
+	OtbUniqueId *actual_friend_unique_id=NULL;
+	g_object_get(actual_friend, OTB_FRIEND_PROP_UNIQUE_ID, &actual_friend_unique_id, NULL);
+	g_assert(actual_friend_unique_id!=NULL);
+	g_assert_cmpint(0, ==, otb_unique_id_compare(actual_friend_unique_id, expected_friend_unique_id));
+	otb_unique_id_unref(actual_friend_unique_id);
+}
+
+static void otb_bitkeeper_find_by_pad_test(const OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_friend_unique_id1, const OtbUniqueId *expected_friend_unique_id2)
+{
+	OtbUniqueId *pad_unique_id1=otb_bitkeeper_generate_incoming_pad_for_friend(bitkeeper, expected_friend_unique_id1);
+	g_assert(pad_unique_id1!=NULL);
+	OtbUniqueId *pad_unique_id2=otb_bitkeeper_generate_incoming_pad_for_friend(bitkeeper, expected_friend_unique_id2);
+	g_assert(pad_unique_id2!=NULL);
+	OtbFriend *actual_friend1=otb_bitkeeper_get_friend_who_sent_pad(bitkeeper, pad_unique_id1);
+	g_assert(actual_friend1!=NULL);
+	OtbFriend *actual_friend2=otb_bitkeeper_get_friend_who_sent_pad(bitkeeper, pad_unique_id2);
+	g_assert(actual_friend2!=NULL);
+	otb_assert_bitkeeper_friend_is_expected(expected_friend_unique_id1, actual_friend1);
+	otb_assert_bitkeeper_friend_is_expected(expected_friend_unique_id2, actual_friend2);
+	g_object_unref(actual_friend2);
+	g_object_unref(actual_friend1);
+	otb_unique_id_unref(pad_unique_id2);
+	otb_unique_id_unref(pad_unique_id1);
+}
+
 static void otb_bitkeeper_delete_test(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
 	g_assert(otb_bitkeeper_remove_friend(bitkeeper, expected_unique_id2));
@@ -332,12 +379,13 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 	return bitkeeper;
 }
 
-static void test_otb_bitkeeper_import_delete_friends()
+static void test_otb_bitkeeper_import_find_delete_friends()
 {
 	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
 	OtbUniqueId *expected_unique_id1=otb_unique_id_new();
 	OtbUniqueId *expected_unique_id2=otb_unique_id_new();
 	otb_bitkeeper_import_test(bitkeeper, expected_unique_id1, expected_unique_id2);
+	otb_bitkeeper_find_by_pad_test(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_bitkeeper_delete_test(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_local_crypto_lock_sym_cipher();
 	otb_unique_id_unref(expected_unique_id1);
@@ -352,5 +400,5 @@ void otb_add_bitkeeper_tests()
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_user", test_otb_bitkeeper_user);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_proxy_port", test_otb_bitkeeper_proxy_port);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_pad_synchronization_interval", test_otb_bitkeeper_pad_synchronization_interval);
-	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_import_delete_friends", test_otb_bitkeeper_import_delete_friends);
+	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_import_find_delete_friends", test_otb_bitkeeper_import_find_delete_friends);
 }
