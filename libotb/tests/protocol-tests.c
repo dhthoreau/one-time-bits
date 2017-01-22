@@ -854,6 +854,7 @@ static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolCont
 	else
 		*context_out=otb_protocol_context_create_server(local_bitkeeper, loopable_thread);
 	g_assert(*context_out!=NULL);
+	otb_loopable_thread_unref(loopable_thread);
 	g_object_unref(peer_friend);
 	g_object_unref(local_bitkeeper);
 	g_free(peer_export);
@@ -1248,6 +1249,7 @@ static void otb_protocol_execution_test(unsigned char client_server, GThreadFunc
 		otb_let_server_continue(FALSE);
 	g_mutex_unlock(&otb_protocol_mutex);
 	g_thread_join(dummy_io_thread);
+	otb_loopable_thread_stop(TEST_PROTOCOL_CONTEXT(protocol_context)->loopable_thread);
 	otb_local_crypto_lock_sym_cipher();
 	g_ptr_array_unref(memory_io_streams);
 	otb_protocol_context_free(protocol_context);

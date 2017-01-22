@@ -82,7 +82,6 @@ void otb_loopable_thread_stop(OtbLoopableThread *loopable_thread)
 	g_cond_signal(&loopable_thread->priv->cond);
 	g_mutex_unlock(&loopable_thread->priv->mutex);
 	g_thread_join(loopable_thread->priv->thread);
-	otb_loopable_thread_unref(loopable_thread);
 }
 
 void otb_loopable_thread_unref(OtbLoopableThread *loopable_thread)
