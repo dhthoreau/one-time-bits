@@ -158,7 +158,7 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 void otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv)
 {
 	void *private_key=NULL;
-	size_t private_key_size=otb_sym_cipher_decrypt(private_key_sym_cipher, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key_iv, &private_key);
+	unsigned int private_key_size=otb_sym_cipher_decrypt(private_key_sym_cipher, g_bytes_get_data(encrypted_private_key, NULL), g_bytes_get_size(encrypted_private_key), private_key_iv, &private_key);
 	BIO *buff_io=BIO_new_mem_buf(private_key, private_key_size);
 	otb_asym_cipher_lock_write(asym_cipher);
 	otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PrivateKey(buff_io, NULL, NULL, NULL), TRUE);
@@ -177,7 +177,7 @@ GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_ciph
 		char *private_key=NULL;
 		long private_key_size=BIO_get_mem_data(buff_io, &private_key);
 		unsigned char *encrypted_private_key_bytes=NULL;
-		size_t encrypted_private_key_size=otb_sym_cipher_encrypt(private_key_sym_cipher, private_key, private_key_size, private_key_iv_out, &encrypted_private_key_bytes);
+		unsigned int encrypted_private_key_size=otb_sym_cipher_encrypt(private_key_sym_cipher, private_key, private_key_size, private_key_iv_out, &encrypted_private_key_bytes);
 		encrypted_private_key=g_bytes_new_take(encrypted_private_key_bytes, encrypted_private_key_size);
 	}
 	otb_asym_cipher_unlock_read(asym_cipher);
@@ -185,7 +185,7 @@ GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_ciph
 	return encrypted_private_key;
 }
 
-gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, size_t key_size)
+gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, unsigned int key_size)
 {
 	gboolean ret_val=TRUE;
 	// FARE - Potrebbe essere bene se ci fossero più di EVP_PKEY_RSA e potremmo avere asym_cipher->priv->asym_cipher_impl come sym_cipher.
