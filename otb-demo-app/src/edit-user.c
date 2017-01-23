@@ -13,7 +13,7 @@
 
 #include "app.h"
 #include "console.h"
-#include "user.h"
+#include "demo-user.h"
 #include "validation.h"
 
 #include "../../libotb/src/libotb.h"

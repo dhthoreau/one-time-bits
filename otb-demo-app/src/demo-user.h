@@ -36,6 +36,6 @@ struct _OtbDemoUserClass
 };
 
 GType otb_demo_user_get_type();
-gboolean otb_demo_user_set_name(const OtbDemoUser *user, char *name);
+gboolean otb_demo_user_set_name(const OtbDemoUser *user, const char *name);
 
 #endif

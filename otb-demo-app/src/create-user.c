@@ -13,6 +13,7 @@
 
 #include "app.h"
 #include "console.h"
+#include "demo-user.h"
 #include "validation.h"
 
 #include "../../libotb/src/libotb.h"
@@ -65,7 +66,11 @@ static const gboolean switch_to_console_window(const CreateUserContainer *create
 static const void *create_user_thread(CreateUserContainer *create_user_container)
 {
 	otb_local_crypto_create_sym_cipher(create_user_container_get_passphrase(create_user_container));
-	otb_bitkeeper_create(create_user_container_get_proxy_port(create_user_container), create_user_container_get_pad_synchronization_interval(create_user_container), create_user_container_get_address(create_user_container), create_user_container_get_port(create_user_container), create_user_container_get_key_size(create_user_container));
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(create_user_container_get_proxy_port(create_user_container), create_user_container_get_pad_synchronization_interval(create_user_container), create_user_container_get_address(create_user_container), create_user_container_get_port(create_user_container), create_user_container_get_key_size(create_user_container));
+	OtbUser *user;
+	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
+	otb_demo_user_set_name(OTB_DEMO_USER(user), create_user_container_get_name(create_user_container));
+	g_object_unref(user);
 	gdk_threads_add_idle((GSourceFunc)switch_to_console_window, create_user_container);
 	return NULL;
 }

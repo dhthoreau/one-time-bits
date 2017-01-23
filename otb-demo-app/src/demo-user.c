@@ -11,7 +11,7 @@
 #include <glib/gi18n.h>
 
 #include "friend.h"
-#include "user.h"
+#include "demo-user.h"
 
 enum
 {
@@ -90,12 +90,12 @@ static void otb_demo_user_export_key_file(const OtbUser *user, GKeyFile *export_
 	g_key_file_set_string(export_key_file, OTB_DEMO_FRIEND_EXPORT_GROUP, OTB_DEMO_FRIEND_EXPORT_NAME, OTB_DEMO_USER(user)->priv->name);
 }
 
-gboolean otb_demo_user_set_name(const OtbDemoUser *user, char *name)
+gboolean otb_demo_user_set_name(const OtbDemoUser *user, const char *name)
 {
 	otb_user_lock_write(OTB_USER(user));
 	g_free(user->priv->name);
 	user->priv->name=g_strdup(name);
-	gboolean ret_val=otb_settings_set_config_string(OTB_DEMO_FRIEND_EXPORT_GROUP, OTB_DEMO_FRIEND_EXPORT_NAME, user->priv->name);
 	otb_user_unlock_write(OTB_USER(user));
+	gboolean ret_val=otb_settings_set_config_string(OTB_DEMO_FRIEND_EXPORT_GROUP, OTB_DEMO_FRIEND_EXPORT_NAME, user->priv->name);
 	return ret_val;
 }

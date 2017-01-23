@@ -15,7 +15,7 @@
 #include "console.h"
 #include "create-user.h"
 #include "passphrase-unlock.h"
-#include "user.h"
+#include "demo-user.h"
 
 #include "../../libotb/src/libotb.h"
 
