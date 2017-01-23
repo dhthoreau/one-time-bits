@@ -80,7 +80,7 @@ static GType *otb_user_get_runtime_type()
 
 static void otb_user_init(OtbUser *user)
 {
-	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, *otb_user_get_runtime_type(), OtbUserPrivate);
+	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, OTB_TYPE_USER, OtbUserPrivate);
 	g_rw_lock_init(&user->priv->lock);
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
