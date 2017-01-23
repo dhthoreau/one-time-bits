@@ -36,8 +36,10 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(!otb_user_exists());
 	OtbUser *user=otb_user_load();
 	g_assert(user==NULL);
-	user=otb_user_create(EXPECTED_ADDRESS, EXPECTED_PORT, 256);
+	user=otb_user_create(256);
 	g_assert(user!=NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, EXPECTED_ADDRESS, OTB_USER_PROP_PORT, EXPECTED_PORT, NULL);
+	g_assert(otb_user_save(user));
 	g_assert(otb_user_exists());
 	OtbUniqueId *actual_unique_id=NULL;
 	OtbAsymCipher *actual_asym_cipher=NULL;
@@ -191,8 +193,8 @@ static OtbUser *otb_do_user_create_from_existing_config_file_test()
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
 	g_assert_cmpint((unsigned int)EXPECTED_PORT1, ==, actual_port1);
-	g_assert(otb_user_set_address(user, EXPECTED_ADDRESS2));
-	g_assert(otb_user_set_port(user, EXPECTED_PORT2));
+	g_object_set(user, OTB_USER_PROP_ADDRESS, EXPECTED_ADDRESS2, OTB_USER_PROP_PORT, EXPECTED_PORT2, NULL);
+	g_assert(otb_user_save(user));
 	char *actual_address2=NULL;
 	unsigned int actual_port2=0;
 	g_object_get(user, OTB_USER_PROP_ADDRESS, &actual_address2, NULL);
@@ -335,8 +337,10 @@ static void test_locks()
 	g_unlink(config_file_path);
 	g_free(config_file_path);
 	g_assert(!otb_user_exists());
-	OtbUser *user=otb_user_create("asjhdgjsahgd.onion", 1234, 256);
+	OtbUser *user=otb_user_create(256);
 	g_assert(user!=NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "asjhdgjsahgd.onion", OTB_USER_PROP_PORT, 1234, NULL);
+	g_assert(otb_user_save(user));
 	GThread *reader_thread1=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);
 	GThread *reader_thread2=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);
 	GThread *reader_thread3=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);

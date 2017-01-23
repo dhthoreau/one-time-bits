@@ -48,10 +48,9 @@ void otb_user_unlock_read(const OtbUser *user);
 void otb_user_lock_write(const OtbUser *user);
 void otb_user_unlock_write(const OtbUser *user);
 gboolean otb_user_exists();
-OtbUser *otb_user_create(const unsigned char *address, unsigned short port, unsigned int key_size);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_user_delete().
+OtbUser *otb_user_create(unsigned int key_size);	// FARE - Cancellarlo.
 OtbUser *otb_user_load();
-gboolean otb_user_set_address(const OtbUser *user, const char *address);
-gboolean otb_user_set_port(const OtbUser *user, unsigned short port);
+gboolean otb_user_save(const OtbUser *user);
 char *otb_user_export(const OtbUser *user);
 
 #endif

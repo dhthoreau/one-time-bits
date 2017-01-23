@@ -776,7 +776,8 @@ static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_unique_id_out, 
 	OtbUser *user=NULL;
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
 	g_assert(user!=NULL);
-	g_assert(otb_user_set_address(user, "ajshdjashgdsjdf.onion"));
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "ajshdjashgdsjdf.onion", NULL);
+	g_assert(otb_user_save(user));
 	g_object_get(user, OTB_USER_PROP_UNIQUE_ID, peer_unique_id_out, OTB_USER_PROP_ASYM_CIPHER, asym_cipher_out, NULL);
 	g_assert(peer_unique_id_out!=NULL);
 	g_assert(asym_cipher_out!=NULL);

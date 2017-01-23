@@ -199,7 +199,8 @@ static void test_otb_bitkeeper_proxy_port()
 	unsigned int proxy_port=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(ORIGINAL_PROXY_PORT, ==, proxy_port);
-	g_assert(otb_bitkeeper_set_proxy_port(original_bitkeeper, NEW_PROXY_PORT));
+	g_object_set(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, NEW_PROXY_PORT, NULL);
+	g_assert(otb_bitkeeper_save(original_bitkeeper));
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(NEW_PROXY_PORT, ==, proxy_port);
 	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();
@@ -224,7 +225,8 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	long long pad_synchronization_interval=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &pad_synchronization_interval, NULL);
 	g_assert_cmpint(ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL, ==, pad_synchronization_interval);
-	g_assert(otb_bitkeeper_set_pad_synchronization_interval(original_bitkeeper, NEW_PAD_SYNCHRONIZATION_INTERVAL));
+	g_object_set(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, NEW_PAD_SYNCHRONIZATION_INTERVAL, NULL);
+	g_assert(otb_bitkeeper_save(original_bitkeeper));
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &pad_synchronization_interval, NULL);
 	g_assert_cmpint(NEW_PAD_SYNCHRONIZATION_INTERVAL, ==, pad_synchronization_interval);
 	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();

@@ -39,6 +39,7 @@ static gboolean otb_user_load_from_settings(OtbUser *user);
 static void otb_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
 static void otb_user_dispose(GObject *object);
 static void otb_user_finalize(GObject *object);
+static void otb_user_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);
 static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
 
 G_DEFINE_TYPE(OtbUser, otb_user, G_TYPE_OBJECT);
@@ -59,11 +60,12 @@ static void otb_user_class_init(OtbUserClass *klass)
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_user_dispose;
 	object_class->finalize=otb_user_finalize;
+	object_class->set_property=otb_user_set_property;
 	object_class->get_property=otb_user_get_property;
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), OTB_TYPE_UNIQUE_ID, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_object(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), OTB_TYPE_ASYM_CIPHER, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_USER_PROP_ADDRESS, _("Address"), _("The address of the user"), NULL, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_USER_PORT, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_USER_PROP_ADDRESS, _("Address"), _("The address of the user"), NULL, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_USER_PORT, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
@@ -130,6 +132,32 @@ void otb_user_lock_write(const OtbUser *user)
 void otb_user_unlock_write(const OtbUser *user)
 {
 	g_rw_lock_writer_unlock(&user->priv->lock);
+}
+
+static void otb_user_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
+{
+	OtbUser *user=OTB_USER(object);
+	otb_user_lock_write(user);
+	switch(prop_id)
+	{
+		case PROP_ADDRESS:
+		{
+			g_free(user->priv->address);
+			user->priv->address=g_value_dup_string(value);
+			break;
+		}
+		case PROP_PORT:
+		{
+			user->priv->port=g_value_get_uint(value);
+			break;
+		}
+		default:
+		{
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+			break;
+		}
+	}
+	otb_user_unlock_write(user);
 }
 
 static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
@@ -214,10 +242,10 @@ gboolean otb_user_exists()
 	return otb_settings_config_group_exists(CONFIG_GROUP);
 }
 
-OtbUser *otb_user_create(const unsigned char *address, unsigned short port, unsigned int key_size)
+OtbUser *otb_user_create(unsigned int key_size)
 {
 	OtbUser *user=g_object_new(*otb_user_get_runtime_type(), NULL);
-	if(G_UNLIKELY(!otb_user_initialize_unique_id(user) || !otb_user_initialize_asym_cipher(user, key_size) || !otb_user_set_address(user, address) || !otb_user_set_port(user, port)))
+	if(G_UNLIKELY(!otb_user_initialize_unique_id(user) || !otb_user_initialize_asym_cipher(user, key_size)))
 	{
 		g_object_unref(user);
 		user=NULL;
@@ -287,22 +315,11 @@ OtbUser *otb_user_load()
 	return user;
 }
 
-gboolean otb_user_set_address(const OtbUser *user, const char *address)
+gboolean otb_user_save(const OtbUser *user)
 {
-	otb_user_lock_write(user);
-	g_free(user->priv->address);
-	user->priv->address=g_strdup(address);
-	gboolean ret_val=otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ADDRESS, user->priv->address);
-	otb_user_unlock_write(user);
-	return ret_val;
-}
-
-gboolean otb_user_set_port(const OtbUser *user, unsigned short port)
-{
-	otb_user_lock_write(user);
-	user->priv->port=port;
-	gboolean ret_val=otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_PORT, user->priv->port);
-	otb_user_unlock_write(user);
+	otb_user_lock_read(user);
+	gboolean ret_val=otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_PORT, user->priv->port) && otb_settings_set_config_string(CONFIG_GROUP, CONFIG_ADDRESS, user->priv->address);
+	otb_user_unlock_read(user);
 	return ret_val;
 }
 

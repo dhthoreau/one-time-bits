@@ -70,11 +70,11 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_FRIEND_PROP_BASE_PATH, _("Base path"), _("Directory where the friend's data will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_INCOMING_PAD_DB, g_param_spec_object(OTB_FRIEND_PROP_INCOMING_PAD_DB, _("Incoming pads"), _("Database of incoming pads"), OTB_TYPE_PAD_DB, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_OUTGOING_PAD_DB, g_param_spec_object(OTB_FRIEND_PROP_OUTGOING_PAD_DB, _("Outgoing pads"), _("Database of outgoing pads"), OTB_TYPE_PAD_DB, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_FRIEND_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the friend"), OTB_TYPE_UNIQUE_ID, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), "", G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), "", G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_FRIEND_PROP_ADDRESS, _("Address"), _("The address of the friend"), NULL, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_FRIEND_PROP_PORT, _("Port"), _("The port of the friend"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_USER_PORT, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_FRIEND_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the friend"), OTB_TYPE_UNIQUE_ID, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), "", G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), "", G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_FRIEND_PROP_ADDRESS, _("Address"), _("The address of the friend"), NULL, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_FRIEND_PROP_PORT, _("Port"), _("The port of the friend"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_USER_PORT, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbFriendPrivate));
 }
 

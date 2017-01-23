@@ -33,13 +33,14 @@ G_DEFINE_TYPE(OtbBitkeeper, otb_bitkeeper, G_TYPE_OBJECT);
 
 static void otb_bitkeeper_dispose(GObject *object);
 static void otb_bitkeeper_finalize(GObject *object);
+static void otb_bitkeeper_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);
 static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
 
 struct _OtbBitkeeperPrivate
 {
 	GRWLock lock;
 	OtbUser *user;
-	unsigned short proxy_port;
+	unsigned int proxy_port;
 	long long pad_synchronization_interval;
 	GSList *friends;
 	char *friends_base_path;
@@ -51,10 +52,11 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->dispose=otb_bitkeeper_dispose;
 	object_class->finalize=otb_bitkeeper_finalize;
+	object_class->set_property=otb_bitkeeper_set_property;
 	object_class->get_property=otb_bitkeeper_get_property;
 	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PROXY_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_PROXY_PORT, _("Proxy port"), _("The port for the local proxy, preferably TOR"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_PROXY_PORT, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PAD_SYNCHRONIZATION_INTERVAL, g_param_spec_int64(OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, _("Pad synchronization interval"), _("How often pads should be synchronized, measured in microseconds"), 1, G_MAXINT64, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_PROXY_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_PROXY_PORT, _("Proxy port"), _("The port for the local proxy, preferably TOR"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_PROXY_PORT, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_PAD_SYNCHRONIZATION_INTERVAL, g_param_spec_int64(OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, _("Pad synchronization interval"), _("How often pads should be synchronized, measured in microseconds"), 1, G_MAXINT64, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbBitkeeperPrivate));
 }
 
@@ -100,6 +102,31 @@ static void otb_bitkeeper_finalize(GObject *object)
 #define otb_bitkeeper_lock_write(bitkeeper)		(g_rw_lock_writer_lock(&bitkeeper->priv->lock))
 #define otb_bitkeeper_unlock_write(bitkeeper)	(g_rw_lock_writer_unlock(&bitkeeper->priv->lock))
 
+static void otb_bitkeeper_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
+{
+	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
+	otb_bitkeeper_lock_write(bitkeeper);
+	switch(prop_id)
+	{
+		case PROP_PROXY_PORT:
+		{
+			bitkeeper->priv->proxy_port=g_value_get_uint(value);
+			break;
+		}
+		case PROP_PAD_SYNCHRONIZATION_INTERVAL:
+		{
+			bitkeeper->priv->pad_synchronization_interval=g_value_get_int64(value);
+			break;
+		}
+		default:
+		{
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+			break;
+		}
+	}
+	otb_bitkeeper_unlock_write(bitkeeper);
+}
+
 static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {
 	OtbBitkeeper *bitkeeper=OTB_BITKEEPER(object);
@@ -113,7 +140,7 @@ static void otb_bitkeeper_get_property(GObject *object, unsigned int prop_id, GV
 		case PROP_PROXY_PORT:
 		{
 			otb_bitkeeper_lock_read(bitkeeper);
-			g_value_set_uint(value, (unsigned int)bitkeeper->priv->proxy_port);
+			g_value_set_uint(value, bitkeeper->priv->proxy_port);
 			otb_bitkeeper_unlock_read(bitkeeper);
 			break;
 		}
@@ -166,13 +193,22 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 	return ret_val;
 }
 
-OtbBitkeeper *otb_bitkeeper_create(unsigned short proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size)
+OtbBitkeeper *otb_bitkeeper_create(unsigned int proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size)
 {
-	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
-	if(G_UNLIKELY((bitkeeper->priv->user=otb_user_create(user_address, user_port, user_key_size))==NULL || !otb_bitkeeper_set_proxy_port(bitkeeper, proxy_port) || !otb_bitkeeper_set_pad_synchronization_interval(bitkeeper, pad_synchronization_interval) || !otb_bitkeeper_load_friends(bitkeeper)))
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_PROXY_PORT, proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, pad_synchronization_interval, NULL);
+	if(G_UNLIKELY(!otb_bitkeeper_save(bitkeeper) || (bitkeeper->priv->user=otb_user_create(user_key_size))==NULL || !otb_bitkeeper_load_friends(bitkeeper)))
 	{
 		g_object_unref(bitkeeper);
 		bitkeeper=NULL;
+	}
+	else
+	{
+		g_object_set(bitkeeper->priv->user, OTB_USER_PROP_ADDRESS, user_address, OTB_USER_PROP_PORT, user_port, NULL);
+		if(G_UNLIKELY(!otb_user_save(bitkeeper->priv->user)))
+		{
+			g_object_unref(bitkeeper);
+			bitkeeper=NULL;
+		}
 	}
 	return bitkeeper;
 }
@@ -182,7 +218,7 @@ OtbBitkeeper *otb_bitkeeper_create_with_defaults(const unsigned char *user_addre
 	return otb_bitkeeper_create(OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, user_address, OTB_BITKEEPER_DEFAULT_USER_PORT, OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
 }
 
-#define otb_bitkeeper_load_proxy_port(bitkeeper)					((bitkeeper->priv->proxy_port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, 0))!=0)
+#define otb_bitkeeper_load_proxy_port(bitkeeper)					((bitkeeper->priv->proxy_port=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, 0))!=0)
 #define otb_bitkeeper_load_pad_synchronization_interval(bitkeeper)	((bitkeeper->priv->pad_synchronization_interval=otb_settings_get_config_int64(CONFIG_GROUP, CONFIG_PAD_SYNCHRONIZATION_INTERVAL, -1))!=-1)
 
 OtbBitkeeper *otb_bitkeeper_load()
@@ -196,21 +232,11 @@ OtbBitkeeper *otb_bitkeeper_load()
 	return bitkeeper;
 }
 
-gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned short proxy_port)
+gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper)
 {
-	otb_bitkeeper_lock_write(bitkeeper);
-	bitkeeper->priv->proxy_port=proxy_port;
-	gboolean ret_val=otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, (int)bitkeeper->priv->proxy_port);
-	otb_bitkeeper_unlock_write(bitkeeper);
-	return ret_val;
-}
-
-gboolean otb_bitkeeper_set_pad_synchronization_interval(const OtbBitkeeper *bitkeeper, long long pad_synchronization_interval)
-{
-	otb_bitkeeper_lock_write(bitkeeper);
-	bitkeeper->priv->pad_synchronization_interval=pad_synchronization_interval;
-	gboolean ret_val=otb_settings_set_config_int64(CONFIG_GROUP, CONFIG_PAD_SYNCHRONIZATION_INTERVAL, bitkeeper->priv->pad_synchronization_interval);
-	otb_bitkeeper_unlock_write(bitkeeper);
+	otb_bitkeeper_lock_read(bitkeeper);
+	gboolean ret_val=otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, bitkeeper->priv->proxy_port) && otb_settings_set_config_int64(CONFIG_GROUP, CONFIG_PAD_SYNCHRONIZATION_INTERVAL, bitkeeper->priv->pad_synchronization_interval);
+	otb_bitkeeper_unlock_read(bitkeeper);
 	return ret_val;
 }
 

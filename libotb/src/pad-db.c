@@ -238,6 +238,7 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 {
 	gboolean ret_val=TRUE;
+	otb_pad_db_lock_read(pad_db);
 	if(G_LIKELY(otb_mkdir_with_parents(pad_db->priv->base_path)))
 	{
 		GKeyFile *key_file=g_key_file_new();
@@ -250,6 +251,7 @@ gboolean otb_pad_db_save(const OtbPadDb *pad_db)
 	}
 	else
 		ret_val=FALSE;
+	otb_pad_db_unlock_read(pad_db);
 	return ret_val;
 }
 

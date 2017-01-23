@@ -48,13 +48,12 @@ struct _OtbBitkeeperClass
 GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
-OtbBitkeeper *otb_bitkeeper_create(unsigned short proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_bitkeeper_delete().
+OtbBitkeeper *otb_bitkeeper_create(unsigned int proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_bitkeeper_delete().
 																																																// FARE - Non utilizzare short.
 																																																// FARE - Permettere un sottotipo (come name di OtbDemoUser).
 OtbBitkeeper *otb_bitkeeper_create_with_defaults(const unsigned char *user_address);
 OtbBitkeeper *otb_bitkeeper_load();
-gboolean otb_bitkeeper_set_proxy_port(const OtbBitkeeper *bitkeeper, unsigned short proxy_port);
-gboolean otb_bitkeeper_set_pad_synchronization_interval(const OtbBitkeeper *bitkeeper, long long pad_synchronization_interval);
+gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);
 GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id);
 OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbBitkeeper *bitkeeper, const OtbUniqueId *pad_unique_id);
