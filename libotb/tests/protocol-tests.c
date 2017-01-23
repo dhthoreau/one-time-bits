@@ -791,9 +791,8 @@ static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolPara
 	OtbPadDb *outgoing_pad_db=NULL;
 	g_object_get(friend, OTB_FRIEND_PROP_OUTGOING_PAD_DB, &outgoing_pad_db, NULL);
 	g_assert(outgoing_pad_db!=NULL);
-	g_assert(otb_pad_db_set_new_pad_min_size(outgoing_pad_db, PAD_SIZE(params)));
-	g_assert(otb_pad_db_set_new_pad_max_size(outgoing_pad_db, PAD_SIZE(params)));
-	g_assert(otb_pad_db_set_new_pad_expiration(outgoing_pad_db, EXPECTED_EXPIRATION_SPAN));
+	g_object_set(outgoing_pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, PAD_SIZE(params), OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, PAD_SIZE(params), OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION, EXPECTED_EXPIRATION_SPAN, NULL);
+	g_assert(otb_pad_db_save(outgoing_pad_db));
 	for(int counter=0; counter<UNSENT_PAD_COUNT(params)+SENT_PAD_COUNT(params)+CONSUMED_PAD_COUNT(params); counter++)
 		g_assert(otb_pad_db_create_unsent_pad(outgoing_pad_db));
 	for(int counter=0; counter<SENT_PAD_COUNT(params)+CONSUMED_PAD_COUNT(params); counter++)

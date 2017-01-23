@@ -62,13 +62,10 @@ struct _OtbPadDbClass
 
 GType otb_pad_db_get_type();
 
+gboolean otb_pad_db_save(const OtbPadDb *pad_db);
 OtbPadDb *otb_pad_db_create_in_directory(const char *base_path);
 OtbPadDb *otb_pad_db_load_from_directory(const char *base_path);
 gboolean otb_pad_db_delete(const OtbPadDb *pad_db);
-gboolean otb_pad_db_set_max_size(const OtbPadDb *pad_db, int32_t max_size);
-gboolean otb_pad_db_set_new_pad_min_size(const OtbPadDb *pad_db, int32_t new_pad_min_size);
-gboolean otb_pad_db_set_new_pad_max_size(const OtbPadDb *pad_db, int32_t new_pad_max_size);
-gboolean otb_pad_db_set_new_pad_expiration(const OtbPadDb *pad_db, long long new_pad_expiration);
 gboolean otb_pad_db_create_unsent_pad(const OtbPadDb *pad_db);
 OtbPadIO *otb_pad_db_add_incoming_pad(const OtbPadDb *pad_db, const OtbUniqueId *unique_id, int32_t size, long long expiration);	// FARE - Deve confermare che la dimensione finale è veramente == size.
 GSList *otb_pad_db_get_ids_of_pads_in_status(const OtbPadDb *pad_db, OtbPadRecStatus status);

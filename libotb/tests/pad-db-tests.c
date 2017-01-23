@@ -43,17 +43,23 @@ static OtbPadDb *otb_create_pad_db_in_random_test_path()
 
 static void test_set_new_pad_size()
 {
-	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE)+1);
-	g_assert(!otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE-1));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
 	int32_t actual_new_pad_min;
-	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, &actual_new_pad_min, NULL);
-	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, actual_new_pad_min);
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE+1));
 	int32_t actual_new_pad_max;
-	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, &actual_new_pad_max, NULL);
+	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(pad_db));
+	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, &actual_new_pad_min, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, &actual_new_pad_max, NULL);
+	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, actual_new_pad_min);
+	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, actual_new_pad_max);
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE+1, NULL);
+	g_assert(otb_pad_db_save(pad_db));
+	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, &actual_new_pad_min, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, &actual_new_pad_max, NULL);
+	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE+1, ==, actual_new_pad_min);
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE+1, ==, actual_new_pad_max);
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, &actual_new_pad_min, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, &actual_new_pad_max, NULL);
+	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, actual_new_pad_min);
+	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, actual_new_pad_max);
 	g_object_unref(pad_db);
 }
 
@@ -77,7 +83,8 @@ static void otb_assert_pad_db_default_property_values(OtbPadDb *pad_db)
 
 static void otb_assert_set_max_size(OtbPadDb *pad_db, int32_t max_size)
 {
-	g_assert(otb_pad_db_set_max_size(pad_db, max_size));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_MAX_SIZE, max_size, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	int32_t actual_max_size;
 	g_object_get(pad_db, OTB_PAD_DB_PROP_MAX_SIZE, &actual_max_size, NULL);
 	g_assert_cmpint(max_size, ==, actual_max_size);
@@ -85,7 +92,8 @@ static void otb_assert_set_max_size(OtbPadDb *pad_db, int32_t max_size)
 
 static void otb_assert_set_new_pad_min_size(OtbPadDb *pad_db, int32_t new_pad_min_size)
 {
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, new_pad_min_size));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, new_pad_min_size, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	int32_t actual_new_pad_min_size;
 	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, &actual_new_pad_min_size, NULL);
 	g_assert_cmpint(new_pad_min_size, ==, actual_new_pad_min_size);
@@ -93,7 +101,8 @@ static void otb_assert_set_new_pad_min_size(OtbPadDb *pad_db, int32_t new_pad_mi
 
 static void otb_assert_set_new_pad_max_size(OtbPadDb *pad_db, int32_t new_pad_max_size)
 {
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, new_pad_max_size));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, new_pad_max_size, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	int32_t actual_new_pad_max_size;
 	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, &actual_new_pad_max_size, NULL);
 	g_assert_cmpint(new_pad_max_size, ==, actual_new_pad_max_size);
@@ -101,7 +110,8 @@ static void otb_assert_set_new_pad_max_size(OtbPadDb *pad_db, int32_t new_pad_ma
 
 static void otb_assert_set_new_pad_expiration(OtbPadDb *pad_db, long long new_pad_expiration)
 {
-	g_assert(otb_pad_db_set_new_pad_expiration(pad_db, new_pad_expiration));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION, new_pad_expiration, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	long long actual_new_pad_expiration;
 	g_object_get(pad_db, OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION, &actual_new_pad_expiration, NULL);
 	g_assert_cmpint(new_pad_expiration, ==, actual_new_pad_expiration);
@@ -162,9 +172,8 @@ static void test_otb_pad_db_rejects_pads_too_large()
 	
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	g_assert(otb_pad_db_set_max_size(pad_db, MAX_SIZE));
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_MAX_SIZE, MAX_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	g_assert(!otb_pad_db_create_unsent_pad(pad_db));
 	otb_assert_number_of_pads_in_status(pad_db, 1, OTB_PAD_REC_STATUS_UNSENT);
@@ -206,8 +215,8 @@ static void test_create_unsent_pad_results_in_proper_pad_file()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	otb_unique_id_unref(otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_UNSENT));
 	otb_local_crypto_lock_sym_cipher();
@@ -251,9 +260,8 @@ static void otb_assert_save_pad_db(const char *pad_db_dir_path, int32_t default_
 	OtbPadDb *save_pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(save_pad_db!=NULL);
 	g_assert(g_file_test(pad_db_dir_path, G_FILE_TEST_EXISTS));
-	g_assert(otb_pad_db_set_new_pad_min_size(save_pad_db, default_new_pad_size));
-	g_assert(otb_pad_db_set_new_pad_max_size(save_pad_db, default_new_pad_size));
-	g_assert(otb_pad_db_set_new_pad_expiration(save_pad_db, NEW_PAD_EXPIRATION_ONE_MONTH));
+	g_object_set(save_pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, default_new_pad_size, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, default_new_pad_size, OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION, NEW_PAD_EXPIRATION_ONE_MONTH, NULL);
+	g_assert(otb_pad_db_save(save_pad_db));
 	*expected_unsent_expiration_out=g_get_real_time()+MICROSECONDS_PER_MONTH;
 	g_assert(otb_pad_db_create_unsent_pad(save_pad_db));
 	*expected_unsent_unique_id_out=otb_pad_db_fetch_random_rec_id_with_null_assertion(save_pad_db, OTB_PAD_REC_STATUS_UNSENT);
@@ -486,8 +494,8 @@ static void test_pad_rec_mark_as_sent()
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	OtbUniqueId *expected_unique_id=otb_mark_random_pad_as_sent(pad_db);
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_UNSENT)==NULL);
@@ -537,8 +545,8 @@ static void test_encryption_fails_due_to_not_enough_pad_bytes()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	OtbUniqueId *pad_unique_id=otb_mark_random_pad_as_sent(pad_db);
 	g_assert(pad_unique_id!=NULL);
@@ -567,8 +575,8 @@ static void test_encryption_with_one_pad()
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	OtbUniqueId *expected_unique_id=otb_mark_random_pad_as_sent(pad_db);
 	unsigned char *encrypted_bytes;
@@ -642,8 +650,8 @@ static void test_pad_db_get_pad_size()
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	OtbUniqueId *unique_id=otb_mark_random_pad_as_sent(pad_db);
 	g_assert(unique_id!=NULL);
@@ -657,8 +665,8 @@ static void test_pad_db_get_pad_size_range()
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
-	g_assert(otb_pad_db_set_new_pad_min_size(pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(pad_db, ABSOLUTE_MIN_PAD_SIZE*2));
+	g_object_set(pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE*2, NULL);
+	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	OtbUniqueId *unique_id=otb_mark_random_pad_as_sent(pad_db);
 	g_assert(unique_id!=NULL);
@@ -764,8 +772,8 @@ static void otb_encryption_decryption_with_two_pads(size_t chunk_size, const uns
 	char *recipient_pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *recipient_pad_db=otb_pad_db_create_in_directory(recipient_pad_db_dir_path);
 	g_assert(recipient_pad_db!=NULL);
-	g_assert(otb_pad_db_set_new_pad_min_size(sender_pad_db, ABSOLUTE_MIN_PAD_SIZE));
-	g_assert(otb_pad_db_set_new_pad_max_size(sender_pad_db, ABSOLUTE_MIN_PAD_SIZE));
+	g_object_set(sender_pad_db, OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, ABSOLUTE_MIN_PAD_SIZE, OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, ABSOLUTE_MIN_PAD_SIZE, NULL);
+	g_assert(otb_pad_db_save(sender_pad_db));
 	otb_pad_db_create_unsent_pads(sender_pad_db, 4);
 	otb_send_random_pads(sender_pad_db, recipient_pad_db, 3);
 	unsigned char *encrypted_message;
