@@ -109,10 +109,8 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME1, ==, actual_transport_cipher_name1);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
 	g_assert_cmpint(EXPECTED_PORT1, ==, actual_port1);
-	g_assert(otb_friend_set_public_key(*create_friend, EXPECTED_PUBLIC_KEY2));
-	g_assert(otb_friend_set_transport_cipher_name(*create_friend, EXPECTED_TRANSPORT_CIPHER_NAME2));
-	g_assert(otb_friend_set_address(*create_friend, EXPECTED_ADDRESS2));
-	g_assert(otb_friend_set_port(*create_friend, EXPECTED_PORT2));
+	g_object_set(*create_friend, OTB_FRIEND_PROP_PUBLIC_KEY, EXPECTED_PUBLIC_KEY2, OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, EXPECTED_TRANSPORT_CIPHER_NAME2, OTB_FRIEND_PROP_ADDRESS, EXPECTED_ADDRESS2, OTB_FRIEND_PROP_PORT, EXPECTED_PORT2, NULL);
+	g_assert(otb_friend_save(*create_friend));
 	if(OTB_IS_DUMMY_FRIEND(*create_friend))
 	{
 		OtbDummyFriend *create_dummy_friend=OTB_DUMMY_FRIEND(*create_friend);
