@@ -65,7 +65,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_USER_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the user"), OTB_TYPE_UNIQUE_ID, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ASYM_CIPHER, g_param_spec_object(OTB_USER_PROP_ASYM_CIPHER, _("Asymetrical cipher"), _("Asymetrical cipher that is used to identify the user and communicate with friends"), OTB_TYPE_ASYM_CIPHER, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_USER_PROP_ADDRESS, _("Address"), _("The address of the user"), NULL, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_USER_PORT, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_USER_PROP_PORT, _("Port"), _("The port of the user"), 1, G_MAXUSHORT, OTB_USER_DEFAULT_PORT, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbUserPrivate));
 }
 
@@ -87,7 +87,7 @@ static void otb_user_init(OtbUser *user)
 	user->priv->unique_id=NULL;
 	user->priv->asym_cipher=NULL;
 	user->priv->address=NULL;
-	user->priv->port=OTB_BITKEEPER_DEFAULT_USER_PORT;
+	user->priv->port=OTB_USER_DEFAULT_PORT;
 }
 
 static void otb_user_dispose(GObject *object)

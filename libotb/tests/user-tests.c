@@ -9,6 +9,7 @@
 #include "../config.h"
 
 #include <glib/gstdio.h>
+#include <openssl/pem.h>
 #include <string.h>
 
 #include "main.h"
@@ -22,6 +23,33 @@
 #include "../src/random.h"
 #include "../src/settings.h"
 #include "../src/user.h"
+
+static void otb_assert_asym_cipher(OtbAsymCipher *asym_cipher, int expected_key_size)
+{
+	g_assert(asym_cipher!=NULL);
+	char *public_key_string=NULL;
+	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &public_key_string, NULL);
+	BIO *buff_io_string_to_key_impl=BIO_new_mem_buf(public_key_string, strlen(public_key_string));
+	EVP_PKEY *public_key_impl=PEM_read_bio_PUBKEY(buff_io_string_to_key_impl, NULL, NULL, NULL);
+	g_assert_cmpint(expected_key_size, ==, BN_num_bits(public_key_impl->pkey.rsa->n));
+	EVP_PKEY_free(public_key_impl);
+	BIO_free(buff_io_string_to_key_impl);
+	g_free(public_key_string);
+}
+
+static void otb_assert_user(OtbUser *user, const char *expected_address, unsigned int expected_port, int expected_key_size)
+{
+	g_assert(user!=NULL);
+	OtbAsymCipher *asym_cipher=NULL;
+	char *actual_address=NULL;
+	unsigned int actual_port;
+	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, OTB_USER_PROP_PORT, &actual_port, NULL);
+	otb_assert_asym_cipher(asym_cipher, expected_key_size);
+	g_assert_cmpstr(expected_address, ==, actual_address);
+	g_assert_cmpint(expected_port, ==, actual_port);
+	g_free(actual_address);
+	g_object_unref(asym_cipher);
+}
 
 static void test_otb_user_create_with_no_config_file()
 {
@@ -39,7 +67,9 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(user==NULL);
 	user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_assert(user!=NULL);
+	otb_assert_user(user, NULL, OTB_USER_DEFAULT_PORT, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, EXPECTED_ADDRESS, OTB_USER_PROP_PORT, EXPECTED_PORT, NULL);
+	otb_assert_user(user, EXPECTED_ADDRESS, EXPECTED_PORT, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_assert(otb_user_save(user));
 	g_assert(otb_user_exists());
 	OtbUniqueId *actual_unique_id=NULL;

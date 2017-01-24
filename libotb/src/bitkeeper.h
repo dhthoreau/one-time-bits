@@ -16,9 +16,6 @@
 
 #define OTB_BITKEEPER_DEFAULT_PROXY_PORT					9050
 #define OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL	10000000ll
-#define OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE					4096	// FARE - Muovarlo a user.h.
-#define OTB_BITKEEPER_DEFAULT_USER_PORT						9876	// FARE - Scegliere una porta giusta.
-																	// FARE - Muovarlo a user.h.
 
 #define OTB_BITKEEPER_PROP_USER							"user"
 #define OTB_BITKEEPER_PROP_PROXY_PORT					"proxy-port"

@@ -11,6 +11,9 @@
 
 #include "asym-cipher.h"
 
+#define OTB_USER_DEFAULT_KEY_SIZE	4096	// FARE - Non usato. Muovarlo a asym-cipher.h.
+#define OTB_USER_DEFAULT_PORT		9876	// FARE - Scegliere una porta giusta.
+
 #define OTB_USER_PROP_UNIQUE_ID		"unique-id"
 #define OTB_USER_PROP_ASYM_CIPHER	"asym-cipher"
 #define OTB_USER_PROP_ADDRESS		"address"

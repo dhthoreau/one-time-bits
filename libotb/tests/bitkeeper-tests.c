@@ -9,7 +9,6 @@
 #include "../config.h"
 
 #include <glib/gstdio.h>
-#include <openssl/pem.h>
 
 #include "main.h"
 #include "friend-tests.h"
@@ -21,31 +20,7 @@
 #include "../src/random.h"
 #include "../src/settings.h"
 
-static void otb_assert_asym_cipher(OtbAsymCipher *asym_cipher, int expected_key_size)
-{
-	g_assert(asym_cipher!=NULL);
-	char *public_key_string=NULL;
-	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &public_key_string, NULL);
-	BIO *buff_io_string_to_key_impl=BIO_new_mem_buf(public_key_string, strlen(public_key_string));
-	EVP_PKEY *public_key_impl=PEM_read_bio_PUBKEY(buff_io_string_to_key_impl, NULL, NULL, NULL);
-	g_assert_cmpint(expected_key_size, ==, BN_num_bits(public_key_impl->pkey.rsa->n));
-	EVP_PKEY_free(public_key_impl);
-	BIO_free(buff_io_string_to_key_impl);
-	g_free(public_key_string);
-}
-
-static void otb_assert_user(OtbUser *user, unsigned int expected_port, int expected_key_size)	// FARE - Muovarlo a user-tests.c.
-{
-	g_assert(user!=NULL);
-	OtbAsymCipher *asym_cipher=NULL;
-	unsigned int actual_port;
-	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, OTB_USER_PROP_PORT, &actual_port, NULL);
-	otb_assert_asym_cipher(asym_cipher, expected_key_size);
-	g_assert_cmpint(expected_port, ==, actual_port);
-	g_object_unref(asym_cipher);
-}
-
-static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, unsigned int expected_proxy_port, long long expected_pad_synchronization_interval, unsigned int expected_user_port, int expected_user_key_size)
+static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, unsigned int expected_proxy_port, long long expected_pad_synchronization_interval)
 {
 	unsigned int actual_proxy_port=0;
 	long long actual_pad_synchronization_interval=0;
@@ -53,7 +28,6 @@ static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, unsigned int expected_
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &actual_proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &actual_pad_synchronization_interval, OTB_BITKEEPER_PROP_USER, &user, NULL);
 	g_assert_cmpint(expected_proxy_port, ==, actual_proxy_port);
 	g_assert_cmpint(actual_pad_synchronization_interval, ==, expected_pad_synchronization_interval);
-	otb_assert_user(user, expected_user_port, expected_user_key_size);
 	g_object_unref(user);
 }
 
@@ -67,7 +41,7 @@ static void test_otb_bitkeeper_create_with_defaults()
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_create_with_defaults(user);
-	otb_assert_bitkeeper(bitkeeper, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, OTB_BITKEEPER_DEFAULT_USER_PORT, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	otb_assert_bitkeeper(bitkeeper, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
 	g_object_unref(bitkeeper);
 	g_object_unref(user);
 }
@@ -86,7 +60,7 @@ static void test_otb_bitkeeper_create()
 	g_assert(otb_user_save(user));
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(user, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
 	g_assert(otb_bitkeeper_save(bitkeeper));
-	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL, OTB_BITKEEPER_DEFAULT_USER_PORT, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
 	g_object_unref(bitkeeper);
 	g_object_unref(user);
 }
@@ -197,7 +171,7 @@ static void test_otb_bitkeeper_proxy_port()
 	g_assert(!otb_bitkeeper_exists());
 	otb_setup_configs_for_bitkeeper_tests_without_output(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, "DES-CBC", "sjhfgjzshdjf.onion");
 	g_assert(otb_bitkeeper_exists());
-	OtbUser *user=otb_user_create(OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	OtbUser *user=otb_user_create(OTB_USER_DEFAULT_KEY_SIZE);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
@@ -229,7 +203,7 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	g_assert(!otb_bitkeeper_exists());
 	otb_setup_configs_for_bitkeeper_tests_without_output(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, "DES-CBC", "sjhfgjzshdjf.onion");
 	g_assert(otb_bitkeeper_exists());
-	OtbUser *user=otb_user_create(OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	OtbUser *user=otb_user_create(OTB_USER_DEFAULT_KEY_SIZE);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
