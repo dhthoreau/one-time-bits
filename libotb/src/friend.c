@@ -55,7 +55,7 @@ struct _OtbFriendPrivate
 	char *public_key;
 	char *transport_cipher_name;
 	char *address;
-	unsigned short port;
+	unsigned int port;
 };
 
 static void otb_friend_class_init(OtbFriendClass *klass)
@@ -244,7 +244,7 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 		case PROP_PORT:
 		{
 			otb_friend_lock_read(friend);
-			g_value_set_uint(value, (unsigned int)friend->priv->port);
+			g_value_set_uint(value, friend->priv->port);
 			otb_friend_unlock_read(friend);
 			break;
 		}
@@ -310,7 +310,7 @@ gboolean otb_friend_save(const OtbFriend *friend)
 #define otb_friend_import_public_key(import_file)				(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY))
 #define otb_friend_import_transport_cipher_name(import_file)	(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME))
 #define otb_friend_import_address(import_file)					(otb_settings_get_string((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS))
-#define otb_friend_import_port(import_file)						((unsigned short)otb_settings_get_uint((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, OTB_BITKEEPER_DEFAULT_USER_PORT))
+#define otb_friend_import_port(import_file)						(otb_settings_get_uint((import_file), OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, OTB_BITKEEPER_DEFAULT_USER_PORT))
 
 static void otb_friend_set_unique_id_no_save(OtbFriend *friend, OtbUniqueId *unique_id)
 {
@@ -345,7 +345,7 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 	char *public_key=otb_friend_import_public_key(import_file);
 	char *transport_cipher_name=otb_friend_import_transport_cipher_name(import_file);
 	char *address=otb_friend_import_address(import_file);
-	unsigned short port=otb_friend_import_port(import_file);
+	unsigned int port=otb_friend_import_port(import_file);
 	otb_friend_set_unique_id_no_save(friend, unique_id);
 	otb_friend_set_public_key_no_save(friend, public_key);
 	otb_friend_set_transport_cipher_name_no_save(friend, transport_cipher_name);
@@ -493,7 +493,7 @@ gboolean otb_friend_set_address(const OtbFriend *friend, const char *address)
 	return ret_val;
 }
 
-gboolean otb_friend_set_port(const OtbFriend *friend, unsigned short port)
+gboolean otb_friend_set_port(const OtbFriend *friend, unsigned int port)
 {
 	otb_friend_lock_write(friend);
 	otb_friend_set_port_no_save(friend, port);

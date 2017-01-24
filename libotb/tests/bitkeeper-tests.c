@@ -34,21 +34,18 @@ static void otb_assert_asym_cipher(OtbAsymCipher *asym_cipher, int expected_key_
 	g_free(public_key_string);
 }
 
-static void otb_assert_user(OtbUser *user, const char *expected_address, unsigned short expected_port, int expected_key_size)
+static void otb_assert_user(OtbUser *user, unsigned int expected_port, int expected_key_size)	// FARE - Muovarlo a user-tests.c.
 {
 	g_assert(user!=NULL);
 	OtbAsymCipher *asym_cipher=NULL;
-	char *actual_address=NULL;
 	unsigned int actual_port;
-	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, OTB_USER_PROP_PORT, &actual_port, NULL);
+	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, OTB_USER_PROP_PORT, &actual_port, NULL);
 	otb_assert_asym_cipher(asym_cipher, expected_key_size);
-	g_assert_cmpstr(expected_address, ==, actual_address);
 	g_assert_cmpint(expected_port, ==, actual_port);
-	g_free(actual_address);
 	g_object_unref(asym_cipher);
 }
 
-static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, unsigned short expected_proxy_port, long long expected_pad_synchronization_interval, const char *expected_user_address, unsigned short expected_user_port, int expected_user_key_size)
+static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, unsigned int expected_proxy_port, long long expected_pad_synchronization_interval, unsigned int expected_user_port, int expected_user_key_size)
 {
 	unsigned int actual_proxy_port=0;
 	long long actual_pad_synchronization_interval=0;
@@ -56,39 +53,45 @@ static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, unsigned short expecte
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &actual_proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &actual_pad_synchronization_interval, OTB_BITKEEPER_PROP_USER, &user, NULL);
 	g_assert_cmpint(expected_proxy_port, ==, actual_proxy_port);
 	g_assert_cmpint(actual_pad_synchronization_interval, ==, expected_pad_synchronization_interval);
-	otb_assert_user(user, expected_user_address, expected_user_port, expected_user_key_size);
+	otb_assert_user(user, expected_user_port, expected_user_key_size);
 	g_object_unref(user);
 }
 
 static void test_otb_bitkeeper_create_with_defaults()
 {
-	const char *EXPECTED_USER_ADDRESS="AlmondMilkRoad.onion";
-	
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_create_with_defaults(EXPECTED_USER_ADDRESS);
-	otb_assert_bitkeeper(bitkeeper, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_USER_ADDRESS, OTB_BITKEEPER_DEFAULT_USER_PORT, OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	OtbUser *user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	g_assert(user!=NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
+	g_assert(otb_user_save(user));
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_create_with_defaults(user);
+	otb_assert_bitkeeper(bitkeeper, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, OTB_BITKEEPER_DEFAULT_USER_PORT, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_object_unref(bitkeeper);
+	g_object_unref(user);
 }
 
 static void test_otb_bitkeeper_create()
 {
-	const unsigned short EXPECTED_PROXY_PORT=55555;
+	const unsigned int EXPECTED_PROXY_PORT=55555;
 	const long long EXPECTED_PAD_SYNCHRONIZATION_INTERVAL=15000000;
-	const char *EXPECTED_USER_ADDRESS="AlmondMilkRoad.onion";
-	const unsigned short EXPECTED_USER_PORT=31415;
-	const int EXPECTED_USER_KEY_SIZE=256;
 	
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_USER_ADDRESS, EXPECTED_USER_PORT, EXPECTED_USER_KEY_SIZE);
-	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_USER_ADDRESS, EXPECTED_USER_PORT, EXPECTED_USER_KEY_SIZE);
+	OtbUser *user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	g_assert(user!=NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
+	g_assert(otb_user_save(user));
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(user, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
+	g_assert(otb_bitkeeper_save(bitkeeper));
+	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL, OTB_BITKEEPER_DEFAULT_USER_PORT, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_object_unref(bitkeeper);
+	g_object_unref(user);
 }
 
-static void otb_write_proxy_port(FILE *file, unsigned short proxy_port)
+static void otb_write_proxy_port(FILE *file, unsigned int proxy_port)
 {
 	g_assert(otb_write("proxy-port=", 1, 11, file)==11);
 	char proxy_port_string[6];
@@ -120,7 +123,7 @@ static void otb_setup_config_file_for_bitkeeper_tests()
 	otb_initialize_settings_for_tests();
 }
 
-static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, unsigned short port, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
+static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, unsigned int port, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
 {
 	otb_recreate_test_dir();
 	otb_initialize_settings_for_tests();
@@ -142,10 +145,10 @@ static void otb_setup_configs_for_bitkeeper_tests_without_output(size_t new_key_
 
 static void test_otb_bitkeeper_user()
 {
-	const size_t NEW_KEY_SIZE=256;
+	const size_t NEW_KEY_SIZE=SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kfjjkjfdhgjkhfkjd.onion";
-	const unsigned short EXPECTED_PORT=13579;
+	const unsigned int EXPECTED_PORT=13579;
 	
 	OtbUniqueId *expected_unique_id=NULL;
 	OtbAsymCipher *expected_asym_cipher=NULL;
@@ -172,7 +175,7 @@ static void test_otb_bitkeeper_user()
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
-	g_assert_cmpint((unsigned int)EXPECTED_PORT, ==, actual_port);
+	g_assert_cmpint(EXPECTED_PORT, ==, actual_port);
 	otb_local_crypto_lock_sym_cipher();
 	g_free(actual_public_key);
 	g_free(actual_sym_cipher_name);
@@ -188,14 +191,19 @@ static void test_otb_bitkeeper_user()
 
 static void test_otb_bitkeeper_proxy_port()
 {
-	const unsigned short ORIGINAL_PROXY_PORT=55555;
-	const unsigned short NEW_PROXY_PORT=12345;
+	const unsigned int ORIGINAL_PROXY_PORT=55555;
+	const unsigned int NEW_PROXY_PORT=12345;
 	
 	g_assert(!otb_bitkeeper_exists());
-	otb_setup_configs_for_bitkeeper_tests_without_output(256, "DES-CBC", "sjhfgjzshdjf.onion");
+	otb_setup_configs_for_bitkeeper_tests_without_output(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, "DES-CBC", "sjhfgjzshdjf.onion");
 	g_assert(otb_bitkeeper_exists());
-	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_create(ORIGINAL_PROXY_PORT, 10000000, "", 11235, 256);
+	OtbUser *user=otb_user_create(OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	g_assert(user!=NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
+	g_assert(otb_user_save(user));
+	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_create(user, ORIGINAL_PROXY_PORT, 10000000);
 	g_assert(original_bitkeeper!=NULL);
+	g_assert(otb_bitkeeper_save(original_bitkeeper));
 	unsigned int proxy_port=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(ORIGINAL_PROXY_PORT, ==, proxy_port);
@@ -210,6 +218,7 @@ static void test_otb_bitkeeper_proxy_port()
 	otb_local_crypto_lock_sym_cipher();
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
+	g_object_unref(user);
 }
 
 static void test_otb_bitkeeper_pad_synchronization_interval()
@@ -218,10 +227,15 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	const long long NEW_PAD_SYNCHRONIZATION_INTERVAL=12345000;
 	
 	g_assert(!otb_bitkeeper_exists());
-	otb_setup_configs_for_bitkeeper_tests_without_output(256, "DES-CBC", "sjhfgjzshdjf.onion");
+	otb_setup_configs_for_bitkeeper_tests_without_output(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, "DES-CBC", "sjhfgjzshdjf.onion");
 	g_assert(otb_bitkeeper_exists());
-	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_create(9050, ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL, "", 27182, 256);
+	OtbUser *user=otb_user_create(OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	g_assert(user!=NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
+	g_assert(otb_user_save(user));
+	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_create(user, 9050, ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL);
 	g_assert(original_bitkeeper!=NULL);
+	g_assert(otb_bitkeeper_save(original_bitkeeper));
 	long long pad_synchronization_interval=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &pad_synchronization_interval, NULL);
 	g_assert_cmpint(ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL, ==, pad_synchronization_interval);
@@ -236,6 +250,7 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	otb_local_crypto_lock_sym_cipher();
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
+	g_object_unref(user);
 }
 
 static void otb_assert_bitkeeper_has_friends(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
@@ -267,8 +282,8 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	const char *EXPECTED_TRANSPORT_CIPHER_NAME2="AES-512-CBC";
 	const char *EXPECTED_ADDRESS1="SoyMilkRoad.onion";
 	const char *EXPECTED_ADDRESS2="SoyMilkRoad2.onion";
-	const unsigned short EXPECTED_PORT1=12345;
-	const unsigned short EXPECTED_PORT2=54321;
+	const unsigned int EXPECTED_PORT1=12345;
+	const unsigned int EXPECTED_PORT2=54321;
 	
 	char *friend1_import_string=otb_create_import_string(expected_unique_id1, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ADDRESS1, EXPECTED_PORT1, "");
 	char *friend2_import_string=otb_create_import_string(expected_unique_id2, EXPECTED_PUBLIC_KEY2, EXPECTED_TRANSPORT_CIPHER_NAME2, EXPECTED_ADDRESS2, EXPECTED_PORT2, "");
@@ -298,8 +313,8 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME2, ==, actual_transport_cipher_name2);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
-	g_assert_cmpint((unsigned int)EXPECTED_PORT1, ==, actual_port1);
-	g_assert_cmpint((unsigned int)EXPECTED_PORT2, ==, actual_port2);
+	g_assert_cmpint(EXPECTED_PORT1, ==, actual_port1);
+	g_assert_cmpint(EXPECTED_PORT2, ==, actual_port2);
 	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, expected_unique_id2);
 	otb_unique_id_unref(actual_unique_id1);
 	otb_unique_id_unref(actual_unique_id2);
@@ -375,9 +390,15 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
 	g_assert(!otb_bitkeeper_exists());
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(9050, 10000000, "", 1357, 256);
+	OtbUser *user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	g_assert(user!=NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
+	g_assert(otb_user_save(user));
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(user, 9050, 10000000);
 	g_assert(bitkeeper!=NULL);
+	g_assert(otb_bitkeeper_save(bitkeeper));
 	g_assert(otb_bitkeeper_exists());
+	g_object_unref(user);
 	return bitkeeper;
 }
 

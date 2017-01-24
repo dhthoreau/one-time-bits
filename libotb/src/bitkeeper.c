@@ -193,29 +193,22 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 	return ret_val;
 }
 
-OtbBitkeeper *otb_bitkeeper_create(unsigned int proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size)
+OtbBitkeeper *otb_bitkeeper_create(OtbUser *user, unsigned int proxy_port, long long pad_synchronization_interval)
 {
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_PROXY_PORT, proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, pad_synchronization_interval, NULL);
-	if(G_UNLIKELY(!otb_bitkeeper_save(bitkeeper) || (bitkeeper->priv->user=otb_user_create(user_key_size))==NULL || !otb_bitkeeper_load_friends(bitkeeper)))
+	if(G_UNLIKELY(!otb_bitkeeper_save(bitkeeper) || !otb_bitkeeper_load_friends(bitkeeper)))
 	{
 		g_object_unref(bitkeeper);
 		bitkeeper=NULL;
 	}
 	else
-	{
-		g_object_set(bitkeeper->priv->user, OTB_USER_PROP_ADDRESS, user_address, OTB_USER_PROP_PORT, user_port, NULL);
-		if(G_UNLIKELY(!otb_user_save(bitkeeper->priv->user)))
-		{
-			g_object_unref(bitkeeper);
-			bitkeeper=NULL;
-		}
-	}
+		bitkeeper->priv->user=g_object_ref(user);
 	return bitkeeper;
 }
 
-OtbBitkeeper *otb_bitkeeper_create_with_defaults(const unsigned char *user_address)
+OtbBitkeeper *otb_bitkeeper_create_with_defaults(OtbUser *user)
 {
-	return otb_bitkeeper_create(OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, user_address, OTB_BITKEEPER_DEFAULT_USER_PORT, OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	return otb_bitkeeper_create(user, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
 }
 
 #define otb_bitkeeper_load_proxy_port(bitkeeper)					((bitkeeper->priv->proxy_port=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, 0))!=0)
@@ -367,13 +360,13 @@ static void otb_bitkeeper_friend_message(OtbFriend *friend, GLogLevelFlags log_l
 	otb_unique_id_unref(friend_unique_id);
 }
 
-static void otb_socket_client_set_proxy_resolver(GSocketClient *socket_client, unsigned short proxy_port)
+static void otb_socket_client_set_proxy_resolver(GSocketClient *socket_client, unsigned int proxy_port)
 {
 	if(proxy_port>0)
 	{
 		char proxy_uri[25];
-		if(G_UNLIKELY(sprintf(proxy_uri, "socks5://127.0.0.1:%u", (unsigned int)proxy_port)<0))
-			g_error(_("sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."), (unsigned int)proxy_port);
+		if(G_UNLIKELY(sprintf(proxy_uri, "socks5://127.0.0.1:%u", proxy_port)<0))
+			g_error(_("sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."), proxy_port);
 		GProxyResolver *proxy_resolver=g_simple_proxy_resolver_new(proxy_uri, NULL);
 		g_socket_client_set_proxy_resolver(socket_client, proxy_resolver);
 		g_object_unref(proxy_resolver);
@@ -388,7 +381,7 @@ static gboolean otb_friend_synchronize_pads_with_remote(OtbBitkeeper *bitkeeper,
 	char *remote_address;
 	unsigned int remote_port;
 	g_object_get(friend, OTB_FRIEND_PROP_ADDRESS, &remote_address, OTB_FRIEND_PROP_PORT, &remote_port, NULL);
-	GSocketConnection *socket_connect=g_socket_client_connect_to_host(socket_client, remote_address, (unsigned short)remote_port, NULL, NULL);
+	GSocketConnection *socket_connect=g_socket_client_connect_to_host(socket_client, remote_address, remote_port, NULL, NULL);
 	if(socket_connect!=NULL)
 	{
 		OtbProtocolContext *protocol_context=otb_protocol_context_create_client(bitkeeper, friend, loopable_thread);

@@ -15,6 +15,7 @@
 #include "dummy-friend.h"
 #include "dummy-user.h"
 #include "test-utils.h"
+#include "user-tests.h"
 #include "../src/friend.h"
 #include "../src/io.h"
 #include "../src/local-crypto.h"
@@ -25,8 +26,8 @@
 static void test_otb_user_create_with_no_config_file()
 {
 	const char *EXPECTED_DEFAULT_SYM_CIPHER_NAME="AES-256-CBC";
-	const char *EXPECTED_ADDRESS="sajkhdgdjashg.onion";
-	const unsigned short EXPECTED_PORT=31415;
+	const char *EXPECTED_ADDRESS="AlmondMilkRoad.onion";
+	const unsigned int EXPECTED_PORT=31415;
 	
 	otb_initialize_settings_for_tests();
 	otb_local_crypto_create_sym_cipher("");
@@ -36,7 +37,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(!otb_user_exists());
 	OtbUser *user=otb_user_load();
 	g_assert(user==NULL);
-	user=otb_user_create(256);
+	user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, EXPECTED_ADDRESS, OTB_USER_PROP_PORT, EXPECTED_PORT, NULL);
 	g_assert(otb_user_save(user));
@@ -53,7 +54,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert_cmpstr(EXPECTED_DEFAULT_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert(actual_public_key!=NULL);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
-	g_assert_cmpint(EXPECTED_PORT, ==, (unsigned short)actual_port);
+	g_assert_cmpint(EXPECTED_PORT, ==, actual_port);
 	otb_local_crypto_lock_sym_cipher();
 	g_free(actual_sym_cipher_name);
 	g_free(actual_public_key);
@@ -107,7 +108,7 @@ static void otb_write_address(FILE *file, const char *address)
 	g_assert(otb_write("\n", 1, 1, file)==1);
 }
 
-static void otb_write_port(FILE *file, unsigned short port)
+static void otb_write_port(FILE *file, unsigned int port)
 {
 	if(port>0)
 	{
@@ -135,7 +136,7 @@ static void otb_write_dummy_data(FILE *file)
 	otb_write_dummy_value(file);
 }
 
-void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *address, unsigned short port)
+void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const char *sym_cipher_name, const OtbAsymCipher *asym_cipher, const char *address, unsigned int port)
 {
 	otb_test_setup_local_crypto();
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
@@ -153,7 +154,7 @@ void otb_setup_config_file_for_user_tests(const OtbUniqueId *unique_id, const ch
 	otb_initialize_settings_for_tests();
 }
 
-static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *address, unsigned short port)
+static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *unique_id, const char *sym_cipher_name, OtbAsymCipher *asym_cipher, const char *address, unsigned int port)
 {
 	otb_setup_config_file_for_user_tests(unique_id, sym_cipher_name, asym_cipher, address, port);
 	OtbUser *user=otb_user_load();
@@ -164,12 +165,12 @@ static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *uniqu
 
 static OtbUser *otb_do_user_create_from_existing_config_file_test()
 {
-	const size_t NEW_KEY_SIZE=256;
+	const size_t NEW_KEY_SIZE=SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
-	const char *EXPECTED_ADDRESS1="akjsdhkljashgd.onion";
-	const char *EXPECTED_ADDRESS2="kjshdfjkhgssdj.onion";
-	const unsigned short EXPECTED_PORT1=12345;
-	const unsigned short EXPECTED_PORT2=6789;
+	const char *EXPECTED_ADDRESS1="AlmondMilkRoad.onion";
+	const char *EXPECTED_ADDRESS2="SoyMilkRoad.onion";
+	const unsigned int EXPECTED_PORT1=12345;
+	const unsigned int EXPECTED_PORT2=6789;
 	
 	otb_initialize_settings_for_tests();
 	otb_local_crypto_create_sym_cipher("");
@@ -192,7 +193,7 @@ static OtbUser *otb_do_user_create_from_existing_config_file_test()
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
-	g_assert_cmpint((unsigned int)EXPECTED_PORT1, ==, actual_port1);
+	g_assert_cmpint(EXPECTED_PORT1, ==, actual_port1);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, EXPECTED_ADDRESS2, OTB_USER_PROP_PORT, EXPECTED_PORT2, NULL);
 	g_assert(otb_user_save(user));
 	char *actual_address2=NULL;
@@ -200,7 +201,7 @@ static OtbUser *otb_do_user_create_from_existing_config_file_test()
 	g_object_get(user, OTB_USER_PROP_ADDRESS, &actual_address2, NULL);
 	g_object_get(user, OTB_USER_PROP_PORT, &actual_port2, NULL);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
-	g_assert_cmpint((unsigned int)EXPECTED_PORT2, ==, actual_port2);
+	g_assert_cmpint(EXPECTED_PORT2, ==, actual_port2);
 	otb_local_crypto_lock_sym_cipher();
 	otb_unique_id_unref(actual_unique_id);
 	otb_unique_id_unref(expected_unique_id);
@@ -235,10 +236,10 @@ static void test_otb_dummy_user_create_from_existing_config_file()
 
 static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 {
-	const size_t NEW_KEY_SIZE=256;
+	const size_t NEW_KEY_SIZE=SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
-	const char *EXPECTED_ADDRESS="kdjhgkfgjhfhj.onion";
-	const unsigned short EXPECTED_PORT=11235;
+	const char *EXPECTED_ADDRESS="AlmondMilkRoad.onion";
+	const unsigned int EXPECTED_PORT=11235;
 	
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
@@ -254,7 +255,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	char *actual_public_key=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PUBLIC_KEY);
 	char *actual_sym_cipher_name=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_TRANSPORT_CIPHER_NAME);
 	char *actual_address=otb_settings_get_string(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_ADDRESS);
-	unsigned short actual_port=(unsigned short)otb_settings_get_uint(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, 0);
+	unsigned int actual_port=otb_settings_get_uint(*export_key_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_PORT, 0);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
@@ -337,9 +338,9 @@ static void test_locks()
 	g_unlink(config_file_path);
 	g_free(config_file_path);
 	g_assert(!otb_user_exists());
-	OtbUser *user=otb_user_create(256);
+	OtbUser *user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_assert(user!=NULL);
-	g_object_set(user, OTB_USER_PROP_ADDRESS, "asjhdgjsahgd.onion", OTB_USER_PROP_PORT, 1234, NULL);
+	g_object_set(user, OTB_USER_PROP_ADDRESS, "CashewMilkRoad.onion", OTB_USER_PROP_PORT, 1234, NULL);
 	g_assert(otb_user_save(user));
 	GThread *reader_thread1=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);
 	GThread *reader_thread2=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, user);

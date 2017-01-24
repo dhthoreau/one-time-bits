@@ -16,8 +16,9 @@
 
 #define OTB_BITKEEPER_DEFAULT_PROXY_PORT					9050
 #define OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL	10000000ll
-#define OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE					4096
+#define OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE					4096	// FARE - Muovarlo a user.h.
 #define OTB_BITKEEPER_DEFAULT_USER_PORT						9876	// FARE - Scegliere una porta giusta.
+																	// FARE - Muovarlo a user.h.
 
 #define OTB_BITKEEPER_PROP_USER							"user"
 #define OTB_BITKEEPER_PROP_PROXY_PORT					"proxy-port"
@@ -48,10 +49,8 @@ struct _OtbBitkeeperClass
 GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
-OtbBitkeeper *otb_bitkeeper_create(unsigned int proxy_port, long long pad_synchronization_interval, const unsigned char *user_address, unsigned short user_port, unsigned int user_key_size);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_bitkeeper_delete().
-																																																// FARE - Non utilizzare short.
-																																																// FARE - Permettere un sottotipo (come name di OtbDemoUser).
-OtbBitkeeper *otb_bitkeeper_create_with_defaults(const unsigned char *user_address);
+OtbBitkeeper *otb_bitkeeper_create(OtbUser *user, unsigned int proxy_port, long long pad_synchronization_interval);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_bitkeeper_delete().
+OtbBitkeeper *otb_bitkeeper_create_with_defaults(OtbUser *user);
 OtbBitkeeper *otb_bitkeeper_load();
 gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);
 GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);

@@ -11,7 +11,7 @@
 
 #include "../src/unique-id.h"
 
-char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *transport_cipher_name, const char *onion_base_domain, unsigned short port, const char *dummy_value);
+char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *transport_cipher_name, const char *onion_base_domain, unsigned int port, const char *dummy_value);
 void otb_add_friend_tests();
 
 #endif

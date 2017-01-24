@@ -50,7 +50,7 @@ struct _OtbUserPrivate
 	OtbUniqueId *unique_id;
 	OtbAsymCipher *asym_cipher;
 	char *address;
-	unsigned short port;
+	unsigned int port;
 };
 
 static void otb_user_class_init(OtbUserClass *klass)
@@ -295,7 +295,7 @@ static gboolean otb_user_load_asym_cipher(OtbUser *user)
 }
 
 #define otb_user_load_address(user)		(((user)->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS))!=NULL)
-#define otb_user_load_port(user)		(((user)->priv->port=(unsigned short)otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PORT, 0))!=0)
+#define otb_user_load_port(user)		(((user)->priv->port=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PORT, 0))!=0)
 
 static gboolean otb_user_load_from_settings(OtbUser *user)
 {

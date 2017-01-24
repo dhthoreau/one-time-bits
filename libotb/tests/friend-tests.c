@@ -62,7 +62,7 @@ static void otb_assert_friends_saved_dbs_in_same_place(OtbFriend *create_friend,
 	g_object_unref(create_outgoing_pad_db);
 }
 
-char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *transport_cipher_name, const char *address, unsigned short port, const char *dummy_value)
+char *otb_create_import_string(const OtbUniqueId *unique_id, const char *public_key, const char *transport_cipher_name, const char *address, unsigned int port, const char *dummy_value)
 {
 	GKeyFile *import_file=g_key_file_new();
 	otb_settings_set_bytes(import_file, OTB_FRIEND_IMPORT_GROUP, OTB_FRIEND_IMPORT_UNIQUE_ID, otb_unique_id_get_bytes(unique_id), OTB_UNIQUE_ID_BYTES_SIZE);
@@ -84,8 +84,8 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	const char *EXPECTED_TRANSPORT_CIPHER_NAME2="AES-128-CBC";
 	const char *EXPECTED_ADDRESS1="SoyMilkRoad.onion";
 	const char *EXPECTED_ADDRESS2="SoyMilkRoad2.onion";
-	const unsigned short EXPECTED_PORT1=1357;
-	const unsigned short EXPECTED_PORT2=2468;
+	const unsigned int EXPECTED_PORT1=1357;
+	const unsigned int EXPECTED_PORT2=2468;
 	const char *EXPECTED_DUMMY_VALUE1="sldkfjklsdjfkslkfjsd.onion";
 	const char *EXPECTED_DUMMY_VALUE2="uyhrhyfrgyrfgghfg.onion";
 	const char *UNEXPECTED_PATH="garbage";
@@ -108,7 +108,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY1, ==, actual_public_key1);
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME1, ==, actual_transport_cipher_name1);
 	g_assert_cmpstr(EXPECTED_ADDRESS1, ==, actual_address1);
-	g_assert_cmpint((unsigned int)EXPECTED_PORT1, ==, actual_port1);
+	g_assert_cmpint(EXPECTED_PORT1, ==, actual_port1);
 	g_assert(otb_friend_set_public_key(*create_friend, EXPECTED_PUBLIC_KEY2));
 	g_assert(otb_friend_set_transport_cipher_name(*create_friend, EXPECTED_TRANSPORT_CIPHER_NAME2));
 	g_assert(otb_friend_set_address(*create_friend, EXPECTED_ADDRESS2));
@@ -135,7 +135,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	g_assert_cmpstr(EXPECTED_PUBLIC_KEY2, ==, actual_public_key2);
 	g_assert_cmpstr(EXPECTED_TRANSPORT_CIPHER_NAME2, ==, actual_transport_cipher_name2);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
-	g_assert_cmpint((unsigned int)EXPECTED_PORT2, ==, actual_port2);
+	g_assert_cmpint(EXPECTED_PORT2, ==, actual_port2);
 	if(OTB_IS_DUMMY_FRIEND(*load_friend))
 		g_assert_cmpstr(EXPECTED_DUMMY_VALUE2, ==, OTB_DUMMY_FRIEND(*load_friend)->dummy_value);
 	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
@@ -211,7 +211,7 @@ static void test_remove_expired_pads()
 	const char *PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *TRANSPORT_CIPHER_NAME="AES-256-CBC";
 	const char *ADDRESS="SoyMilkRoad.onion";
-	const unsigned short PORT=31415;
+	const unsigned int PORT=31415;
 	const char *DUMMY_VALUE="sldkfjklsdjfkslkfjsd.onion";
 	
 	otb_test_setup_local_crypto();
