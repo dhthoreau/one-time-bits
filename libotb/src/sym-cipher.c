@@ -55,9 +55,9 @@ static void otb_sym_cipher_class_init(OtbSymCipherClass *klass)
 	object_class->finalize=otb_sym_cipher_finalize;
 	object_class->set_property=otb_sym_cipher_set_property;
 	object_class->get_property=otb_sym_cipher_get_property;
-	g_object_class_install_property(object_class, PROP_CIPHER, g_param_spec_string(OTB_SYM_CIPHER_PROP_CIPHER, _("Cipher"), _("Name of the cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property(object_class, PROP_MESSAGE_DIGEST, g_param_spec_string(OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST, _("Message digest"), _("Message digest to use for hashes"), DEFAULT_MESSAGE_DIGEST, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property(object_class, PROP_HASH_ITERATIONS, g_param_spec_uint(OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, _("Hash iterations"), _("Number of iterations to go through when hashing"), 1, G_MAXUINT, DEFAULT_HASH_ITERATIONS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_CIPHER, g_param_spec_string(OTB_SYM_CIPHER_PROP_CIPHER, _("Cipher"), _("Name of the cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT/*FARE _ONLY*/));
+	g_object_class_install_property(object_class, PROP_MESSAGE_DIGEST, g_param_spec_string(OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST, _("Message digest"), _("Message digest to use for hashes"), DEFAULT_MESSAGE_DIGEST, G_PARAM_READWRITE | G_PARAM_CONSTRUCT/*FARE _ONLY*/));
+	g_object_class_install_property(object_class, PROP_HASH_ITERATIONS, g_param_spec_uint(OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, _("Hash iterations"), _("Number of iterations to go through when hashing"), 1, G_MAXUINT, DEFAULT_HASH_ITERATIONS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT/*FARE _ONLY*/));
 	g_type_class_add_private(klass, sizeof(OtbSymCipherPrivate));
 }
 

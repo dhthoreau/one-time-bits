@@ -83,10 +83,10 @@ static void otb_pad_db_class_init(OtbPadDbClass *klass)
 	object_class->set_property=otb_pad_db_set_property;
 	object_class->get_property=otb_pad_db_get_property;
 	g_object_class_install_property(object_class, PROP_BASE_PATH, g_param_spec_string(OTB_PAD_DB_PROP_BASE_PATH, _("Base path"), _("Directory where the database will be saved"), NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_MAX_SIZE, g_param_spec_uint64(OTB_PAD_DB_PROP_MAX_SIZE, _("Max size"), _("Maximum size of the database"), 0, G_MAXINT64, DEFAULT_MAX_SIZE, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_NEW_PAD_MIN_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, _("New pad min size"), _("Minimum size for a newly created pad"), MINIMUM_NEW_PAD_SIZE, G_MAXINT, DEFAULT_NEW_PAD_MIN_SIZE, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_NEW_PAD_MAX_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, _("New pad max size"), _("Maximum size for a newly created pad"), MINIMUM_NEW_PAD_SIZE, G_MAXINT, DEFAULT_NEW_PAD_MAX_SIZE, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_NEW_PAD_EXPIRATION, g_param_spec_int64(OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION, _("New pad expiration"), _("Time interval of expiration for a newly created pad"), MINIMUM_NEW_PAD_EXPIRATION, G_MAXINT64, DEFAULT_NEW_PAD_EXPIRATION, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_MAX_SIZE, g_param_spec_uint64(OTB_PAD_DB_PROP_MAX_SIZE, _("Max size"), _("Maximum size of the database"), 0, G_MAXINT64, DEFAULT_MAX_SIZE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_NEW_PAD_MIN_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MIN_SIZE, _("New pad min size"), _("Minimum size for a newly created pad"), MINIMUM_NEW_PAD_SIZE, G_MAXINT, DEFAULT_NEW_PAD_MIN_SIZE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_NEW_PAD_MAX_SIZE, g_param_spec_int(OTB_PAD_DB_PROP_NEW_PAD_MAX_SIZE, _("New pad max size"), _("Maximum size for a newly created pad"), MINIMUM_NEW_PAD_SIZE, G_MAXINT, DEFAULT_NEW_PAD_MAX_SIZE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_NEW_PAD_EXPIRATION, g_param_spec_int64(OTB_PAD_DB_PROP_NEW_PAD_EXPIRATION, _("New pad expiration"), _("Time interval of expiration for a newly created pad"), MINIMUM_NEW_PAD_EXPIRATION, G_MAXINT64, DEFAULT_NEW_PAD_EXPIRATION, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbPadDbPrivate));
 }
 
@@ -96,10 +96,6 @@ static void otb_pad_db_init(OtbPadDb *pad_db)
 	g_rw_lock_init(&pad_db->priv->lock);
 	pad_db->priv->base_path=NULL;
 	pad_db->priv->file_path=NULL;
-	pad_db->priv->max_size=DEFAULT_MAX_SIZE;
-	pad_db->priv->new_pad_min_size=DEFAULT_NEW_PAD_MIN_SIZE;
-	pad_db->priv->new_pad_max_size=DEFAULT_NEW_PAD_MAX_SIZE;
-	pad_db->priv->new_pad_expiration=DEFAULT_NEW_PAD_EXPIRATION;
 	pad_db->priv->open_pad_io=NULL;
 	pad_db->priv->pad_recs=NULL;
 }

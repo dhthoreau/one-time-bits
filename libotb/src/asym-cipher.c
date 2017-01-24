@@ -47,7 +47,7 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 	object_class->set_property=otb_asym_cipher_set_property;
 	object_class->get_property=otb_asym_cipher_get_property;
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, _("Public key"), _("The public key to use for encryption"), NULL, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT/*FARE _ONLY*/));
 	g_type_class_add_private(klass, sizeof(OtbAsymCipherPrivate));
 }
 

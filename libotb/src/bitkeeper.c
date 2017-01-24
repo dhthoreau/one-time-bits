@@ -54,9 +54,9 @@ static void otb_bitkeeper_class_init(OtbBitkeeperClass *klass)
 	object_class->finalize=otb_bitkeeper_finalize;
 	object_class->set_property=otb_bitkeeper_set_property;
 	object_class->get_property=otb_bitkeeper_get_property;
-	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READABLE));
-	g_object_class_install_property(object_class, PROP_PROXY_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_PROXY_PORT, _("Proxy port"), _("The port for the local proxy, preferably TOR"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_PROXY_PORT, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_PAD_SYNCHRONIZATION_INTERVAL, g_param_spec_int64(OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, _("Pad synchronization interval"), _("How often pads should be synchronized, measured in microseconds"), 1, G_MAXINT64, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_USER, g_param_spec_object(OTB_BITKEEPER_PROP_USER, _("User"), _("The user who is using the application"), OTB_TYPE_USER, G_PARAM_READWRITE /*| G_PARAM_CONSTRUCT_ONLY*/));
+	g_object_class_install_property(object_class, PROP_PROXY_PORT, g_param_spec_uint(OTB_BITKEEPER_PROP_PROXY_PORT, _("Proxy port"), _("The port for the local proxy, preferably TOR"), 1, G_MAXUSHORT, OTB_BITKEEPER_DEFAULT_PROXY_PORT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property(object_class, PROP_PAD_SYNCHRONIZATION_INTERVAL, g_param_spec_int64(OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, _("Pad synchronization interval"), _("How often pads should be synchronized, measured in microseconds"), 1, G_MAXINT64, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbBitkeeperPrivate));
 }
 
@@ -65,8 +65,6 @@ static void otb_bitkeeper_init(OtbBitkeeper *bitkeeper)
 	bitkeeper->priv=G_TYPE_INSTANCE_GET_PRIVATE(bitkeeper, OTB_TYPE_BITKEEPER, OtbBitkeeperPrivate);
 	g_rw_lock_init(&bitkeeper->priv->lock);
 	bitkeeper->priv->user=NULL;
-	bitkeeper->priv->proxy_port=OTB_BITKEEPER_DEFAULT_PROXY_PORT;
-	bitkeeper->priv->pad_synchronization_interval=OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL;
 	bitkeeper->priv->friends=NULL;
 	bitkeeper->priv->friends_base_path=g_build_filename(otb_settings_get_data_directory_path(), "friends", NULL);
 	bitkeeper->priv->synchronize_pads_thread=NULL;

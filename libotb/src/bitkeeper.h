@@ -47,6 +47,7 @@ GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
 OtbBitkeeper *otb_bitkeeper_create(OtbUser *user, unsigned int proxy_port, long long pad_synchronization_interval);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_bitkeeper_delete().
+																													// FARE - Cancellare.
 OtbBitkeeper *otb_bitkeeper_create_with_defaults(OtbUser *user);
 OtbBitkeeper *otb_bitkeeper_load();
 gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);

@@ -71,10 +71,10 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 	g_object_class_install_property(object_class, PROP_INCOMING_PAD_DB, g_param_spec_object(OTB_FRIEND_PROP_INCOMING_PAD_DB, _("Incoming pads"), _("Database of incoming pads"), OTB_TYPE_PAD_DB, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_OUTGOING_PAD_DB, g_param_spec_object(OTB_FRIEND_PROP_OUTGOING_PAD_DB, _("Outgoing pads"), _("Database of outgoing pads"), OTB_TYPE_PAD_DB, G_PARAM_READABLE));
 	g_object_class_install_property(object_class, PROP_UNIQUE_ID, g_param_spec_boxed(OTB_FRIEND_PROP_UNIQUE_ID, _("Unique ID"), _("UUID of the friend"), OTB_TYPE_UNIQUE_ID, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), "", G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), "", G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_FRIEND_PROP_PUBLIC_KEY, _("Public key"), _("Key that is used to identify the friend"), NULL, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_TRANSPORT_CIPHER_NAME, g_param_spec_string(OTB_FRIEND_PROP_TRANSPORT_CIPHER_NAME, _("Transport cipher"), _("The cipher used for data transport"), NULL, G_PARAM_READWRITE));
 	g_object_class_install_property(object_class, PROP_ADDRESS, g_param_spec_string(OTB_FRIEND_PROP_ADDRESS, _("Address"), _("The address of the friend"), NULL, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_FRIEND_PROP_PORT, _("Port"), _("The port of the friend"), 1, G_MAXUSHORT, OTB_USER_DEFAULT_PORT, G_PARAM_READWRITE));
+	g_object_class_install_property(object_class, PROP_PORT, g_param_spec_uint(OTB_FRIEND_PROP_PORT, _("Port"), _("The port of the friend"), 1, G_MAXUSHORT, OTB_USER_DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_type_class_add_private(klass, sizeof(OtbFriendPrivate));
 }
 
@@ -92,7 +92,6 @@ static void otb_friend_init(OtbFriend *friend)
 	friend->priv->public_key=NULL;
 	friend->priv->transport_cipher_name=NULL;
 	friend->priv->address=NULL;
-	friend->priv->port=OTB_USER_DEFAULT_PORT;
 }
 
 static const OtbPadDb *otb_friend_set_incoming_pad_db(const OtbFriend *friend, OtbPadDb *incoming_pad_db)
