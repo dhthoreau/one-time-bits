@@ -11,7 +11,6 @@
 
 #include "asym-cipher.h"
 
-#define OTB_USER_DEFAULT_KEY_SIZE	4096	// FARE - Non usato. Muovarlo a asym-cipher.h.
 #define OTB_USER_DEFAULT_PORT		9876	// FARE - Scegliere una porta giusta.
 
 #define OTB_USER_PROP_UNIQUE_ID		"unique-id"
@@ -51,7 +50,6 @@ void otb_user_unlock_read(const OtbUser *user);
 void otb_user_lock_write(const OtbUser *user);
 void otb_user_unlock_write(const OtbUser *user);
 gboolean otb_user_exists();
-OtbUser *otb_user_create(unsigned int key_size);	// FARE - Cancellarlo.
 OtbUser *otb_user_load();
 gboolean otb_user_save(const OtbUser *user);
 char *otb_user_export(const OtbUser *user);

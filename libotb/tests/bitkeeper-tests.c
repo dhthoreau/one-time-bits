@@ -36,7 +36,10 @@ static void test_otb_bitkeeper_create_with_defaults()
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
-	OtbUser *user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
+	g_assert(asym_cipher!=NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher));
+	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, NULL);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
@@ -44,6 +47,7 @@ static void test_otb_bitkeeper_create_with_defaults()
 	otb_assert_bitkeeper(bitkeeper, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
 	g_object_unref(bitkeeper);
 	g_object_unref(user);
+	g_object_unref(asym_cipher);
 }
 
 static void test_otb_bitkeeper_create()
@@ -54,7 +58,10 @@ static void test_otb_bitkeeper_create()
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
-	OtbUser *user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
+	g_assert(asym_cipher!=NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher));
+	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, NULL);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
@@ -63,6 +70,7 @@ static void test_otb_bitkeeper_create()
 	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
 	g_object_unref(bitkeeper);
 	g_object_unref(user);
+	g_object_unref(asym_cipher);
 }
 
 static void otb_write_proxy_port(FILE *file, unsigned int proxy_port)
@@ -97,29 +105,29 @@ static void otb_setup_config_file_for_bitkeeper_tests()
 	otb_initialize_settings_for_tests();
 }
 
-static void otb_setup_configs_for_bitkeeper_tests(size_t new_key_size, const char *sym_cipher_name, const char *address, unsigned int port, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
+static void otb_setup_configs_for_bitkeeper_tests(int new_key_size, const char *sym_cipher_name, const char *address, unsigned int port, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
 {
 	otb_recreate_test_dir();
 	otb_initialize_settings_for_tests();
 	*unique_id_out=otb_unique_id_new();
-	*asym_cipher_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(*asym_cipher_out, new_key_size));
+	*asym_cipher_out=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, new_key_size, NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(*asym_cipher_out));
 	otb_setup_config_file_for_user_tests(*unique_id_out, sym_cipher_name, *asym_cipher_out, address, port);
 	otb_setup_config_file_for_bitkeeper_tests();
 }
 
-static void otb_setup_configs_for_bitkeeper_tests_without_output(size_t new_key_size, const char *sym_cipher_name, const char *address)
+static void otb_setup_configs_for_bitkeeper_tests_without_output(int new_key_size, const char *sym_cipher_name, const char *address)
 {
 	OtbUniqueId *unique_id=NULL;
 	OtbAsymCipher *asym_cipher=NULL;
-	otb_setup_configs_for_bitkeeper_tests(new_key_size, sym_cipher_name, address, 0, &unique_id, &asym_cipher);
+	otb_setup_configs_for_bitkeeper_tests(new_key_size, sym_cipher_name, address, 9898, &unique_id, &asym_cipher);
 	g_object_unref(asym_cipher);
 	otb_unique_id_unref(unique_id);
 }
 
 static void test_otb_bitkeeper_user()
 {
-	const size_t NEW_KEY_SIZE=SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY;
+	const int NEW_KEY_SIZE=SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kfjjkjfdhgjkhfkjd.onion";
 	const unsigned int EXPECTED_PORT=13579;
@@ -171,7 +179,7 @@ static void test_otb_bitkeeper_proxy_port()
 	g_assert(!otb_bitkeeper_exists());
 	otb_setup_configs_for_bitkeeper_tests_without_output(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, "DES-CBC", "sjhfgjzshdjf.onion");
 	g_assert(otb_bitkeeper_exists());
-	OtbUser *user=otb_user_create(OTB_USER_DEFAULT_KEY_SIZE);
+	OtbUser *user=otb_user_load();
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
@@ -203,7 +211,7 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	g_assert(!otb_bitkeeper_exists());
 	otb_setup_configs_for_bitkeeper_tests_without_output(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, "DES-CBC", "sjhfgjzshdjf.onion");
 	g_assert(otb_bitkeeper_exists());
-	OtbUser *user=otb_user_create(OTB_USER_DEFAULT_KEY_SIZE);
+	OtbUser *user=otb_user_load();
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
@@ -364,7 +372,10 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
 	g_assert(!otb_bitkeeper_exists());
-	OtbUser *user=otb_user_create(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, "RC2-64-CBC", OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
+	g_assert(asym_cipher!=NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher));
+	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, NULL);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
@@ -373,6 +384,7 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 	g_assert(otb_bitkeeper_save(bitkeeper));
 	g_assert(otb_bitkeeper_exists());
 	g_object_unref(user);
+	g_object_unref(asym_cipher);
 	return bitkeeper;
 }
 

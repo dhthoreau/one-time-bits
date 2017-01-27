@@ -144,7 +144,6 @@ static void otb_pad_db_set_base_path(const OtbPadDb *pad_db, const char *base_pa
 static void otb_pad_db_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
 	OtbPadDb *pad_db=OTB_PAD_DB(object);
-	otb_pad_db_lock_write(pad_db);
 	switch(prop_id)
 	{
 		case PROP_BASE_PATH:
@@ -154,26 +153,34 @@ static void otb_pad_db_set_property(GObject *object, unsigned int prop_id, const
 		}
 		case PROP_MAX_SIZE:
 		{
+			otb_pad_db_lock_write(pad_db);
 			pad_db->priv->max_size=g_value_get_uint64(value);
+			otb_pad_db_unlock_write(pad_db);
 			break;
 		}
 		case PROP_NEW_PAD_MIN_SIZE:
 		{
+			otb_pad_db_lock_write(pad_db);
 			pad_db->priv->new_pad_min_size=g_value_get_int(value);
 			if(pad_db->priv->new_pad_min_size>pad_db->priv->new_pad_max_size)
 				pad_db->priv->new_pad_max_size=pad_db->priv->new_pad_min_size;
+			otb_pad_db_unlock_write(pad_db);
 			break;
 		}
 		case PROP_NEW_PAD_MAX_SIZE:
 		{
+			otb_pad_db_lock_write(pad_db);
 			pad_db->priv->new_pad_max_size=g_value_get_int(value);
 			if(pad_db->priv->new_pad_min_size>pad_db->priv->new_pad_max_size)
 				pad_db->priv->new_pad_min_size=pad_db->priv->new_pad_max_size;
+			otb_pad_db_unlock_write(pad_db);
 			break;
 		}
 		case PROP_NEW_PAD_EXPIRATION:
 		{
+			otb_pad_db_lock_write(pad_db);
 			pad_db->priv->new_pad_expiration=g_value_get_int64(value);
+			otb_pad_db_unlock_write(pad_db);
 			break;
 		}
 		default:
@@ -182,13 +189,11 @@ static void otb_pad_db_set_property(GObject *object, unsigned int prop_id, const
 			break;
 		}
 	}
-	otb_pad_db_unlock_write(pad_db);
 }
 
 static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)
 {
 	OtbPadDb *pad_db=OTB_PAD_DB(object);
-	otb_pad_db_lock_read(pad_db);
 	switch(prop_id)
 	{
 		case PROP_BASE_PATH:
@@ -198,22 +203,30 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 		}
 		case PROP_MAX_SIZE:
 		{
+			otb_pad_db_lock_read(pad_db);
 			g_value_set_uint64(value, pad_db->priv->max_size);
+			otb_pad_db_unlock_read(pad_db);
 			break;
 		}
 		case PROP_NEW_PAD_MIN_SIZE:
 		{
+			otb_pad_db_lock_read(pad_db);
 			g_value_set_int(value, pad_db->priv->new_pad_min_size);
+			otb_pad_db_unlock_read(pad_db);
 			break;
 		}
 		case PROP_NEW_PAD_MAX_SIZE:
 		{
+			otb_pad_db_lock_read(pad_db);
 			g_value_set_int(value, pad_db->priv->new_pad_max_size);
+			otb_pad_db_unlock_read(pad_db);
 			break;
 		}
 		case PROP_NEW_PAD_EXPIRATION:
 		{
+			otb_pad_db_lock_read(pad_db);
 			g_value_set_int64(value, pad_db->priv->new_pad_expiration);
+			otb_pad_db_unlock_read(pad_db);
 			break;
 		}
 		default:
@@ -222,7 +235,6 @@ static void otb_pad_db_get_property(GObject *object, unsigned int prop_id, GValu
 			break;
 		}
 	}
-	otb_pad_db_unlock_read(pad_db);
 }
 
 #define SAVE_GROUP					"pad-db"

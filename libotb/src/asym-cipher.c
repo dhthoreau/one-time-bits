@@ -16,11 +16,13 @@
 #include "random.h"
 #include "asym-cipher.h"
 
-#define DEFAULT_CIPHER			"AES-256-CBC"
+#define DEFAULT_KEY_SIZE	4096
+#define DEFAULT_CIPHER		"AES-256-CBC"
 
 struct _OtbAsymCipherPrivate
 {
 	GRWLock lock;
+	int key_size;
 	const EVP_CIPHER *cipher_impl;
 	EVP_PKEY *key_impl;
 	gboolean key_impl_mem_is_locked;
@@ -30,6 +32,7 @@ enum
 {
 	PROP_0,
 	PROP_PUBLIC_KEY,
+	PROP_KEY_SIZE,
 	PROP_SYM_CIPHER_NAME
 };
 
@@ -47,7 +50,8 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 	object_class->set_property=otb_asym_cipher_set_property;
 	object_class->get_property=otb_asym_cipher_get_property;
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, _("Public key"), _("The public key to use for encryption"), NULL, G_PARAM_READWRITE));
-	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT/*FARE _ONLY*/));
+	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));	// FARE - Unit test di DEFAULT_CIPHER (ed altri).
+	g_object_class_install_property(object_class, PROP_KEY_SIZE, g_param_spec_int(OTB_ASYM_CIPHER_PROP_KEY_SIZE, _("Key size"), _("The size of the key to use for encryption"), 0, G_MAXINT, DEFAULT_KEY_SIZE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_type_class_add_private(klass, sizeof(OtbAsymCipherPrivate));
 }
 
@@ -92,22 +96,24 @@ static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, 
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
 	switch(prop_id)
 	{
+		case PROP_SYM_CIPHER_NAME:
+		{
+			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(g_value_get_string(value));
+			break;
+		}
+		case PROP_KEY_SIZE:
+		{
+			asym_cipher->priv->key_size=g_value_get_int(value);
+			break;
+		}
 		case PROP_PUBLIC_KEY:
 		{
-			char *string_value=g_value_dup_string(value);
+			const char *string_value=g_value_get_string(value);
 			BIO *buff_io=BIO_new_mem_buf(string_value, strlen(string_value));
 			otb_asym_cipher_lock_write(asym_cipher);
 			otb_asym_cipher_set_key_impl(asym_cipher, PEM_read_bio_PUBKEY(buff_io, NULL, NULL, NULL), FALSE);
 			otb_asym_cipher_unlock_write(asym_cipher);
 			BIO_free_all(buff_io);
-			g_free(string_value);
-			break;
-		}
-		case PROP_SYM_CIPHER_NAME:
-		{
-			otb_asym_cipher_lock_write(asym_cipher);
-			asym_cipher->priv->cipher_impl=_EVP_get_cipherbyname(g_value_get_string(value));
-			otb_asym_cipher_unlock_write(asym_cipher);
 			break;
 		}
 		default:
@@ -123,6 +129,16 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
 	switch(prop_id)
 	{
+		case PROP_KEY_SIZE:
+		{
+			g_value_set_int(value, asym_cipher->priv->key_size);
+			break;
+		}
+		case PROP_SYM_CIPHER_NAME:
+		{
+			g_value_set_string(value, EVP_CIPHER_name(asym_cipher->priv->cipher_impl));
+			break;
+		}
 		case PROP_PUBLIC_KEY:
 		{
 			BIO *buff_io=BIO_new(BIO_s_mem());
@@ -138,13 +154,6 @@ static void otb_asym_cipher_get_property(GObject *object, unsigned int prop_id, 
 			}
 			otb_asym_cipher_unlock_read(asym_cipher);
 			BIO_free(buff_io);
-			break;
-		}
-		case PROP_SYM_CIPHER_NAME:
-		{
-			otb_asym_cipher_lock_read(asym_cipher);
-			g_value_set_string(value, EVP_CIPHER_name(asym_cipher->priv->cipher_impl));
-			otb_asym_cipher_unlock_read(asym_cipher);
 			break;
 		}
 		default:
@@ -185,7 +194,7 @@ GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_ciph
 	return encrypted_private_key;
 }
 
-gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, unsigned int key_size)
+gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher)
 {
 	gboolean ret_val=TRUE;
 	// FARE - Potrebbe essere bene se ci fossero più di EVP_PKEY_RSA e potremmo avere asym_cipher->priv->asym_cipher_impl come sym_cipher.
@@ -193,7 +202,7 @@ gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, unsign
 	EVP_PKEY *key_impl=NULL;
 	if(G_UNLIKELY(EVP_PKEY_keygen_init(context)<=0))
 		ret_val=FALSE;
-	else if(G_UNLIKELY(_EVP_PKEY_CTX_set_rsa_keygen_bits(context, key_size)<=0))
+	else if(G_UNLIKELY(_EVP_PKEY_CTX_set_rsa_keygen_bits(context, asym_cipher->priv->key_size)<=0))
 		ret_val=FALSE;
 	else if(G_UNLIKELY(EVP_PKEY_keygen(context, &key_impl)<=0))
 		ret_val=FALSE;

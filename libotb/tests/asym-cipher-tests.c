@@ -52,10 +52,10 @@ static void otb_copy_private_key(OtbAsymCipher *asym_cipher_original, OtbAsymCip
 
 void otb_generate_public_private_keys(OtbAsymCipher **asym_cipher_public_out, OtbAsymCipher **asym_cipher_private_out)
 {
-	const size_t NEW_KEY_SIZE=512;
+	const int NEW_KEY_SIZE=512;
 	
-	OtbAsymCipher *asym_cipher_original=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original, NEW_KEY_SIZE));
+	OtbAsymCipher *asym_cipher_original=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, NEW_KEY_SIZE, NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher_original));
 	*asym_cipher_public_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	*asym_cipher_private_out=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
 	otb_copy_public_key(asym_cipher_original, *asym_cipher_public_out);

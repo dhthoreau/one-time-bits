@@ -20,8 +20,9 @@ typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 #define otb_asym_cipher_context_free(cipher_context)					EVP_CIPHER_CTX_free(cipher_context)
 #define otb_asym_cipher_dispose_decryption_buffer(decryption_buffer)	otb_openssl_dispose_decryption_buffer((decryption_buffer))
 
-#define OTB_ASYM_CIPHER_PROP_PUBLIC_KEY			"public-key"
 #define OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME	"sym-cipher-name"
+#define OTB_ASYM_CIPHER_PROP_KEY_SIZE			"key-size"	// FARE - Unit test.
+#define OTB_ASYM_CIPHER_PROP_PUBLIC_KEY			"public-key"
 
 #define OTB_TYPE_ASYM_CIPHER			(otb_asym_cipher_get_type())
 #define OTB_ASYM_CIPHER(obj)			(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_ASYM_CIPHER, OtbAsymCipher))
@@ -49,7 +50,7 @@ GType otb_asym_cipher_get_type();
 
 void otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv);
 GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_cipher, OtbSymCipher *private_key_sym_cipher, GBytes **private_key_iv_out);
-gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher, unsigned int key_size);
+gboolean otb_asym_cipher_generate_random_keys(OtbAsymCipher *asym_cipher);
 unsigned char *otb_asym_cipher_create_encryption_buffer(const OtbAsymCipher *asym_cipher, size_t plain_bytes_buffer_size);	// FARE - size_t è il migliore? (In generale.)
 void *otb_asym_cipher_create_decryption_buffer(const OtbAsymCipher *asym_cipher, size_t encrypted_bytes_buffer_size);
 OtbAsymCipherContext *otb_asym_cipher_init_encryption(const OtbAsymCipher *asym_cipher, GBytes **encrypted_key_out, GBytes **iv_out);

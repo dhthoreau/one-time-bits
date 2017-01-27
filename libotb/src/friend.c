@@ -198,16 +198,12 @@ static void otb_friend_set_property(GObject *object, unsigned int prop_id, const
 	{
 		case PROP_BASE_PATH:
 		{
-			otb_friend_lock_write(friend);
 			otb_friend_set_base_path(friend, g_value_get_string(value));
-			otb_friend_unlock_write(friend);
 			break;
 		}
 		case PROP_UNIQUE_ID:
 		{
-			otb_friend_lock_write(friend);
 			otb_friend_set_unique_id(friend, g_value_get_boxed(value));
-			otb_friend_unlock_write(friend);
 			break;
 		}
 		case PROP_PUBLIC_KEY:
@@ -253,30 +249,22 @@ static void otb_friend_get_property(GObject *object, unsigned int prop_id, GValu
 	{
 		case PROP_BASE_PATH:
 		{
-			otb_friend_lock_read(friend);
 			g_value_set_string(value, friend->priv->base_path);
-			otb_friend_unlock_read(friend);
 			break;
 		}
 		case PROP_INCOMING_PAD_DB:
 		{
-			otb_friend_lock_read(friend);
 			g_value_set_object(value, friend->priv->incoming_pad_db);
-			otb_friend_unlock_read(friend);
 			break;
 		}
 		case PROP_OUTGOING_PAD_DB:
 		{
-			otb_friend_lock_read(friend);
 			g_value_set_object(value, friend->priv->outgoing_pad_db);
-			otb_friend_unlock_read(friend);
 			break;
 		}
 		case PROP_UNIQUE_ID:
 		{
-			otb_friend_lock_read(friend);
 			g_value_set_boxed(value, friend->priv->unique_id);
-			otb_friend_unlock_read(friend);
 			break;
 		}
 		case PROP_PUBLIC_KEY:

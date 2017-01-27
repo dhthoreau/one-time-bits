@@ -111,7 +111,7 @@ static void otb_pad_rec_finalize(GObject *object)
 	G_OBJECT_CLASS(otb_pad_rec_parent_class)->finalize(object);
 }
 
-#define otb_pad_rec_lock(pad_rec)	(g_rec_mutex_lock(&(pad_rec)->priv->recursive_mutex))
+#define otb_pad_rec_lock(pad_rec)	(g_rec_mutex_lock(&(pad_rec)->priv->recursive_mutex))	// FARE - RWLock??
 #define otb_pad_rec_unlock(pad_rec)	(g_rec_mutex_unlock(&(pad_rec)->priv->recursive_mutex))
 
 static void otb_pad_rec_compute_file_paths(const OtbPadRec *pad_rec)

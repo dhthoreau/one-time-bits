@@ -755,24 +755,9 @@ static void otb_do_server_receive_final_pad_chunk_from_client(const ProtocolPara
 	otb_assert_transmitted_pad(TEST_PROTOCOL_CONTEXT(protocol_context), TEST_PROTOCOL_CONTEXT(protocol_context)->pad_db);
 }
 
-static OtbBitkeeper *otb_create_bitkeeper_for_protocol_test()
-{
-	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
-	OtbUser *user=NULL;
-	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
-	g_assert(user!=NULL);
-	OtbAsymCipher *asym_cipher=NULL;
-	g_object_get(user, OTB_USER_PROP_ASYM_CIPHER, &asym_cipher, NULL);
-	g_assert(asym_cipher!=NULL);
-	g_object_set(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, "RC2-64-CBC", NULL);
-	g_object_unref(asym_cipher);
-	g_object_unref(user);
-	return bitkeeper;
-}
-
 static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_unique_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
 {
-	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_protocol_test();
+	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
 	OtbUser *user=NULL;
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
 	g_assert(user!=NULL);
@@ -843,7 +828,7 @@ static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolCont
 	OtbUniqueId *peer_unique_id=NULL;
 	char *peer_export=NULL;
 	otb_create_peer_for_protocol_test(&peer_unique_id, peer_asym_cipher_out, &peer_export);
-	OtbBitkeeper *local_bitkeeper=otb_create_bitkeeper_for_protocol_test();
+	OtbBitkeeper *local_bitkeeper=otb_create_bitkeeper_for_test();
 	g_assert(otb_bitkeeper_import_friend(local_bitkeeper, peer_export));
 	OtbFriend *peer_friend=otb_bitkeeper_get_friend(local_bitkeeper, peer_unique_id);
 	g_assert(peer_friend!=NULL);
