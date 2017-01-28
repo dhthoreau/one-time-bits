@@ -198,23 +198,6 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 	return ret_val;
 }
 
-OtbBitkeeper *otb_bitkeeper_create(OtbUser *user, unsigned int proxy_port, long long pad_synchronization_interval)
-{
-	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_PROXY_PORT, proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, pad_synchronization_interval, NULL);
-	bitkeeper->priv->user=g_object_ref(user);
-	if(G_UNLIKELY(!otb_bitkeeper_save(bitkeeper) || !otb_bitkeeper_load_friends(bitkeeper)))
-	{
-		g_object_unref(bitkeeper);
-		bitkeeper=NULL;
-	}
-	return bitkeeper;
-}
-
-OtbBitkeeper *otb_bitkeeper_create_with_defaults(OtbUser *user)
-{
-	return otb_bitkeeper_create(user, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
-}
-
 #define otb_bitkeeper_load_proxy_port(bitkeeper)					((bitkeeper->priv->proxy_port=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, 0))!=0)
 #define otb_bitkeeper_load_pad_synchronization_interval(bitkeeper)	((bitkeeper->priv->pad_synchronization_interval=otb_settings_get_config_int64(CONFIG_GROUP, CONFIG_PAD_SYNCHRONIZATION_INTERVAL, -1))!=-1)
 

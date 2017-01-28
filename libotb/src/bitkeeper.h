@@ -46,11 +46,9 @@ struct _OtbBitkeeperClass
 GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
-OtbBitkeeper *otb_bitkeeper_create(OtbUser *user, unsigned int proxy_port, long long pad_synchronization_interval);	// FARE - Non cancellare dati sul disc. Invece, abbi un otb_bitkeeper_delete().
-																													// FARE - Cancellare.
-OtbBitkeeper *otb_bitkeeper_create_with_defaults(OtbUser *user);
 OtbBitkeeper *otb_bitkeeper_load();
 gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);
+// FARE - Un otb_bitkeeper_delete()?
 GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id);
 OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbBitkeeper *bitkeeper, const OtbUniqueId *pad_unique_id);

@@ -20,15 +20,16 @@
 #include "../src/random.h"
 #include "../src/settings.h"
 
-static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, unsigned int expected_proxy_port, long long expected_pad_synchronization_interval)
+static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, OtbUser *expected_user, unsigned int expected_proxy_port, long long expected_pad_synchronization_interval)
 {
 	unsigned int actual_proxy_port=0;
 	long long actual_pad_synchronization_interval=0;
-	OtbUser *user=NULL;
-	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &actual_proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &actual_pad_synchronization_interval, OTB_BITKEEPER_PROP_USER, &user, NULL);
+	OtbUser *actual_user=NULL;
+	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &actual_user, OTB_BITKEEPER_PROP_PROXY_PORT, &actual_proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &actual_pad_synchronization_interval, NULL);
+	g_assert(expected_user==actual_user);
 	g_assert_cmpint(expected_proxy_port, ==, actual_proxy_port);
-	g_assert_cmpint(actual_pad_synchronization_interval, ==, expected_pad_synchronization_interval);
-	g_object_unref(user);
+	g_assert_cmpint(expected_pad_synchronization_interval, ==, actual_pad_synchronization_interval);
+	g_object_unref(actual_user);
 }
 
 static void test_otb_bitkeeper_create_with_defaults()
@@ -42,9 +43,8 @@ static void test_otb_bitkeeper_create_with_defaults()
 	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, NULL);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
-	g_assert(otb_user_save(user));
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_create_with_defaults(user);
-	otb_assert_bitkeeper(bitkeeper, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, NULL);
+	otb_assert_bitkeeper(bitkeeper, user, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
 	g_object_unref(bitkeeper);
 	g_object_unref(user);
 	g_object_unref(asym_cipher);
@@ -64,10 +64,9 @@ static void test_otb_bitkeeper_create()
 	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, NULL);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
-	g_assert(otb_user_save(user));
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(user, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PROXY_PORT, EXPECTED_PROXY_PORT, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL, NULL);
 	g_assert(otb_bitkeeper_save(bitkeeper));
-	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
+	otb_assert_bitkeeper(bitkeeper, user, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
 	g_object_unref(bitkeeper);
 	g_object_unref(user);
 	g_object_unref(asym_cipher);
@@ -183,7 +182,7 @@ static void test_otb_bitkeeper_proxy_port()
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
-	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_create(user, ORIGINAL_PROXY_PORT, 10000000);
+	OtbBitkeeper *original_bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PROXY_PORT, ORIGINAL_PROXY_PORT, NULL);
 	g_assert(original_bitkeeper!=NULL);
 	g_assert(otb_bitkeeper_save(original_bitkeeper));
 	unsigned int proxy_port=0;
@@ -215,7 +214,7 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
-	OtbBitkeeper *original_bitkeeper=otb_bitkeeper_create(user, 9050, ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL);
+	OtbBitkeeper *original_bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL, NULL);
 	g_assert(original_bitkeeper!=NULL);
 	g_assert(otb_bitkeeper_save(original_bitkeeper));
 	long long pad_synchronization_interval=0;
@@ -379,7 +378,7 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
 	g_assert(otb_user_save(user));
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(user, 9050, 10000000);
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, NULL);
 	g_assert(bitkeeper!=NULL);
 	g_assert(otb_bitkeeper_save(bitkeeper));
 	g_assert(otb_bitkeeper_exists());
