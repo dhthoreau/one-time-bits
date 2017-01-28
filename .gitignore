@@ -3,6 +3,7 @@
 *.la
 *.lo
 *.log
+*.mo
 *.o
 *.trs
 *~
