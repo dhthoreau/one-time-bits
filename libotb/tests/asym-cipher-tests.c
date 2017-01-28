@@ -33,6 +33,21 @@ static void test_asym_cipher_properties()
 	g_object_unref(asym_cipher);
 }
 
+static void test_asym_cipher_default_properties()
+{
+	const int EXPECTED_KEY_SIZE=4096;
+	const char *EXPECTED_CIPHER="AES-256-CBC";
+	
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, NULL);
+	int actual_key_size=0;
+	char *actual_cipher=NULL;
+	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_KEY_SIZE, &actual_key_size, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_cipher, NULL);
+	g_assert_cmpint(EXPECTED_KEY_SIZE, ==, actual_key_size);
+	g_assert_cmpstr(EXPECTED_CIPHER, ==, actual_cipher);
+	g_free(actual_cipher);
+	g_object_unref(asym_cipher);
+}
+
 static void otb_copy_public_key(OtbAsymCipher *asym_cipher_original, OtbAsymCipher *asym_cipher_public)
 {
 	char *public_key=NULL;
@@ -137,6 +152,7 @@ static void test_asym_cipher_encryption()
 void otb_add_asym_cipher_tests()
 {
 	otb_add_test_func("/asym_cipher/test_asym_cipher_properties", test_asym_cipher_properties);
+	otb_add_test_func("/asym_cipher/test_asym_cipher_default_properties", test_asym_cipher_default_properties);
 	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption_in_steps", test_asym_cipher_encryption_in_steps);
 	otb_add_test_func("/asym_cipher/test_asym_cipher_encryption", test_asym_cipher_encryption);
 }
