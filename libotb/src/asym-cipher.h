@@ -21,7 +21,7 @@ typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 #define otb_asym_cipher_dispose_decryption_buffer(decryption_buffer)	otb_openssl_dispose_decryption_buffer((decryption_buffer))
 
 #define OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME	"sym-cipher-name"
-#define OTB_ASYM_CIPHER_PROP_KEY_SIZE			"key-size"	// FARE - Unit test.
+#define OTB_ASYM_CIPHER_PROP_KEY_SIZE			"key-size"
 #define OTB_ASYM_CIPHER_PROP_PUBLIC_KEY			"public-key"
 
 #define OTB_TYPE_ASYM_CIPHER			(otb_asym_cipher_get_type())

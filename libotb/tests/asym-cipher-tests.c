@@ -17,12 +17,18 @@
 
 static void test_asym_cipher_properties()
 {
+	const int EXPECTED_KEY_SIZE=1024;
 	const char *EXPECTED_CIPHER="RC2-64-CBC";
+	const char *EXPECTED_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDGWqZN030YlVr0TznrdM8BHD/G\no8bF2MKYWGf1z2UuzGQE22ZQOGCWFfh9RvWvUJoRQD9G8TgqIwHexLIctmOF1EmO\n+k6AH789OZzuaGGU1e/KgLVlXX2KP6yjnS2Z6xfoJ8VWXX5FrutpxxYImU3HX99A\n2IO1ElneRAI5y1tbewIDAQAB\n-----END PUBLIC KEY-----\n";
 	
-	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, EXPECTED_CIPHER, NULL);
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, EXPECTED_KEY_SIZE, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, EXPECTED_CIPHER, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, EXPECTED_PUBLIC_KEY, NULL);
+	int actual_key_size=0;
 	char *actual_cipher=NULL;
-	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_cipher, NULL);
+	char *actual_public_key=NULL;
+	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_KEY_SIZE, &actual_key_size, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_cipher, OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, &actual_public_key, NULL);
+	g_assert_cmpint(EXPECTED_KEY_SIZE, ==, actual_key_size);
 	g_assert_cmpstr(EXPECTED_CIPHER, ==, actual_cipher);
+	g_assert_cmpstr(EXPECTED_PUBLIC_KEY, ==, actual_public_key);
 	g_free(actual_cipher);
 	g_object_unref(asym_cipher);
 }
