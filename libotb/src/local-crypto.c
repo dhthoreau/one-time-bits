@@ -39,40 +39,34 @@ gboolean otb_local_crypto_can_be_unlocked()
 	return local_crypto_can_be_unlocked;
 }
 
-static void otb_local_crypto_new_sym_cipher_initialize_string_property(OtbSymCipher *sym_cipher, const char *config_key, const char *sym_cipher_property)
+static char *otb_local_crypto_new_sym_cipher_get_string_property(const char *config_key, const char *default_value)
 {
 	char *value=otb_settings_get_config_string(CONFIG_GROUP, config_key);
 	if(G_UNLIKELY(value==NULL))
 	{
-		char *defaulted_value;
-		g_object_get(sym_cipher, sym_cipher_property, &defaulted_value, NULL);
-		otb_settings_set_config_string(CONFIG_GROUP, config_key, defaulted_value);
-		g_free(defaulted_value);
+		otb_settings_set_config_string(CONFIG_GROUP, config_key, default_value);
+		value=strdup(default_value);
 	}
-	else
-		g_object_set(sym_cipher, sym_cipher_property, value, NULL);
-	g_free(value);
+	return value;
 }
 
-static void otb_local_crypto_new_sym_cipher_initialize_int_property(OtbSymCipher *sym_cipher, const char *config_key, int error_value, const char *sym_cipher_property)
+static int otb_local_crypto_new_sym_cipher_get_int_property(const char *config_key, int error_value, int default_value)
 {
 	int value=otb_settings_get_config_int(CONFIG_GROUP, config_key, error_value);
 	if(G_UNLIKELY(value==error_value))
 	{
-		int defaulted_value;
-		g_object_get(sym_cipher, sym_cipher_property, &defaulted_value, NULL);
-		otb_settings_set_config_int(CONFIG_GROUP, config_key, defaulted_value);
+		otb_settings_set_config_int(CONFIG_GROUP, config_key, default_value);
+		value=default_value;
 	}
-	else
-		g_object_set(sym_cipher, sym_cipher_property, value, NULL);
+	return value;
 }
 
 static OtbSymCipher *otb_local_crypto_new_sym_cipher()
 {
-	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
-	otb_local_crypto_new_sym_cipher_initialize_string_property(sym_cipher, CONFIG_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER);
-	otb_local_crypto_new_sym_cipher_initialize_string_property(sym_cipher, CONFIG_MESSAGE_DIGEST, OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST);
-	otb_local_crypto_new_sym_cipher_initialize_int_property(sym_cipher, CONFIG_HASH_ITERATIONS, 0, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS);
+	char *cipher=otb_local_crypto_new_sym_cipher_get_string_property(CONFIG_SYM_CIPHER, OTB_SYM_CIPHER_DEFAULT_CIPHER);
+	char *message_digest=otb_local_crypto_new_sym_cipher_get_string_property(CONFIG_MESSAGE_DIGEST, OTB_SYM_CIPHER_DEFAULT_MESSAGE_DIGEST);
+	int hash_iterations=otb_local_crypto_new_sym_cipher_get_int_property(CONFIG_HASH_ITERATIONS, 0, OTB_SYM_CIPHER_DEFAULT_HASH_ITERATIONS);
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, cipher, OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST, message_digest, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, hash_iterations, NULL);
 	return sym_cipher;
 }
 
