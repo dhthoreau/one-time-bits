@@ -1,66 +1,115 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2015-11-29 17:15-0500\n"
-"PO-Revision-Date: 2015-11-29 17:16-0500\n"
+"POT-Creation-Date: 2017-01-28 14:06-0500\n"
+"PO-Revision-Date: 2017-01-28 14:07-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.8.7.1\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: src\n"
 
-#: src/user.c:61 src/friend.c:73 src/pad-rec.c:75
-msgid "Unique ID"
-msgstr "ID univoco"
+#: src/asym-cipher.c:52 src/friend.c:74
+msgid "Public key"
+msgstr "Chiave pubblica"
 
-#: src/user.c:61
-msgid "UUID of the user"
-msgstr "UUID dell'utente"
+#: src/asym-cipher.c:52
+msgid "The public key to use for encryption"
+msgstr "La chiave pubblica che è usata per crittografia"
 
-#: src/user.c:62
-msgid "Asymetrical cipher"
-msgstr "Cifra asimmetrica"
+#: src/asym-cipher.c:53
+msgid "Symmetric cipher"
+msgstr "Cifra simmetrica"
 
-#: src/user.c:62
-msgid ""
-"Asymetrical cipher that is used to identify the user and communicate with "
-"friends"
-msgstr ""
-"Cifra asimmetrica usata per identificare l'utente e comunicare con amici."
+#: src/asym-cipher.c:53
+msgid "Name of the symmetric cipher to use"
+msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/user.c:63 src/friend.c:76
-msgid "Address"
-msgstr "Indirizzo"
+#: src/asym-cipher.c:54
+msgid "Key size"
+msgstr "Lunghezza della chiave"
 
-#: src/user.c:63
-msgid "The address of the user"
-msgstr "L'indirizzo dell'utente"
+#: src/asym-cipher.c:54
+msgid "The size of the key to use for encryption"
+msgstr "La Lunghezza della chiave che è usata per crittografia"
 
-#: src/user.c:64 src/friend.c:77
-msgid "Port"
-msgstr "Porta"
-
-#: src/user.c:64
-msgid "The port of the user"
-msgstr "La porta dell'utente"
-
-#: src/settings.c:40 src/settings.c:54
+#: src/asym-cipher.c:254 src/sym-cipher.c:212
 #, c-format
-msgid "Failed to load key file from %s. Error == %s"
-msgstr "Non è riuscito ad aprire il file di chiave %s. Errore == %s"
+msgid "Failed to initialize encryption. Error == %s"
+msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/settings.c:168 src/settings.c:216 src/settings.c:237 src/settings.c:259
+#: src/asym-cipher.c:270 src/sym-cipher.c:226
 #, c-format
-msgid "Failed to read %s / %s from config file. Error == %s"
-msgstr ""
-"Non è riuscito a leggere %s / %s da file di configurazione. Errore == %s"
+msgid "Failed to initialize decryption. Error == %s"
+msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/friend.c:70 src/pad-rec.c:77 src/pad-db.c:85
+#: src/asym-cipher.c:283 src/sym-cipher.c:341
+#, c-format
+msgid "Failed to encrypt data. Error == %s"
+msgstr "Non è riuscito a cifrare dati. Errore == %s"
+
+#: src/asym-cipher.c:296 src/sym-cipher.c:354
+#, c-format
+msgid "Failed to decrypt data. Error == %s"
+msgstr "Non è riuscito a decifrare dati. Errore == %s"
+
+#: src/asym-cipher.c:309 src/sym-cipher.c:367
+#, c-format
+msgid "Failed to encrypt final data. Error == %s"
+msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
+
+#: src/asym-cipher.c:323 src/sym-cipher.c:381
+#, c-format
+msgid "Failed to decrypt final data. Error == %s"
+msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
+
+#: src/bitkeeper.c:57
+msgid "User"
+msgstr "Utente"
+
+#: src/bitkeeper.c:57
+msgid "The user who is using the application"
+msgstr "L'utente chi sta usando l'applicazione"
+
+#: src/bitkeeper.c:58
+msgid "Proxy port"
+msgstr "Porta della delega"
+
+#: src/bitkeeper.c:58
+msgid "The port for the local proxy, preferably TOR"
+msgstr "Porta della delega locale, preferibilmente TOR"
+
+#: src/bitkeeper.c:59
+msgid "Pad synchronization interval"
+msgstr "Intervallo della sincronizzazione dei blocchi"
+
+#: src/bitkeeper.c:59
+msgid "How often pads should be synchronized, measured in microseconds"
+msgstr ""
+"Quanto spesso i blocchi dovrebbero essere sincronizzati, misurato con "
+"microsecondi"
+
+#: src/bitkeeper.c:358
+#, c-format
+msgid "sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."
+msgstr ""
+"sprintf() non è riuscito a otb_socket_client_set_proxy_resolver() per porta "
+"%u."
+
+#: src/bitkeeper.c:396
+msgid "Failed to delete expired pads."
+msgstr "Non è riuscito a cancellare i blocchi scaduti."
+
+#: src/bitkeeper.c:398
+msgid "Failed to synchronize pads with friend."
+msgstr "Non è riuscito a sincronizzare i blocchi con l'amico."
+
+#: src/friend.c:70 src/pad-db.c:85 src/pad-rec.c:77
 msgid "Base path"
 msgstr "Precorso di base"
 
@@ -84,13 +133,13 @@ msgstr "Blocchi in partenza"
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
+#: src/friend.c:73 src/pad-rec.c:75 src/user.c:65
+msgid "Unique ID"
+msgstr "ID univoco"
+
 #: src/friend.c:73
 msgid "UUID of the friend"
 msgstr "UUID dell'amico"
-
-#: src/friend.c:74 src/asym-cipher.c:49
-msgid "Public key"
-msgstr "Chiave pubblica"
 
 #: src/friend.c:74
 msgid "Key that is used to identify the friend"
@@ -104,22 +153,60 @@ msgstr "Cifra di trasporto"
 msgid "The cipher used for data transport"
 msgstr "La cifra per trasportare i dati"
 
+#: src/friend.c:76 src/user.c:67
+msgid "Address"
+msgstr "Indirizzo"
+
 #: src/friend.c:76
 msgid "The address of the friend"
 msgstr "L'indirizzo dell'amico"
+
+#: src/friend.c:77 src/user.c:68
+msgid "Port"
+msgstr "Porta"
 
 #: src/friend.c:77
 msgid "The port of the friend"
 msgstr "La porta dell'amico"
 
-#: src/friend.c:157
+#: src/friend.c:163
 msgid "Tried to change unique ID of a friend."
 msgstr "Si è provato a cambiare ID univoco d'un amico."
 
-#: src/random.c:23
+#: src/io.c:22
 #, c-format
-msgid "Failed to generate random data. Error == %s"
-msgstr "Non è riuscito a generare dati casuali. Errore == %s"
+msgid "Failed to open file %s. Error == %s"
+msgstr "Non è riuscito ad aprire il file %s. Errore == %s"
+
+#: src/io.c:48
+#, c-format
+msgid "Failed to write file. Error == %s"
+msgstr "Non è riuscito a scrivere un file. Errore == %s"
+
+#: src/io.c:59
+#, c-format
+msgid "Failed to read file. Error == %s"
+msgstr "Non è riuscito a leggere un file. Errore == %s"
+
+#: src/io.c:70
+#, c-format
+msgid "Failed close file. Error == %s"
+msgstr "Non è riuscito a chiudere un file. Errore == %s"
+
+#: src/io.c:82
+#, c-format
+msgid "Failed delete file %s. Error == %s"
+msgstr "Non è riuscito a cancellare un file %s. Errore == %s"
+
+#: src/io.c:94
+#, c-format
+msgid "Failed create directory %s. Error == %s"
+msgstr "Non è riuscito a creare la directory %s. Errore == %s"
+
+#: src/io.c:106
+#, c-format
+msgid "Failed open directory %s. Error == %s"
+msgstr "Non è riuscito ad aprire la directory %s. Errore == %s"
 
 #: src/memory.c:81
 msgid "Failed to add locked page to hash table."
@@ -148,6 +235,78 @@ msgstr ""
 #: src/memory.c:162
 msgid "Failed to remove memory from hash table."
 msgstr "Non è riuscito ad eliminare memoria da tabella hash."
+
+#: src/pad-db.c:85
+msgid "Directory where the database will be saved"
+msgstr "La directory dove il database sarà salvato"
+
+#: src/pad-db.c:86
+msgid "Max size"
+msgstr "Dimensione massima"
+
+#: src/pad-db.c:86
+msgid "Maximum size of the database"
+msgstr "Dimensione massima del database"
+
+#: src/pad-db.c:87
+msgid "New pad min size"
+msgstr "Dimensione minima di blocchi nuovi"
+
+#: src/pad-db.c:87
+msgid "Minimum size for a newly created pad"
+msgstr "Dimensione minima di blocchi creati di fresco"
+
+#: src/pad-db.c:88
+msgid "New pad max size"
+msgstr "Dimensione massima di blocchi nuovi"
+
+#: src/pad-db.c:88
+msgid "Maximum size for a newly created pad"
+msgstr "Dimensione massima di blocchi creati di fresco"
+
+#: src/pad-db.c:89
+msgid "New pad expiration"
+msgstr "Scadenza dei blocchi nuovi"
+
+#: src/pad-db.c:89
+msgid "Time interval of expiration for a newly created pad"
+msgstr "Intervallo di tempo di scadenza di blocchi creati di fresco"
+
+#: src/pad-db.c:330
+msgid "Failed to add record due to non-unique ID."
+msgstr "Non è riuscito ad aggiungere record a causa di ID non univoco."
+
+#: src/pad-db.c:335
+msgid "Failed to add record due to database size limitation."
+msgstr ""
+"Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
+"del database."
+
+#: src/pad-db.c:836
+msgid ""
+"Failed to update the status of all pads used to encrypt a file, though file "
+"itself was fully encrypted. This could cause problems for the recipient of "
+"your encrypted files. Recomendation is that the encrypted file not be used."
+msgstr ""
+"Non è riuscito ad aggiornare lo stato di tutti blocchi utilizzati per "
+"cifrare un file, sebbene il file era cifrato completamente. Quello potrebbe "
+"causare problemi per il destinatario dei tuoi file cifrati. La "
+"raccomandazione è che il file cifrato non sia utilizzato."
+
+#: src/pad-db.c:895
+msgid "Failed to decrypt file due to unsupported file version number."
+msgstr ""
+"Non è riuscito a decifrare il file a causa di numero di versione non "
+"supportata di file."
+
+#: src/pad-db.c:954
+msgid ""
+"Failed to delete all pads used to decrypt a file, though file itself was "
+"fully decrypted. Recomendation is to reset the pad database."
+msgstr ""
+"Non è riuscito a cancellare tutti blocchi utilizzati per decifrare un file, "
+"sebbene il file era decifrato completamente. La raccomandazione è azzerare "
+"il database di blocchi."
 
 #: src/pad-rec.c:75
 msgid "UUID of the record"
@@ -191,195 +350,21 @@ msgid ""
 msgstr ""
 "La data e l'ora in cui il blocco scade (microsecondi da 1-gen-1979 UTC)"
 
-#: src/bitkeeper.c:55
-msgid "User"
-msgstr "Utente"
+#: src/random.c:23
+#, c-format
+msgid "Failed to generate random data. Error == %s"
+msgstr "Non è riuscito a generare dati casuali. Errore == %s"
 
-#: src/bitkeeper.c:55
-msgid "The user who is using the application"
-msgstr "L'utente chi sta usando l'applicazione"
+#: src/settings.c:40 src/settings.c:54
+#, c-format
+msgid "Failed to load key file from %s. Error == %s"
+msgstr "Non è riuscito ad aprire il file di chiave %s. Errore == %s"
 
-#: src/bitkeeper.c:56
-msgid "Proxy port"
-msgstr "Porta della delega"
-
-#: src/bitkeeper.c:56
-msgid "The port for the local proxy, preferably TOR"
-msgstr "Porta della delega locale, preferibilmente TOR"
-
-#: src/bitkeeper.c:57
-msgid "Pad synchronization interval"
-msgstr "Intervallo della sincronizzazione dei blocchi"
-
-#: src/bitkeeper.c:57
-msgid "How often pads should be synchronized, measured in microseconds"
+#: src/settings.c:168 src/settings.c:216 src/settings.c:237 src/settings.c:259
+#, c-format
+msgid "Failed to read %s / %s from config file. Error == %s"
 msgstr ""
-"Quanto spesso i blocchi dovrebbero essere sincronizzati, misurato con "
-"microsecondi"
-
-#: src/bitkeeper.c:322
-#, c-format
-msgid "sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."
-msgstr ""
-"sprintf() non è riuscito a otb_socket_client_set_proxy_resolver() per porta "
-"%u."
-
-#: src/bitkeeper.c:360
-msgid "Failed to delete expired pads."
-msgstr "Non è riuscito a cancellare i blocchi scaduti."
-
-#: src/bitkeeper.c:363
-msgid "Failed to synchronize pads with friend."
-msgstr "Non è riuscito a sincronizzare i blocchi con l'amico."
-
-#: src/io.c:22
-#, c-format
-msgid "Failed to open file %s. Error == %s"
-msgstr "Non è riuscito ad aprire il file %s. Errore == %s"
-
-#: src/io.c:48
-#, c-format
-msgid "Failed to write file. Error == %s"
-msgstr "Non è riuscito a scrivere un file. Errore == %s"
-
-#: src/io.c:59
-#, c-format
-msgid "Failed to read file. Error == %s"
-msgstr "Non è riuscito a leggere un file. Errore == %s"
-
-#: src/io.c:70
-#, c-format
-msgid "Failed close file. Error == %s"
-msgstr "Non è riuscito a chiudere un file. Errore == %s"
-
-#: src/io.c:82
-#, c-format
-msgid "Failed delete file %s. Error == %s"
-msgstr "Non è riuscito a cancellare un file %s. Errore == %s"
-
-#: src/io.c:94
-#, c-format
-msgid "Failed create directory %s. Error == %s"
-msgstr "Non è riuscito a creare la directory %s. Errore == %s"
-
-#: src/io.c:106
-#, c-format
-msgid "Failed open directory %s. Error == %s"
-msgstr "Non è riuscito ad aprire la directory %s. Errore == %s"
-
-#: src/asym-cipher.c:49
-msgid "The public key to use for encryption"
-msgstr "La chiave pubblica che è usata per crittografia"
-
-#: src/asym-cipher.c:50
-msgid "Symmetric cipher"
-msgstr "Cifra simmetrica"
-
-#: src/asym-cipher.c:50
-msgid "Name of the symmetric cipher to use"
-msgstr "Nome della cifra simmetrica per utilizzare"
-
-#: src/asym-cipher.c:246 src/sym-cipher.c:212
-#, c-format
-msgid "Failed to initialize encryption. Error == %s"
-msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
-
-#: src/asym-cipher.c:262 src/sym-cipher.c:226
-#, c-format
-msgid "Failed to initialize decryption. Error == %s"
-msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
-
-#: src/asym-cipher.c:275 src/sym-cipher.c:341
-#, c-format
-msgid "Failed to encrypt data. Error == %s"
-msgstr "Non è riuscito a cifrare dati. Errore == %s"
-
-#: src/asym-cipher.c:288 src/sym-cipher.c:354
-#, c-format
-msgid "Failed to decrypt data. Error == %s"
-msgstr "Non è riuscito a decifrare dati. Errore == %s"
-
-#: src/asym-cipher.c:301 src/sym-cipher.c:367
-#, c-format
-msgid "Failed to encrypt final data. Error == %s"
-msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
-
-#: src/asym-cipher.c:315 src/sym-cipher.c:381
-#, c-format
-msgid "Failed to decrypt final data. Error == %s"
-msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
-
-#: src/pad-db.c:85
-msgid "Directory where the database will be saved"
-msgstr "La directory dove il database sarà salvato"
-
-#: src/pad-db.c:86
-msgid "Max size"
-msgstr "Dimensione massima"
-
-#: src/pad-db.c:86
-msgid "Maximum size of the database"
-msgstr "Dimensione massima del database"
-
-#: src/pad-db.c:87
-msgid "New pad min size"
-msgstr "Dimensione minima di blocchi nuovi"
-
-#: src/pad-db.c:87
-msgid "Minimum size for a newly created pad"
-msgstr "Dimensione minima di blocchi creati di fresco"
-
-#: src/pad-db.c:88
-msgid "New pad max size"
-msgstr "Dimensione massima di blocchi nuovi"
-
-#: src/pad-db.c:88
-msgid "Maximum size for a newly created pad"
-msgstr "Dimensione massima di blocchi creati di fresco"
-
-#: src/pad-db.c:89
-msgid "New pad expiration"
-msgstr "Scadenza dei blocchi nuovi"
-
-#: src/pad-db.c:89
-msgid "Time interval of expiration for a newly created pad"
-msgstr "Intervallo di tempo di scadenza di blocchi creati di fresco"
-
-#: src/pad-db.c:296
-msgid "Failed to add record due to non-unique ID."
-msgstr "Non è riuscito ad aggiungere record a causa di ID non univoco."
-
-#: src/pad-db.c:301
-msgid "Failed to add record due to database size limitation."
-msgstr ""
-"Non è riuscito ad aggiungere record a causa di la limitazione di dimensione "
-"del database."
-
-#: src/pad-db.c:880
-msgid ""
-"Failed to update the status of all pads used to encrypt a file, though file "
-"itself was fully encrypted. This could cause problems for the recipient of "
-"your encrypted files. Recomendation is that the encrypted file not be used."
-msgstr ""
-"Non è riuscito ad aggiornare lo stato di tutti blocchi utilizzati per cifrare "
-"un file, sebbene il file era cifrato completamente. Quello potrebbe causare "
-"problemi per il destinatario dei tuoi file cifrati. La raccomandazione è che "
-"il file cifrato non sia utilizzato."
-
-#: src/pad-db.c:939
-msgid "Failed to decrypt file due to unsupported file version number."
-msgstr ""
-"Non è riuscito a decifrare il file a causa di numero di versione non "
-"supportata di file."
-
-#: src/pad-db.c:998
-msgid ""
-"Failed to delete all pads used to decrypt a file, though file itself was "
-"fully decrypted. Recomendation is to reset the pad database."
-msgstr ""
-"Non è riuscito a cancellare tutti blocchi utilizzati per decifrare un file, "
-"sebbene il file era decifrato completamente. La raccomandazione è azzerare "
-"il database di blocchi."
+"Non è riuscito a leggere %s / %s da file di configurazione. Errore == %s"
 
 #: src/sym-cipher.c:58
 msgid "Cipher"
@@ -404,3 +389,26 @@ msgstr "Iterazioni di hash"
 #: src/sym-cipher.c:60
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."
+
+#: src/user.c:65
+msgid "UUID of the user"
+msgstr "UUID dell'utente"
+
+#: src/user.c:66
+msgid "Asymetrical cipher"
+msgstr "Cifra asimmetrica"
+
+#: src/user.c:66
+msgid ""
+"Asymetrical cipher that is used to identify the user and communicate with "
+"friends"
+msgstr ""
+"Cifra asimmetrica usata per identificare l'utente e comunicare con amici."
+
+#: src/user.c:67
+msgid "The address of the user"
+msgstr "L'indirizzo dell'utente"
+
+#: src/user.c:68
+msgid "The port of the user"
+msgstr "La porta dell'utente"
