@@ -11,5 +11,3 @@ void otb_mlock(const void* address, size_t size);
 void otb_munlock(const void* address, size_t size);
 void *otb_malloc_locked(size_t size);
 void otb_free_locked(void *memory);
-
-extern int fuck;
