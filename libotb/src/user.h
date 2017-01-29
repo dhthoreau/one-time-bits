@@ -39,12 +39,14 @@ struct _OtbUserClass
 {
 	GObjectClass parent_class;
 	gboolean (*otb_user_load_from_settings_private)(OtbUser *user);
+	gboolean (*otb_user_save_to_settings_private)(const OtbUser *user);
 	void (*otb_user_export_key_file_private)(const OtbUser *user, GKeyFile *export_key_file);
 };
 
 GType otb_user_get_type();
 
 void otb_user_set_runtime_type(GType user_runtime_type);
+GType otb_user_get_runtime_type();
 void otb_user_lock_read(const OtbUser *user);
 void otb_user_unlock_read(const OtbUser *user);
 void otb_user_lock_write(const OtbUser *user);

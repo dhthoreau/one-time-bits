@@ -22,6 +22,7 @@ enum
 static gboolean otb_demo_user_load_from_settings(OtbUser *user);
 static void otb_demo_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
 static void otb_demo_user_finalize(GObject *object);
+static void otb_demo_user_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);
 static void otb_demo_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec);
 
 G_DEFINE_TYPE(OtbDemoUser, otb_demo_user, OTB_TYPE_USER);
@@ -37,8 +38,9 @@ static void otb_demo_user_class_init(OtbDemoUserClass *klass)
 	OTB_USER_CLASS(klass)->otb_user_export_key_file_private=otb_demo_user_export_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->finalize=otb_demo_user_finalize;
+	object_class->set_property=otb_demo_user_set_property;
 	object_class->get_property=otb_demo_user_get_property;
-	g_object_class_install_property(object_class, PROP_NAME, g_param_spec_string(OTB_DEMO_USER_PROP_NAME, _("Name"), _("The name of the user"), NULL, G_PARAM_READABLE));
+	g_object_class_install_property(object_class, PROP_NAME, g_param_spec_string(OTB_DEMO_USER_PROP_NAME, _("Name"), _("The name of the user"), NULL, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbDemoUserPrivate));
 }
 
@@ -55,6 +57,27 @@ static void otb_demo_user_finalize(GObject *object)
 	OtbDemoUser *user=OTB_DEMO_USER(object);
 	g_free(user->priv->name);
 	G_OBJECT_CLASS(otb_demo_user_parent_class)->finalize(object);
+}
+
+static void otb_demo_user_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
+{
+	OtbDemoUser *user=OTB_DEMO_USER(object);
+	switch(prop_id)
+	{
+		case PROP_NAME:
+		{
+			otb_user_lock_read(OTB_USER(user));
+			g_free(user->priv->name);
+			user->priv->name=g_value_dup_string(value);
+			otb_user_unlock_read(OTB_USER(user));
+			break;
+		}
+		default:
+		{
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+			break;
+		}
+	}
 }
 
 static void otb_demo_user_get_property(GObject *object, unsigned int prop_id, GValue *value, GParamSpec *pspec)

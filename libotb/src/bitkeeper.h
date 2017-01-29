@@ -47,7 +47,7 @@ GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
 OtbBitkeeper *otb_bitkeeper_load();
-gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);
+gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);	// FARE - Unit test.
 // FARE - Un otb_bitkeeper_delete()?
 GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);
 OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id);

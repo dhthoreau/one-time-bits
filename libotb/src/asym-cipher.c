@@ -16,9 +16,6 @@
 #include "random.h"
 #include "asym-cipher.h"
 
-#define DEFAULT_KEY_SIZE	4096
-#define DEFAULT_CIPHER		"AES-256-CBC"
-
 struct _OtbAsymCipherPrivate
 {
 	GRWLock lock;
@@ -49,8 +46,8 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 	object_class->finalize=otb_asym_cipher_finalize;
 	object_class->set_property=otb_asym_cipher_set_property;
 	object_class->get_property=otb_asym_cipher_get_property;
-	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property(object_class, PROP_KEY_SIZE, g_param_spec_int(OTB_ASYM_CIPHER_PROP_KEY_SIZE, _("Key size"), _("The size of the key to use for encryption"), 0, G_MAXINT, DEFAULT_KEY_SIZE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_SYM_CIPHER_NAME, g_param_spec_string(OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, _("Symmetric cipher"), _("Name of the symmetric cipher to use"), OTB_ASYM_CIPHER_DEFAULT_CIPHER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property(object_class, PROP_KEY_SIZE, g_param_spec_int(OTB_ASYM_CIPHER_PROP_KEY_SIZE, _("Key size"), _("The size of the key to use for encryption"), 0, G_MAXINT, OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property(object_class, PROP_PUBLIC_KEY, g_param_spec_string(OTB_ASYM_CIPHER_PROP_PUBLIC_KEY, _("Public key"), _("The public key to use for encryption"), NULL, G_PARAM_READWRITE));
 	g_type_class_add_private(klass, sizeof(OtbAsymCipherPrivate));
 }

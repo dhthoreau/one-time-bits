@@ -66,12 +66,16 @@ static const gboolean switch_to_console_window(const CreateUserContainer *create
 static const void *create_user_thread(CreateUserContainer *create_user_container)
 {
 	otb_local_crypto_create_sym_cipher(create_user_container_get_passphrase(create_user_container));
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_create(create_user_container_get_proxy_port(create_user_container), create_user_container_get_pad_synchronization_interval(create_user_container), create_user_container_get_address(create_user_container), create_user_container_get_port(create_user_container), create_user_container_get_key_size(create_user_container));
-	OtbUser *user;
-	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, create_user_container_get_key_size(create_user_container), NULL);
+	otb_asym_cipher_generate_random_keys(asym_cipher);	// FARE - È ruscito?
+	OtbUser *user=g_object_new(otb_user_get_runtime_type(), OTB_USER_PROP_ASYM_CIPHER, asym_cipher, OTB_USER_PROP_ADDRESS, create_user_container_get_address(create_user_container), OTB_USER_PROP_PORT, create_user_container_get_port(create_user_container), NULL);
 	otb_demo_user_set_name(OTB_DEMO_USER(user), create_user_container_get_name(create_user_container));
-	g_object_unref(user);
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PROXY_PORT, create_user_container_get_proxy_port(create_user_container), OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, create_user_container_get_pad_synchronization_interval(create_user_container), NULL);
+	otb_bitkeeper_save(bitkeeper);	// FARE - È ruscito?
 	gdk_threads_add_idle((GSourceFunc)switch_to_console_window, create_user_container);
+	g_object_unref(bitkeeper);
+	g_object_unref(user);
+	g_object_unref(asym_cipher);
 	return NULL;
 }
 
@@ -115,8 +119,8 @@ static void new_create_user_window_setup(GtkBuilder *builder)
 	char key_size_string[12];
 	char proxy_port_string[6];
 	char pad_synchonization_interval_string[21];
-	sprintf(port_string, "%hu", OTB_BITKEEPER_DEFAULT_USER_PORT);
-	sprintf(key_size_string, "%hu", OTB_BITKEEPER_DEFAULT_USER_KEY_SIZE);
+	sprintf(port_string, "%hu", OTB_USER_DEFAULT_PORT);
+	sprintf(key_size_string, "%hu", OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE);
 	sprintf(proxy_port_string, "%hu", OTB_BITKEEPER_DEFAULT_PROXY_PORT);
 	sprintf(pad_synchonization_interval_string, "%lli", OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
 	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "portValue")), port_string);

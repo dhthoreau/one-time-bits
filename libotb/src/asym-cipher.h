@@ -15,6 +15,9 @@
 #include "openssl-util.h"
 #include "sym-cipher.h"
 
+#define OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE	4096
+#define OTB_ASYM_CIPHER_DEFAULT_CIPHER		"AES-256-CBC"
+
 typedef EVP_CIPHER_CTX OtbAsymCipherContext;
 
 #define otb_asym_cipher_context_free(cipher_context)					EVP_CIPHER_CTX_free(cipher_context)

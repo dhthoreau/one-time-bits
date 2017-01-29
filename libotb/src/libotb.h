@@ -9,6 +9,7 @@
 #ifndef OTB_LIBOTB_H
 #define OTB_LIBOTB_H
 
+#include "asym-cipher.h"
 #include "bitkeeper.h"
 #include "local-crypto.h"
 #include "settings.h"

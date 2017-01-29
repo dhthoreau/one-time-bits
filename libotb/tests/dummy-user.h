@@ -11,7 +11,8 @@
 
 #include "../src/user.h"
 
-#define OTB_DUMMY_USER_EXPORT_VALUE	"dummy-export-dumb-dumb"
+#define OTB_DUMMY_USER_EXPORT_VALUE	"LiberareSnowden"
+#define OTB_DUMMY_USER_SAVE_VALUE	"LiberareAssange"
 
 #define OTB_TYPE_DUMMY_USER				(otb_dummy_user_get_type())
 #define OTB_DUMMY_USER(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_TYPE_DUMMY_USER, OtbDummyUser))

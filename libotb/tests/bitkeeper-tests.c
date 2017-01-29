@@ -126,7 +126,6 @@ static void otb_setup_configs_for_bitkeeper_tests_without_output(int new_key_siz
 
 static void test_otb_bitkeeper_user()
 {
-	const int NEW_KEY_SIZE=SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY;
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kfjjkjfdhgjkhfkjd.onion";
 	const unsigned int EXPECTED_PORT=13579;
@@ -134,7 +133,7 @@ static void test_otb_bitkeeper_user()
 	OtbUniqueId *expected_unique_id=NULL;
 	OtbAsymCipher *expected_asym_cipher=NULL;
 	g_assert(!otb_bitkeeper_exists());
-	otb_setup_configs_for_bitkeeper_tests(NEW_KEY_SIZE, EXPECTED_SYM_CIPHER_NAME, EXPECTED_ADDRESS, EXPECTED_PORT, &expected_unique_id, &expected_asym_cipher);
+	otb_setup_configs_for_bitkeeper_tests(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, EXPECTED_SYM_CIPHER_NAME, EXPECTED_ADDRESS, EXPECTED_PORT, &expected_unique_id, &expected_asym_cipher);
 	g_assert(otb_bitkeeper_exists());
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
 	g_assert(bitkeeper!=NULL);
