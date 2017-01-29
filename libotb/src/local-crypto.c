@@ -67,6 +67,8 @@ static OtbSymCipher *otb_local_crypto_new_sym_cipher()
 	char *message_digest=otb_local_crypto_new_sym_cipher_get_string_property(CONFIG_MESSAGE_DIGEST, OTB_SYM_CIPHER_DEFAULT_MESSAGE_DIGEST);
 	int hash_iterations=otb_local_crypto_new_sym_cipher_get_int_property(CONFIG_HASH_ITERATIONS, 0, OTB_SYM_CIPHER_DEFAULT_HASH_ITERATIONS);
 	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_CIPHER, cipher, OTB_SYM_CIPHER_PROP_MESSAGE_DIGEST, message_digest, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, hash_iterations, NULL);
+	g_free(message_digest);
+	g_free(cipher);
 	return sym_cipher;
 }
 
