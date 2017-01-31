@@ -11,6 +11,8 @@
 
 typedef void (*WindowCreationSetupCallback)(GtkBuilder *builder);
 
-void otb_demo_app_create_window(const char *file_name, const WindowCreationSetupCallback setup_callback, GtkApplication *application);
+GtkWindow *otb_demo_app_create_hidden_transient_window(const char *file_name, const char *window_name, GtkApplication *application, const WindowCreationSetupCallback setup_callback, GtkWindow *parent_for_transient_window);
+void otb_demo_app_create_transient_window(const char *file_name, const char *window_name, GtkApplication *application, const WindowCreationSetupCallback setup_callback, GtkWindow *parent_for_transient_window);
+void otb_demo_app_create_window(const char *file_name, const char *window_name, GtkApplication *application, const WindowCreationSetupCallback setup_callback);
 
 #endif

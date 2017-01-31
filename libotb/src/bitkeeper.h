@@ -46,7 +46,7 @@ struct _OtbBitkeeperClass
 GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
-OtbBitkeeper *otb_bitkeeper_load();
+OtbBitkeeper *otb_bitkeeper_load();	// FARE - Ha bisogno d'un singleton?
 gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);
 // FARE - Un otb_bitkeeper_delete()?
 GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);

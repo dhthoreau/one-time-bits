@@ -6,11 +6,13 @@
  * as published by Sam Hocevar. See the COPYING file for more details.
  **/
 
-#ifndef OTB_DEMO_CREATE_USER_H
-#define OTB_DEMO_CREATE_USER_H
+#ifndef OTB_WORKING_H
+#define OTB_WORKING_H
 
 #include <gtk/gtk.h>
 
-void otb_demo_edit_user_show_new_window(GtkApplication *application);
+#include "app.h"
+
+#define otb_demo_app_create_hidden_working_transient(parent_window)	otb_demo_app_create_hidden_transient_window("working.ui", "workingWindow", gtk_window_get_application(parent_window), NULL, (parent_window))
 
 #endif

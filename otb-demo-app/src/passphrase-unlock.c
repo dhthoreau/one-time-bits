@@ -17,6 +17,8 @@
 
 #include "../../libotb/src/libotb.h"
 
+#define PASSPHRASE_UNLOCK_WINDOW	"passphraseUnlockWindow"
+
 typedef struct
 {
 	GtkWindow *window;
@@ -26,7 +28,7 @@ typedef struct
 static PassphraseUnlockContainer *passphrase_unlock_container_from_builder(GtkBuilder *builder)
 {
 	PassphraseUnlockContainer *passphrase_unlock_container=g_slice_new(PassphraseUnlockContainer);
-	passphrase_unlock_container->window=g_object_ref(GTK_WINDOW(gtk_builder_get_object(builder, "window")));
+	passphrase_unlock_container->window=g_object_ref(GTK_WINDOW(gtk_builder_get_object(builder, PASSPHRASE_UNLOCK_WINDOW)));
 	passphrase_unlock_container->passphrase=g_object_ref(GTK_ENTRY(gtk_builder_get_object(builder, "passphraseValue")));
 	return passphrase_unlock_container;
 }
@@ -65,10 +67,10 @@ static void new_passphrase_unlock_window_setup(GtkBuilder *builder)
 {
 	PassphraseUnlockContainer *passphrase_unlock_container=passphrase_unlock_container_from_builder(builder);
 	g_signal_connect(GTK_WIDGET(gtk_builder_get_object(builder, "unlockButton")), "clicked", G_CALLBACK(signal_passphrase_unlock_button_clicked), passphrase_unlock_container);
-	g_signal_connect(GTK_WIDGET(gtk_builder_get_object(builder, "window")), "destroy", G_CALLBACK(signal_passphrase_unlock_container_free), passphrase_unlock_container);
+	g_signal_connect(GTK_WIDGET(gtk_builder_get_object(builder, PASSPHRASE_UNLOCK_WINDOW)), "destroy", G_CALLBACK(signal_passphrase_unlock_container_free), passphrase_unlock_container);
 }
 
 void otb_demo_passphrase_unlock_show_new_window(GtkApplication *application)
 {
-	otb_demo_app_create_window("passphrase-unlock.ui", new_passphrase_unlock_window_setup, application);
+	otb_demo_app_create_window("passphrase-unlock.ui", PASSPHRASE_UNLOCK_WINDOW, application, new_passphrase_unlock_window_setup);
 }

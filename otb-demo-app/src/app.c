@@ -11,20 +11,33 @@
 #include <gtk/gtk.h>
 
 #include "app.h"
-#include "edit-user.h"
 
-void otb_demo_app_create_window(const char *file_name, const WindowCreationSetupCallback setup_callback, GtkApplication *application)
+GtkWindow *otb_demo_app_create_hidden_transient_window(const char *file_name, const char *window_name, GtkApplication *application, const WindowCreationSetupCallback setup_callback, GtkWindow *parent_for_transient_window)
 {
 	char *file_path=g_build_filename(DATA_DIRECTORY, file_name, NULL);
 	GtkBuilder *builder=gtk_builder_new_from_file(file_path);
 	gtk_builder_connect_signals(builder, NULL);
-	GtkWindow *window=GTK_WINDOW(gtk_builder_get_object(builder, "window"));
+	GtkWindow *window=GTK_WINDOW(g_object_ref(gtk_builder_get_object(builder, window_name)));
 	if(setup_callback!=NULL)
 		setup_callback(builder);
 	g_object_unref(builder);
+	if(parent_for_transient_window!=NULL)
+		gtk_window_set_transient_for(window, parent_for_transient_window);
 	gtk_application_add_window(application, window);
-	gtk_widget_show(GTK_WIDGET(window));
 	g_free(file_path);
+	return window;
+}
+
+void otb_demo_app_create_transient_window(const char *file_name, const char *window_name, GtkApplication *application, const WindowCreationSetupCallback setup_callback, GtkWindow *parent_for_transient_window)
+{
+	GtkWindow *window=otb_demo_app_create_hidden_transient_window(file_name, window_name, application, setup_callback, parent_for_transient_window);
+	gtk_widget_show(GTK_WIDGET(window));
+	g_object_unref(window);
+}
+
+void otb_demo_app_create_window(const char *file_name, const char *window_name, GtkApplication *application, const WindowCreationSetupCallback setup_callback)
+{
+	otb_demo_app_create_transient_window(file_name, window_name, application, setup_callback, NULL);
 }
 
 G_MODULE_EXPORT

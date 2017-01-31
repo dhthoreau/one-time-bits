@@ -18,6 +18,8 @@
 
 #include "../../libotb/src/libotb.h"
 
+#define EDIT_USER_WINDOW	"editUserWindow"
+
 typedef struct
 {
 	GtkWindow *window;
@@ -32,7 +34,7 @@ typedef struct
 static EditUserContainer *edit_user_container_from_builder(GtkBuilder *builder)
 {
 	EditUserContainer *edit_user_container=g_slice_new(EditUserContainer);
-	edit_user_container->window=g_object_ref(GTK_WINDOW(gtk_builder_get_object(builder, "window")));
+	edit_user_container->window=g_object_ref(GTK_WINDOW(gtk_builder_get_object(builder, EDIT_USER_WINDOW)));
 	edit_user_container->workingWindow=g_object_ref(GTK_WINDOW(gtk_builder_get_object(builder, "workingWindow")));
 	edit_user_container->name=g_object_ref(GTK_ENTRY(gtk_builder_get_object(builder, "nameValue")));
 	edit_user_container->address=g_object_ref(GTK_ENTRY(gtk_builder_get_object(builder, "addressValue")));
@@ -127,21 +129,15 @@ static void new_edit_user_window_setup(GtkBuilder *builder)
 	gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(builder, "padSynchronizationIntervalValue")), pad_synchonization_interval_string);
 	EditUserContainer *edit_user_container=edit_user_container_from_builder(builder);
 	g_signal_connect(GTK_WIDGET(gtk_builder_get_object(builder, "saveButton")), "clicked", G_CALLBACK(signal_edit_user_save_button_clicked), edit_user_container);
-	g_signal_connect(GTK_WIDGET(gtk_builder_get_object(builder, "window")), "destroy", G_CALLBACK(signal_edit_user_container_free), edit_user_container);
+	g_signal_connect(GTK_WIDGET(gtk_builder_get_object(builder, EDIT_USER_WINDOW)), "destroy", G_CALLBACK(signal_edit_user_container_free), edit_user_container);
 	g_free(address);
 	g_free(name);
 	g_object_unref(user);
 }
 
-void otb_demo_edit_user_show_new_window(GtkApplication *application)
-{
-	otb_demo_app_create_window("edit-user.ui", new_edit_user_window_setup, application);
-}
-
 G_MODULE_EXPORT
-void otb_demo_app_signal_switch_to_edit_user(GtkWidget *widget, void *callback_data)
+void otb_demo_app_signal_pop_edit_user(GtkWidget *widget, void *callback_data)
 {
 	GtkWindow *window=GTK_WINDOW(gtk_widget_get_toplevel(widget));
-	otb_demo_edit_user_show_new_window(gtk_window_get_application(window));
-	gtk_widget_destroy(GTK_WIDGET(window));
+	otb_demo_app_create_transient_window("edit-user.ui", EDIT_USER_WINDOW, gtk_window_get_application(window), new_edit_user_window_setup, window);
 }

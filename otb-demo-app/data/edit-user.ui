@@ -23,9 +23,10 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkApplicationWindow" id="window">
+  <object class="GtkApplicationWindow" id="editUserWindow">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">OTB Demo App</property>
+    <property name="modal">True</property>
     <property name="window_position">center</property>
     <child>
       <object class="GtkGrid" id="mainGrid">
@@ -279,7 +280,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
-                <signal name="clicked" handler="otb_demo_app_signal_switch_to_console" swapped="no"/>
+                <signal name="clicked" handler="otb_demo_app_signal_close_window" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -307,7 +308,7 @@
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
     <property name="deletable">False</property>
-    <property name="transient_for">window</property>
+    <property name="transient_for">editUserWindow</property>
     <property name="show_menubar">False</property>
     <child>
       <object class="GtkBox" id="box">

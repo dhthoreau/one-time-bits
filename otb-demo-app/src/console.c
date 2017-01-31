@@ -17,9 +17,11 @@
 
 #include "../../libotb/src/libotb.h"
 
+#define CONSOLE_WINDOW	"consoleWindow"
+
 void otb_demo_console_show_new_window(GtkApplication *application)
 {
-	otb_demo_app_create_window("console.ui", NULL, application);
+	otb_demo_app_create_window("console.ui", CONSOLE_WINDOW, application, NULL);
 }
 
 G_MODULE_EXPORT
