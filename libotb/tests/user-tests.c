@@ -60,7 +60,9 @@ static void otb_assert_user(OtbUser *user, OtbAsymCipher *expected_asym_cipher, 
 static void setup_save_file_for_user_test()
 {
 	otb_initialize_settings_for_tests();
-	otb_local_crypto_create_sym_cipher("");
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
+	g_assert(otb_local_crypto_set(sym_cipher, ""));
+	g_object_unref(sym_cipher);
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	g_unlink(config_file_path);
 	g_free(config_file_path);
@@ -95,7 +97,7 @@ static void test_otb_user_create_with_constructor_params()
 	g_assert(actual_public_key!=NULL);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
 	g_assert_cmpint(EXPECTED_PORT, ==, actual_port);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(actual_sym_cipher_name);
 	g_free(actual_public_key);
 	g_object_unref(actual_asym_cipher);
@@ -136,7 +138,7 @@ static void test_otb_user_create_with_no_config_file()
 	g_assert(actual_public_key!=NULL);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
 	g_assert_cmpint(EXPECTED_PORT, ==, actual_port);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(actual_sym_cipher_name);
 	g_free(actual_public_key);
 	g_object_unref(actual_asym_cipher);
@@ -254,7 +256,9 @@ static OtbUser *otb_do_user_create_from_existing_config_file_test()
 	const unsigned int EXPECTED_PORT2=6789;
 	
 	otb_initialize_settings_for_tests();
-	otb_local_crypto_create_sym_cipher("");
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
+	g_assert(otb_local_crypto_set(sym_cipher, ""));
+	g_object_unref(sym_cipher);
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbAsymCipher *expected_asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
 	g_assert(expected_asym_cipher!=NULL);
@@ -284,7 +288,7 @@ static OtbUser *otb_do_user_create_from_existing_config_file_test()
 	g_object_get(user, OTB_USER_PROP_PORT, &actual_port2, NULL);
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
 	g_assert_cmpint(EXPECTED_PORT2, ==, actual_port2);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	otb_unique_id_unref(actual_unique_id);
 	otb_unique_id_unref(expected_unique_id);
 	g_free(actual_sym_cipher_name);
@@ -343,7 +347,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	g_assert_cmpstr(EXPECTED_SYM_CIPHER_NAME, ==, actual_sym_cipher_name);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
 	g_assert_cmpint(EXPECTED_PORT, ==, actual_port);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(export_string);
 	otb_unique_id_unref(actual_unique_id);
 	g_free(actual_unique_id_bytes);
@@ -454,7 +458,9 @@ static void *reader_thread_func(OtbUser *user)
 static void test_locks()
 {
 	otb_initialize_settings_for_tests();
-	otb_local_crypto_create_sym_cipher("");
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
+	g_assert(otb_local_crypto_set(sym_cipher, ""));
+	g_object_unref(sym_cipher);
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	g_unlink(config_file_path);
 	g_free(config_file_path);

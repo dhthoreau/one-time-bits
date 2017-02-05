@@ -44,7 +44,7 @@ G_DEFINE_TYPE(OtbFriend, otb_friend, G_TYPE_OBJECT);
 
 struct _OtbFriendPrivate
 {
-	GRWLock lock;
+	GRWLock rw_lock;
 	OtbUniqueId *unique_id;
 	char *base_path;
 	char *file_path;
@@ -81,7 +81,7 @@ static void otb_friend_class_init(OtbFriendClass *klass)
 static void otb_friend_init(OtbFriend *friend)
 {
 	friend->priv=G_TYPE_INSTANCE_GET_PRIVATE(friend, OTB_TYPE_FRIEND, OtbFriendPrivate);
-	g_rw_lock_init(&friend->priv->lock);
+	g_rw_lock_init(&friend->priv->rw_lock);
 	friend->priv->unique_id=NULL;
 	friend->priv->base_path=NULL;
 	friend->priv->file_path=NULL;
@@ -125,7 +125,7 @@ static void otb_friend_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_FRIEND(object));
 	OtbFriend *friend=OTB_FRIEND(object);
-	g_rw_lock_clear(&friend->priv->lock);
+	g_rw_lock_clear(&friend->priv->rw_lock);
 	otb_unique_id_unref(friend->priv->unique_id);
 	g_free(friend->priv->base_path);
 	g_free(friend->priv->file_path);
@@ -186,10 +186,10 @@ static void otb_friend_set_address(const OtbFriend *friend, const char *address)
 
 #define otb_friend_set_port(friend, port_value)	(friend)->priv->port=(port_value);
 
-#define otb_friend_lock_read(friend)	(g_rw_lock_reader_lock(&friend->priv->lock))
-#define otb_friend_unlock_read(friend)	(g_rw_lock_reader_unlock(&friend->priv->lock))
-#define otb_friend_lock_write(friend)	(g_rw_lock_writer_lock(&friend->priv->lock))
-#define otb_friend_unlock_write(friend)	(g_rw_lock_writer_unlock(&friend->priv->lock))
+#define otb_friend_lock_read(friend)	(g_rw_lock_reader_lock(&friend->priv->rw_lock))
+#define otb_friend_unlock_read(friend)	(g_rw_lock_reader_unlock(&friend->priv->rw_lock))
+#define otb_friend_lock_write(friend)	(g_rw_lock_writer_lock(&friend->priv->rw_lock))
+#define otb_friend_unlock_write(friend)	(g_rw_lock_writer_unlock(&friend->priv->rw_lock))
 
 static void otb_friend_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
@@ -398,18 +398,18 @@ void otb_friend_set_runtime_type(GType friend_runtime_type)
 
 OtbFriend *otb_friend_import_to_directory(const char *import_string, const char *base_path)
 {
-	gboolean success=TRUE;
+	gboolean ret_val=TRUE;
 	OtbFriend *friend=g_object_new(*otb_friend_get_runtime_type(), OTB_FRIEND_PROP_BASE_PATH, base_path, NULL);
 	GKeyFile *key_file=otb_settings_load_key_file_from_string(import_string);
 	if(G_UNLIKELY(key_file==NULL))
-		success=FALSE;
+		ret_val=FALSE;
 	else
 	{
 		OTB_FRIEND_GET_CLASS(friend)->otb_friend_import_key_file_private(friend, key_file);
 		if(G_UNLIKELY(g_file_test(friend->priv->file_path, G_FILE_TEST_EXISTS) || !otb_friend_save(friend) || otb_friend_set_incoming_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->incoming_pad_db_path))==NULL || otb_friend_set_outgoing_pad_db(friend, otb_pad_db_create_in_directory(friend->priv->outgoing_pad_db_path))==NULL))
-			success=FALSE;
+			ret_val=FALSE;
 	}
-	if(G_UNLIKELY(!success))
+	if(G_UNLIKELY(!ret_val))
 	{
 		g_object_unref(friend);
 		friend=NULL;

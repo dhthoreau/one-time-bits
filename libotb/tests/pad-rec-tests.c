@@ -99,7 +99,7 @@ static void test_otb_pad_rec_default_status()
 	OtbPadRecStatus pad_rec_status;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 	g_assert_cmpint(expected_status, ==, pad_rec_status);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -111,7 +111,7 @@ static void test_otb_pad_rec_initializing_status()
 	OtbPadRecStatus pad_rec_status;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 	g_assert_cmpint(expected_status, ==, pad_rec_status);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -124,7 +124,7 @@ static void test_otb_pad_rec_initializing_base_path()
 	char *actual_base_path=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_BASE_PATH, &actual_base_path, NULL);
 	g_assert_cmpstr(EXPECTED_BASE_PATH, ==, actual_base_path);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(actual_base_path);
 	g_object_unref(pad_rec);
 }
@@ -138,7 +138,7 @@ static void test_otb_pad_rec_initializing_base_name()
 	char *actual_base_name=NULL;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_BASE_NAME, &actual_base_name, NULL);
 	g_assert_cmpstr(EXPECTED_BASE_NAME, ==, actual_base_name);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(actual_base_name);
 	g_object_unref(pad_rec);
 }
@@ -155,7 +155,7 @@ static void test_otb_pad_rec_default_expiration()
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &actual_expiration, NULL);
 	g_assert(actual_expiration!=-1);
 	g_assert_cmpint(SECONDS_PER_YEAR, ==, (actual_expiration-date_now)/MICROSECONDS_PER_SECOND);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -167,7 +167,7 @@ static void test_otb_pad_rec_initializing_expiration()
 	long long actual_expiration=-1;
 	g_object_get(pad_rec, OTB_PAD_REC_PROP_EXPIRATION, &actual_expiration, NULL);
 	g_assert_cmpint(expected_expiration, ==, actual_expiration);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -181,7 +181,7 @@ static void test_otb_pad_rec_specifying_unique_id()
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	otb_unique_id_unref(actual_unique_id);
 	g_object_unref(pad_rec);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	otb_unique_id_unref(expected_unique_id);
 }
 
@@ -195,7 +195,7 @@ static void test_otb_pad_rec_without_specifying_unique_id()
 	g_assert_cmpint(0, !=, otb_unique_id_compare(expected_unique_id, actual_unique_id));
 	otb_unique_id_unref(actual_unique_id);
 	otb_unique_id_unref(expected_unique_id);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -209,7 +209,7 @@ static void test_otb_pad_rec_compare_by_id()
 	g_assert_cmpint(0, !=, otb_pad_rec_compare_by_id(pad_rec, unexpected_unique_id));
 	otb_unique_id_unref(expected_unique_id);
 	otb_unique_id_unref(unexpected_unique_id);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -233,7 +233,7 @@ static void test_otb_pad_rec_save_load()
 	OtbPadRecStatus pad_rec_status;
 	g_object_get(pad_rec_load, OTB_PAD_REC_PROP_STATUS, &pad_rec_status, NULL);
 	g_assert_cmpint(expected_status, ==, pad_rec_status);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec_load);
 	g_object_unref(pad_rec_save);
 }
@@ -247,7 +247,7 @@ static void test_otb_pad_rec_generate_pad_file()
 	otb_pad_rec_generate_pad_file(pad_rec);
 	otb_assert_pad_file_exists(pad_rec);
 	otb_assert_pad_file(pad_rec, NULL, EXPECTED_PAD_SIZE, FALSE);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -269,7 +269,7 @@ static void test_otb_pad_rec_io_and_full_deletion()
 	otb_pad_rec_delete(pad_rec);
 	otb_assert_pad_rec_file_does_not_exist(pad_rec);
 	otb_assert_pad_file_does_not_exist(pad_rec);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 
@@ -291,7 +291,7 @@ static void test_otb_pad_rec_io_and_pad_deletion()
 	otb_pad_rec_delete_pad(pad_rec);
 	otb_assert_pad_rec_file_exists(pad_rec);
 	otb_assert_pad_file_does_not_exist(pad_rec);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_rec);
 }
 

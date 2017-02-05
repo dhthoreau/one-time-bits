@@ -40,7 +40,7 @@ struct _OtbCipherContext
 
 struct _OtbPadDbPrivate
 {
-	GRWLock lock;
+	GRWLock rw_lock;
 	char *base_path;
 	char *file_path;
 	unsigned long long max_size;
@@ -93,7 +93,7 @@ static void otb_pad_db_class_init(OtbPadDbClass *klass)
 static void otb_pad_db_init(OtbPadDb *pad_db)
 {
 	pad_db->priv=G_TYPE_INSTANCE_GET_PRIVATE(pad_db, OTB_TYPE_PAD_DB, OtbPadDbPrivate);
-	g_rw_lock_init(&pad_db->priv->lock);
+	g_rw_lock_init(&pad_db->priv->rw_lock);
 	pad_db->priv->base_path=NULL;
 	pad_db->priv->file_path=NULL;
 	pad_db->priv->open_pad_io=NULL;
@@ -120,7 +120,7 @@ static void otb_pad_db_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_PAD_DB(object));
 	OtbPadDb *pad_db=OTB_PAD_DB(object);
-	g_rw_lock_clear(&pad_db->priv->lock);
+	g_rw_lock_clear(&pad_db->priv->rw_lock);
 	g_free(pad_db->priv->base_path);
 	g_free(pad_db->priv->file_path);
 	if(pad_db->priv->open_pad_io!=NULL)
@@ -136,10 +136,10 @@ static void otb_pad_db_set_base_path(const OtbPadDb *pad_db, const char *base_pa
 	pad_db->priv->file_path=g_build_filename(base_path, "db.otb", NULL);
 }
 
-#define otb_pad_db_lock_read(pad_db)	(g_rw_lock_reader_lock(&(pad_db)->priv->lock))
-#define otb_pad_db_unlock_read(pad_db)	(g_rw_lock_reader_unlock(&(pad_db)->priv->lock))
-#define otb_pad_db_lock_write(pad_db)	(g_rw_lock_writer_lock(&(pad_db)->priv->lock))
-#define otb_pad_db_unlock_write(pad_db)	(g_rw_lock_writer_unlock(&(pad_db)->priv->lock))
+#define otb_pad_db_lock_read(pad_db)	(g_rw_lock_reader_lock(&(pad_db)->priv->rw_lock))
+#define otb_pad_db_unlock_read(pad_db)	(g_rw_lock_reader_unlock(&(pad_db)->priv->rw_lock))
+#define otb_pad_db_lock_write(pad_db)	(g_rw_lock_writer_lock(&(pad_db)->priv->rw_lock))
+#define otb_pad_db_unlock_write(pad_db)	(g_rw_lock_writer_unlock(&(pad_db)->priv->rw_lock))
 
 static void otb_pad_db_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {

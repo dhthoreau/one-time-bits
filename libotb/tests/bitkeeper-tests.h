@@ -11,7 +11,7 @@
 
 #include "../src/bitkeeper.h"
 
-OtbBitkeeper *otb_create_bitkeeper_for_test();
+void otb_create_bitkeeper_for_test();
 void otb_add_bitkeeper_tests();
 
 #endif

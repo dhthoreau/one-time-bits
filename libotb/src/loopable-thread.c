@@ -17,7 +17,7 @@ struct _OtbLoopableThreadPriv
 	int ref_count;
 	OtbLoopableThreadFunc loopable_thread_func;
 	long long looping_interval;
-	void *data;
+	void *data;	// FARE - Cancellare?
 	gboolean continue_looping;
 	GMutex mutex;
 	GCond cond;

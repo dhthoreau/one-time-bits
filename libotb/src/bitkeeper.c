@@ -21,6 +21,14 @@
 #define CONFIG_PROXY_PORT					"proxy-port"
 #define CONFIG_PAD_SYNCHRONIZATION_INTERVAL	"pad-synchronization-interval"
 
+static GRWLock otb_global_bitkeeper_rw_lock;
+static OtbBitkeeper *otb_global_bitkeeper=NULL;
+
+#define otb_global_bitkeeper_lock_read()		(g_rw_lock_reader_lock(&otb_global_bitkeeper_rw_lock))
+#define otb_global_bitkeeper_unlock_read()	(g_rw_lock_reader_unlock(&otb_global_bitkeeper_rw_lock))
+#define otb_global_bitkeeper_lock_write()	(g_rw_lock_writer_lock(&otb_global_bitkeeper_rw_lock))
+#define otb_global_bitkeeper_unlock_write()	(g_rw_lock_writer_unlock(&otb_global_bitkeeper_rw_lock))
+
 enum
 {
 	PROP_0,
@@ -198,28 +206,52 @@ static gboolean otb_bitkeeper_load_friends(OtbBitkeeper *bitkeeper)
 	return ret_val;
 }
 
+static void otb_bitkeeper_set_global(OtbBitkeeper *bitkeeper)
+{
+	otb_global_bitkeeper_lock_write();
+	OtbBitkeeper *old_global_bitkeeper=otb_global_bitkeeper;
+	otb_global_bitkeeper=(bitkeeper==NULL?NULL:g_object_ref(bitkeeper));
+	otb_global_bitkeeper_unlock_write();
+	if(old_global_bitkeeper!=NULL)
+		g_object_unref(old_global_bitkeeper);
+}
+
+gboolean otb_bitkeeper_set(OtbBitkeeper *bitkeeper)
+{
+	otb_bitkeeper_set_global(bitkeeper);
+	return otb_bitkeeper_save();
+}
+
 #define otb_bitkeeper_load_proxy_port(bitkeeper)					((bitkeeper->priv->proxy_port=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, 0))!=0)
 #define otb_bitkeeper_load_pad_synchronization_interval(bitkeeper)	((bitkeeper->priv->pad_synchronization_interval=otb_settings_get_config_int64(CONFIG_GROUP, CONFIG_PAD_SYNCHRONIZATION_INTERVAL, -1))!=-1)
 
-OtbBitkeeper *otb_bitkeeper_load()
+gboolean otb_bitkeeper_load()
 {
+	gboolean ret_val=TRUE;
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, NULL);
 	if(G_UNLIKELY((bitkeeper->priv->user=otb_user_load())==NULL || !otb_bitkeeper_load_proxy_port(bitkeeper) || !otb_bitkeeper_load_pad_synchronization_interval(bitkeeper) || !otb_bitkeeper_load_friends(bitkeeper)))
-	{
-		g_object_unref(bitkeeper);
-		bitkeeper=NULL;
-	}
-	return bitkeeper;
+		ret_val=FALSE;
+	else
+		otb_bitkeeper_set_global(bitkeeper);
+	g_object_unref(bitkeeper);
+	return ret_val;
 }
 
-gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper)
+gboolean otb_bitkeeper_save()
 {
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_read(bitkeeper);
 	gboolean ret_val=otb_settings_set_config_uint(CONFIG_GROUP, CONFIG_PROXY_PORT, bitkeeper->priv->proxy_port) && otb_settings_set_config_int64(CONFIG_GROUP, CONFIG_PAD_SYNCHRONIZATION_INTERVAL, bitkeeper->priv->pad_synchronization_interval) && otb_user_save(bitkeeper->priv->user);
 	for(GSList *friend_iter=bitkeeper->priv->friends; friend_iter!=NULL; friend_iter=friend_iter->next)
 		ret_val=(ret_val && otb_friend_save(friend_iter->data));
 	otb_bitkeeper_unlock_read(bitkeeper);
+	g_object_unref(bitkeeper);
 	return ret_val;
+}
+
+void otb_bitkeeper_unload()
+{
+	otb_bitkeeper_set_global(NULL);
 }
 
 static GSList *otb_bitkeeper_get_unique_ids_of_friends_no_lock(const OtbBitkeeper *bitkeeper)
@@ -235,11 +267,13 @@ static GSList *otb_bitkeeper_get_unique_ids_of_friends_no_lock(const OtbBitkeepe
 	return selected_friend_unique_ids;
 }
 
-GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper)
+GSList *otb_bitkeeper_get_unique_ids_of_friends()
 {
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_read(bitkeeper);
 	GSList *selected_friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends_no_lock(bitkeeper);
 	otb_bitkeeper_unlock_read(bitkeeper);
+	g_object_unref(bitkeeper);
 	return selected_friend_unique_ids;
 }
 
@@ -258,18 +292,21 @@ static OtbFriend *otb_bitkeeper_get_friend_no_lock_no_ref(const OtbBitkeeper *bi
 	return friend;
 }
 
-OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id)
+OtbFriend *otb_bitkeeper_get_friend(const OtbUniqueId *friend_unique_id)
 {
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_read(bitkeeper);
 	OtbFriend *friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, friend_unique_id);
 	if(G_LIKELY(friend!=NULL))
 		g_object_ref(friend);
 	otb_bitkeeper_unlock_read(bitkeeper);
+	g_object_unref(bitkeeper);
 	return friend;
 }
 
-OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbBitkeeper *bitkeeper, const OtbUniqueId *pad_unique_id)
+OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbUniqueId *pad_unique_id)
 {
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	OtbFriend *friend=NULL;
 	otb_bitkeeper_lock_read(bitkeeper);
 	GSList *friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends_no_lock(bitkeeper);
@@ -287,6 +324,7 @@ OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbBitkeeper *bitkeeper, 
 	}
 	otb_bitkeeper_unlock_read(bitkeeper);
 	g_slist_free_full(friend_unique_ids, (GDestroyNotify)otb_unique_id_unref);
+	g_object_unref(bitkeeper);
 	return friend;
 }
 
@@ -300,9 +338,10 @@ static OtbFriend *otb_bitkeeper_import_friend_to_disk(const OtbBitkeeper *bitkee
 	return import_friend;
 }
 
-gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string)
+gboolean otb_bitkeeper_import_friend(const char *import_string)
 {
 	gboolean ret_val=TRUE;
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_write(bitkeeper);
 	OtbFriend *import_friend=otb_bitkeeper_import_friend_to_disk(bitkeeper, import_string);
 	OtbUniqueId *import_unique_id;
@@ -319,12 +358,14 @@ gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import
 		ret_val=FALSE;
 	}
 	otb_bitkeeper_unlock_write(bitkeeper);
+	g_object_unref(bitkeeper);
 	return ret_val;
 }
 
-gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id)
+gboolean otb_bitkeeper_remove_friend(const OtbUniqueId *unique_id)
 {
 	gboolean ret_val;
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_write(bitkeeper);
 	OtbFriend *friend_to_delete=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, unique_id);
 	if(G_UNLIKELY(friend_to_delete==NULL))
@@ -336,6 +377,7 @@ gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId 
 		g_object_unref(friend_to_delete);
 	}
 	otb_bitkeeper_unlock_write(bitkeeper);
+	g_object_unref(bitkeeper);
 	return ret_val;
 }
 
@@ -373,7 +415,7 @@ static gboolean otb_friend_synchronize_pads_with_remote(OtbBitkeeper *bitkeeper,
 	GSocketConnection *socket_connect=g_socket_client_connect_to_host(socket_client, remote_address, remote_port, NULL, NULL);
 	if(socket_connect!=NULL)
 	{
-		OtbProtocolContext *protocol_context=otb_protocol_context_create_client(bitkeeper, friend, loopable_thread);
+		OtbProtocolContext *protocol_context=otb_protocol_context_create_client(friend, loopable_thread);
 		otb_protocol_execute(protocol_context, otb_protocol_client, g_io_stream_get_input_stream(G_IO_STREAM(socket_connect)), g_io_stream_get_output_stream(G_IO_STREAM(socket_connect)), TRUE);
 		otb_protocol_context_free(protocol_context);
 		g_object_unref(socket_connect);
@@ -388,39 +430,43 @@ static void otb_bitkeeper_synchronize_pads_of_friend_from_unique_id(OtbUniqueId 
 {
 	if(otb_loopable_thread_continue_looping(loopable_thread))
 	{
-		OtbBitkeeper *bitkeeper=otb_loopable_thread_data(loopable_thread);
-		OtbFriend *friend=otb_bitkeeper_get_friend(bitkeeper, friend_unique_id);
+		OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
+		OtbFriend *friend=otb_bitkeeper_get_friend_no_lock_no_ref(bitkeeper, friend_unique_id);
 		if(friend!=NULL)
 		{
 			if(!otb_friend_remove_expired_pads(friend))
 				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_WARNING, _("Failed to delete expired pads."));
 			if(otb_loopable_thread_continue_looping(loopable_thread) && !otb_friend_synchronize_pads_with_remote(bitkeeper, friend, loopable_thread))
 				otb_bitkeeper_friend_message(friend, G_LOG_LEVEL_MESSAGE, _("Failed to synchronize pads with friend."));
-			g_object_unref(friend);
 		}
+		g_object_unref(bitkeeper);
 	}
 }
 
 static void otb_bitkeeper_synchronize_pads_loopable_thread_func(OtbLoopableThread *loopable_thread)
 {
-	OtbBitkeeper *bitkeeper=otb_loopable_thread_data(loopable_thread);
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_read(bitkeeper);
 	GSList *unique_ids_of_friends=otb_bitkeeper_get_unique_ids_of_friends(bitkeeper);
 	otb_bitkeeper_unlock_read(bitkeeper);
+	g_object_unref(bitkeeper);
 	g_slist_foreach(unique_ids_of_friends, (GFunc)otb_bitkeeper_synchronize_pads_of_friend_from_unique_id, loopable_thread);
 	g_slist_free_full(unique_ids_of_friends, (GDestroyNotify)otb_unique_id_unref);
 }
 
-void otb_bitkeeper_launch_tasks(OtbBitkeeper *bitkeeper)
+void otb_bitkeeper_launch_tasks()
 {
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_write(bitkeeper);
 	if(bitkeeper->priv->synchronize_pads_thread==NULL)
-		bitkeeper->priv->synchronize_pads_thread=otb_loopable_thread_new("SynchoronizePads", otb_bitkeeper_synchronize_pads_loopable_thread_func, bitkeeper, bitkeeper->priv->pad_synchronization_interval);
+		bitkeeper->priv->synchronize_pads_thread=otb_loopable_thread_new("SynchoronizePads", otb_bitkeeper_synchronize_pads_loopable_thread_func, NULL, bitkeeper->priv->pad_synchronization_interval);
 	otb_bitkeeper_unlock_write(bitkeeper);
+	g_object_unref(bitkeeper);
 }
 
-void otb_bitkeeper_shutdown_tasks(OtbBitkeeper *bitkeeper)
+void otb_bitkeeper_shutdown_tasks()
 {
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	otb_bitkeeper_lock_write(bitkeeper);
 	if(bitkeeper->priv->synchronize_pads_thread!=NULL)
 	{
@@ -428,4 +474,13 @@ void otb_bitkeeper_shutdown_tasks(OtbBitkeeper *bitkeeper)
 		bitkeeper->priv->synchronize_pads_thread=NULL;
 	}
 	otb_bitkeeper_unlock_write(bitkeeper);
+	g_object_unref(bitkeeper);
+}
+
+OtbBitkeeper *otb_bitkeeper_get_with_ref()
+{
+	otb_global_bitkeeper_lock_read();
+	OtbBitkeeper *bitkeeper=otb_global_bitkeeper==NULL?NULL:g_object_ref(otb_global_bitkeeper);
+	otb_global_bitkeeper_unlock_read();
+	return bitkeeper;
 }

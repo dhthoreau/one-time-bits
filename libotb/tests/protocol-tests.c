@@ -46,7 +46,6 @@ typedef struct
 {
 	unsigned char state;
 	unsigned char *authentication_token;
-	OtbBitkeeper *bitkeeper;
 	OtbUser *local_user;
 	OtbLoopableThread *loopable_thread;
 	OtbAsymCipher *local_asym_cipher;
@@ -564,8 +563,8 @@ static void otb_do_server_establish_friend(const ProtocolParams params, OtbProto
 	uint32_t client_request_packet_size=17;
 	unsigned char *client_request_packet=g_new(unsigned char, client_request_packet_size);
 	client_request_packet[0]=EXPECTED_COMMAND_SENDING_FRIEND_ID;
-	GSList *friend_unique_ids=NULL;
-	g_assert((friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends(TEST_PROTOCOL_CONTEXT(protocol_context)->bitkeeper))!=NULL);
+	GSList *friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends();
+	g_assert(friend_unique_ids!=NULL);
 	OtbUniqueId *expected_friend_unique_id=friend_unique_ids->data;
 	memcpy(client_request_packet+1, otb_unique_id_get_bytes(expected_friend_unique_id), 16);
 	unsigned char *server_packet=NULL;
@@ -757,8 +756,9 @@ static void otb_do_server_receive_final_pad_chunk_from_client(const ProtocolPara
 
 static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_unique_id_out, OtbAsymCipher **asym_cipher_out, char **export_out)
 {
-	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
+	otb_create_bitkeeper_for_test();
 	OtbUser *user=NULL;
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
 	g_assert(user!=NULL);
 	g_object_set(user, OTB_USER_PROP_ADDRESS, "ajshdjashgdsjdf.onion", NULL);
@@ -828,20 +828,19 @@ static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolCont
 	OtbUniqueId *peer_unique_id=NULL;
 	char *peer_export=NULL;
 	otb_create_peer_for_protocol_test(&peer_unique_id, peer_asym_cipher_out, &peer_export);
-	OtbBitkeeper *local_bitkeeper=otb_create_bitkeeper_for_test();
-	g_assert(otb_bitkeeper_import_friend(local_bitkeeper, peer_export));
-	OtbFriend *peer_friend=otb_bitkeeper_get_friend(local_bitkeeper, peer_unique_id);
+//	otb_create_bitkeeper_for_test();
+	g_assert(otb_bitkeeper_import_friend(peer_export));
+	OtbFriend *peer_friend=otb_bitkeeper_get_friend(peer_unique_id);
 	g_assert(peer_friend!=NULL);
 	otb_setup_friend_pads_for_test(peer_friend, params);
 	OtbLoopableThread *loopable_thread=otb_loopable_thread_new("DummyTestLoop", otb_dummy_loopable_thread, NULL, 1);
 	if(CLIENT_SERVER(params)==CLIENT)
-		*context_out=otb_protocol_context_create_client(local_bitkeeper, peer_friend, loopable_thread);
+		*context_out=otb_protocol_context_create_client(peer_friend, loopable_thread);
 	else
-		*context_out=otb_protocol_context_create_server(local_bitkeeper, loopable_thread);
+		*context_out=otb_protocol_context_create_server(loopable_thread);
 	g_assert(*context_out!=NULL);
 	otb_loopable_thread_unref(loopable_thread);
 	g_object_unref(peer_friend);
-	g_object_unref(local_bitkeeper);
 	g_free(peer_export);
 	otb_unique_id_unref(peer_unique_id);
 }
@@ -869,7 +868,7 @@ static gboolean otb_run_protocol_error_injected_tests(const ProtocolParams param
 		g_byte_array_unref(transmitted_pad_byte_array);
 		transmitted_pad_byte_array=NULL;
 	}
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	otb_loopable_thread_stop(TEST_PROTOCOL_CONTEXT(protocol_context)->loopable_thread);
 	otb_protocol_context_free(protocol_context);
 	g_object_unref(peer_asym_cipher);
@@ -1235,7 +1234,7 @@ static void otb_protocol_execution_test(unsigned char client_server, GThreadFunc
 	g_mutex_unlock(&otb_protocol_mutex);
 	g_thread_join(dummy_io_thread);
 	otb_loopable_thread_stop(TEST_PROTOCOL_CONTEXT(protocol_context)->loopable_thread);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_ptr_array_unref(memory_io_streams);
 	otb_protocol_context_free(protocol_context);
 	g_object_unref(peer_asym_cipher);

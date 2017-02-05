@@ -20,13 +20,36 @@
 #include "../src/random.h"
 #include "../src/settings.h"
 
-static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, OtbUser *expected_user, unsigned int expected_proxy_port, long long expected_pad_synchronization_interval)
+static void otb_assert_asym_cipher(OtbAsymCipher *actual_asym_cipher, const char *expected_sym_cipher_name, int expected_key_size)
+{
+	char *actual_sym_cipher_name=NULL;
+	int actual_key_size;
+	g_object_get(actual_asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &actual_sym_cipher_name, OTB_ASYM_CIPHER_PROP_KEY_SIZE, &actual_key_size, NULL);
+	g_assert_cmpstr(expected_sym_cipher_name, ==, actual_sym_cipher_name);
+	g_assert_cmpint(expected_key_size, ==, actual_key_size);
+	g_free(actual_sym_cipher_name);
+}
+
+static void otb_assert_user(OtbUser *actual_user, const char *expected_address, unsigned int expected_port, const char *expected_sym_cipher_name, int expected_key_size)
+{
+	OtbAsymCipher *actual_asym_cipher=NULL;
+	char *actual_address=NULL;
+	unsigned int actual_port;
+	g_object_get(actual_user, OTB_USER_PROP_ASYM_CIPHER, &actual_asym_cipher, OTB_USER_PROP_ADDRESS, &actual_address, OTB_USER_PROP_PORT, &actual_port, NULL);
+	otb_assert_asym_cipher(actual_asym_cipher, expected_sym_cipher_name, expected_key_size);
+	g_assert_cmpstr(expected_address, ==, actual_address);
+	g_assert_cmpint(expected_port, ==, actual_port);
+	g_free(actual_address);
+	g_object_unref(actual_asym_cipher);
+}
+
+static void otb_assert_bitkeeper(OtbBitkeeper *actual_bitkeeper, unsigned int expected_proxy_port, long long expected_pad_synchronization_interval, const char *expected_address, unsigned int expected_port, const char *expected_sym_cipher_name, int expected_key_size)
 {
 	unsigned int actual_proxy_port=0;
 	long long actual_pad_synchronization_interval=0;
 	OtbUser *actual_user=NULL;
-	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &actual_user, OTB_BITKEEPER_PROP_PROXY_PORT, &actual_proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &actual_pad_synchronization_interval, NULL);
-	g_assert(expected_user==actual_user);
+	g_object_get(actual_bitkeeper, OTB_BITKEEPER_PROP_USER, &actual_user, OTB_BITKEEPER_PROP_PROXY_PORT, &actual_proxy_port, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &actual_pad_synchronization_interval, NULL);
+	otb_assert_user(actual_user, expected_address, expected_port, expected_sym_cipher_name, expected_key_size);
 	g_assert_cmpint(expected_proxy_port, ==, actual_proxy_port);
 	g_assert_cmpint(expected_pad_synchronization_interval, ==, actual_pad_synchronization_interval);
 	g_object_unref(actual_user);
@@ -34,26 +57,7 @@ static void otb_assert_bitkeeper(OtbBitkeeper *bitkeeper, OtbUser *expected_user
 
 static void test_otb_bitkeeper_create_with_defaults()
 {
-	otb_recreate_test_dir();
-	otb_test_setup_local_crypto();
-	otb_initialize_settings_for_tests();
-	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
-	g_assert(asym_cipher!=NULL);
-	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher));
-	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, NULL);
-	g_assert(user!=NULL);
-	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
-	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, NULL);
-	otb_assert_bitkeeper(bitkeeper, user, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL);
-	g_object_unref(bitkeeper);
-	g_object_unref(user);
-	g_object_unref(asym_cipher);
-}
-
-static void test_otb_bitkeeper_create()
-{
-	const unsigned int EXPECTED_PROXY_PORT=55555;
-	const long long EXPECTED_PAD_SYNCHRONIZATION_INTERVAL=15000000;
+	const char *EXPECTED_ADDRESS="BungaBungaBerlusconiRuby.onion";
 	
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
@@ -61,12 +65,56 @@ static void test_otb_bitkeeper_create()
 	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
 	g_assert(asym_cipher!=NULL);
 	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher));
-	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, NULL);
+	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, OTB_USER_PROP_ADDRESS, EXPECTED_ADDRESS, NULL);
 	g_assert(user!=NULL);
-	g_object_set(user, OTB_USER_PROP_ADDRESS, "BungaBunga.onion", NULL);
-	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PROXY_PORT, EXPECTED_PROXY_PORT, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL, NULL);
-	g_assert(otb_bitkeeper_save(bitkeeper));
-	otb_assert_bitkeeper(bitkeeper, user, EXPECTED_PROXY_PORT, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL);
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, NULL);
+	otb_assert_bitkeeper(bitkeeper, OTB_BITKEEPER_DEFAULT_PROXY_PORT, OTB_BITKEEPER_DEFAULT_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_ADDRESS, OTB_USER_DEFAULT_PORT, OTB_ASYM_CIPHER_DEFAULT_CIPHER, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	g_object_unref(bitkeeper);
+	g_object_unref(user);
+	g_object_unref(asym_cipher);
+}
+
+static void test_otb_bitkeeper_create_set_unload_load_save()
+{
+	const char *EXPECTED_ADDRESS="BungaBungaBerlusconiMara.onion";
+	const unsigned int EXPECTED_PORT=6666;
+	const unsigned int EXPECTED_PROXY_PORT1=55555;
+	const long long EXPECTED_PAD_SYNCHRONIZATION_INTERVAL1=15000000;
+	const unsigned int EXPECTED_PROXY_PORT2=4444;
+	const long long EXPECTED_PAD_SYNCHRONIZATION_INTERVAL2=30000000;
+	
+	otb_recreate_test_dir();
+	otb_test_setup_local_crypto();
+	otb_initialize_settings_for_tests();
+	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
+	g_assert(asym_cipher!=NULL);
+	g_assert(otb_asym_cipher_generate_random_keys(asym_cipher));
+	OtbUser *user=g_object_new(OTB_TYPE_USER, OTB_USER_PROP_ASYM_CIPHER, asym_cipher, OTB_USER_PROP_ADDRESS, EXPECTED_ADDRESS, OTB_USER_PROP_PORT, EXPECTED_PORT, NULL);
+	g_assert(user!=NULL);
+	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PROXY_PORT, EXPECTED_PROXY_PORT1, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL1, NULL);
+	otb_bitkeeper_set(bitkeeper);
+	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT1, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL1, EXPECTED_ADDRESS, EXPECTED_PORT, OTB_ASYM_CIPHER_DEFAULT_CIPHER, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	OtbBitkeeper *bitkeeper_retrieved=otb_bitkeeper_get_with_ref();
+	g_assert(bitkeeper==bitkeeper_retrieved);
+	g_object_unref(bitkeeper_retrieved);
+	g_object_unref(bitkeeper);
+	otb_bitkeeper_unload();
+	bitkeeper=otb_bitkeeper_get_with_ref();
+	g_assert(bitkeeper==NULL);
+	g_assert(otb_bitkeeper_load());
+	bitkeeper=otb_bitkeeper_get_with_ref();
+	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT1, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL1, EXPECTED_ADDRESS, EXPECTED_PORT, OTB_ASYM_CIPHER_DEFAULT_CIPHER, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	g_object_set(bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, EXPECTED_PROXY_PORT2, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL2, NULL);
+	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT2, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL2, EXPECTED_ADDRESS, EXPECTED_PORT, OTB_ASYM_CIPHER_DEFAULT_CIPHER, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
+	g_object_unref(bitkeeper);
+	bitkeeper=NULL;
+	g_assert(otb_bitkeeper_save());
+	otb_bitkeeper_unload();
+	bitkeeper=otb_bitkeeper_get_with_ref();
+	g_assert(bitkeeper==NULL);
+	g_assert(otb_bitkeeper_load());
+	bitkeeper=otb_bitkeeper_get_with_ref();
+	otb_assert_bitkeeper(bitkeeper, EXPECTED_PROXY_PORT2, EXPECTED_PAD_SYNCHRONIZATION_INTERVAL2, EXPECTED_ADDRESS, EXPECTED_PORT, OTB_ASYM_CIPHER_DEFAULT_CIPHER, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY);
 	g_object_unref(bitkeeper);
 	g_object_unref(user);
 	g_object_unref(asym_cipher);
@@ -135,7 +183,8 @@ static void test_otb_bitkeeper_user()
 	g_assert(!otb_bitkeeper_exists());
 	otb_setup_configs_for_bitkeeper_tests(SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, EXPECTED_SYM_CIPHER_NAME, EXPECTED_ADDRESS, EXPECTED_PORT, &expected_unique_id, &expected_asym_cipher);
 	g_assert(otb_bitkeeper_exists());
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
+	g_assert(otb_bitkeeper_load());
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	g_assert(bitkeeper!=NULL);
 	OtbUser *user=NULL;
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
@@ -156,7 +205,7 @@ static void test_otb_bitkeeper_user()
 	g_assert_cmpstr(expected_public_key, ==, actual_public_key);
 	g_assert_cmpstr(EXPECTED_ADDRESS, ==, actual_address);
 	g_assert_cmpint(EXPECTED_PORT, ==, actual_port);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(actual_public_key);
 	g_free(actual_sym_cipher_name);
 	g_free(expected_public_key);
@@ -183,19 +232,20 @@ static void test_otb_bitkeeper_proxy_port()
 	g_assert(otb_user_save(user));
 	OtbBitkeeper *original_bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PROXY_PORT, ORIGINAL_PROXY_PORT, NULL);
 	g_assert(original_bitkeeper!=NULL);
-	g_assert(otb_bitkeeper_save(original_bitkeeper));
+	g_assert(otb_bitkeeper_set(original_bitkeeper));
 	unsigned int proxy_port=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(ORIGINAL_PROXY_PORT, ==, proxy_port);
 	g_object_set(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, NEW_PROXY_PORT, NULL);
-	g_assert(otb_bitkeeper_save(original_bitkeeper));
+	g_assert(otb_bitkeeper_save());
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(NEW_PROXY_PORT, ==, proxy_port);
-	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();
+	g_assert(otb_bitkeeper_load());
+	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_get_with_ref();
 	g_assert(second_bitkeeper!=NULL);
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(NEW_PROXY_PORT, ==, proxy_port);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
 	g_object_unref(user);
@@ -215,27 +265,28 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	g_assert(otb_user_save(user));
 	OtbBitkeeper *original_bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL, NULL);
 	g_assert(original_bitkeeper!=NULL);
-	g_assert(otb_bitkeeper_save(original_bitkeeper));
+	g_assert(otb_bitkeeper_set(original_bitkeeper));
 	long long pad_synchronization_interval=0;
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &pad_synchronization_interval, NULL);
 	g_assert_cmpint(ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL, ==, pad_synchronization_interval);
 	g_object_set(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, NEW_PAD_SYNCHRONIZATION_INTERVAL, NULL);
-	g_assert(otb_bitkeeper_save(original_bitkeeper));
+	g_assert(otb_bitkeeper_save());
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &pad_synchronization_interval, NULL);
 	g_assert_cmpint(NEW_PAD_SYNCHRONIZATION_INTERVAL, ==, pad_synchronization_interval);
-	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_load();
+	g_assert(otb_bitkeeper_load());
+	OtbBitkeeper *second_bitkeeper=otb_bitkeeper_get_with_ref();
 	g_assert(second_bitkeeper!=NULL);
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &pad_synchronization_interval, NULL);
 	g_assert_cmpint(NEW_PAD_SYNCHRONIZATION_INTERVAL, ==, pad_synchronization_interval);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
 	g_object_unref(user);
 }
 
-static void otb_assert_bitkeeper_has_friends(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
+static void otb_assert_bitkeeper_has_friends(const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
-	GSList *unique_ids=otb_bitkeeper_get_unique_ids_of_friends(bitkeeper);
+	GSList *unique_ids=otb_bitkeeper_get_unique_ids_of_friends();
 	size_t expected_size=(expected_unique_id1==NULL?0:1)+(expected_unique_id2==NULL?0:1);
 	g_assert_cmpint(expected_size, ==, g_slist_length(unique_ids));
 	if(expected_unique_id1!=NULL)
@@ -245,16 +296,14 @@ static void otb_assert_bitkeeper_has_friends(OtbBitkeeper *bitkeeper, const OtbU
 	g_slist_free_full(unique_ids, (GDestroyNotify)otb_unique_id_unref);
 }
 
-static void otb_assert_bitkeeper_has_friends_in_memory_and_persisted(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
+static void otb_assert_bitkeeper_has_friends_in_memory_and_persisted(const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
-	otb_assert_bitkeeper_has_friends(bitkeeper, expected_unique_id1, expected_unique_id2);
-	OtbBitkeeper *bitkeeper_loaded=otb_bitkeeper_load();
-	g_assert(bitkeeper_loaded!=NULL);
-	otb_assert_bitkeeper_has_friends(bitkeeper_loaded, expected_unique_id1, expected_unique_id2);
-	g_object_unref(bitkeeper_loaded);
+	otb_assert_bitkeeper_has_friends(expected_unique_id1, expected_unique_id2);
+	g_assert(otb_bitkeeper_load());
+	otb_assert_bitkeeper_has_friends(expected_unique_id1, expected_unique_id2);
 }
 
-static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
+static void otb_bitkeeper_import_test(const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
 	const char *EXPECTED_PUBLIC_KEY1="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *EXPECTED_PUBLIC_KEY2="-----BEGIN PUBLIC KEY-----\noCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
@@ -267,10 +316,10 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	
 	char *friend1_import_string=otb_create_import_string(expected_unique_id1, EXPECTED_PUBLIC_KEY1, EXPECTED_TRANSPORT_CIPHER_NAME1, EXPECTED_ADDRESS1, EXPECTED_PORT1, "");
 	char *friend2_import_string=otb_create_import_string(expected_unique_id2, EXPECTED_PUBLIC_KEY2, EXPECTED_TRANSPORT_CIPHER_NAME2, EXPECTED_ADDRESS2, EXPECTED_PORT2, "");
-	g_assert(otb_bitkeeper_import_friend(bitkeeper, friend1_import_string));
-	g_assert(otb_bitkeeper_import_friend(bitkeeper, friend2_import_string));
-	OtbFriend *friend1=otb_bitkeeper_get_friend(bitkeeper, expected_unique_id1);
-	OtbFriend *friend2=otb_bitkeeper_get_friend(bitkeeper, expected_unique_id2);
+	g_assert(otb_bitkeeper_import_friend(friend1_import_string));
+	g_assert(otb_bitkeeper_import_friend(friend2_import_string));
+	OtbFriend *friend1=otb_bitkeeper_get_friend(expected_unique_id1);
+	OtbFriend *friend2=otb_bitkeeper_get_friend(expected_unique_id2);
 	g_assert(friend1!=NULL);
 	g_assert(friend2!=NULL);
 	OtbUniqueId *actual_unique_id1=NULL;
@@ -295,7 +344,7 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	g_assert_cmpstr(EXPECTED_ADDRESS2, ==, actual_address2);
 	g_assert_cmpint(EXPECTED_PORT1, ==, actual_port1);
 	g_assert_cmpint(EXPECTED_PORT2, ==, actual_port2);
-	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, expected_unique_id2);
+	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(expected_unique_id1, expected_unique_id2);
 	otb_unique_id_unref(actual_unique_id1);
 	otb_unique_id_unref(actual_unique_id2);
 	g_free(actual_public_key1);
@@ -310,9 +359,9 @@ static void otb_bitkeeper_import_test(OtbBitkeeper *bitkeeper, const OtbUniqueId
 	g_free(friend2_import_string);
 }
 
-static OtbUniqueId *otb_bitkeeper_generate_incoming_pad_for_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id)
+static OtbUniqueId *otb_bitkeeper_generate_incoming_pad_for_friend(const OtbUniqueId *friend_unique_id)
 {
-	OtbFriend *friend=otb_bitkeeper_get_friend(bitkeeper, friend_unique_id);
+	OtbFriend *friend=otb_bitkeeper_get_friend(friend_unique_id);
 	g_assert(friend!=NULL);
 	OtbPadDb *incoming_pad_db=NULL;
 	g_object_get(friend, OTB_FRIEND_PROP_INCOMING_PAD_DB, &incoming_pad_db, NULL);
@@ -338,15 +387,15 @@ static void otb_assert_bitkeeper_friend_is_expected(const OtbUniqueId *expected_
 	otb_unique_id_unref(actual_friend_unique_id);
 }
 
-static void otb_bitkeeper_find_by_pad_test(const OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_friend_unique_id1, const OtbUniqueId *expected_friend_unique_id2)
+static void otb_bitkeeper_find_by_pad_test(const OtbUniqueId *expected_friend_unique_id1, const OtbUniqueId *expected_friend_unique_id2)
 {
-	OtbUniqueId *pad_unique_id1=otb_bitkeeper_generate_incoming_pad_for_friend(bitkeeper, expected_friend_unique_id1);
+	OtbUniqueId *pad_unique_id1=otb_bitkeeper_generate_incoming_pad_for_friend(expected_friend_unique_id1);
 	g_assert(pad_unique_id1!=NULL);
-	OtbUniqueId *pad_unique_id2=otb_bitkeeper_generate_incoming_pad_for_friend(bitkeeper, expected_friend_unique_id2);
+	OtbUniqueId *pad_unique_id2=otb_bitkeeper_generate_incoming_pad_for_friend(expected_friend_unique_id2);
 	g_assert(pad_unique_id2!=NULL);
-	OtbFriend *actual_friend1=otb_bitkeeper_get_friend_who_sent_pad(bitkeeper, pad_unique_id1);
+	OtbFriend *actual_friend1=otb_bitkeeper_get_friend_who_sent_pad(pad_unique_id1);
 	g_assert(actual_friend1!=NULL);
-	OtbFriend *actual_friend2=otb_bitkeeper_get_friend_who_sent_pad(bitkeeper, pad_unique_id2);
+	OtbFriend *actual_friend2=otb_bitkeeper_get_friend_who_sent_pad(pad_unique_id2);
 	g_assert(actual_friend2!=NULL);
 	otb_assert_bitkeeper_friend_is_expected(expected_friend_unique_id1, actual_friend1);
 	otb_assert_bitkeeper_friend_is_expected(expected_friend_unique_id2, actual_friend2);
@@ -356,15 +405,15 @@ static void otb_bitkeeper_find_by_pad_test(const OtbBitkeeper *bitkeeper, const 
 	otb_unique_id_unref(pad_unique_id1);
 }
 
-static void otb_bitkeeper_delete_test(OtbBitkeeper *bitkeeper, const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
+static void otb_bitkeeper_delete_test(const OtbUniqueId *expected_unique_id1, const OtbUniqueId *expected_unique_id2)
 {
-	g_assert(otb_bitkeeper_remove_friend(bitkeeper, expected_unique_id2));
-	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, expected_unique_id1, NULL);
-	g_assert(otb_bitkeeper_remove_friend(bitkeeper, expected_unique_id1));
-	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(bitkeeper, NULL, NULL);
+	g_assert(otb_bitkeeper_remove_friend(expected_unique_id2));
+	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(expected_unique_id1, NULL);
+	g_assert(otb_bitkeeper_remove_friend(expected_unique_id1));
+	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(NULL, NULL);
 }
 
-OtbBitkeeper *otb_create_bitkeeper_for_test()
+void otb_create_bitkeeper_for_test()
 {
 	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
@@ -379,31 +428,29 @@ OtbBitkeeper *otb_create_bitkeeper_for_test()
 	g_assert(otb_user_save(user));
 	OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, NULL);
 	g_assert(bitkeeper!=NULL);
-	g_assert(otb_bitkeeper_save(bitkeeper));
+	g_assert(otb_bitkeeper_set(bitkeeper));
 	g_assert(otb_bitkeeper_exists());
 	g_object_unref(user);
 	g_object_unref(asym_cipher);
-	return bitkeeper;
 }
 
 static void test_otb_bitkeeper_import_find_delete_friends()
 {
-	OtbBitkeeper *bitkeeper=otb_create_bitkeeper_for_test();
+	otb_create_bitkeeper_for_test();
 	OtbUniqueId *expected_unique_id1=otb_unique_id_new();
 	OtbUniqueId *expected_unique_id2=otb_unique_id_new();
-	otb_bitkeeper_import_test(bitkeeper, expected_unique_id1, expected_unique_id2);
-	otb_bitkeeper_find_by_pad_test(bitkeeper, expected_unique_id1, expected_unique_id2);
-	otb_bitkeeper_delete_test(bitkeeper, expected_unique_id1, expected_unique_id2);
-	otb_local_crypto_lock_sym_cipher();
+	otb_bitkeeper_import_test(expected_unique_id1, expected_unique_id2);
+	otb_bitkeeper_find_by_pad_test(expected_unique_id1, expected_unique_id2);
+	otb_bitkeeper_delete_test(expected_unique_id1, expected_unique_id2);
+	otb_local_crypto_lock();
 	otb_unique_id_unref(expected_unique_id1);
 	otb_unique_id_unref(expected_unique_id2);
-	g_object_unref(bitkeeper);
 }
 
 void otb_add_bitkeeper_tests()
 {
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_create_with_defaults", test_otb_bitkeeper_create_with_defaults);
-	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_create", test_otb_bitkeeper_create);
+	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_create_set_unload_load_save", test_otb_bitkeeper_create_set_unload_load_save);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_user", test_otb_bitkeeper_user);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_proxy_port", test_otb_bitkeeper_proxy_port);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_pad_synchronization_interval", test_otb_bitkeeper_pad_synchronization_interval);

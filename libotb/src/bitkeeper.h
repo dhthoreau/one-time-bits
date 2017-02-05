@@ -46,15 +46,17 @@ struct _OtbBitkeeperClass
 GType otb_bitkeeper_get_type();
 
 gboolean otb_bitkeeper_exists();
-OtbBitkeeper *otb_bitkeeper_load();	// FARE - Ha bisogno d'un singleton?
-gboolean otb_bitkeeper_save(const OtbBitkeeper *bitkeeper);
-// FARE - Un otb_bitkeeper_delete()?
-GSList *otb_bitkeeper_get_unique_ids_of_friends(const OtbBitkeeper *bitkeeper);
-OtbFriend *otb_bitkeeper_get_friend(const OtbBitkeeper *bitkeeper, const OtbUniqueId *friend_unique_id);
-OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbBitkeeper *bitkeeper, const OtbUniqueId *pad_unique_id);
-gboolean otb_bitkeeper_import_friend(OtbBitkeeper *bitkeeper, const char *import_string);
-gboolean otb_bitkeeper_remove_friend(OtbBitkeeper *bitkeeper, const OtbUniqueId *unique_id);
-void otb_bitkeeper_launch_tasks(OtbBitkeeper *bitkeeper);
-void otb_bitkeeper_shutdown_tasks(OtbBitkeeper *bitkeeper);
+gboolean otb_bitkeeper_set(OtbBitkeeper *bitkeeper);
+gboolean otb_bitkeeper_load();
+gboolean otb_bitkeeper_save();
+void otb_bitkeeper_unload();
+GSList *otb_bitkeeper_get_unique_ids_of_friends();
+OtbFriend *otb_bitkeeper_get_friend(const OtbUniqueId *friend_unique_id);
+OtbFriend *otb_bitkeeper_get_friend_who_sent_pad(const OtbUniqueId *pad_unique_id);
+gboolean otb_bitkeeper_import_friend(const char *import_string);
+gboolean otb_bitkeeper_remove_friend(const OtbUniqueId *unique_id);
+void otb_bitkeeper_launch_tasks();
+void otb_bitkeeper_shutdown_tasks();
+OtbBitkeeper *otb_bitkeeper_get_with_ref();
 
 #endif

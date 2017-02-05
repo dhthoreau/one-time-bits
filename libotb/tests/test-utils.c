@@ -56,14 +56,12 @@ char *otb_generate_unique_test_subdir_path()
 	return subdir_path;
 }
 
-void otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long()
+static void otb_create_local_crypto_test_config_that_unit_test_does_not_take_too_long()
 {
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	FILE *file=otb_open_text_for_write(config_file_path);
 	g_free(config_file_path);
 	g_assert(file!=NULL);
-	g_assert(otb_write("[local-crypto]\n", 1, 15, file)==15);
-	g_assert(otb_write("hash-iterations=1\n", 1, 18, file)==18);
 	g_assert(otb_write("[user]\n", 1, 7, file)==7);
 	g_assert(otb_write("asym-cipher-new-key-size=", 1, 25, file)==25);
 	char key_size_string[4];
@@ -77,9 +75,11 @@ void otb_test_setup_local_crypto()
 {
 	const char *PASSPHRASE="Civilization is the progress toward a society of privacy.";
 	
-	otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long();
+	otb_create_local_crypto_test_config_that_unit_test_does_not_take_too_long();
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
-	otb_local_crypto_create_sym_cipher(PASSPHRASE);
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, 1, NULL);
+	g_assert(otb_local_crypto_set(sym_cipher, PASSPHRASE));
+	g_object_unref(sym_cipher);
 }
 
 #define SECONDS_TO_WAIT_FOR_DELETION_OPERATION_TO_COMPLETE	1

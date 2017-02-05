@@ -21,23 +21,33 @@ static void test_local_crypto()
 	const char *EXPECTED_PASSPHRASE="Without music, life would be a mistake.";
 	const char *NEW_PASSPHRASE="Whoever fights monsters should see to it that in the process he does not become a monster.";
 	
-	otb_create_local_crypto_test_config_with_few_has_iteration_so_that_unit_test_does_not_take_too_long();
 	otb_initialize_settings_for_tests();
-	g_assert(!otb_local_crypto_can_be_unlocked());
-	g_assert(otb_local_crypto_create_sym_cipher(EXPECTED_PASSPHRASE));
-	g_assert(otb_local_crypto_can_be_unlocked());
-	g_assert(!otb_local_crypto_unlock_sym_cipher(NEW_PASSPHRASE));
-	g_assert(otb_local_crypto_unlock_sym_cipher(EXPECTED_PASSPHRASE));
 	OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
-	g_assert(local_crypto_sym_cipher!=NULL);
-	g_object_unref(local_crypto_sym_cipher);
-	g_assert(otb_local_crypto_change_passphrase(EXPECTED_PASSPHRASE, NEW_PASSPHRASE));
-	g_assert(!otb_local_crypto_unlock_sym_cipher(EXPECTED_PASSPHRASE));
-	g_assert(otb_local_crypto_unlock_sym_cipher(NEW_PASSPHRASE));
+	g_assert(local_crypto_sym_cipher==NULL);
+	g_assert(!otb_local_crypto_can_be_unlocked());
+	OtbSymCipher *new_sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, OTB_SYM_CIPHER_PROP_HASH_ITERATIONS, 1, NULL);
+	g_assert(otb_local_crypto_set(new_sym_cipher, EXPECTED_PASSPHRASE));
+	g_assert(otb_local_crypto_can_be_unlocked());
 	local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 	g_assert(local_crypto_sym_cipher!=NULL);
-	otb_local_crypto_lock_sym_cipher();
+	g_assert(new_sym_cipher==local_crypto_sym_cipher);
+	g_object_unref(new_sym_cipher);
 	g_object_unref(local_crypto_sym_cipher);
+	otb_local_crypto_lock();
+	local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+	g_assert(local_crypto_sym_cipher==NULL);
+	g_assert(!otb_local_crypto_unlock(NEW_PASSPHRASE));
+	g_assert(!otb_local_crypto_change_passphrase(EXPECTED_PASSPHRASE, NEW_PASSPHRASE));
+	g_assert(otb_local_crypto_unlock(EXPECTED_PASSPHRASE));
+	g_assert(otb_local_crypto_change_passphrase(EXPECTED_PASSPHRASE, NEW_PASSPHRASE));
+	g_assert(!otb_local_crypto_unlock(EXPECTED_PASSPHRASE));
+	g_assert(otb_local_crypto_unlock(NEW_PASSPHRASE));
+	local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+	g_assert(local_crypto_sym_cipher!=NULL);
+	g_object_unref(local_crypto_sym_cipher);
+	otb_local_crypto_lock();
+	local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
+	g_assert(local_crypto_sym_cipher==NULL);
 }
 
 void otb_add_local_crypto_tests()

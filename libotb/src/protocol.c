@@ -84,6 +84,7 @@ STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER -> COMMAND_FINISH -> <null> -> ST
 #include <glib.h>
 #include <string.h>
 
+#include "bitkeeper.h"
 #include "loopable-thread.h"
 #include "memory.h"
 #include "pad-db.h"
@@ -91,6 +92,7 @@ STATE_CLIENT_SENDING_FINAL_PAD_CHUNK_TO_SERVER -> COMMAND_FINISH -> <null> -> ST
 #include "protocol.h"
 #include "random.h"
 #include "settings.h"
+#include "user.h"
 
 #define CONFIG_GROUP				"protocol"
 #define CONFIG_CHUNK_SIZE			"chunk-size"
@@ -105,7 +107,6 @@ struct _OtbProtocolContext
 {
 	OtbProtocolState state;
 	unsigned char *authentication_token;
-	OtbBitkeeper *bitkeeper;
 	OtbUser *local_user;
 	OtbLoopableThread *loopable_thread;
 	OtbAsymCipher *local_asym_cipher;
@@ -163,11 +164,11 @@ static void otb_protocol_set_peer_friend_on_context(OtbProtocolContext *protocol
 	g_free(peer_public_key);
 }
 
-OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, OtbFriend *peer_friend, OtbLoopableThread *loopable_thread)
+OtbProtocolContext *otb_protocol_context_create_client(OtbFriend *peer_friend, OtbLoopableThread *loopable_thread)
 {
 	OtbProtocolContext *protocol_context=g_new(OtbProtocolContext, 1);
 	protocol_context->authentication_token=otb_create_random_bytes(AUTHENTICATION_TOKEN_SIZE);
-	protocol_context->bitkeeper=g_object_ref(bitkeeper);
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &protocol_context->local_user, NULL);
 	g_object_get(protocol_context->local_user, OTB_USER_PROP_ASYM_CIPHER, &protocol_context->local_asym_cipher, NULL);
 	if(peer_friend!=NULL)
@@ -182,6 +183,7 @@ OtbProtocolContext *otb_protocol_context_create_client(OtbBitkeeper *bitkeeper, 
 	protocol_context->pad_unique_id=NULL;
 	protocol_context->pad_io=NULL;
 	protocol_context->state=STATE_INITIAL;
+	g_object_unref(bitkeeper);
 	return protocol_context;
 }
 
@@ -693,7 +695,7 @@ static uint32_t otb_protocol_server_establish_friend(OtbProtocolContext *protoco
 	if(G_LIKELY(input_packet_size==ESTABLISHING_FRIEND_PACKET_SIZE && PACKET_COMMAND(input_packet)==COMMAND_SENDING_FRIEND_ID))
 	{
 		OtbUniqueId *friend_unique_id=otb_unique_id_from_bytes(ESTABLISHING_FRIEND_PACKET_UNIQUE_ID_BYTES(input_packet));
-		OtbFriend *peer_friend=otb_bitkeeper_get_friend(protocol_context->bitkeeper, friend_unique_id);
+		OtbFriend *peer_friend=otb_bitkeeper_get_friend(friend_unique_id);
 		if(G_UNLIKELY(peer_friend==NULL))
 			packet_out_size=otb_protocol_create_error_packet(protocol_context, packet_out);
 		else
@@ -985,7 +987,6 @@ void otb_protocol_execute(OtbProtocolContext *protocol_context, ProtocolFunc pro
 void otb_protocol_context_free(OtbProtocolContext *protocol_context)
 {
 	g_free(protocol_context->authentication_token);
-	g_object_unref(protocol_context->bitkeeper);
 	g_object_unref(protocol_context->local_user);
 	otb_loopable_thread_unref(protocol_context->loopable_thread);
 	g_object_unref(protocol_context->local_asym_cipher);

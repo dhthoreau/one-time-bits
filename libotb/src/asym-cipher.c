@@ -18,7 +18,7 @@
 
 struct _OtbAsymCipherPrivate
 {
-	GRWLock lock;
+	GRWLock rw_lock;
 	int key_size;
 	const EVP_CIPHER *cipher_impl;
 	EVP_PKEY *key_impl;
@@ -55,7 +55,7 @@ static void otb_asym_cipher_class_init(OtbAsymCipherClass *klass)
 static void otb_asym_cipher_init(OtbAsymCipher *asym_cipher)
 {
 	asym_cipher->priv=G_TYPE_INSTANCE_GET_PRIVATE(asym_cipher, OTB_TYPE_ASYM_CIPHER, OtbAsymCipherPrivate);
-	g_rw_lock_init(&asym_cipher->priv->lock);
+	g_rw_lock_init(&asym_cipher->priv->rw_lock);
 	asym_cipher->priv->cipher_impl=NULL;
 	asym_cipher->priv->key_impl=NULL;
 	asym_cipher->priv->key_impl_mem_is_locked=FALSE;
@@ -66,7 +66,7 @@ static void otb_asym_cipher_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_ASYM_CIPHER(object));
 	OtbAsymCipher *asym_cipher=OTB_ASYM_CIPHER(object);
-	g_rw_lock_clear(&asym_cipher->priv->lock);
+	g_rw_lock_clear(&asym_cipher->priv->rw_lock);
 	EVP_PKEY_free(asym_cipher->priv->key_impl);
 	G_OBJECT_CLASS(otb_asym_cipher_parent_class)->finalize(object);
 }
@@ -83,10 +83,10 @@ static void otb_asym_cipher_set_key_impl(const OtbAsymCipher *asym_cipher, EVP_P
 	asym_cipher->priv->key_impl_mem_is_locked=lock_key_memory;
 }
 
-#define otb_asym_cipher_lock_read(asym_cipher)	(g_rw_lock_reader_lock(&asym_cipher->priv->lock))
-#define otb_asym_cipher_unlock_read(asym_cipher)	(g_rw_lock_reader_unlock(&asym_cipher->priv->lock))
-#define otb_asym_cipher_lock_write(asym_cipher)	(g_rw_lock_writer_lock(&asym_cipher->priv->lock))
-#define otb_asym_cipher_unlock_write(asym_cipher)	(g_rw_lock_writer_unlock(&asym_cipher->priv->lock))
+#define otb_asym_cipher_lock_read(asym_cipher)	(g_rw_lock_reader_lock(&asym_cipher->priv->rw_lock))
+#define otb_asym_cipher_unlock_read(asym_cipher)	(g_rw_lock_reader_unlock(&asym_cipher->priv->rw_lock))
+#define otb_asym_cipher_lock_write(asym_cipher)	(g_rw_lock_writer_lock(&asym_cipher->priv->rw_lock))
+#define otb_asym_cipher_unlock_write(asym_cipher)	(g_rw_lock_writer_unlock(&asym_cipher->priv->rw_lock))
 
 static void otb_asym_cipher_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {

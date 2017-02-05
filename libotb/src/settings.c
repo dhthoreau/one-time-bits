@@ -21,15 +21,15 @@
 
 static char *otb_config_directory_path=NULL;
 static char *otb_data_directory_path=NULL;
-static GRWLock config_lock;
+static GRWLock config_rw_lock;
 static GKeyFile *config_key_file=NULL;
 
 #define otb_settings_get_config_file_path()	(g_build_filename(otb_config_directory_path, CONFIG_FILE_NAME, NULL))
 
-static void otb_settings_lock_config_read(){ 	(g_rw_lock_reader_lock(&config_lock));}
-static void otb_settings_unlock_config_read(){	(g_rw_lock_reader_unlock(&config_lock));}
-static void otb_settings_lock_config_write(){	(g_rw_lock_writer_lock(&config_lock));}
-static void otb_settings_unlock_config_write(){	(g_rw_lock_writer_unlock(&config_lock));}
+static void otb_settings_lock_config_read(){ 	(g_rw_lock_reader_lock(&config_rw_lock));}
+static void otb_settings_unlock_config_read(){	(g_rw_lock_reader_unlock(&config_rw_lock));}
+static void otb_settings_lock_config_write(){	(g_rw_lock_writer_lock(&config_rw_lock));}
+static void otb_settings_unlock_config_write(){	(g_rw_lock_writer_unlock(&config_rw_lock));}
 
 GKeyFile *otb_settings_load_key_file_from_file(const char *file_path)
 {

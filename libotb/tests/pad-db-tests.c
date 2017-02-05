@@ -180,7 +180,7 @@ static void test_otb_pad_db_rejects_pads_too_large()
 	OtbUniqueId *unique_id=otb_unique_id_new();
 	long long few_months_from_now=otb_few_months_from_now();
 	g_assert(otb_pad_db_add_incoming_pad(pad_db, unique_id, ABSOLUTE_MIN_PAD_SIZE, few_months_from_now)==NULL);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	otb_unique_id_unref(unique_id);
 	g_object_unref(pad_db);
 }
@@ -197,7 +197,7 @@ static void test_otb_pad_db_rejects_pads_duplicate_id()
 	g_assert(pad_io!=NULL);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io));
 	g_assert(otb_pad_db_add_incoming_pad(pad_db, unique_id, ARBITRARY_SIZE, few_months_from_now)==NULL);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	otb_unique_id_unref(unique_id);
 	g_object_unref(pad_db);
 }
@@ -219,7 +219,7 @@ static void test_create_unsent_pad_results_in_proper_pad_file()
 	g_assert(otb_pad_db_save(pad_db));
 	g_assert(otb_pad_db_create_unsent_pad(pad_db));
 	otb_unique_id_unref(otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_UNSENT));
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(pad_db_dir_path);
 	g_object_unref(pad_db);
 }
@@ -321,7 +321,7 @@ static void test_pads_save_load_delete()
 	g_free(expected_unsent_bytes);
 	otb_unique_id_unref(expected_incoming_unique_id);
 	otb_unique_id_unref(expected_unsent_unique_id);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(pad_db_dir_path);
 }
 
@@ -354,7 +354,7 @@ static void test_add_incoming_pad()
 	otb_assert_pad_read(pad_io, EXPECTED_PAD_BYTES, EXPECTED_PAD_SIZE);
 	g_assert(otb_pad_db_close_pad(pad_db, pad_io));
 	otb_assert_expiration(pad_db, unique_id, expected_expiration);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_db);
 }
 
@@ -383,7 +383,7 @@ static void test_get_random_rec_id()
 	otb_unique_id_unref(expected_unique_id_2);
 	otb_unique_id_unref(actual_unique_id1);
 	otb_unique_id_unref(expected_unique_id_1);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_db);
 }
 
@@ -407,7 +407,7 @@ static void test_otb_pad_db_get_ids_of_pads_in_status()
 	g_slist_free_full(actual_unique_ids, (GDestroyNotify)otb_unique_id_unref);
 	otb_unique_id_unref(expected_unique_id_2);
 	otb_unique_id_unref(expected_unique_id_1);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_db);
 }
 
@@ -441,7 +441,7 @@ static void test_remove_rec()
 	g_assert(otb_pad_db_remove_pad(pad_db, unique_id_to_remove));
 	otb_unique_id_unref(unique_id_to_keep);
 	otb_unique_id_unref(unique_id_to_remove);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(pad_db_dir_path);
 	g_object_unref(pad_db);
 }
@@ -478,7 +478,7 @@ static void test_remove_expired_pads()
 	g_slist_free_full(remaining_pads, (GFreeFunc)otb_unique_id_unref);
 	otb_unique_id_unref(pad_unique_id_to_preserve);
 	otb_unique_id_unref(pad_unique_id_to_expire);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(pad_db_dir_path);
 	g_object_unref(pad_db);
 }
@@ -504,7 +504,7 @@ static void test_pad_rec_mark_as_sent()
 	otb_unique_id_unref(expected_unique_id);
 	otb_unique_id_unref(actual_unique_id);
 	g_object_unref(pad_db);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 }
 
 static OtbUniqueId *otb_mark_random_pad_as_received(const OtbPadDb *pad_db)
@@ -532,7 +532,7 @@ static void test_pad_rec_mark_as_received()
 	otb_unique_id_unref(actual_unique_id);
 	otb_unique_id_unref(expected_unique_id);
 	otb_unique_id_unref(unique_id);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_db);
 }
 
@@ -557,7 +557,7 @@ static void test_encryption_fails_due_to_not_enough_pad_bytes()
 	g_assert_cmpint(OTB_PAD_DB_CRYPT_RESULT_NOT_ENOUGH_PADS, ==, otb_finish_encrypt(cipher_context));
 	g_assert(encrypted_bytes==NULL);
 	g_assert_cmpint(0, ==, encrypted_bytes_size);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(encrypted_bytes);
 	otb_unique_id_unref(pad_unique_id);
 	g_object_unref(pad_db);
@@ -597,7 +597,7 @@ static void test_encryption_with_one_pad()
 	g_assert(otb_pad_db_fetch_random_rec_id(pad_db, OTB_PAD_REC_STATUS_SENT)==NULL);
 	OtbUniqueId *actual_unique_id=otb_pad_db_fetch_random_rec_id_with_null_assertion(pad_db, OTB_PAD_REC_STATUS_CONSUMED);
 	g_assert_cmpint(0, ==, otb_unique_id_compare(expected_unique_id, actual_unique_id));
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(pad_bytes);
 	g_free(encrypted_bytes);
 	otb_unique_id_unref(expected_unique_id);
@@ -657,7 +657,7 @@ static void test_pad_db_get_pad_size()
 	g_assert(unique_id!=NULL);
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, ==, otb_pad_db_get_pad_size(pad_db, unique_id));
 	otb_unique_id_unref(unique_id);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_db);
 }
 
@@ -673,7 +673,7 @@ static void test_pad_db_get_pad_size_range()
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE, <=, otb_pad_db_get_pad_size(pad_db, unique_id));
 	g_assert_cmpint(ABSOLUTE_MIN_PAD_SIZE*2, >=, otb_pad_db_get_pad_size(pad_db, unique_id));
 	otb_unique_id_unref(unique_id);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_object_unref(pad_db);
 }
 
@@ -780,7 +780,7 @@ static void otb_encryption_decryption_with_two_pads(size_t chunk_size, const uns
 	size_t encrypted_message_size;
 	encrypted_message_size=otb_encrypt_file_for_two_pad_test(sender_pad_db, chunk_size, message, message_size, &encrypted_message);
 	otb_decrypt_file_for_two_pad_test(recipient_pad_db, chunk_size, message, message_size, encrypted_message, encrypted_message_size);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(encrypted_message);
 	g_object_unref(recipient_pad_db);
 	g_free(recipient_pad_db_dir_path);

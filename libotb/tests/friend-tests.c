@@ -139,7 +139,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	otb_assert_friends_saved_dbs_in_same_place(*create_friend, *load_friend);
 	otb_friend_delete(*load_friend);
 	otb_assert_file_does_not_exist(friend_dir_path);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	g_free(actual_base_path);
 	otb_unique_id_unref(actual_unique_id1);
 	otb_unique_id_unref(actual_unique_id2);
@@ -228,7 +228,7 @@ static void test_remove_expired_pads()
 	otb_friend_remove_expired_pads(friend);
 	otb_assert_pad_db_with_pads_for_expiration_test(incoming_pad_db, incoming_pad_unique_id_to_expire, incoming_pad_unique_id_to_preserve);
 	otb_assert_pad_db_with_pads_for_expiration_test(outgoing_pad_db, outgoing_pad_unique_id_to_expire, outgoing_pad_unique_id_to_preserve);
-	otb_local_crypto_lock_sym_cipher();
+	otb_local_crypto_lock();
 	otb_unique_id_unref(outgoing_pad_unique_id_to_preserve);
 	otb_unique_id_unref(outgoing_pad_unique_id_to_expire);
 	otb_unique_id_unref(incoming_pad_unique_id_to_preserve);

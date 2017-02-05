@@ -47,7 +47,7 @@ G_DEFINE_TYPE(OtbUser, otb_user, G_TYPE_OBJECT);
 
 struct _OtbUserPrivate
 {
-	GRWLock lock;
+	GRWLock rw_lock;
 	OtbUniqueId *unique_id;
 	OtbAsymCipher *asym_cipher;
 	char *address;
@@ -74,7 +74,7 @@ static void otb_user_class_init(OtbUserClass *klass)
 static void otb_user_init(OtbUser *user)
 {
 	user->priv=G_TYPE_INSTANCE_GET_PRIVATE(user, OTB_TYPE_USER, OtbUserPrivate);
-	g_rw_lock_init(&user->priv->lock);
+	g_rw_lock_init(&user->priv->rw_lock);
 	user->priv->unique_id=otb_unique_id_new();
 	user->priv->asym_cipher=NULL;
 	user->priv->address=NULL;
@@ -98,7 +98,7 @@ static void otb_user_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_USER(object));
 	OtbUser *user=OTB_USER(object);
-	g_rw_lock_clear(&user->priv->lock);
+	g_rw_lock_clear(&user->priv->rw_lock);
 	otb_unique_id_unref(user->priv->unique_id);
 	g_free(user->priv->address);
 	G_OBJECT_CLASS(otb_user_parent_class)->finalize(object);
@@ -106,22 +106,22 @@ static void otb_user_finalize(GObject *object)
 
 void otb_user_lock_read(const OtbUser *user)
 {
-	g_rw_lock_reader_lock(&user->priv->lock);
+	g_rw_lock_reader_lock(&user->priv->rw_lock);
 }
 
 void otb_user_unlock_read(const OtbUser *user)
 {
-	g_rw_lock_reader_unlock(&user->priv->lock);
+	g_rw_lock_reader_unlock(&user->priv->rw_lock);
 }
 
 void otb_user_lock_write(const OtbUser *user)
 {
-	g_rw_lock_writer_lock(&user->priv->lock);
+	g_rw_lock_writer_lock(&user->priv->rw_lock);
 }
 
 void otb_user_unlock_write(const OtbUser *user)
 {
-	g_rw_lock_writer_unlock(&user->priv->lock);
+	g_rw_lock_writer_unlock(&user->priv->rw_lock);
 }
 
 static void otb_user_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
@@ -245,7 +245,7 @@ static gboolean otb_user_load_unique_id(OtbUser *user)
 
 static gboolean otb_user_load_asym_cipher(OtbUser *user)
 {
-	gboolean success=FALSE;
+	gboolean ret_val=FALSE;
 	char *sym_cipher_name=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_SYM_CIPHER);
 	int key_size=otb_settings_get_config_int(CONFIG_GROUP, CONFIG_ASYM_CIPHER_KEY_SIZE, OTB_ASYM_CIPHER_DEFAULT_KEY_SIZE);
 	GBytes *private_key_iv=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV);
@@ -257,13 +257,13 @@ static gboolean otb_user_load_asym_cipher(OtbUser *user)
 		user->priv->asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, sym_cipher_name, OTB_ASYM_CIPHER_PROP_KEY_SIZE, key_size, NULL);
 		OtbSymCipher *local_crypto_sym_cipher=otb_local_crypto_get_sym_cipher_with_ref();
 		otb_asym_cipher_set_encrypted_private_key(user->priv->asym_cipher, encrypted_private_key, local_crypto_sym_cipher, private_key_iv);
-		success=TRUE;
+		ret_val=TRUE;
 		g_object_unref(local_crypto_sym_cipher);
 	}
 	g_bytes_unref(encrypted_private_key);
 	g_bytes_unref(private_key_iv);
 	g_free(sym_cipher_name);
-	return success;
+	return ret_val;
 }
 
 #define otb_user_load_address(user)		(((user)->priv->address=otb_settings_get_config_string(CONFIG_GROUP, CONFIG_ADDRESS))!=NULL)
@@ -289,7 +289,7 @@ OtbUser *otb_user_load()
 
 static gboolean otb_user_save_asym_cipher(OtbAsymCipher *asym_cipher)
 {
-	gboolean success=FALSE;
+	gboolean ret_val=FALSE;
 	char *sym_cipher_name;
 	long key_size;
 	g_object_get(asym_cipher, OTB_ASYM_CIPHER_PROP_SYM_CIPHER_NAME, &sym_cipher_name, OTB_ASYM_CIPHER_PROP_KEY_SIZE, &key_size, NULL);
@@ -299,13 +299,13 @@ static gboolean otb_user_save_asym_cipher(OtbAsymCipher *asym_cipher)
 		GBytes *private_key_iv;
 		GBytes *encrypted_private_key=otb_asym_cipher_get_encrypted_private_key(asym_cipher, local_crypto_sym_cipher, &private_key_iv);
 		if(G_LIKELY(otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY_IV, private_key_iv) && otb_settings_set_config_gbytes(CONFIG_GROUP, CONFIG_ASYM_CIPHER_PRIVATE_KEY, encrypted_private_key)))
-			success=TRUE;
+			ret_val=TRUE;
 		g_bytes_unref(encrypted_private_key);
 		g_bytes_unref(private_key_iv);
 		g_object_unref(local_crypto_sym_cipher);
 	}
 	g_free(sym_cipher_name);
-	return success;
+	return ret_val;
 }
 
 static gboolean otb_user_save_to_settings(const OtbUser *user)

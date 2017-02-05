@@ -22,7 +22,7 @@ struct _OtbSymCipherSalt
 
 struct _OtbSymCipherPrivate
 {
-	GRWLock lock;
+	GRWLock rw_lock;
 	unsigned char *key;
 	size_t key_size;
 	const EVP_CIPHER *sym_cipher_impl;
@@ -60,7 +60,7 @@ static void otb_sym_cipher_class_init(OtbSymCipherClass *klass)
 static void otb_sym_cipher_init(OtbSymCipher *sym_cipher)
 {
 	sym_cipher->priv=G_TYPE_INSTANCE_GET_PRIVATE(sym_cipher, OTB_TYPE_SYM_CIPHER, OtbSymCipherPrivate);
-	g_rw_lock_init(&sym_cipher->priv->lock);
+	g_rw_lock_init(&sym_cipher->priv->rw_lock);
 	sym_cipher->priv->key=NULL;
 	sym_cipher->priv->key_size=0;
 	sym_cipher->priv->sym_cipher_impl=NULL;
@@ -87,16 +87,16 @@ static void otb_sym_cipher_finalize(GObject *object)
 	g_return_if_fail(object!=NULL);
 	g_return_if_fail(OTB_IS_SYM_CIPHER(object));
 	OtbSymCipher *sym_cipher=OTB_SYM_CIPHER(object);
-	g_rw_lock_clear(&sym_cipher->priv->lock);
+	g_rw_lock_clear(&sym_cipher->priv->rw_lock);
 	otb_sym_cipher_set_key(sym_cipher, NULL, 0);
 	sym_cipher->priv->key=NULL;
 	G_OBJECT_CLASS(otb_sym_cipher_parent_class)->finalize(object);
 }
 
-#define otb_sym_cipher_lock_read(sym_cipher)	(g_rw_lock_reader_lock(&sym_cipher->priv->lock))
-#define otb_sym_cipher_unlock_read(sym_cipher)	(g_rw_lock_reader_unlock(&sym_cipher->priv->lock))
-#define otb_sym_cipher_lock_write(sym_cipher)	(g_rw_lock_writer_lock(&sym_cipher->priv->lock))
-#define otb_sym_cipher_unlock_write(sym_cipher)	(g_rw_lock_writer_unlock(&sym_cipher->priv->lock))
+#define otb_sym_cipher_lock_read(sym_cipher)	(g_rw_lock_reader_lock(&sym_cipher->priv->rw_lock))
+#define otb_sym_cipher_unlock_read(sym_cipher)	(g_rw_lock_reader_unlock(&sym_cipher->priv->rw_lock))
+#define otb_sym_cipher_lock_write(sym_cipher)	(g_rw_lock_writer_lock(&sym_cipher->priv->rw_lock))
+#define otb_sym_cipher_unlock_write(sym_cipher)	(g_rw_lock_writer_unlock(&sym_cipher->priv->rw_lock))
 
 static void otb_sym_cipher_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {
