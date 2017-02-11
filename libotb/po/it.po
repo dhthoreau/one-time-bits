@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2017-01-28 14:06-0500\n"
-"PO-Revision-Date: 2017-01-28 14:07-0500\n"
+"POT-Creation-Date: 2017-02-11 08:56-0500\n"
+"PO-Revision-Date: 2017-02-11 08:57-0500\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -14,98 +14,98 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: src\n"
 
-#: src/asym-cipher.c:52 src/friend.c:74
-msgid "Public key"
-msgstr "Chiave pubblica"
-
-#: src/asym-cipher.c:52
-msgid "The public key to use for encryption"
-msgstr "La chiave pubblica che è usata per crittografia"
-
-#: src/asym-cipher.c:53
+#: src/asym-cipher.c:49
 msgid "Symmetric cipher"
 msgstr "Cifra simmetrica"
 
-#: src/asym-cipher.c:53
+#: src/asym-cipher.c:49
 msgid "Name of the symmetric cipher to use"
 msgstr "Nome della cifra simmetrica per utilizzare"
 
-#: src/asym-cipher.c:54
+#: src/asym-cipher.c:50
 msgid "Key size"
 msgstr "Lunghezza della chiave"
 
-#: src/asym-cipher.c:54
+#: src/asym-cipher.c:50
 msgid "The size of the key to use for encryption"
 msgstr "La Lunghezza della chiave che è usata per crittografia"
 
-#: src/asym-cipher.c:254 src/sym-cipher.c:212
+#: src/asym-cipher.c:51 src/friend.c:74
+msgid "Public key"
+msgstr "Chiave pubblica"
+
+#: src/asym-cipher.c:51
+msgid "The public key to use for encryption"
+msgstr "La chiave pubblica che è usata per crittografia"
+
+#: src/asym-cipher.c:251 src/sym-cipher.c:208
 #, c-format
 msgid "Failed to initialize encryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la crittografia. Errore == %s"
 
-#: src/asym-cipher.c:270 src/sym-cipher.c:226
+#: src/asym-cipher.c:267 src/sym-cipher.c:222
 #, c-format
 msgid "Failed to initialize decryption. Error == %s"
 msgstr "Non è riuscito ad inizializzare la decrittazione. Errore == %s"
 
-#: src/asym-cipher.c:283 src/sym-cipher.c:341
+#: src/asym-cipher.c:280 src/sym-cipher.c:337
 #, c-format
 msgid "Failed to encrypt data. Error == %s"
 msgstr "Non è riuscito a cifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:296 src/sym-cipher.c:354
+#: src/asym-cipher.c:293 src/sym-cipher.c:350
 #, c-format
 msgid "Failed to decrypt data. Error == %s"
 msgstr "Non è riuscito a decifrare dati. Errore == %s"
 
-#: src/asym-cipher.c:309 src/sym-cipher.c:367
+#: src/asym-cipher.c:306 src/sym-cipher.c:363
 #, c-format
 msgid "Failed to encrypt final data. Error == %s"
 msgstr "Non è riuscito a cifrare dati finali. Errore == %s"
 
-#: src/asym-cipher.c:323 src/sym-cipher.c:381
+#: src/asym-cipher.c:320 src/sym-cipher.c:377
 #, c-format
 msgid "Failed to decrypt final data. Error == %s"
 msgstr "Non è riuscito a decifrare dati finali. Errore == %s"
 
-#: src/bitkeeper.c:57
+#: src/bitkeeper.c:65
 msgid "User"
 msgstr "Utente"
 
-#: src/bitkeeper.c:57
+#: src/bitkeeper.c:65
 msgid "The user who is using the application"
 msgstr "L'utente chi sta usando l'applicazione"
 
-#: src/bitkeeper.c:58
+#: src/bitkeeper.c:66
 msgid "Proxy port"
 msgstr "Porta della delega"
 
-#: src/bitkeeper.c:58
+#: src/bitkeeper.c:66
 msgid "The port for the local proxy, preferably TOR"
 msgstr "Porta della delega locale, preferibilmente TOR"
 
-#: src/bitkeeper.c:59
+#: src/bitkeeper.c:67
 msgid "Pad synchronization interval"
 msgstr "Intervallo della sincronizzazione dei blocchi"
 
-#: src/bitkeeper.c:59
+#: src/bitkeeper.c:67
 msgid "How often pads should be synchronized, measured in microseconds"
 msgstr ""
 "Quanto spesso i blocchi dovrebbero essere sincronizzati, misurato con "
 "microsecondi"
 
-#: src/bitkeeper.c:358
+#: src/bitkeeper.c:400
 #, c-format
 msgid "sprintf() failed in otb_socket_client_set_proxy_resolver() for port %u."
 msgstr ""
 "sprintf() non è riuscito a otb_socket_client_set_proxy_resolver() per porta "
 "%u."
 
-#: src/bitkeeper.c:396
+#: src/bitkeeper.c:438
 msgid "Failed to delete expired pads."
 msgstr "Non è riuscito a cancellare i blocchi scaduti."
 
-#: src/bitkeeper.c:398
+#: src/bitkeeper.c:440
 msgid "Failed to synchronize pads with friend."
 msgstr "Non è riuscito a sincronizzare i blocchi con l'amico."
 
@@ -133,7 +133,7 @@ msgstr "Blocchi in partenza"
 msgid "Database of outgoing pads"
 msgstr "Il database di blocchi in partenza"
 
-#: src/friend.c:73 src/pad-rec.c:75 src/user.c:65
+#: src/friend.c:73 src/pad-rec.c:75 src/user.c:67
 msgid "Unique ID"
 msgstr "ID univoco"
 
@@ -153,7 +153,7 @@ msgstr "Cifra di trasporto"
 msgid "The cipher used for data transport"
 msgstr "La cifra per trasportare i dati"
 
-#: src/friend.c:76 src/user.c:67
+#: src/friend.c:76 src/user.c:69
 msgid "Address"
 msgstr "Indirizzo"
 
@@ -161,7 +161,7 @@ msgstr "Indirizzo"
 msgid "The address of the friend"
 msgstr "L'indirizzo dell'amico"
 
-#: src/friend.c:77 src/user.c:68
+#: src/friend.c:77 src/user.c:70
 msgid "Port"
 msgstr "Porta"
 
@@ -366,49 +366,49 @@ msgid "Failed to read %s / %s from config file. Error == %s"
 msgstr ""
 "Non è riuscito a leggere %s / %s da file di configurazione. Errore == %s"
 
-#: src/sym-cipher.c:58
+#: src/sym-cipher.c:54
 msgid "Cipher"
 msgstr "Cifra"
 
-#: src/sym-cipher.c:58
+#: src/sym-cipher.c:54
 msgid "Name of the cipher to use"
 msgstr "Nome della cifra per utilizzare"
 
-#: src/sym-cipher.c:59
+#: src/sym-cipher.c:55
 msgid "Message digest"
 msgstr "Message digest"
 
-#: src/sym-cipher.c:59
+#: src/sym-cipher.c:55
 msgid "Message digest to use for hashes"
 msgstr "Il message digest da utilizzare per hash"
 
-#: src/sym-cipher.c:60
+#: src/sym-cipher.c:56
 msgid "Hash iterations"
 msgstr "Iterazioni di hash"
 
-#: src/sym-cipher.c:60
+#: src/sym-cipher.c:56
 msgid "Number of iterations to go through when hashing"
 msgstr "Il numero di iterazioni da fare hash."
 
-#: src/user.c:65
+#: src/user.c:67
 msgid "UUID of the user"
 msgstr "UUID dell'utente"
 
-#: src/user.c:66
+#: src/user.c:68
 msgid "Asymetrical cipher"
 msgstr "Cifra asimmetrica"
 
-#: src/user.c:66
+#: src/user.c:68
 msgid ""
 "Asymetrical cipher that is used to identify the user and communicate with "
 "friends"
 msgstr ""
 "Cifra asimmetrica usata per identificare l'utente e comunicare con amici."
 
-#: src/user.c:67
+#: src/user.c:69
 msgid "The address of the user"
 msgstr "L'indirizzo dell'utente"
 
-#: src/user.c:68
+#: src/user.c:70
 msgid "The port of the user"
 msgstr "La porta dell'utente"
