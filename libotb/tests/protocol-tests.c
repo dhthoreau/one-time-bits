@@ -770,6 +770,7 @@ static void otb_create_peer_for_protocol_test(OtbUniqueId **peer_unique_id_out, 
 	g_assert(export_out!=NULL);
 	g_object_unref(user);
 	g_object_unref(bitkeeper);
+	otb_bitkeeper_unload();
 }
 
 static void otb_setup_friend_pads_for_test(OtbFriend *friend, const ProtocolParams params)
@@ -828,7 +829,6 @@ static void otb_setup_protocol_test(const ProtocolParams params, OtbProtocolCont
 	OtbUniqueId *peer_unique_id=NULL;
 	char *peer_export=NULL;
 	otb_create_peer_for_protocol_test(&peer_unique_id, peer_asym_cipher_out, &peer_export);
-//	otb_create_bitkeeper_for_test();
 	g_assert(otb_bitkeeper_import_friend(peer_export));
 	OtbFriend *peer_friend=otb_bitkeeper_get_friend(peer_unique_id);
 	g_assert(peer_friend!=NULL);

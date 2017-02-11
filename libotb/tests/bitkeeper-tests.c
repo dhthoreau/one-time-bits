@@ -245,6 +245,7 @@ static void test_otb_bitkeeper_proxy_port()
 	g_assert(second_bitkeeper!=NULL);
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, &proxy_port, NULL);
 	g_assert_cmpint(NEW_PROXY_PORT, ==, proxy_port);
+	otb_bitkeeper_unload();
 	otb_local_crypto_lock();
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
@@ -278,6 +279,7 @@ static void test_otb_bitkeeper_pad_synchronization_interval()
 	g_assert(second_bitkeeper!=NULL);
 	g_object_get(original_bitkeeper, OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, &pad_synchronization_interval, NULL);
 	g_assert_cmpint(NEW_PAD_SYNCHRONIZATION_INTERVAL, ==, pad_synchronization_interval);
+	otb_bitkeeper_unload();
 	otb_local_crypto_lock();
 	g_object_unref(second_bitkeeper);
 	g_object_unref(original_bitkeeper);
@@ -430,6 +432,7 @@ void otb_create_bitkeeper_for_test()
 	g_assert(bitkeeper!=NULL);
 	g_assert(otb_bitkeeper_set(bitkeeper));
 	g_assert(otb_bitkeeper_exists());
+	g_object_unref(bitkeeper);
 	g_object_unref(user);
 	g_object_unref(asym_cipher);
 }
@@ -442,9 +445,10 @@ static void test_otb_bitkeeper_import_find_delete_friends()
 	otb_bitkeeper_import_test(expected_unique_id1, expected_unique_id2);
 	otb_bitkeeper_find_by_pad_test(expected_unique_id1, expected_unique_id2);
 	otb_bitkeeper_delete_test(expected_unique_id1, expected_unique_id2);
-	otb_local_crypto_lock();
 	otb_unique_id_unref(expected_unique_id1);
 	otb_unique_id_unref(expected_unique_id2);
+	otb_bitkeeper_unload();
+	otb_local_crypto_lock();
 }
 
 void otb_add_bitkeeper_tests()
