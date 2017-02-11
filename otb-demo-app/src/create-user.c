@@ -115,7 +115,8 @@ static void error_dialog_idle(CreateUserContainer *create_user_container, const 
 
 static const char *create_user_thread(CreateUserContainer *create_user_container)
 {
-	otb_local_crypto_create_sym_cipher(create_user_container_get_passphrase(create_user_container));
+	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
+	otb_local_crypto_set(sym_cipher, create_user_container_get_passphrase(create_user_container));
 	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, create_user_container_get_key_size(create_user_container), NULL);
 	if(!otb_asym_cipher_generate_random_keys(asym_cipher))
 		error_dialog_idle(create_user_container, _("There was a failure generating encryption keys."));
@@ -124,7 +125,7 @@ static const char *create_user_thread(CreateUserContainer *create_user_container
 		OtbUser *user=g_object_new(otb_user_get_runtime_type(), OTB_USER_PROP_ASYM_CIPHER, asym_cipher, OTB_USER_PROP_ADDRESS, create_user_container_get_address(create_user_container), OTB_USER_PROP_PORT, create_user_container_get_port(create_user_container), NULL);
 		g_object_set(user, OTB_DEMO_USER_PROP_NAME, create_user_container_get_name(create_user_container), NULL);
 		OtbBitkeeper *bitkeeper=g_object_new(OTB_TYPE_BITKEEPER, OTB_BITKEEPER_PROP_USER, user, OTB_BITKEEPER_PROP_PROXY_PORT, create_user_container_get_proxy_port(create_user_container), OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, create_user_container_get_pad_synchronization_interval(create_user_container), NULL);
-		if(!otb_bitkeeper_save(bitkeeper))
+		if(!otb_bitkeeper_set(bitkeeper))
 			error_dialog_idle(create_user_container, _("There was a failure saving your profile to disk."));
 		else
 			gdk_threads_add_idle((GSourceFunc)switch_to_console_window, create_user_container);
@@ -132,6 +133,7 @@ static const char *create_user_thread(CreateUserContainer *create_user_container
 		g_object_unref(user);
 	}
 	g_object_unref(asym_cipher);
+	g_object_unref(sym_cipher);
 	return NULL;
 }
 

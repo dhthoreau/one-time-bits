@@ -15,7 +15,7 @@
 #include "test-utils.h"
 #include "../src/sym-cipher.h"
 
-static void test_sym_cipher_properties()
+static void test_sym_cipher_properties(void)
 {
 	const char *EXPECTED_CIPHER="RC2-64-CBC";
 	const char *EXPECTED_MESSAGE_DIGEST="MD5";
@@ -34,7 +34,7 @@ static void test_sym_cipher_properties()
 	g_object_unref(sym_cipher);
 }
 
-static void test_sym_cipher_hash_passphrase()
+static void test_sym_cipher_hash_passphrase(void)
 {
 	const char *EXPECTED_PASSPHRASE="...and verily, I have even heard the frog croak in it!";
 	const char *UNEXPECTED_PASSPHRASE="...to one who is striking at the root!";
@@ -53,7 +53,7 @@ static void test_sym_cipher_hash_passphrase()
 	otb_sym_cipher_salt_free(expected_salt);
 }
 
-static void test_sym_cipher_encryption_in_steps()
+static void test_sym_cipher_encryption_in_steps(void)
 {
 	const size_t EXPECTED_MESSAGE_SIZE=523;
 	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
@@ -90,7 +90,7 @@ static void test_sym_cipher_encryption_in_steps()
 	g_object_unref(sym_cipher);
 }
 
-static void test_sym_cipher_encryption()
+static void test_sym_cipher_encryption(void)
 {
 	const size_t EXPECTED_MESSAGE_SIZE=523;
 	const char *EXPECTED_MESSAGE="It is forbidden to kill; therefore all murderers are punished unless they kill in large numbers and to the sound of trumpets.";
@@ -119,7 +119,7 @@ static void test_sym_cipher_encryption()
 	g_object_unref(sym_cipher);
 }
 
-void otb_add_sym_cipher_tests()
+void otb_add_sym_cipher_tests(void)
 {
 	otb_add_test_func("/sym_cipher/test_sym_cipher_properties", test_sym_cipher_properties);
 	otb_add_test_func("/sym_cipher/test_sym_cipher_hash_passphrase", test_sym_cipher_hash_passphrase);

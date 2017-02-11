@@ -43,16 +43,16 @@ struct _OtbUserClass
 	void (*otb_user_export_key_file_private)(const OtbUser *user, GKeyFile *export_key_file);
 };
 
-GType otb_user_get_type();
+GType otb_user_get_type(void);
 
 void otb_user_set_runtime_type(GType user_runtime_type);
-GType otb_user_get_runtime_type();
+GType otb_user_get_runtime_type(void);
 void otb_user_lock_read(const OtbUser *user);
 void otb_user_unlock_read(const OtbUser *user);
 void otb_user_lock_write(const OtbUser *user);
 void otb_user_unlock_write(const OtbUser *user);
-gboolean otb_user_exists();
-OtbUser *otb_user_load();
+gboolean otb_user_exists(void);
+OtbUser *otb_user_load(void);
 gboolean otb_user_save(const OtbUser *user);
 char *otb_user_export(const OtbUser *user);
 

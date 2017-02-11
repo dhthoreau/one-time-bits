@@ -11,6 +11,6 @@
 
 #define ABSOLUTE_MIN_PAD_SIZE	1024
 
-void otb_add_pad_db_tests();
+void otb_add_pad_db_tests(void);
 
 #endif

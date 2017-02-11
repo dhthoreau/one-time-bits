@@ -59,7 +59,7 @@ static const gboolean switch_to_console_window(const EditUserContainer *edit_use
 
 static void save_edit_user_information(EditUserContainer *edit_user_container)
 {
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	g_object_set(bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, edit_user_container_get_proxy_port(edit_user_container), OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, edit_user_container_get_pad_synchronization_interval(edit_user_container), NULL);
 	OtbUser *user;
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
@@ -107,7 +107,7 @@ static void signal_edit_user_container_free(const GtkWidget *widget, EditUserCon
 
 static void new_edit_user_window_setup(GtkBuilder *builder)
 {
-	OtbBitkeeper *bitkeeper=otb_bitkeeper_load();
+	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	OtbUser *user;
 	unsigned int proxy_port;
 	long long pad_synchronization_interval;

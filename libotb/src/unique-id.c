@@ -21,7 +21,7 @@ struct _OtbUniqueId
 	uuid_t uuid;
 };
 
-GType otb_unique_id_get_type()
+GType otb_unique_id_get_type(void)
 {
 	static GType unique_id_type;
 	static long otb_unique_id_type_initialized=FALSE;
@@ -33,14 +33,14 @@ GType otb_unique_id_get_type()
 	return unique_id_type;
 }
 
-static OtbUniqueId *otb_unique_id_instantiate()
+static OtbUniqueId *otb_unique_id_instantiate(void)
 {
 	OtbUniqueId *unique_id=g_slice_new(OtbUniqueId);
 	unique_id->ref_count=1;
 	return unique_id;
 }
 
-OtbUniqueId *otb_unique_id_new()
+OtbUniqueId *otb_unique_id_new(void)
 {
 	OtbUniqueId *unique_id=otb_unique_id_instantiate();
 	uuid_generate(unique_id->uuid);
@@ -73,7 +73,7 @@ OtbUniqueId *otb_unique_id_from_string(const char *unique_id_string)
 	return unique_id;
 }
 
-char *otb_unique_id_string_new()
+char *otb_unique_id_string_new(void)
 {
 	OtbUniqueId *unique_id=otb_unique_id_new();
 	char *unique_id_string=otb_unique_id_to_string(unique_id);

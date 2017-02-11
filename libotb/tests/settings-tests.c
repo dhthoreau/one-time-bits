@@ -17,21 +17,21 @@
 
 #define GROUP_NAME	"test"
 
-static void test_settings_set_config_dir()
+static void test_settings_set_config_dir(void)
 {
 	otb_settings_initialize("otb-tests", "otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());
 	g_assert_cmpstr(otb_get_test_dir_path(), == , otb_settings_get_config_directory_path());
 }
 
-static void test_settings_set_data_dir()
+static void test_settings_set_data_dir(void)
 {
 	otb_settings_initialize("otb-tests", "otb");
 	otb_settings_set_data_directory_path(otb_get_test_dir_path());
 	g_assert_cmpstr(otb_get_test_dir_path(), == , otb_settings_get_data_directory_path());
 }
 
-static void test_settings_get_config_file_version()
+static void test_settings_get_config_file_version(void)
 {
 	const char *CONFIG_META_GROUP_NAME="config-meta";
 	const char *FILE_VERSION_KEY="file-version";
@@ -40,7 +40,7 @@ static void test_settings_get_config_file_version()
 	g_assert_cmpint(0, ==, otb_settings_get_config_int(CONFIG_META_GROUP_NAME, FILE_VERSION_KEY, -1));
 }
 
-static void test_settings_get_set_config_string()
+static void test_settings_get_set_config_string(void)
 {
 	const char *STRING_KEY="string-key";
 	const char *EXPECTED_STRING="It was decided by the university of Coimbre that the sight of several persons being slowly burned in great ceremony is an infallible secret for preventing earthquakes.";
@@ -55,7 +55,7 @@ static void test_settings_get_set_config_string()
 	g_free(actual_string);
 }
 
-static void test_settings_get_set_config_int_directory_does_not_exist()
+static void test_settings_get_set_config_int_directory_does_not_exist(void)
 {
 	const char *INT_KEY="int-key";
 	const int EXPECTED_INT=-42;
@@ -70,7 +70,7 @@ static void test_settings_get_set_config_int_directory_does_not_exist()
 	g_assert_cmpint(EXPECTED_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 }
 
-static void test_settings_get_set_config_int()
+static void test_settings_get_set_config_int(void)
 {
 	const char *INT_KEY="int-key";
 	const int EXPECTED_INT=-42;
@@ -84,7 +84,7 @@ static void test_settings_get_set_config_int()
 	g_assert_cmpint(EXPECTED_INT, ==, otb_settings_get_config_int(GROUP_NAME, INT_KEY, ERROR_INT));
 }
 
-static void test_settings_get_set_config_uint()
+static void test_settings_get_set_config_uint(void)
 {
 	const char *UINT_KEY="uint-key";
 	const unsigned int EXPECTED_UINT=UINT_MAX;
@@ -98,7 +98,7 @@ static void test_settings_get_set_config_uint()
 	g_assert_cmpint(EXPECTED_UINT, ==, otb_settings_get_config_uint(GROUP_NAME, UINT_KEY, ERROR_UINT));
 }
 
-static void test_settings_get_set_config_int64()
+static void test_settings_get_set_config_int64(void)
 {
 	const char *INT64_KEY="int64-key";
 	const long long EXPECTED_INT64=-42;
@@ -112,7 +112,7 @@ static void test_settings_get_set_config_int64()
 	g_assert_cmpint(EXPECTED_INT64, ==, otb_settings_get_config_int(GROUP_NAME, INT64_KEY, ERROR_INT64));
 }
 
-static void test_settings_get_set_bytes()
+static void test_settings_get_set_bytes(void)
 {
 	const char *BYTES_KEY="bytes-key";
 	const size_t EXPECTED_BYTES_SIZE=9;
@@ -134,7 +134,7 @@ static void test_settings_get_set_bytes()
 	g_key_file_unref(load_key_file);
 }
 
-static void test_settings_get_set_config_bytes()
+static void test_settings_get_set_config_bytes(void)
 {
 	const char *BYTES_KEY="bytes-key";
 	const size_t EXPECTED_BYTES_SIZE=9;
@@ -152,7 +152,7 @@ static void test_settings_get_set_config_bytes()
 	g_free(actual_bytes);
 }
 
-static void test_settings_get_set_gbytes()
+static void test_settings_get_set_gbytes(void)
 {
 	const char *GBYTES_KEY="gbytes-key";
 	const size_t EXPECTED_GBYTES_SIZE=7;
@@ -174,7 +174,7 @@ static void test_settings_get_set_gbytes()
 	g_key_file_unref(load_key_file);
 }
 
-static void test_settings_get_set_config_gbytes()
+static void test_settings_get_set_config_gbytes(void)
 {
 	const char *GBYTES_KEY="gbytes-key";
 	const size_t EXPECTED_GBYTES_SIZE=7;
@@ -192,7 +192,7 @@ static void test_settings_get_set_config_gbytes()
 	g_bytes_unref(expected_gbytes);
 }
 
-void otb_add_settings_tests()
+void otb_add_settings_tests(void)
 {
 	otb_add_test_func("/settings/test_settings_set_config_dir", test_settings_set_config_dir);
 	otb_add_test_func("/settings/test_settings_set_data_dir", test_settings_set_data_dir);

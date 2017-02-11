@@ -31,7 +31,7 @@ static OtbSymCipher *otb_local_crypto_sym_cipher=NULL;
 #define otb_local_crypto_lock_write()	(g_rw_lock_writer_lock(&otb_local_crypto_rw_lock))
 #define otb_local_crypto_unlock_write()	(g_rw_lock_writer_unlock(&otb_local_crypto_rw_lock))
 
-gboolean otb_local_crypto_can_be_unlocked()
+gboolean otb_local_crypto_can_be_unlocked(void)
 {
 	GBytes *passphrase_hash=otb_settings_get_config_gbytes(CONFIG_GROUP, CONFIG_PASSPHRASE_HASH);
 	gboolean local_crypto_can_be_unlocked=(passphrase_hash!=NULL);
@@ -153,7 +153,7 @@ static int otb_local_crypto_load_sym_cipher_get_int_property(const char *config_
 	return value;
 }
 
-static OtbSymCipher *otb_local_crypto_load_sym_cipher()
+static OtbSymCipher *otb_local_crypto_load_sym_cipher(void)
 {
 	char *cipher=otb_local_crypto_load_sym_cipher_get_string_property(CONFIG_SYM_CIPHER, OTB_SYM_CIPHER_DEFAULT_CIPHER);
 	char *message_digest=otb_local_crypto_load_sym_cipher_get_string_property(CONFIG_MESSAGE_DIGEST, OTB_SYM_CIPHER_DEFAULT_MESSAGE_DIGEST);
@@ -191,7 +191,7 @@ gboolean otb_local_crypto_unlock(const char *passphrase)
 	return unlock_successful;
 }
 
-void otb_local_crypto_lock()
+void otb_local_crypto_lock(void)
 {
 	otb_local_crypto_set_local_sym_cipher(NULL);
 }
@@ -210,7 +210,7 @@ gboolean otb_local_crypto_change_passphrase(const char *old_passphrase, const ch
 	return ret_val;
 }
 
-OtbSymCipher *otb_local_crypto_get_sym_cipher_with_ref()
+OtbSymCipher *otb_local_crypto_get_sym_cipher_with_ref(void)
 {
 	otb_local_crypto_lock_read();
 	OtbSymCipher *sym_cipher=otb_local_crypto_sym_cipher==NULL?NULL:g_object_ref(otb_local_crypto_sym_cipher);

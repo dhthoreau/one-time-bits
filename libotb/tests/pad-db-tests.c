@@ -32,7 +32,7 @@ static void otb_assert_pad_db_file_exists(const char *base_path)
 	g_free(expected_pad_db_file_path);
 }
 
-static OtbPadDb *otb_create_pad_db_in_random_test_path()
+static OtbPadDb *otb_create_pad_db_in_random_test_path(void)
 {
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
@@ -41,7 +41,7 @@ static OtbPadDb *otb_create_pad_db_in_random_test_path()
 	return pad_db;
 }
 
-static void test_set_new_pad_size()
+static void test_set_new_pad_size(void)
 {
 	int32_t actual_new_pad_min;
 	int32_t actual_new_pad_max;
@@ -146,7 +146,7 @@ static void otb_load_db_from_path_with_custom_property_values(const char *pad_db
 	g_object_unref(pad_db);
 }
 
-static void test_otb_pad_db_io()
+static void test_otb_pad_db_io(void)
 {
 	const int32_t EXPECTED_MAX_SIZE=1234567890;
 	const int32_t EXPECTED_NEW_PAD_MIN_SIZE=12345678;
@@ -166,7 +166,7 @@ static void otb_assert_number_of_pads_in_status(const OtbPadDb *pad_db, size_t e
 	g_slist_free_full(pad_unique_ids, (GDestroyNotify)otb_unique_id_unref);
 }
 
-static void test_otb_pad_db_rejects_pads_too_large()
+static void test_otb_pad_db_rejects_pads_too_large(void)
 {
 	const int32_t MAX_SIZE=2047;
 	
@@ -185,7 +185,7 @@ static void test_otb_pad_db_rejects_pads_too_large()
 	g_object_unref(pad_db);
 }
 
-static void test_otb_pad_db_rejects_pads_duplicate_id()
+static void test_otb_pad_db_rejects_pads_duplicate_id(void)
 {
 	const size_t ARBITRARY_SIZE=10;
 	
@@ -209,7 +209,7 @@ static OtbUniqueId *otb_pad_db_fetch_random_rec_id_with_null_assertion(const Otb
 	return unique_id;
 }
 
-static void test_create_unsent_pad_results_in_proper_pad_file()
+static void test_create_unsent_pad_results_in_proper_pad_file(void)
 {
 	otb_test_setup_local_crypto();
 	char *pad_db_dir_path=otb_generate_unique_test_subdir_path();
@@ -303,7 +303,7 @@ static void otb_assert_load_pad_db(const char *pad_db_dir_path, int32_t default_
 	g_object_unref(load_pad_db);
 }
 
-static void test_pads_save_load_delete()
+static void test_pads_save_load_delete(void)
 {
 	const int32_t EXPECTED_DEFAULT_NEW_PAD_SIZE=10240;
 	
@@ -335,7 +335,7 @@ static OtbUniqueId *otb_pad_db_add_incoming_pad_from_bytes(const OtbPadDb *pad_d
 	return unique_id;
 }
 
-static void test_add_incoming_pad()
+static void test_add_incoming_pad(void)
 {
 	const int32_t EXPECTED_PAD_SIZE=8;
 	const unsigned char EXPECTED_PAD_BYTES[8]={0x43, 0x61, 0x7a, 0x5a, 0x6f, 0x4e, 0x53, 0x61};
@@ -358,7 +358,7 @@ static void test_add_incoming_pad()
 	g_object_unref(pad_db);
 }
 
-static void test_get_random_rec_id()
+static void test_get_random_rec_id(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
@@ -387,7 +387,7 @@ static void test_get_random_rec_id()
 	g_object_unref(pad_db);
 }
 
-static void test_otb_pad_db_get_ids_of_pads_in_status()
+static void test_otb_pad_db_get_ids_of_pads_in_status(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
@@ -411,7 +411,7 @@ static void test_otb_pad_db_get_ids_of_pads_in_status()
 	g_object_unref(pad_db);
 }
 
-static void test_close_pad_fails_when_nothing_is_opened()
+static void test_close_pad_fails_when_nothing_is_opened(void)
 {
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
 	g_assert(!otb_pad_db_close_pad(pad_db, NULL));
@@ -421,7 +421,7 @@ static void test_close_pad_fails_when_nothing_is_opened()
 	g_object_unref(pad_db);
 }
 
-static void test_remove_rec()
+static void test_remove_rec(void)
 {
 	const int32_t INCOMING_PAD_SIZE=10;
 	
@@ -446,7 +446,7 @@ static void test_remove_rec()
 	g_object_unref(pad_db);
 }
 
-static void test_remove_rec_that_does_not_exist()
+static void test_remove_rec_that_does_not_exist(void)
 {
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
 	OtbUniqueId *unique_id=otb_unique_id_new();
@@ -455,7 +455,7 @@ static void test_remove_rec_that_does_not_exist()
 	g_object_unref(pad_db);
 }
 
-static void test_remove_expired_pads()
+static void test_remove_expired_pads(void)
 {
 	const int32_t INCOMING_PAD_SIZE=10;
 	
@@ -490,7 +490,7 @@ static OtbUniqueId *otb_mark_random_pad_as_sent(const OtbPadDb *pad_db)
 	return unique_id;
 }
 
-static void test_pad_rec_mark_as_sent()
+static void test_pad_rec_mark_as_sent(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
@@ -514,7 +514,7 @@ static OtbUniqueId *otb_mark_random_pad_as_received(const OtbPadDb *pad_db)
 	return unique_id;
 }
 
-static void test_pad_rec_mark_as_received()
+static void test_pad_rec_mark_as_received(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
@@ -536,7 +536,7 @@ static void test_pad_rec_mark_as_received()
 	g_object_unref(pad_db);
 }
 
-static void test_encryption_fails_due_to_not_enough_pad_bytes()
+static void test_encryption_fails_due_to_not_enough_pad_bytes(void)
 {
 	const size_t MESSAGE_SIZE=1009;
 	const char *EXPECTED_MESSAGE="I heartily accept the motto, \"That government is best which governs least\"; and I should like to see it acted up to more rapidly and systematically. Carried out, it finally amounts to this, which also I believe - \"That government is best which governs not at all\"; and when men are prepared for it, that will be the kind of government which they will have. Government is at best but an expedient; but most governments are usually, and all governments are sometimes, inexpedient. The objections which have been brought against a standing army, and they are many and weighty, and deserve to prevail, may also at last be brought against a standing government. The standing army is only an arm of the standing government. The government itself, which is only the mode which the people have chosen to execute their will, is equally liable to be abused and perverted before the people can act through it. Witness the present Mexican war, the work of comparatively a few individuals using the standing government as ";
@@ -564,7 +564,7 @@ static void test_encryption_fails_due_to_not_enough_pad_bytes()
 	g_free(pad_db_dir_path);
 }
 
-static void test_encryption_with_one_pad()
+static void test_encryption_with_one_pad(void)
 {
 	const size_t MESSAGE_SIZE=1008;
 	const char *EXPECTED_MESSAGE="I heartily accept the motto, \"That government is best which governs least\"; and I should like to see it acted up to more rapidly and systematically. Carried out, it finally amounts to this, which also I believe - \"That government is best which governs not at all\"; and when men are prepared for it, that will be the kind of government which they will have. Government is at best but an expedient; but most governments are usually, and all governments are sometimes, inexpedient. The objections which have been brought against a standing army, and they are many and weighty, and deserve to prevail, may also at last be brought against a standing government. The standing army is only an arm of the standing government. The government itself, which is only the mode which the people have chosen to execute their will, is equally liable to be abused and perverted before the people can act through it. Witness the present Mexican war, the work of comparatively a few individuals using the standing government as";
@@ -606,7 +606,7 @@ static void test_encryption_with_one_pad()
 	g_object_unref(pad_db);
 }
 
-static void test_decryption_fails_due_to_unsupported_file_format()
+static void test_decryption_fails_due_to_unsupported_file_format(void)
 {
 	const unsigned char FORMAT_VERSION='\xff';
 	
@@ -626,7 +626,7 @@ static void test_decryption_fails_due_to_unsupported_file_format()
 	g_object_unref(pad_db);
 }
 
-static void test_decryption_fails_due_to_missing_pad()
+static void test_decryption_fails_due_to_missing_pad(void)
 {
 	const unsigned char FORMAT_VERSION='\x00';
 	
@@ -646,7 +646,7 @@ static void test_decryption_fails_due_to_missing_pad()
 	g_free(pad_db_dir_path);
 }
 
-static void test_pad_db_get_pad_size()
+static void test_pad_db_get_pad_size(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
@@ -661,7 +661,7 @@ static void test_pad_db_get_pad_size()
 	g_object_unref(pad_db);
 }
 
-static void test_pad_db_get_pad_size_range()
+static void test_pad_db_get_pad_size_range(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadDb *pad_db=otb_create_pad_db_in_random_test_path();
@@ -788,7 +788,7 @@ static void otb_encryption_decryption_with_two_pads(size_t chunk_size, const uns
 	g_free(sender_pad_db_dir_path);
 }
 
-static void test_encryption_decryption_with_two_pads_varying_chunk_size()
+static void test_encryption_decryption_with_two_pads_varying_chunk_size(void)
 {
 	const char *MESSAGE="I heartily accept the motto, \"That government is best which governs least\"; and I should like to see it acted up to more rapidly and systematically. Carried out, it finally amounts to this, which also I believe - \"That government is best which governs not at all\"; and when men are prepared for it, that will be the kind of government which the will have. Government is at best but an expedient; but most governments are usually, and all governments are sometimes, inexpedient. The objections which have been brought against a standing army, and they are many and weighty, and deserve to prevail, may also at last be brought against a standing government. The standing army is only an arm of the standing government. The government itself, which is only the mode which the people have chosen to execute their will, is equally liable to be abused and perverted before the people can act through it. Witness the present Mexican war, the work of comparatively a few individuals using the standing government as their tool; for in the outset, the people would not have consented to this measure. This American government - what is it but a tradition, though a recent one, endeavoring to transmit itself unimpaired to posterity, but each instant losing some of its integrity? It has not the vitality and force of a single living man; for a single man can bend it to his will. It is a sort of wooden gun to the people themselves. But it is not the less necessary for this; for the people must have some complicated machinery or other, and hear its din, to satisfy that idea of government which they have. Governments show thus how successfully men can be imposed upon, even impose on themselves, for their own advantage. It is excellent, we must all allow. Yet this government never of itself furthered any enterprise, but by the alacrity with which it got out of its way. It does not keep the country free. It does not settle the West. It does not educate. The character inherent in the American people has done all that.";
 	const size_t MESSAGE_SIZE=2016;
@@ -797,7 +797,7 @@ static void test_encryption_decryption_with_two_pads_varying_chunk_size()
 		otb_encryption_decryption_with_two_pads(chunk_size, MESSAGE, MESSAGE_SIZE);
 }
 
-void otb_add_pad_db_tests()
+void otb_add_pad_db_tests(void)
 {
 	otb_add_test_func("/pad-db/test_set_new_pad_size", test_set_new_pad_size);
 	otb_add_test_func("/pad-db/test_otb_pad_db_io", test_otb_pad_db_io);

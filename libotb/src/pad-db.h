@@ -60,7 +60,7 @@ struct _OtbPadDbClass
 	GObjectClass parent_class;
 };
 
-GType otb_pad_db_get_type();
+GType otb_pad_db_get_type(void);
 
 gboolean otb_pad_db_save(const OtbPadDb *pad_db);
 OtbPadDb *otb_pad_db_create_in_directory(const char *base_path);

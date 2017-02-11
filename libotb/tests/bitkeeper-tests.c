@@ -55,11 +55,10 @@ static void otb_assert_bitkeeper(OtbBitkeeper *actual_bitkeeper, unsigned int ex
 	g_object_unref(actual_user);
 }
 
-static void test_otb_bitkeeper_create_with_defaults()
+static void test_otb_bitkeeper_create_with_defaults(void)
 {
 	const char *EXPECTED_ADDRESS="BungaBungaBerlusconiRuby.onion";
 	
-	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
 	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
@@ -74,7 +73,7 @@ static void test_otb_bitkeeper_create_with_defaults()
 	g_object_unref(asym_cipher);
 }
 
-static void test_otb_bitkeeper_create_set_unload_load_save()
+static void test_otb_bitkeeper_create_set_unload_load_save(void)
 {
 	const char *EXPECTED_ADDRESS="BungaBungaBerlusconiMara.onion";
 	const unsigned int EXPECTED_PORT=6666;
@@ -83,7 +82,6 @@ static void test_otb_bitkeeper_create_set_unload_load_save()
 	const unsigned int EXPECTED_PROXY_PORT2=4444;
 	const long long EXPECTED_PAD_SYNCHRONIZATION_INTERVAL2=30000000;
 	
-	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
 	OtbAsymCipher *asym_cipher=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, SHORT_KEY_SIZE_THAT_DOES_NOT_MAKE_UNIT_TESTS_RUN_SLOWLY, NULL);
@@ -138,7 +136,7 @@ static void otb_write_pad_synchronization_interval(FILE *file, long long pad_syn
 	g_assert(otb_write("\n", 1, 1, file)==1);
 }
 
-static void otb_setup_config_file_for_bitkeeper_tests()
+static void otb_setup_config_file_for_bitkeeper_tests(void)
 {
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	FILE *file=g_fopen(config_file_path, "a");
@@ -154,7 +152,6 @@ static void otb_setup_config_file_for_bitkeeper_tests()
 
 static void otb_setup_configs_for_bitkeeper_tests(int new_key_size, const char *sym_cipher_name, const char *address, unsigned int port, OtbUniqueId **unique_id_out, OtbAsymCipher **asym_cipher_out)
 {
-	otb_recreate_test_dir();
 	otb_initialize_settings_for_tests();
 	*unique_id_out=otb_unique_id_new();
 	*asym_cipher_out=g_object_new(OTB_TYPE_ASYM_CIPHER, OTB_ASYM_CIPHER_PROP_KEY_SIZE, new_key_size, NULL);
@@ -172,7 +169,7 @@ static void otb_setup_configs_for_bitkeeper_tests_without_output(int new_key_siz
 	otb_unique_id_unref(unique_id);
 }
 
-static void test_otb_bitkeeper_user()
+static void test_otb_bitkeeper_user(void)
 {
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="kfjjkjfdhgjkhfkjd.onion";
@@ -218,7 +215,7 @@ static void test_otb_bitkeeper_user()
 	otb_unique_id_unref(expected_unique_id);
 }
 
-static void test_otb_bitkeeper_proxy_port()
+static void test_otb_bitkeeper_proxy_port(void)
 {
 	const unsigned int ORIGINAL_PROXY_PORT=55555;
 	const unsigned int NEW_PROXY_PORT=12345;
@@ -252,7 +249,7 @@ static void test_otb_bitkeeper_proxy_port()
 	g_object_unref(user);
 }
 
-static void test_otb_bitkeeper_pad_synchronization_interval()
+static void test_otb_bitkeeper_pad_synchronization_interval(void)
 {
 	const long long ORIGINAL_PAD_SYNCHRONIZATION_INTERVAL=15000000;
 	const long long NEW_PAD_SYNCHRONIZATION_INTERVAL=12345000;
@@ -415,9 +412,8 @@ static void otb_bitkeeper_delete_test(const OtbUniqueId *expected_unique_id1, co
 	otb_assert_bitkeeper_has_friends_in_memory_and_persisted(NULL, NULL);
 }
 
-void otb_create_bitkeeper_for_test()
+void otb_create_bitkeeper_for_test(void)
 {
-	otb_recreate_test_dir();
 	otb_test_setup_local_crypto();
 	otb_initialize_settings_for_tests();
 	g_assert(!otb_bitkeeper_exists());
@@ -437,7 +433,7 @@ void otb_create_bitkeeper_for_test()
 	g_object_unref(asym_cipher);
 }
 
-static void test_otb_bitkeeper_import_find_delete_friends()
+static void test_otb_bitkeeper_import_find_delete_friends(void)
 {
 	otb_create_bitkeeper_for_test();
 	OtbUniqueId *expected_unique_id1=otb_unique_id_new();
@@ -451,7 +447,7 @@ static void test_otb_bitkeeper_import_find_delete_friends()
 	otb_local_crypto_lock();
 }
 
-void otb_add_bitkeeper_tests()
+void otb_add_bitkeeper_tests(void)
 {
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_create_with_defaults", test_otb_bitkeeper_create_with_defaults);
 	otb_add_test_func("/bitkeeper/test_otb_bitkeeper_create_set_unload_load_save", test_otb_bitkeeper_create_set_unload_load_save);

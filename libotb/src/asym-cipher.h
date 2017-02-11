@@ -49,7 +49,7 @@ struct _OtbAsymCipherClass
 	GObjectClass parent_class;
 };
 
-GType otb_asym_cipher_get_type();
+GType otb_asym_cipher_get_type(void);
 
 void otb_asym_cipher_set_encrypted_private_key(const OtbAsymCipher *asym_cipher, GBytes *encrypted_private_key, OtbSymCipher *private_key_sym_cipher, GBytes *private_key_iv);
 GBytes *otb_asym_cipher_get_encrypted_private_key(const OtbAsymCipher *asym_cipher, OtbSymCipher *private_key_sym_cipher, GBytes **private_key_iv_out);

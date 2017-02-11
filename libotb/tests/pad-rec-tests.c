@@ -91,7 +91,7 @@ static void otb_assert_pad_file(OtbPadRec *pad_rec, const unsigned char *expecte
 	g_assert(otb_pad_io_free(pad_io));
 }
 
-static void test_otb_pad_rec_default_status()
+static void test_otb_pad_rec_default_status(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadRecStatus expected_status=OTB_PAD_REC_STATUS_UNSENT;
@@ -103,7 +103,7 @@ static void test_otb_pad_rec_default_status()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_initializing_status()
+static void test_otb_pad_rec_initializing_status(void)
 {
 	otb_test_setup_local_crypto();
 	OtbPadRecStatus expected_status=OTB_PAD_REC_STATUS_RECEIVED;
@@ -115,7 +115,7 @@ static void test_otb_pad_rec_initializing_status()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_initializing_base_path()
+static void test_otb_pad_rec_initializing_base_path(void)
 {
 	const char *EXPECTED_BASE_PATH="hey/yo";
 	
@@ -129,7 +129,7 @@ static void test_otb_pad_rec_initializing_base_path()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_initializing_base_name()
+static void test_otb_pad_rec_initializing_base_name(void)
 {
 	const char *EXPECTED_BASE_NAME="12345";
 	
@@ -143,7 +143,7 @@ static void test_otb_pad_rec_initializing_base_name()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_default_expiration()
+static void test_otb_pad_rec_default_expiration(void)
 {
 	const long long SECONDS_PER_YEAR=31536000;
 	const long long MICROSECONDS_PER_SECOND=1000000;
@@ -159,7 +159,7 @@ static void test_otb_pad_rec_default_expiration()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_initializing_expiration()
+static void test_otb_pad_rec_initializing_expiration(void)
 {
 	otb_test_setup_local_crypto();
 	long long expected_expiration=g_get_real_time();
@@ -171,7 +171,7 @@ static void test_otb_pad_rec_initializing_expiration()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_specifying_unique_id()
+static void test_otb_pad_rec_specifying_unique_id(void)
 {
 	otb_test_setup_local_crypto();
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
@@ -185,7 +185,7 @@ static void test_otb_pad_rec_specifying_unique_id()
 	otb_unique_id_unref(expected_unique_id);
 }
 
-static void test_otb_pad_rec_without_specifying_unique_id()
+static void test_otb_pad_rec_without_specifying_unique_id(void)
 {
 	otb_test_setup_local_crypto();
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
@@ -199,7 +199,7 @@ static void test_otb_pad_rec_without_specifying_unique_id()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_compare_by_id()
+static void test_otb_pad_rec_compare_by_id(void)
 {
 	otb_test_setup_local_crypto();
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
@@ -213,7 +213,7 @@ static void test_otb_pad_rec_compare_by_id()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_save_load()
+static void test_otb_pad_rec_save_load(void)
 {
 	otb_test_setup_local_crypto();
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
@@ -238,7 +238,7 @@ static void test_otb_pad_rec_save_load()
 	g_object_unref(pad_rec_save);
 }
 
-static void test_otb_pad_rec_generate_pad_file()
+static void test_otb_pad_rec_generate_pad_file(void)
 {
 	const int32_t EXPECTED_PAD_SIZE=20;
 	
@@ -251,7 +251,7 @@ static void test_otb_pad_rec_generate_pad_file()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_io_and_full_deletion()
+static void test_otb_pad_rec_io_and_full_deletion(void)
 {
 	const int32_t EXPECTED_PAD_SIZE=1;
 	const unsigned char EXPECTED_PAD_BYTES[10]={0x85, 0x83, 0x3b, 0xee, 0x34, 0x7a, 0x2b, 0x96, 0xec, 0x87};
@@ -273,7 +273,7 @@ static void test_otb_pad_rec_io_and_full_deletion()
 	g_object_unref(pad_rec);
 }
 
-static void test_otb_pad_rec_io_and_pad_deletion()
+static void test_otb_pad_rec_io_and_pad_deletion(void)
 {
 	const int32_t EXPECTED_PAD_SIZE=1;
 	const unsigned char EXPECTED_PAD_BYTES[10]={0x85, 0x83, 0x3b, 0xee, 0x34, 0x7a, 0x2b, 0x96, 0xec, 0x87};
@@ -295,7 +295,7 @@ static void test_otb_pad_rec_io_and_pad_deletion()
 	g_object_unref(pad_rec);
 }
 
-void otb_add_pad_rec_tests()
+void otb_add_pad_rec_tests(void)
 {
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_default_status", test_otb_pad_rec_default_status);
 	otb_add_test_func("/pad-rec/test_otb_pad_rec_initializing_status", test_otb_pad_rec_initializing_status);

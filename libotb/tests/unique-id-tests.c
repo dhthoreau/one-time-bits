@@ -11,7 +11,7 @@
 #include "main.h"
 #include "../src/unique-id.h"
 
-static void test_unique_id_create_compare()
+static void test_unique_id_create_compare(void)
 {
 	OtbUniqueId *unique_id1=otb_unique_id_new();
 	OtbUniqueId *unique_id2=otb_unique_id_new();
@@ -21,7 +21,7 @@ static void test_unique_id_create_compare()
 	otb_unique_id_unref(unique_id2);
 }
 
-static void test_unique_id_duplicate()
+static void test_unique_id_duplicate(void)
 {
 	OtbUniqueId *unique_id1=otb_unique_id_new();
 	OtbUniqueId *unique_id2=otb_unique_id_ref(unique_id1);
@@ -30,7 +30,7 @@ static void test_unique_id_duplicate()
 	otb_unique_id_unref(unique_id2);
 }
 
-static void test_unique_id_bytes()
+static void test_unique_id_bytes(void)
 {
 	OtbUniqueId *expected_unique_id=otb_unique_id_new();
 	OtbUniqueId *actual_unique_id=otb_unique_id_from_bytes(otb_unique_id_get_bytes(expected_unique_id));
@@ -40,7 +40,7 @@ static void test_unique_id_bytes()
 	otb_unique_id_unref(expected_unique_id);
 }
 
-static void test_unique_id_strings()
+static void test_unique_id_strings(void)
 {
 	char *expected_unique_id_string=otb_unique_id_string_new();
 	OtbUniqueId *unique_id=otb_unique_id_from_string(expected_unique_id_string);
@@ -51,7 +51,7 @@ static void test_unique_id_strings()
 	g_free(expected_unique_id_string);
 }
 
-void otb_add_unique_id_tests()
+void otb_add_unique_id_tests(void)
 {
 	otb_add_test_func("/unique-id/test_unique_id_create_compare", test_unique_id_create_compare);
 	otb_add_test_func("/unique-id/test_unique_id_duplicate", test_unique_id_duplicate);

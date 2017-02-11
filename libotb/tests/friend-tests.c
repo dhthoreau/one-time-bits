@@ -154,7 +154,7 @@ static void otb_do_friend_create_import_save_delete_test(OtbFriend **create_frie
 	g_free(friend_dir_path);
 }
 
-static void test_otb_friend_create_import_save_delete()
+static void test_otb_friend_create_import_save_delete(void)
 {
 	OtbFriend *create_friend=NULL;
 	OtbFriend *load_friend=NULL;
@@ -167,7 +167,7 @@ static void test_otb_friend_create_import_save_delete()
 	g_object_unref(create_friend);
 }
 
-static void test_otb_dummy_friend_create_import_save_delete()
+static void test_otb_dummy_friend_create_import_save_delete(void)
 {
 	OtbFriend *create_friend=NULL;
 	OtbFriend *load_friend=NULL;
@@ -204,7 +204,7 @@ static void otb_assert_pad_db_with_pads_for_expiration_test(OtbPadDb *pad_db, Ot
 	g_slist_free_full(remaining_pads, (GFreeFunc)otb_unique_id_unref);
 }
 
-static void test_remove_expired_pads()
+static void test_remove_expired_pads(void)
 {
 	const char *PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
 	const char *TRANSPORT_CIPHER_NAME="AES-256-CBC";
@@ -240,7 +240,7 @@ static void test_remove_expired_pads()
 	otb_unique_id_unref(friend_unique_id);
 }
 
-void otb_add_friend_tests()
+void otb_add_friend_tests(void)
 {
 	otb_add_test_func("/friend/test_otb_friend_create_import_save_delete", test_otb_friend_create_import_save_delete);
 	otb_add_test_func("/friend/test_otb_dummy_friend_create_import_save_delete", test_otb_dummy_friend_create_import_save_delete);

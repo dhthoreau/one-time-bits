@@ -52,7 +52,7 @@ struct _OtbSymCipherClass
 	GObjectClass parent_class;
 };
 
-GType otb_sym_cipher_get_type();
+GType otb_sym_cipher_get_type(void);
 
 GBytes *otb_sym_cipher_hash_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, OtbSymCipherSalt **sym_cipher_salt_out);
 gboolean otb_sym_cipher_validate_passphrase(const OtbSymCipher *sym_cipher, const char *passphrase, GBytes *passphrase_hash, const OtbSymCipherSalt *sym_cipher_salt);

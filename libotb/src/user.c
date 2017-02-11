@@ -198,7 +198,7 @@ static void otb_user_get_property(GObject *object, unsigned int prop_id, GValue 
 	}
 }
 
-static GType *otb_user_get_runtime_type_pointer()
+static GType *otb_user_get_runtime_type_pointer(void)
 {
 	static long otb_user_runtime_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_user_runtime_initialized)))
@@ -215,12 +215,12 @@ void otb_user_set_runtime_type(GType user_runtime_type)
 	*otb_user_get_runtime_type_pointer()=user_runtime_type;
 }
 
-GType otb_user_get_runtime_type()
+GType otb_user_get_runtime_type(void)
 {
 	return *otb_user_get_runtime_type_pointer();
 }
 
-gboolean otb_user_exists()
+gboolean otb_user_exists(void)
 {
 	return otb_settings_config_group_exists(CONFIG_GROUP);
 }
@@ -274,7 +274,7 @@ static gboolean otb_user_load_from_settings(OtbUser *user)
 	return otb_user_load_unique_id(user) && otb_user_load_asym_cipher(user) && otb_user_load_address(user) && otb_user_load_port(user);
 }
 
-OtbUser *otb_user_load()
+OtbUser *otb_user_load(void)
 {
 	if(G_UNLIKELY(!otb_user_exists()))
 		return NULL;

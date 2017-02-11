@@ -379,7 +379,7 @@ static void otb_friend_import_key_file(OtbFriend *friend, GKeyFile *import_file)
 	otb_unique_id_unref(unique_id);
 }
 
-static GType *otb_friend_get_runtime_type()
+static GType *otb_friend_get_runtime_type(void)
 {
 	static long otb_friend_runtime_path_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_friend_runtime_path_initialized)))

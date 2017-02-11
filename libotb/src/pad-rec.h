@@ -57,7 +57,7 @@ struct _OtbPadRecClass
 	GObjectClass parent_class;
 };
 
-GType otb_pad_rec_get_type();
+GType otb_pad_rec_get_type(void);
 
 int otb_pad_rec_compare_by_id(const OtbPadRec *pad_rec, const OtbUniqueId *unique_id);
 gboolean otb_pad_rec_save(const OtbPadRec *pad_rec);

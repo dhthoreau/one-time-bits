@@ -24,7 +24,7 @@ static void otb_test_loopable_thread(OtbLoopableThread *loopable_thread)
 	g_assert_cmpint(otb_test_loopable_thread_data, ==, *((int*)otb_loopable_thread_data(loopable_thread)));
 }
 
-static void test_loopable_thread()
+static void test_loopable_thread(void)
 {
 	otb_test_loopable_thread_call_count=0;
 	otb_random_bytes(&otb_test_loopable_thread_data, sizeof otb_test_loopable_thread_data);
@@ -37,7 +37,7 @@ static void test_loopable_thread()
 	otb_loopable_thread_unref(loopable_thread);
 }
 
-void otb_add_loopable_thread_tests()
+void otb_add_loopable_thread_tests(void)
 {
 	otb_add_test_func("/loopable-thread/test_loopable_thread", test_loopable_thread);
 }

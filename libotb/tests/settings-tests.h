@@ -9,6 +9,6 @@
 #ifndef OTB_SETTINGS_TESTS
 #define OTB_SETTINGS_TESTS
 
-void otb_add_settings_tests();
+void otb_add_settings_tests(void);
 
 #endif

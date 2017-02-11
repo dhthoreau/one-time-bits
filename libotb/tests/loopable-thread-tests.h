@@ -9,6 +9,6 @@
 #ifndef OTB_LOOPABLE_THREAD_TESTS_H
 #define OTB_LOOPABLE_THREAD_TESTS_H
 
-extern void otb_add_loopable_thread_tests();
+extern void otb_add_loopable_thread_tests(void);
 
 #endif

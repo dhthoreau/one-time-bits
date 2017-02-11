@@ -54,7 +54,7 @@ struct _OtbFriendClass
 	void (*otb_friend_export_key_file_private)(const OtbFriend *friend, GKeyFile *);
 };
 
-GType otb_friend_get_type();
+GType otb_friend_get_type(void);
 
 void otb_friend_set_runtime_type(GType friend_runtime_type);
 gboolean otb_friend_save(const OtbFriend *friend);

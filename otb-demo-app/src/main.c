@@ -28,7 +28,7 @@ static void activate(GtkApplication *application, const void *user_data)
 	otb_settings_initialize(OTB_DEMO_APP_NAME, "otb");
 	if(otb_data_is_corrupted_or_missing())
 		otb_demo_create_user_show_new_window(application);
-	else if(otb_local_crypto_unlock_sym_cipher(""))
+	else if(otb_local_crypto_unlock(""))
 		otb_demo_console_show_new_window(application);
 	else
 		otb_demo_passphrase_unlock_show_new_window(application);

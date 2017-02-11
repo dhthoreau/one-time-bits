@@ -9,6 +9,6 @@
 #ifndef OTB_UNIQUE_ID_TESTS
 #define OTB_UNIQUE_ID_TESTS
 
-void otb_add_unique_id_tests();
+void otb_add_unique_id_tests(void);
 
 #endif

@@ -9,6 +9,6 @@
 #ifndef OTB_LEAK_TESTS
 #define OTB_LEAK_TESTS
 
-void otb_add_leak_tests();
+void otb_add_leak_tests(void);
 
 #endif

@@ -15,7 +15,7 @@
 #define otb_openssl_create_encryption_buffer(cipher_impl, plain_bytes_buffer_size)		g_new(unsigned char, (plain_bytes_buffer_size)+EVP_CIPHER_block_size(cipher_impl))
 #define otb_openssl_create_decryption_buffer(cipher_impl, encrypted_bytes_buffer_size)	otb_malloc_locked((encrypted_bytes_buffer_size)+EVP_CIPHER_block_size(cipher_impl))
 
-char *otb_openssl_errors_as_string();
+char *otb_openssl_errors_as_string(void);
 GBytes *otb_openssl_generate_random_iv(const EVP_CIPHER *cipher_impl);
 
 #endif

@@ -46,7 +46,7 @@ static GHashTable *otb_allocation_sizes;
 static GHashTable *otb_locked_pages=NULL;
 #endif
 
-static void otb_mlock_initialize_hash_tables()
+static void otb_mlock_initialize_hash_tables(void)
 {
 	static long otb_mlock_hash_tables_initialized=FALSE;
 	if(G_UNLIKELY(g_once_init_enter(&otb_mlock_hash_tables_initialized)))

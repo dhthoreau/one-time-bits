@@ -17,9 +17,9 @@ GKeyFile *otb_settings_load_key_file_from_string(const char *string);
 
 void otb_settings_initialize(const char *app_name, const char *otb_sub_dir);
 
-const char *otb_settings_get_config_directory_path();
+const char *otb_settings_get_config_directory_path(void);
 void otb_settings_set_config_directory_path(const char *config_directory_path);
-const char *otb_settings_get_data_directory_path();
+const char *otb_settings_get_data_directory_path(void);
 void otb_settings_set_data_directory_path(const char *data_directory_path);
 
 gboolean otb_settings_config_group_exists(const char *group_name);

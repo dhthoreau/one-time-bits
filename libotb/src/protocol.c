@@ -563,7 +563,7 @@ static uint32_t otb_protocol_client_attempt_to_send_first_pad_chunk_to_server(Ot
 	return packet_out_size;
 }
 
-static size_t otb_protocol_get_chunk_size()
+static size_t otb_protocol_get_chunk_size(void)
 {
 	size_t chunk_size=otb_settings_get_config_uint(CONFIG_GROUP, CONFIG_CHUNK_SIZE, 0);
 	if(G_UNLIKELY(chunk_size==0))

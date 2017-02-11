@@ -26,10 +26,10 @@ static GKeyFile *config_key_file=NULL;
 
 #define otb_settings_get_config_file_path()	(g_build_filename(otb_config_directory_path, CONFIG_FILE_NAME, NULL))
 
-static void otb_settings_lock_config_read(){ 	(g_rw_lock_reader_lock(&config_rw_lock));}
-static void otb_settings_unlock_config_read(){	(g_rw_lock_reader_unlock(&config_rw_lock));}
-static void otb_settings_lock_config_write(){	(g_rw_lock_writer_lock(&config_rw_lock));}
-static void otb_settings_unlock_config_write(){	(g_rw_lock_writer_unlock(&config_rw_lock));}
+#define otb_settings_lock_config_read() 	(g_rw_lock_reader_lock(&config_rw_lock))
+#define otb_settings_unlock_config_read()	(g_rw_lock_reader_unlock(&config_rw_lock))
+#define otb_settings_lock_config_write()	(g_rw_lock_writer_lock(&config_rw_lock))
+#define otb_settings_unlock_config_write()	(g_rw_lock_writer_unlock(&config_rw_lock))
 
 GKeyFile *otb_settings_load_key_file_from_file(const char *file_path)
 {
@@ -59,7 +59,7 @@ GKeyFile *otb_settings_load_key_file_from_string(const char *string)
 	return key_file;
 }
 
-static void otb_settings_load_config_file()
+static void otb_settings_load_config_file(void)
 {
 	otb_settings_lock_config_write();
 	GKeyFile *old_config_key_file=config_key_file;
@@ -92,7 +92,7 @@ void otb_settings_initialize(const char *app_name, const char *otb_sub_dir)
 	}
 }
 
-const char *otb_settings_get_config_directory_path()
+const char *otb_settings_get_config_directory_path(void)
 {
 	return otb_config_directory_path;
 }
@@ -104,7 +104,7 @@ void otb_settings_set_config_directory_path(const char *config_directory_path)
 	otb_settings_load_config_file();
 }
 
-const char *otb_settings_get_data_directory_path()
+const char *otb_settings_get_data_directory_path(void)
 {
 	return otb_data_directory_path;
 }
@@ -132,7 +132,7 @@ gboolean otb_settings_save_key_file(GKeyFile *key_file, const char *file_path)
 	return ret_val;
 }
 
-static gboolean otb_settings_save_config_key_file()
+static gboolean otb_settings_save_config_key_file(void)
 {
 	otb_mkdir_with_parents(otb_config_directory_path);
 	char *config_file_path=otb_settings_get_config_file_path();

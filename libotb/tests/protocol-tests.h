@@ -9,6 +9,6 @@
 #ifndef OTB_PROTOCOL_TESTS_H
 #define OTB_PROTOCOL_TESTS_H
 
-void otb_add_protocol_tests();
+void otb_add_protocol_tests(void);
 
 #endif

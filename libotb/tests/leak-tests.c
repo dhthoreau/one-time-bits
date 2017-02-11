@@ -13,7 +13,7 @@
 #include "main.h"
 #include "test-utils.h"
 
-static void otb_call_test(const void *test, const void *user_data)
+static void otb_call_test(void *test)
 {
 	otb_recreate_test_dir();
 	((GTestFunc)test)();
@@ -28,7 +28,7 @@ static void test_memory_leaks()
 		g_slist_foreach(otb_test_funcs, (GFunc)otb_call_test, NULL);
 }
 
-void otb_add_leak_tests()
+void otb_add_leak_tests(void)
 {
 	if(g_test_perf())
 		g_test_add_func("/leak/test_memory_leaks", test_memory_leaks);

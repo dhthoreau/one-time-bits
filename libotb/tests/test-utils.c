@@ -21,7 +21,7 @@
 
 static char *otb_test_dir_path=NULL;
 
-void otb_recreate_test_dir()
+void otb_recreate_test_dir(void)
 {
 	g_free(otb_test_dir_path);
 	otb_test_dir_path=NULL;
@@ -30,25 +30,25 @@ void otb_recreate_test_dir()
 	g_mkdir(otb_test_dir_path, S_IRUSR | S_IWUSR | S_IRWXU);
 }
 
-static void otb_delete_test_dir()
+static void otb_delete_test_dir(void)
 {
 	otb_delete_dir(otb_test_dir_path);
 	g_free(otb_test_dir_path);
 	otb_test_dir_path=NULL;
 }
 
-void otb_test_clean_up()
+void otb_test_clean_up(void)
 {
 	otb_delete_test_dir();
 	otb_initialize_settings_for_tests();
 }
 
-const char *otb_get_test_dir_path()
+const char *otb_get_test_dir_path(void)
 {
 	return otb_test_dir_path;
 }
 
-char *otb_generate_unique_test_subdir_path()
+char *otb_generate_unique_test_subdir_path(void)
 {
 	char *unique_id_str=otb_unique_id_string_new();
 	char *subdir_path=g_build_filename(otb_test_dir_path, unique_id_str, NULL);
@@ -56,7 +56,7 @@ char *otb_generate_unique_test_subdir_path()
 	return subdir_path;
 }
 
-static void otb_create_local_crypto_test_config_that_unit_test_does_not_take_too_long()
+static void otb_create_local_crypto_test_config_that_unit_test_does_not_take_too_long(void)
 {
 	char *config_file_path=g_build_filename(otb_get_test_dir_path(), "otb.conf", NULL);
 	FILE *file=otb_open_text_for_write(config_file_path);
@@ -71,7 +71,7 @@ static void otb_create_local_crypto_test_config_that_unit_test_does_not_take_too
 	g_assert(otb_close(file));
 }
 
-void otb_test_setup_local_crypto()
+void otb_test_setup_local_crypto(void)
 {
 	const char *PASSPHRASE="Civilization is the progress toward a society of privacy.";
 	
@@ -91,7 +91,7 @@ void otb_assert_file_does_not_exist(const char *file_path)
 	g_assert(!g_file_test(file_path, G_FILE_TEST_EXISTS));
 }
 
-long long otb_few_months_from_now()
+long long otb_few_months_from_now(void)
 {
 	long long now=g_get_real_time();
 	unsigned int months;
@@ -100,7 +100,7 @@ long long otb_few_months_from_now()
 	return now+months*MICROSECONDS_PER_MONTH;
 }
 
-void otb_initialize_settings_for_tests()
+void otb_initialize_settings_for_tests(void)
 {
 	otb_settings_initialize("otb-tests", "otb");
 	otb_settings_set_config_directory_path(otb_get_test_dir_path());

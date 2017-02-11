@@ -31,7 +31,7 @@
 
 GSList *otb_test_funcs=NULL;
 
-static void otb_add_tests()
+static void otb_add_tests(void)
 {
 	otb_add_unique_id_tests();
 	otb_add_settings_tests();
@@ -48,7 +48,7 @@ static void otb_add_tests()
 	otb_add_leak_tests();
 }
 
-static void otb_run_tests()
+static void otb_run_tests(void)
 {
 	otb_add_tests();
 	g_test_run();
@@ -66,6 +66,6 @@ int main(int argc, char *argv[])
 	setlocale(LC_ALL, "");
 	textdomain(GETTEXT_PACKAGE);
 	g_test_init(&argc, &argv, NULL);
-	otb_run_tests(&argc, &argv);
+	otb_run_tests();
 	return 0;
 }

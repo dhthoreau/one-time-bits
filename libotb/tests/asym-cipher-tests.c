@@ -15,7 +15,7 @@
 #include "test-utils.h"
 #include "../src/asym-cipher.h"
 
-static void test_asym_cipher_properties()
+static void test_asym_cipher_properties(void)
 {
 	const int EXPECTED_KEY_SIZE=1024;
 	const char *EXPECTED_CIPHER="RC2-64-CBC";
@@ -33,7 +33,7 @@ static void test_asym_cipher_properties()
 	g_object_unref(asym_cipher);
 }
 
-static void test_asym_cipher_default_properties()
+static void test_asym_cipher_default_properties(void)
 {
 	const int EXPECTED_KEY_SIZE=4096;
 	const char *EXPECTED_CIPHER="AES-256-CBC";
@@ -84,7 +84,7 @@ void otb_generate_public_private_keys(OtbAsymCipher **asym_cipher_public_out, Ot
 	g_object_unref(asym_cipher_original);
 }
 
-static void test_asym_cipher_encryption_in_steps()
+static void test_asym_cipher_encryption_in_steps(void)
 {
 	const size_t EXPECTED_MESSAGE_SIZE=74;
 	const char *EXPECTED_MESSAGE="Timid men prefer the calm of despotism to the tempestuous sea of liberty.";
@@ -119,7 +119,7 @@ static void test_asym_cipher_encryption_in_steps()
 	g_object_unref(asym_cipher_public);
 }
 
-static void test_asym_cipher_encryption()
+static void test_asym_cipher_encryption(void)
 {
 	const size_t EXPECTED_MESSAGE_SIZE=307;
 	const char *EXPECTED_MESSAGE="There was not one hireling there. I have no doubt that it was a principle they fought for, as much as our ancestors, and not to avoid a three-penny tax on their tea; and the results of this battle will be as important and memorable to those whom it concerns as those of the battle of Bunker Hill, at least.";
@@ -149,7 +149,7 @@ static void test_asym_cipher_encryption()
 	g_object_unref(asym_cipher_public);
 }
 
-void otb_add_asym_cipher_tests()
+void otb_add_asym_cipher_tests(void)
 {
 	otb_add_test_func("/asym_cipher/test_asym_cipher_properties", test_asym_cipher_properties);
 	otb_add_test_func("/asym_cipher/test_asym_cipher_default_properties", test_asym_cipher_default_properties);

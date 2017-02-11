@@ -35,7 +35,7 @@ struct _OtbDummyFriendClass
 	OtbFriendClass parent_class;
 };
 
-GType otb_dummy_friend_get_type();
+GType otb_dummy_friend_get_type(void);
 
 gboolean otb_dummy_friend_set_dummy_value(OtbDummyFriend *dummy_friend, const char *dummy_value);
 

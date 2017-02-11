@@ -9,6 +9,6 @@
 #ifndef OTB_LOCAL_CRYPTO_TESTS
 #define OTB_LOCAL_CRYPTO_TESTS
 
-void otb_add_local_crypto_tests();
+void otb_add_local_crypto_tests(void);
 
 #endif

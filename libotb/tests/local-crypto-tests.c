@@ -16,7 +16,7 @@
 #include "../src/local-crypto.h"
 #include "../src/settings.h"
 
-static void test_local_crypto()
+static void test_local_crypto(void *fixture, const void *data)
 {
 	const char *EXPECTED_PASSPHRASE="Without music, life would be a mistake.";
 	const char *NEW_PASSPHRASE="Whoever fights monsters should see to it that in the process he does not become a monster.";
@@ -50,7 +50,7 @@ static void test_local_crypto()
 	g_assert(local_crypto_sym_cipher==NULL);
 }
 
-void otb_add_local_crypto_tests()
+void otb_add_local_crypto_tests(void)
 {
 	otb_add_test_func("/local-crypto/test_local_crypto", test_local_crypto);
 }

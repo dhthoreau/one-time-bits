@@ -16,7 +16,7 @@
 #include "memory.h"
 #include "random.h"
 
-char *otb_openssl_errors_as_string()
+char *otb_openssl_errors_as_string(void)
 {
 	BIO *bio=BIO_new(BIO_s_mem());
 	ERR_print_errors(bio);

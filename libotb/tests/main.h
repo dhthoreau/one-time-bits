@@ -13,7 +13,7 @@
 
 #include "test-utils.h"
 
-#define otb_add_test_func(name, func)	if(!g_test_perf()) g_test_add((name), void, NULL, otb_recreate_test_dir, (func), otb_test_clean_up); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
+#define otb_add_test_func(name, func)	if(!g_test_perf()) g_test_add((name), void, NULL, (GTestFixtureFunc)otb_recreate_test_dir, (GTestFixtureFunc)(func), (GTestFixtureFunc)otb_test_clean_up); otb_test_funcs=g_slist_prepend(otb_test_funcs, (func))
 
 extern GSList *otb_test_funcs;
 

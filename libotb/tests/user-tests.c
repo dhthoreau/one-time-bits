@@ -57,7 +57,7 @@ static void otb_assert_user(OtbUser *user, OtbAsymCipher *expected_asym_cipher, 
 	g_object_unref(actual_asym_cipher);
 }
 
-static void setup_save_file_for_user_test()
+static void setup_save_file_for_user_test(void)
 {
 	otb_initialize_settings_for_tests();
 	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
@@ -69,7 +69,7 @@ static void setup_save_file_for_user_test()
 	g_assert(!otb_user_exists());
 }
 
-static void test_otb_user_create_with_constructor_params()
+static void test_otb_user_create_with_constructor_params(void)
 {
 	const char *EXPECTED_DEFAULT_SYM_CIPHER_NAME="AES-256-CBC";
 	const char *EXPECTED_ADDRESS="AlmondMilkRoad.onion";
@@ -106,7 +106,7 @@ static void test_otb_user_create_with_constructor_params()
 	g_object_unref(user);
 }
 
-static void test_otb_user_create_with_no_config_file()
+static void test_otb_user_create_with_no_config_file(void)
 {
 	const char *EXPECTED_DEFAULT_SYM_CIPHER_NAME="AES-256-CBC";
 	const char *EXPECTED_ADDRESS="AlmondMilkRoad.onion";
@@ -247,7 +247,7 @@ static OtbUser *otb_load_user_from_existing_config_file(const OtbUniqueId *uniqu
 	return user;
 }
 
-static OtbUser *otb_do_user_create_from_existing_config_file_test()
+static OtbUser *otb_do_user_create_from_existing_config_file_test(void)
 {
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS1="AlmondMilkRoad.onion";
@@ -301,7 +301,7 @@ static OtbUser *otb_do_user_create_from_existing_config_file_test()
 	return user;
 }
 
-static void test_otb_user_create_from_existing_config_file()
+static void test_otb_user_create_from_existing_config_file(void)
 {
 	OtbUser *user=otb_do_user_create_from_existing_config_file_test();
 	g_assert(OTB_IS_USER(user));
@@ -309,7 +309,7 @@ static void test_otb_user_create_from_existing_config_file()
 	g_object_unref(user);
 }
 
-static void test_otb_dummy_user_create_from_existing_config_file()
+static void test_otb_dummy_user_create_from_existing_config_file(void)
 {
 	otb_user_set_runtime_type(OTB_TYPE_DUMMY_USER);
 	OtbUser *user=otb_do_user_create_from_existing_config_file_test();
@@ -359,7 +359,7 @@ static void otb_do_user_export_test(OtbUser **user, GKeyFile **export_key_file)
 	g_object_unref(expected_asym_cipher);
 }
 
-static void test_otb_user_export()
+static void test_otb_user_export(void)
 {
 	OtbUser *user=NULL;
 	GKeyFile *export_key_file=NULL;
@@ -370,7 +370,7 @@ static void test_otb_user_export()
 	g_object_unref(user);
 }
 
-static void test_otb_dummy_user_export()
+static void test_otb_dummy_user_export(void)
 {
 	OtbUser *user=NULL;
 	GKeyFile *export_key_file=NULL;
@@ -386,7 +386,7 @@ static void test_otb_dummy_user_export()
 	otb_user_set_runtime_type(OTB_TYPE_USER);
 }
 
-static OtbUser *do_user_save_test()
+static OtbUser *do_user_save_test(void)
 {
 	const char *EXPECTED_SYM_CIPHER_NAME="DES-CBC";
 	const char *EXPECTED_ADDRESS="AlmondMilkRoad.onion";
@@ -406,7 +406,7 @@ static OtbUser *do_user_save_test()
 	return actual_user;
 }
 
-static void test_otb_user_save()
+static void test_otb_user_save(void)
 {
 	OtbUser *user=do_user_save_test();
 	g_assert(OTB_IS_USER(user));
@@ -414,7 +414,7 @@ static void test_otb_user_save()
 	g_object_unref(user);
 }
 
-static void test_otb_dummy_user_save()
+static void test_otb_dummy_user_save(void)
 {
 	otb_user_set_runtime_type(OTB_TYPE_DUMMY_USER);
 	OtbUser *user=do_user_save_test();
@@ -429,7 +429,7 @@ static gboolean writing=FALSE;
 static int readers=0;
 static GMutex reader_writer_test_mutex;
 
-static void sleep_for_up_to_100_microseconds()
+static void sleep_for_up_to_100_microseconds(void)
 {
 	useconds_t sleep_time;
 	otb_random_bytes(&sleep_time, sizeof(sleep_time));
@@ -455,7 +455,7 @@ static void *reader_thread_func(OtbUser *user)
 	return NULL;
 }
 
-static void test_locks()
+static void test_locks(void)
 {
 	otb_initialize_settings_for_tests();
 	OtbSymCipher *sym_cipher=g_object_new(OTB_TYPE_SYM_CIPHER, NULL);
@@ -492,7 +492,7 @@ static void test_locks()
 	g_object_unref(asym_cipher);
 }
 
-void otb_add_user_tests()
+void otb_add_user_tests(void)
 {
 	otb_add_test_func("/user/test_otb_user_create_with_constructor_params", test_otb_user_create_with_constructor_params);
 	otb_add_test_func("/user/test_otb_user_create_with_no_config_file", test_otb_user_create_with_no_config_file);

@@ -57,7 +57,7 @@ gboolean otb_validation_validate_equal(GtkEntry *entry1, GtkEntry *entry2)
 
 gboolean otb_validation_validate_local_crypto_unlock(GtkEntry *entry)
 {
-	if(!otb_local_crypto_unlock_sym_cipher(gtk_entry_get_text(entry)))
+	if(!otb_local_crypto_unlock(gtk_entry_get_text(entry)))
 	{
 		invalidate_entry(entry);
 		return FALSE;
