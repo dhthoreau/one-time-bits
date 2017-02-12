@@ -12,7 +12,6 @@
 #include <glib/gi18n.h>
 
 #include "app.h"
-#include "console.h"
 #include "demo-user.h"
 #include "dialog.h"
 #include "validation.h"
@@ -51,28 +50,25 @@ static EditUserContainer *edit_user_container_from_builder(GtkBuilder *builder)
 #define edit_user_container_get_proxy_port(edit_user_container)						((unsigned int)gtk_adjustment_get_value((edit_user_container)->proxy_port))
 #define edit_user_container_get_pad_synchronization_interval(edit_user_container)	((long long)gtk_adjustment_get_value((edit_user_container)->pad_synchronization_interval))
 
-static const gboolean switch_to_console_window(const EditUserContainer *edit_user_container)
-{
-	otb_demo_console_show_new_window(gtk_window_get_application(edit_user_container->window));
-	gtk_widget_destroy(GTK_WIDGET(edit_user_container->window));
-	return FALSE;
-}
-
-static void save_edit_user_information(EditUserContainer *edit_user_container)
+static gboolean save_edit_user_information(EditUserContainer *edit_user_container)
 {
 	OtbBitkeeper *bitkeeper=otb_bitkeeper_get_with_ref();
 	g_object_set(bitkeeper, OTB_BITKEEPER_PROP_PROXY_PORT, edit_user_container_get_proxy_port(edit_user_container), OTB_BITKEEPER_PROP_PAD_SYNCHRONIZATION_INTERVAL, edit_user_container_get_pad_synchronization_interval(edit_user_container), NULL);
 	OtbUser *user;
 	g_object_get(bitkeeper, OTB_BITKEEPER_PROP_USER, &user, NULL);
 	g_object_set(OTB_DEMO_USER(user), OTB_DEMO_USER_PROP_NAME, edit_user_container_get_name(edit_user_container), OTB_USER_PROP_ADDRESS, edit_user_container_get_address(edit_user_container), OTB_USER_PROP_PORT, edit_user_container_get_port(edit_user_container), NULL);
+	gboolean ret_val=otb_bitkeeper_save();
+	if(G_UNLIKELY(!ret_val))
+		otb_demo_error_dialog(edit_user_container->window, _("There was a failure saving your profile to disk."));
 	g_object_unref(user);
 	g_object_unref(bitkeeper);
+	return ret_val;
 }
 
 static const void *edit_user_thread(EditUserContainer *edit_user_container)
 {
-	save_edit_user_information(edit_user_container);
-	gdk_threads_add_idle((GSourceFunc)switch_to_console_window, edit_user_container);
+	if(G_LIKELY(save_edit_user_information(edit_user_container)))
+		gdk_threads_add_idle((GSourceFunc)gtk_widget_destroy, edit_user_container->window);
 	return NULL;
 }
 

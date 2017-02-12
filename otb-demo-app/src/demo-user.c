@@ -20,6 +20,7 @@ enum
 };
 
 static gboolean otb_demo_user_load_from_settings(OtbUser *user);
+static gboolean otb_demo_user_save_to_settings(const OtbUser *user);
 static void otb_demo_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file);
 static void otb_demo_user_finalize(GObject *object);
 static void otb_demo_user_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec);
@@ -35,6 +36,7 @@ struct _OtbDemoUserPrivate
 static void otb_demo_user_class_init(OtbDemoUserClass *klass)
 {
 	OTB_USER_CLASS(klass)->otb_user_load_from_settings_private=otb_demo_user_load_from_settings;
+	OTB_USER_CLASS(klass)->otb_user_save_to_settings_private=otb_demo_user_save_to_settings;
 	OTB_USER_CLASS(klass)->otb_user_export_key_file_private=otb_demo_user_export_key_file;
 	GObjectClass *object_class=G_OBJECT_CLASS(klass);
 	object_class->finalize=otb_demo_user_finalize;
@@ -105,6 +107,13 @@ static void otb_demo_user_get_property(GObject *object, unsigned int prop_id, GV
 static gboolean otb_demo_user_load_from_settings(OtbUser *user)
 {
 	return OTB_USER_CLASS(otb_demo_user_parent_class)->otb_user_load_from_settings_private(user) && otb_demo_user_load_name(user);
+}
+
+#define otb_demo_user_save_name(user)	(otb_settings_set_config_string(OTB_DEMO_FRIEND_EXPORT_GROUP, OTB_DEMO_FRIEND_EXPORT_NAME, OTB_DEMO_USER(user)->priv->name))
+
+static gboolean otb_demo_user_save_to_settings(const OtbUser *user)
+{
+	return OTB_USER_CLASS(otb_demo_user_parent_class)->otb_user_save_to_settings_private(user) && otb_demo_user_save_name(user);
 }
 
 static void otb_demo_user_export_key_file(const OtbUser *user, GKeyFile *export_key_file)
