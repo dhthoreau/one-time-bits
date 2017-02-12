@@ -14,6 +14,7 @@
 #include "app.h"
 #include "console.h"
 #include "create-user.h"
+#include "dialog.h"
 #include "passphrase-unlock.h"
 #include "demo-user.h"
 
@@ -23,13 +24,24 @@
 
 #define otb_data_is_corrupted_or_missing()	(!otb_local_crypto_can_be_unlocked() || !otb_bitkeeper_exists() || !otb_user_exists())
 
+gboolean otb_demo_load_bitkeeper_with_error_handling(GtkWindow *window)
+{
+	gboolean ret_val=otb_bitkeeper_load();
+	if(G_UNLIKELY(!ret_val))
+		otb_demo_error_dialog(window, _("There was a problem loading the data."));
+	return ret_val;
+}
+
 static void activate(GtkApplication *application, const void *user_data)
 {
 	otb_settings_initialize(OTB_DEMO_APP_NAME, "otb");
-	if(otb_data_is_corrupted_or_missing())
+	if(G_UNLIKELY(otb_data_is_corrupted_or_missing()))
 		otb_demo_create_user_show_new_window(application);
 	else if(otb_local_crypto_unlock(""))
-		otb_demo_console_show_new_window(application);
+	{
+		if(otb_demo_load_bitkeeper_with_error_handling(NULL))
+			otb_demo_console_show_new_window(application);
+	}
 	else
 		otb_demo_passphrase_unlock_show_new_window(application);
 }

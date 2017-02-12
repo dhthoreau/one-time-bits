@@ -14,6 +14,7 @@
 #include "app.h"
 #include "console.h"
 #include "demo-user.h"
+#include "dialog.h"
 #include "validation.h"
 
 #include "../../libotb/src/libotb.h"
@@ -81,11 +82,7 @@ static void signal_edit_user_save_button_clicked(const GtkWidget *widget, EditUs
 	success&=otb_validation_validate_not_blank(edit_user_container->name);
 	success&=otb_validation_validate_not_blank(edit_user_container->address);
 	if(!success)
-	{
-		GtkWidget *error_dialog=gtk_message_dialog_new(edit_user_container->window, GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, _("Some inputs are invalid and are highlighted in red. Please correct them and try again."));
-		gtk_dialog_run(GTK_DIALOG(error_dialog));
-		gtk_widget_destroy(error_dialog);
-	}
+		otb_demo_error_dialog(edit_user_container->window, _("Some inputs are invalid and are highlighted in red. Please correct them and try again."));
 	else
 	{
 		gtk_widget_show(GTK_WIDGET(edit_user_container->workingWindow));

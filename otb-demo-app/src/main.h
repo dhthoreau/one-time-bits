@@ -11,4 +11,6 @@
 
 #define OTB_DEMO_APP_NAME	"otb-demo-app"
 
+gboolean otb_demo_load_bitkeeper_with_error_handling(GtkWindow *window);
+
 #endif

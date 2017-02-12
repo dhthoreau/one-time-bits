@@ -14,6 +14,7 @@
 #include "app.h"
 #include "console.h"
 #include "demo-user.h"
+#include "dialog.h"
 #include "validation.h"
 #include "working.h"
 
@@ -73,24 +74,6 @@ static void close_working_window(CreateUserContainer *create_user_container)
 	create_user_container->workingWindow=NULL;
 }
 
-static void dialog(CreateUserContainer *create_user_container, GtkMessageType type, const char *message)
-{
-	close_working_window(create_user_container);
-	GtkWidget *error_dialog=gtk_message_dialog_new(create_user_container->window, GTK_DIALOG_MODAL, type, GTK_BUTTONS_OK, message, NULL);
-	gtk_dialog_run(GTK_DIALOG(error_dialog));
-	gtk_widget_destroy(error_dialog);
-}
-
-static void warning_dialog(CreateUserContainer *create_user_container, const char *message)
-{
-	dialog(create_user_container, GTK_MESSAGE_WARNING, message);
-}
-
-static void error_dialog(CreateUserContainer *create_user_container, const char *message)
-{
-	dialog(create_user_container, GTK_MESSAGE_ERROR, message);
-}
-
 typedef struct
 {
 	CreateUserContainer *create_user_container;
@@ -100,7 +83,8 @@ typedef struct
 static gboolean error_dialog_idle_impl(void *data)
 {
 	ErrorDialogIdleData *error_dialog_idle_data=data;
-	dialog(error_dialog_idle_data->create_user_container, GTK_MESSAGE_ERROR, error_dialog_idle_data->message);
+	close_working_window(error_dialog_idle_data->create_user_container);
+	otb_demo_error_dialog(error_dialog_idle_data->create_user_container->window, error_dialog_idle_data->message);
 	g_slice_free(ErrorDialogIdleData, data);
 	return FALSE;
 }
@@ -144,7 +128,10 @@ static void signal_create_user_save_button_clicked(const GtkWidget *widget, Crea
 	success&=otb_validation_validate_not_blank(create_user_container->address);
 	success&=otb_validation_validate_equal(create_user_container->passphrase, create_user_container->repeatPassphrase);
 	if(!success)
-		warning_dialog(create_user_container, _("Some inputs are invalid and are highlighted in red. Please correct them and try again."));
+	{
+		close_working_window(create_user_container);
+		otb_demo_warning_dialog(create_user_container->window, _("Some inputs are invalid and are highlighted in red. Please correct them and try again."));
+	}
 	else
 	{
 		create_user_container->workingWindow=otb_demo_app_create_hidden_working_transient(create_user_container->window);

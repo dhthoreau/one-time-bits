@@ -13,6 +13,8 @@
 
 #include "app.h"
 #include "console.h"
+#include "dialog.h"
+#include "main.h"
 #include "validation.h"
 
 #include "../../libotb/src/libotb.h"
@@ -38,18 +40,10 @@ static PassphraseUnlockContainer *passphrase_unlock_container_from_builder(GtkBu
 static void signal_passphrase_unlock_button_clicked(const GtkWidget *widget, PassphraseUnlockContainer *passphrase_unlock_container)
 {
 	if(!otb_validation_validate_not_blank(passphrase_unlock_container->passphrase))
-	{
-		GtkWidget *error_dialog=gtk_message_dialog_new(passphrase_unlock_container->window, GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, _("Please enter a passphrase."));
-		gtk_dialog_run(GTK_DIALOG(error_dialog));
-		gtk_widget_destroy(error_dialog);
-	}
+		otb_demo_error_dialog(passphrase_unlock_container->window, _("Please enter a passphrase."));
 	else if(!otb_validation_validate_local_crypto_unlock(passphrase_unlock_container->passphrase))
-	{
-		GtkWidget *error_dialog=gtk_message_dialog_new(passphrase_unlock_container->window, GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, _("Incorrect passphrase. Please try again."));
-		gtk_dialog_run(GTK_DIALOG(error_dialog));
-		gtk_widget_destroy(error_dialog);
-	}
-	else
+		otb_demo_error_dialog(passphrase_unlock_container->window, _("Incorrect passphrase. Please try again."));
+	else if(otb_demo_load_bitkeeper_with_error_handling(passphrase_unlock_container->window))
 	{
 		otb_demo_console_show_new_window(gtk_window_get_application(passphrase_unlock_container->window));
 		gtk_widget_destroy(GTK_WIDGET(passphrase_unlock_container->window));
