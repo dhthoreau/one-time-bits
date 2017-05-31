@@ -13,15 +13,32 @@
 
 #include "app.h"
 #include "create-user.h"
+#include "demo-friend.h"
 #include "validation.h"
 
 #include "../../libotb/src/libotb.h"
 
 #define CONSOLE_WINDOW	"consoleWindow"
 
+static void add_friend_to_console_list(const OtbUniqueId *friend_unique_id, GtkListBox *friends_list)
+{
+	OtbFriend *friend=otb_bitkeeper_get_friend(friend_unique_id);
+	char *friend_name;
+	g_object_get(friend, OTB_DEMO_FRIEND_PROP_NAME, &friend_name, NULL);
+	GtkWidget *friend_label=gtk_label_new(friend_name);
+	gtk_container_add(GTK_CONTAINER(friends_list), friend_label);
+	g_object_unref(friend_label);
+	g_free(friend_name);
+	g_object_unref(friend);
+}
+
 static void console_window_setup(GtkBuilder *builder)
 {
 	GtkListBox *friends_list=g_object_ref(GTK_LIST_BOX(gtk_builder_get_object(builder, "friendsList")));
+	GSList *friend_unique_ids=otb_bitkeeper_get_unique_ids_of_friends();
+	g_slist_foreach(friend_unique_ids, (GFunc)add_friend_to_console_list, friends_list);
+	g_slist_free_full(friend_unique_ids, (GDestroyNotify)otb_unique_id_unref);
+	g_object_unref(friends_list);
 }
 
 void otb_demo_console_show_new_window(GtkApplication *application)

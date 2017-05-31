@@ -13,6 +13,7 @@
 #include "test-utils.h"
 #include "../src/friend.h"
 #include "../src/local-crypto.h"
+#include "../src/random.h"
 #include "../src/settings.h"
 #include "../src/unique-id.h"
 
@@ -240,9 +241,75 @@ static void test_remove_expired_pads(void)
 	otb_unique_id_unref(friend_unique_id);
 }
 
+static gboolean writing=FALSE;
+static int readers=0;
+static GMutex reader_writer_test_mutex;
+
+static void sleep_for_up_to_100_microseconds(void)
+{
+	useconds_t sleep_time;
+	otb_random_bytes(&sleep_time, sizeof(sleep_time));
+	usleep(otb_modulo(sleep_time, 100));
+}
+
+static void *reader_thread_func(OtbFriend *friend)
+{
+	for(int iter=0; iter<1000; iter++)
+	{
+		otb_friend_lock_read(friend);
+		g_assert(!writing);
+		g_mutex_lock(&reader_writer_test_mutex);
+		readers++;
+		g_mutex_unlock(&reader_writer_test_mutex);
+		sleep_for_up_to_100_microseconds();
+		g_mutex_lock(&reader_writer_test_mutex);
+		readers--;
+		g_mutex_unlock(&reader_writer_test_mutex);
+		g_assert(!writing);
+		otb_friend_unlock_read(friend);
+	}
+	return NULL;
+}
+
+static void test_locks(void)
+{
+	const char *PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAOI3kOtj0yQLT1JyfbBXLbUCAwEAAQ==\n-----END PUBLIC KEY-----";
+	const char *TRANSPORT_CIPHER_NAME="AES-128-CBC";
+	const char *ADDRESS="SoyMilkRoad.onion";
+	const unsigned int PORT=1357;
+	const char *DUMMY_VALUE="sldkfjklsdjfkslkfjsd.onion";
+	
+	otb_test_setup_local_crypto();
+	OtbUniqueId *unique_id=otb_unique_id_new();
+	char *import_string=otb_create_import_string(unique_id, PUBLIC_KEY, TRANSPORT_CIPHER_NAME, ADDRESS, PORT, DUMMY_VALUE);
+	char *friend_dir_path=otb_generate_unique_test_subdir_path();
+	OtbFriend *friend=otb_friend_import_to_directory(import_string, friend_dir_path);
+	GThread *reader_thread1=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, friend);
+	GThread *reader_thread2=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, friend);
+	GThread *reader_thread3=g_thread_new("ReaderThread1", (GThreadFunc)reader_thread_func, friend);
+	for(int iter=0; iter<1000; iter++)
+	{
+		otb_friend_lock_write(friend);
+		g_assert_cmpint(readers, ==, 0);
+		writing=TRUE;
+		sleep_for_up_to_100_microseconds();
+		writing=FALSE;
+		g_assert_cmpint(readers, ==, 0);
+		otb_friend_unlock_write(friend);
+	}
+	g_thread_join(reader_thread3);
+	g_thread_join(reader_thread2);
+	g_thread_join(reader_thread1);
+	g_object_unref(friend);
+	g_free(friend_dir_path);
+	g_free(import_string);
+	otb_unique_id_unref(unique_id);
+}
+
 void otb_add_friend_tests(void)
 {
 	otb_add_test_func("/friend/test_otb_friend_create_import_save_delete", test_otb_friend_create_import_save_delete);
 	otb_add_test_func("/friend/test_otb_dummy_friend_create_import_save_delete", test_otb_dummy_friend_create_import_save_delete);
 	otb_add_test_func("/friend/test_remove_expired_pads", test_remove_expired_pads);
+	otb_add_test_func("/friend/test_locks", test_locks);
 }

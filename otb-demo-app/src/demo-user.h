@@ -35,6 +35,6 @@ struct _OtbDemoUserClass
 	OtbUserClass parent_class;
 };
 
-GType otb_demo_user_get_type();
+GType otb_demo_user_get_type(void);
 
 #endif

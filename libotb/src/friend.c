@@ -184,12 +184,27 @@ static void otb_friend_set_address(const OtbFriend *friend, const char *address)
 	friend->priv->address=g_strdup(address);
 }
 
-#define otb_friend_set_port(friend, port_value)	(friend)->priv->port=(port_value);
+void otb_friend_lock_read(const OtbFriend *friend)
+{
+	g_rw_lock_reader_lock(&friend->priv->rw_lock);
+}
 
-#define otb_friend_lock_read(friend)	(g_rw_lock_reader_lock(&friend->priv->rw_lock))
-#define otb_friend_unlock_read(friend)	(g_rw_lock_reader_unlock(&friend->priv->rw_lock))
-#define otb_friend_lock_write(friend)	(g_rw_lock_writer_lock(&friend->priv->rw_lock))
-#define otb_friend_unlock_write(friend)	(g_rw_lock_writer_unlock(&friend->priv->rw_lock))
+void otb_friend_unlock_read(const OtbFriend *friend)
+{
+	g_rw_lock_reader_unlock(&friend->priv->rw_lock);
+}
+
+void otb_friend_lock_write(const OtbFriend *friend)
+{
+	g_rw_lock_writer_lock(&friend->priv->rw_lock);
+}
+
+void otb_friend_unlock_write(const OtbFriend *friend)
+{
+	g_rw_lock_writer_unlock(&friend->priv->rw_lock);
+}
+
+#define otb_friend_set_port(friend, port_value)	(friend)->priv->port=(port_value);
 
 static void otb_friend_set_property(GObject *object, unsigned int prop_id, const GValue *value, GParamSpec *pspec)
 {

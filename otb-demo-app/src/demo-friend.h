@@ -14,6 +14,8 @@
 #define OTB_DEMO_FRIEND_EXPORT_GROUP	"otb-demo"
 #define OTB_DEMO_FRIEND_EXPORT_NAME		"name"
 
+#define OTB_DEMO_FRIEND_PROP_NAME	"name"
+
 #define OTB_DEMO_TYPE_FRIEND				(otb_demo_friend_get_type())
 #define OTB_DEMO_FRIEND(obj)				(G_TYPE_CHECK_INSTANCE_CAST((obj), OTB_DEMO_TYPE_FRIEND, OtbDemoFriend))
 #define OTB_DEMO_IS_FRIEND(obj)				(G_TYPE_CHECK_INSTANCE_TYPE((obj), OTB_DEMO_TYPE_FRIEND))
@@ -28,18 +30,16 @@ typedef struct _OtbDemoFriendPrivate OtbDemoFriendPrivate;
 struct _OtbDemoFriend
 {
 	OtbFriend parent_instance;
-	char *name;
+	OtbDemoFriendPrivate *priv;
 };
 
 struct _OtbDemoFriendClass
 {
 	OtbFriendClass parent_class;
-	OtbFriendPrivate *priv;
 };
 
-GType otb_demo_friend_get_type();
+GType otb_demo_friend_get_type(void);
 
 gboolean otb_demo_friend_set_name_value(OtbDemoFriend *demo_friend, const char *name);
 
 #endif
-
