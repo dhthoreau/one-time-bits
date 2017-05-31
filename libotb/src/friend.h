@@ -57,10 +57,10 @@ struct _OtbFriendClass
 GType otb_friend_get_type(void);
 
 void otb_friend_set_runtime_type(GType friend_runtime_type);
-void otb_friend_lock_read(const OtbFriend *friend);	// FARE - Unit test.
-void otb_friend_unlock_read(const OtbFriend *friend);	// FARE - Unit test.
-void otb_friend_lock_write(const OtbFriend *friend);	// FARE - Unit test.
-void otb_friend_unlock_write(const OtbFriend *friend);	// FARE - Unit test.
+void otb_friend_lock_read(const OtbFriend *friend);
+void otb_friend_unlock_read(const OtbFriend *friend);
+void otb_friend_lock_write(const OtbFriend *friend);
+void otb_friend_unlock_write(const OtbFriend *friend);
 gboolean otb_friend_save(const OtbFriend *friend);
 OtbFriend *otb_friend_import_to_directory(const char *import_string, const char *base_path);
 OtbFriend *otb_friend_load_from_directory(const char *base_path);
