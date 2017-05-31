@@ -1,5 +1,5 @@
 /**
- * Copyright © 2015 the OTB team
+ * Copyright © 2017 the OTB team
  * 
  * This work is free. You can redistribute it and/or modify it under the
  * terms of the Do What The Fuck You Want To Public License, Version 2,
@@ -22,7 +22,7 @@ static void *initialize_css_provider(void *garbage)
 	char *css_file_path=g_build_filename(DATA_DIRECTORY, "entry-invalid.css", NULL);
 	provider=gtk_css_provider_new();
 	if(!gtk_css_provider_load_from_path(provider, css_file_path, NULL))
-		g_error(_("Failed to load ENTRY_ERROR_STYLE."));
+		g_error(_("Failed to load CSS."));
 	g_free(css_file_path);
 }
 

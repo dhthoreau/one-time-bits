@@ -1,5 +1,5 @@
 /**
- * Copyright © 2015 the OTB team
+ * Copyright © 2017 the OTB team
  * 
  * This work is free. You can redistribute it and/or modify it under the
  * terms of the Do What The Fuck You Want To Public License, Version 2,
@@ -614,7 +614,7 @@ static void test_decryption_fails_due_to_unsupported_file_format(void)
 	OtbPadDb *pad_db=otb_pad_db_create_in_directory(pad_db_dir_path);
 	g_assert(pad_db!=NULL);
 	unsigned char input_bytes[sizeof FORMAT_VERSION+OTB_UNIQUE_ID_BYTES_SIZE];
-	memcpy(input_bytes, &FORMAT_VERSION, sizeof(FORMAT_VERSION));
+	memcpy(input_bytes, &FORMAT_VERSION, sizeof FORMAT_VERSION);
 	void *decrypted_bytes;
 	size_t decrypted_bytes_size;
 	OtbCipherContext *cipher_context=otb_cipher_context_new(pad_db);

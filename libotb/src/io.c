@@ -1,5 +1,5 @@
 /**
- * Copyright © 2015 the OTB team
+ * Copyright © 2017 the OTB team
  * 
  * This work is free. You can redistribute it and/or modify it under the
  * terms of the Do What The Fuck You Want To Public License, Version 2,
@@ -37,6 +37,11 @@ FILE *otb_open_binary_for_read(const char *file_path)
 FILE *otb_open_text_for_write(const char *file_path)
 {
 	return otb_open_file_with_logging(file_path, "w");
+}
+
+FILE *otb_open_text_for_read(const char *file_path)
+{
+	return otb_open_file_with_logging(file_path, "r");
 }
 
 size_t otb_write(const void *buffer, size_t size, size_t num_items, FILE *file)

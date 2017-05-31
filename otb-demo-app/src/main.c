@@ -1,5 +1,5 @@
 /**
- * Copyright © 2015 the OTB team
+ * Copyright © 2017 the OTB team
  * 
  * This work is free. You can redistribute it and/or modify it under the
  * terms of the Do What The Fuck You Want To Public License, Version 2,
@@ -28,7 +28,7 @@ gboolean otb_demo_load_bitkeeper_with_error_handling(GtkWindow *window)
 {
 	gboolean ret_val=otb_bitkeeper_load();
 	if(G_UNLIKELY(!ret_val))
-		otb_demo_error_dialog(window, _("There was a problem loading the data."));
+		otb_demo_error_dialog(window, _("There was an error loading the data."));
 	return ret_val;
 }
 

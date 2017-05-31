@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: One Time Bits\n"
-"POT-Creation-Date: 2017-02-11 08:56-0500\n"
-"PO-Revision-Date: 2017-02-11 08:57-0500\n"
+"POT-Creation-Date: 2017-05-30 19:35-0400\n"
+"PO-Revision-Date: 2017-05-30 19:35-0400\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: it\n"
@@ -178,32 +178,32 @@ msgstr "Si è provato a cambiare ID univoco d'un amico."
 msgid "Failed to open file %s. Error == %s"
 msgstr "Non è riuscito ad aprire il file %s. Errore == %s"
 
-#: src/io.c:48
+#: src/io.c:53
 #, c-format
 msgid "Failed to write file. Error == %s"
 msgstr "Non è riuscito a scrivere un file. Errore == %s"
 
-#: src/io.c:59
+#: src/io.c:64
 #, c-format
 msgid "Failed to read file. Error == %s"
 msgstr "Non è riuscito a leggere un file. Errore == %s"
 
-#: src/io.c:70
+#: src/io.c:75
 #, c-format
 msgid "Failed close file. Error == %s"
 msgstr "Non è riuscito a chiudere un file. Errore == %s"
 
-#: src/io.c:82
+#: src/io.c:87
 #, c-format
 msgid "Failed delete file %s. Error == %s"
 msgstr "Non è riuscito a cancellare un file %s. Errore == %s"
 
-#: src/io.c:94
+#: src/io.c:99
 #, c-format
 msgid "Failed create directory %s. Error == %s"
 msgstr "Non è riuscito a creare la directory %s. Errore == %s"
 
-#: src/io.c:106
+#: src/io.c:111
 #, c-format
 msgid "Failed open directory %s. Error == %s"
 msgstr "Non è riuscito ad aprire la directory %s. Errore == %s"

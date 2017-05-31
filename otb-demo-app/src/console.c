@@ -1,5 +1,5 @@
 /**
- * Copyright © 2015 the OTB team
+ * Copyright © 2017 the OTB team
  * 
  * This work is free. You can redistribute it and/or modify it under the
  * terms of the Do What The Fuck You Want To Public License, Version 2,
@@ -19,9 +19,14 @@
 
 #define CONSOLE_WINDOW	"consoleWindow"
 
+static void console_window_setup(GtkBuilder *builder)
+{
+	GtkListBox *friends_list=g_object_ref(GTK_LIST_BOX(gtk_builder_get_object(builder, "friendsList")));
+}
+
 void otb_demo_console_show_new_window(GtkApplication *application)
 {
-	otb_demo_app_create_window("console.ui", CONSOLE_WINDOW, application, NULL);
+	otb_demo_app_create_window("console.ui", CONSOLE_WINDOW, application, console_window_setup);
 }
 
 G_MODULE_EXPORT
